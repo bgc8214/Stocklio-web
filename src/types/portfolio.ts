@@ -34,3 +34,12 @@ export interface DailySnapshot {
   dailyProfit: number
   createdAt: Date
 }
+
+export interface CategoryGoal {
+  id: string
+  userId: string
+  categoryId: number
+  targetAmount: number // 목표 금액 (원화)
+  createdAt: Date
+  updatedAt: Date
+}

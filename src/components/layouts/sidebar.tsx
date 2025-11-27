@@ -17,10 +17,26 @@ import {
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/lib/hooks/use-auth'
 
-const navigation = [
+type NavigationItem = {
+  name: string
+  href: string
+  icon: any
+  subItems?: Array<{ name: string; href: string }>
+}
+
+const navigation: NavigationItem[] = [
   { name: '대시보드', href: '/dashboard', icon: LayoutDashboard },
   { name: '포트폴리오', href: '/portfolio', icon: Wallet },
-  { name: '카테고리', href: '/categories', icon: PieChart },
+  {
+    name: '카테고리',
+    href: '/categories',
+    icon: PieChart,
+    subItems: [
+      { name: '📈 나스닥100', href: '/categories/nasdaq100' },
+      { name: '📊 S&P 500', href: '/categories/sp500' },
+      { name: '💰 배당주', href: '/categories/dividend' },
+    ],
+  },
   { name: '수익 추이 분석', href: '/analytics', icon: BarChart3 },
   { name: '리밸런싱', href: '/rebalancing', icon: BarChart3 },
   { name: '월간 리포트', href: '/reports', icon: Calendar },
@@ -51,19 +67,40 @@ export function Sidebar() {
           const isActive = pathname === item.href || pathname?.startsWith(item.href + '/')
 
           return (
-            <Link
-              key={item.name}
-              href={item.href}
-              className={cn(
-                'flex items-center space-x-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
-                isActive
-                  ? 'bg-primary text-primary-foreground'
-                  : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
+            <div key={item.name}>
+              <Link
+                href={item.href}
+                className={cn(
+                  'flex items-center space-x-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+                  isActive
+                    ? 'bg-primary text-primary-foreground'
+                    : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
+                )}
+              >
+                <Icon className="h-5 w-5" />
+                <span>{item.name}</span>
+              </Link>
+
+              {/* 서브 메뉴 */}
+              {item.subItems && isActive && (
+                <div className="ml-8 mt-1 space-y-1">
+                  {item.subItems.map((subItem) => (
+                    <Link
+                      key={subItem.name}
+                      href={subItem.href}
+                      className={cn(
+                        'block rounded-lg px-3 py-1.5 text-sm transition-colors',
+                        pathname === subItem.href
+                          ? 'bg-primary/10 text-primary font-medium'
+                          : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
+                      )}
+                    >
+                      {subItem.name}
+                    </Link>
+                  ))}
+                </div>
               )}
-            >
-              <Icon className="h-5 w-5" />
-              <span>{item.name}</span>
-            </Link>
+            </div>
           )
         })}
       </nav>
