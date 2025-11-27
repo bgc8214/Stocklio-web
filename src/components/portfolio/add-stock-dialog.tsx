@@ -179,7 +179,10 @@ export function AddStockDialog({
           description: '포트폴리오가 수정되었습니다.',
         })
       } else {
-        await addMutation.mutateAsync(data)
+        await addMutation.mutateAsync({
+          ...data,
+          currentPrice: data.averageCost, // 초기 currentPrice는 averageCost와 동일하게 설정
+        })
         toast({
           title: '추가 완료',
           description: '포트폴리오에 종목이 추가되었습니다.',

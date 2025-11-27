@@ -49,6 +49,10 @@ export const portfolioConverter: FirestoreDataConverter<Portfolio> = {
 
 // Portfolio CRUD
 export async function getPortfolios(userId: string): Promise<Portfolio[]> {
+  if (!firestore) {
+    throw new Error('Firestore가 초기화되지 않았습니다.')
+  }
+
   const q = query(
     collection(firestore, 'portfolios', userId, 'stocks'),
     orderBy('createdAt', 'desc')
@@ -62,6 +66,10 @@ export async function addPortfolio(
   userId: string,
   portfolio: Omit<Portfolio, 'id'>
 ): Promise<string> {
+  if (!firestore) {
+    throw new Error('Firestore가 초기화되지 않았습니다.')
+  }
+
   const ref = await addDoc(
     collection(firestore, 'portfolios', userId, 'stocks').withConverter(
       portfolioConverter
@@ -76,6 +84,10 @@ export async function updatePortfolio(
   portfolioId: string,
   data: Partial<Portfolio>
 ): Promise<void> {
+  if (!firestore) {
+    throw new Error('Firestore가 초기화되지 않았습니다.')
+  }
+
   const ref = doc(firestore, 'portfolios', userId, 'stocks', portfolioId)
   await updateDoc(ref, {
     ...data,
@@ -87,6 +99,10 @@ export async function deletePortfolio(
   userId: string,
   portfolioId: string
 ): Promise<void> {
+  if (!firestore) {
+    throw new Error('Firestore가 초기화되지 않았습니다.')
+  }
+
   const ref = doc(firestore, 'portfolios', userId, 'stocks', portfolioId)
   await deleteDoc(ref)
 }
