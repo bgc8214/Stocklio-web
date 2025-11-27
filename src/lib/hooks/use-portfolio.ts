@@ -140,75 +140,80 @@ export function usePortfoliosWithProfit() {
     PortfolioWithProfit[]
   >([])
   const [isUpdatingPrices, setIsUpdatingPrices] = useState(false)
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
 
-  useEffect(() => {
+  const updatePrices = async () => {
     if (!portfolios || portfolios.length === 0) {
       setPortfoliosWithProfit([])
       return
     }
 
-    const updatePrices = async () => {
-      setIsUpdatingPrices(true)
-      try {
-        // 고유한 티커만 추출
-        const uniqueTickers = Array.from(
-          new Set(portfolios.map((p) => p.ticker))
-        )
+    setIsUpdatingPrices(true)
+    try {
+      // 고유한 티커만 추출
+      const uniqueTickers = Array.from(
+        new Set(portfolios.map((p) => p.ticker))
+      )
 
-        // 주가 조회
-        const prices = await getStockPrices(uniqueTickers)
-        const priceMap = new Map(
-          prices.map((p) => [p.ticker, p.currentPrice])
-        )
+      // 주가 조회
+      const prices = await getStockPrices(uniqueTickers)
+      const priceMap = new Map(
+        prices.map((p) => [p.ticker, p.currentPrice])
+      )
 
-        // 포트폴리오에 수익 정보 추가
-        const updated = portfolios.map((portfolio) => {
-          const currentPrice = priceMap.get(portfolio.ticker) || portfolio.currentPrice
-          const marketValue = currentPrice * portfolio.quantity
-          const investment = portfolio.averageCost * portfolio.quantity
-          const profit = marketValue - investment
-          const profitRate = investment !== 0 ? (profit / investment) * 100 : 0
+      // 포트폴리오에 수익 정보 추가
+      const updated = portfolios.map((portfolio) => {
+        const currentPrice = priceMap.get(portfolio.ticker) || portfolio.currentPrice
+        const marketValue = currentPrice * portfolio.quantity
+        const investment = portfolio.averageCost * portfolio.quantity
+        const profit = marketValue - investment
+        const profitRate = investment !== 0 ? (profit / investment) * 100 : 0
 
-          return {
-            ...portfolio,
-            currentPrice,
-            marketValue,
-            investment,
-            profit,
-            profitRate,
-          }
-        })
+        return {
+          ...portfolio,
+          currentPrice,
+          marketValue,
+          investment,
+          profit,
+          profitRate,
+        }
+      })
 
-        setPortfoliosWithProfit(updated)
-      } catch (error) {
-        console.error('Error updating prices:', error)
-        // 에러 발생 시 기본값 사용
-        const fallback = portfolios.map((portfolio) => {
-          const marketValue = portfolio.currentPrice * portfolio.quantity
-          const investment = portfolio.averageCost * portfolio.quantity
-          const profit = marketValue - investment
-          const profitRate = investment !== 0 ? (profit / investment) * 100 : 0
+      setPortfoliosWithProfit(updated)
+      setLastUpdated(new Date())
+    } catch (error) {
+      console.error('Error updating prices:', error)
+      // 에러 발생 시 기본값 사용
+      const fallback = portfolios.map((portfolio) => {
+        const marketValue = portfolio.currentPrice * portfolio.quantity
+        const investment = portfolio.averageCost * portfolio.quantity
+        const profit = marketValue - investment
+        const profitRate = investment !== 0 ? (profit / investment) * 100 : 0
 
-          return {
-            ...portfolio,
-            marketValue,
-            investment,
-            profit,
-            profitRate,
-          }
-        })
-        setPortfoliosWithProfit(fallback)
-      } finally {
-        setIsUpdatingPrices(false)
-      }
+        return {
+          ...portfolio,
+          marketValue,
+          investment,
+          profit,
+          profitRate,
+        }
+      })
+      setPortfoliosWithProfit(fallback)
+    } finally {
+      setIsUpdatingPrices(false)
     }
+  }
 
+  useEffect(() => {
     updatePrices()
   }, [portfolios])
 
   return {
     data: portfoliosWithProfit,
     isLoading: isLoading || isUpdatingPrices,
+    isUpdatingPrices,
+    lastUpdated,
+    refetchPrices: updatePrices,
     // 총 자산과 총 비용을 계산하여 반환 (스냅샷 생성용)
     totalValue: portfoliosWithProfit.reduce((sum, p) => sum + p.marketValue, 0),
     totalCost: portfoliosWithProfit.reduce((sum, p) => sum + p.investment, 0),
