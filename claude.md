@@ -4,6 +4,114 @@
 
 ---
 
+## 🔄 GitHub Issues 워크플로우
+
+이 프로젝트는 **GitHub Issues 기반 개발 워크플로우**를 사용합니다.
+
+### 📋 이슈 기반 작업 프로세스
+
+모든 작업은 다음 순서로 진행됩니다:
+
+1. **이슈 불러오기** - GitHub에서 할당된 이슈 확인
+2. **브랜치 세팅하기** - 이슈 번호로 feature 브랜치 생성
+3. **코드베이스 분석하기** - 관련 파일 및 의존성 파악
+4. **이슈 해결 계획 세우기** - 구현 방향 및 단계 설계
+5. **이슈 해결하기** - 실제 코드 작성 및 구현
+6. **테스트 작성하기** - 기능 검증 및 테스트 코드
+7. **검증하기** - 빌드, 린트, 타입 체크
+8. **풀리퀘스트 작성하기** - PR 생성 및 리뷰 요청
+
+### 🌿 브랜치 네이밍 규칙
+
+```bash
+# Feature
+feature/#<issue-number>-<short-description>
+예: feature/#1-implement-dashboard
+
+# Bugfix
+bugfix/#<issue-number>-<short-description>
+예: bugfix/#5-fix-login-error
+
+# Hotfix
+hotfix/#<issue-number>-<short-description>
+예: hotfix/#10-critical-security-patch
+```
+
+### 💬 커밋 메시지 규칙
+
+```bash
+<type>(#<issue-number>): <subject>
+
+[optional body]
+
+[optional footer]
+```
+
+**Type:**
+- `feat`: 새로운 기능
+- `fix`: 버그 수정
+- `docs`: 문서 변경
+- `style`: 코드 포맷팅 (기능 변경 없음)
+- `refactor`: 리팩토링
+- `test`: 테스트 추가/수정
+- `chore`: 빌드, 설정 등
+
+**예시:**
+```bash
+feat(#12): 대시보드 히어로 카드 구현
+
+- 총 자산 표시 컴포넌트 추가
+- 실시간 수익률 계산 로직 구현
+- Glass Morphism 디자인 적용
+
+Closes #12
+```
+
+### 📝 풀리퀘스트 템플릿
+
+```markdown
+## 📌 관련 이슈
+Closes #<issue-number>
+
+## 🎯 작업 내용
+- [ ] 작업 항목 1
+- [ ] 작업 항목 2
+
+## 🧪 테스트 체크리스트
+- [ ] 빌드 성공
+- [ ] 타입 체크 통과
+- [ ] 린트 통과
+- [ ] 기능 동작 확인
+
+## 📸 스크린샷 (옵션)
+
+## 💭 리뷰 노트
+```
+
+### 🛠️ GitHub CLI 명령어
+
+```bash
+# 이슈 조회
+gh issue list
+gh issue view <issue-number>
+
+# 브랜치 생성 (이슈 기반)
+gh issue develop <issue-number> --checkout
+
+# PR 생성
+gh pr create --title "feat(#12): 대시보드 구현" --body "Closes #12"
+
+# PR 상태 확인
+gh pr status
+gh pr view
+
+# PR 리뷰
+gh pr review --approve
+gh pr merge
+```
+
+---
+
 ## 프로젝트 개요
 
 **MyFolio**는 주식 포트폴리오를 **나스닥100, S&P 500, 배당주** 3개 카테고리로 간단하게 관리하는 웹 애플리케이션입니다.
@@ -222,16 +330,6 @@ NEXT_PUBLIC_FIREBASE_APP_ID=your_app_id
 
 ---
 
-## 다음 작업
-
-1. **.env.local 파일 생성** - Firebase 설정
-2. **개선된 컴포넌트 적용** - 랜딩, 인증, 자산 카드
-3. **대시보드 구현** - 실제 데이터 연동
-4. **종목 추가 기능** - Firebase 연동
-5. **Yahoo Finance API 연동** - 실시간 주가
-
----
-
 ## 문서
 
 ### 루트 문서
@@ -267,6 +365,9 @@ npm run start
 
 # 린트 검사
 npm run lint
+
+# 타입 체크
+npx tsc --noEmit
 ```
 
 ---
