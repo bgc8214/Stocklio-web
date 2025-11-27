@@ -45,7 +45,7 @@ export function CategoryAllocation({ categories }: CategoryAllocationProps) {
                   cx="50%"
                   cy="50%"
                   outerRadius={80}
-                  label={({ percentage }) => `${percentage.toFixed(1)}%`}
+                  label={(entry: any) => `${entry.percentage.toFixed(1)}%`}
                 >
                   {chartData.map((entry, index) => {
                     const categoryId = categories[index]?.id
