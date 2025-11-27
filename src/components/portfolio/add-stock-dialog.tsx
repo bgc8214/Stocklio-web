@@ -56,8 +56,15 @@ export function AddStockDialog({
   const [isSearching, setIsSearching] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [searchResults, setSearchResults] = useState<
-    Array<{ symbol: string; name: string; exchange: string }>
+    Array<{
+      symbol: string
+      name: string
+      exchange: string
+      currentPrice?: number
+      currency?: string
+    }>
   >([])
+  const [loadingPrices, setLoadingPrices] = useState(false)
 
   const {
     register,
@@ -109,6 +116,27 @@ export function AddStockDialog({
     try {
       const results = await searchStocks(searchQuery)
       setSearchResults(results)
+
+      // 검색 결과에 대한 현재가 조회
+      if (results.length > 0) {
+        setLoadingPrices(true)
+        const pricesPromises = results.map(async (result) => {
+          try {
+            const price = await getStockPrice(result.symbol)
+            return {
+              ...result,
+              currentPrice: price.currentPrice,
+              currency: price.currency,
+            }
+          } catch {
+            return result
+          }
+        })
+
+        const resultsWithPrices = await Promise.all(pricesPromises)
+        setSearchResults(resultsWithPrices)
+        setLoadingPrices(false)
+      }
     } catch (error) {
       toast({
         variant: 'destructive',
@@ -243,17 +271,41 @@ export function AddStockDialog({
               </Button>
             </div>
             {searchResults.length > 0 && (
-              <div className="border rounded-md max-h-40 overflow-y-auto">
+              <div className="border rounded-md max-h-60 overflow-y-auto">
                 {searchResults.map((stock) => (
                   <button
                     key={stock.symbol}
                     type="button"
                     onClick={() => handleSelectStock(stock)}
-                    className="w-full text-left px-3 py-2 hover:bg-muted transition-colors"
+                    className="w-full text-left px-3 py-2 hover:bg-muted transition-colors border-b last:border-b-0"
                   >
-                    <div className="font-medium">{stock.symbol}</div>
-                    <div className="text-sm text-muted-foreground">
-                      {stock.name}
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <div className="font-medium">{stock.symbol}</div>
+                        <div className="text-sm text-muted-foreground">
+                          {stock.name}
+                        </div>
+                      </div>
+                      {stock.currentPrice !== undefined ? (
+                        <div className="text-right ml-4">
+                          <div className="font-medium">
+                            {stock.currency === 'KRW'
+                              ? `₩${stock.currentPrice.toLocaleString()}`
+                              : `$${stock.currentPrice.toFixed(2)}`}
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            {stock.exchange}
+                          </div>
+                        </div>
+                      ) : loadingPrices ? (
+                        <div className="text-sm text-muted-foreground">
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        </div>
+                      ) : (
+                        <div className="text-xs text-muted-foreground">
+                          {stock.exchange}
+                        </div>
+                      )}
                     </div>
                   </button>
                 ))}
