@@ -108,6 +108,7 @@ my-portfolio-web/
 
 ## 사용 가능한 명령어
 
+### 개발 명령어
 \`\`\`bash
 # 개발 서버 실행
 npm run dev
@@ -120,6 +121,27 @@ npm run start
 
 # 린트 검사
 npm run lint
+\`\`\`
+
+### Git Worktree 명령어
+\`\`\`bash
+# 워크트리 생성 (빠른 방법)
+npm run wt:create -- ../worktrees/issue-7 -b feature/#7-new-feature
+
+# 워크트리 목록 확인
+npm run wt:list
+
+# 워크트리 삭제
+npm run wt:remove -- ../worktrees/issue-7
+
+# 워크트리 정리
+npm run wt:prune
+
+# 헬퍼 스크립트 사용 (권장)
+./.worktree-helper.sh create 7    # 이슈 7번 워크트리 생성
+./.worktree-helper.sh list        # 워크트리 목록
+./.worktree-helper.sh open 7      # VS Code로 열기
+./.worktree-helper.sh remove 7    # 워크트리 삭제
 \`\`\`
 
 ## 개발 로드맵
