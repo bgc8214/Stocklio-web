@@ -1,22 +1,17 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Portfolio } from '@/types/portfolio'
-import { getStockPrice, getStockPrices } from '@/lib/api/yahoo-finance'
-import { firestore, isFirebaseConfigured } from '@/lib/firebase/config'
+import { getStockPrices } from '@/lib/api/yahoo-finance'
+import { isFirebaseConfigured } from '@/lib/firebase/config'
 import { useAuth } from './use-auth'
 import {
-  collection,
-  query,
-  where,
-  getDocs,
-  addDoc,
-  updateDoc,
-  deleteDoc,
-  doc,
-  Timestamp,
-} from 'firebase/firestore'
+  getPortfolios,
+  addPortfolio,
+  updatePortfolio,
+  deletePortfolio,
+} from '@/lib/firebase/firestore'
 import {
   getLocalPortfolios,
   saveLocalPortfolio,
@@ -43,29 +38,8 @@ export function usePortfolios() {
     queryKey: ['portfolios', user?.uid || 'local'],
     queryFn: async () => {
       // Firebase가 설정되어 있고 사용자가 있으면 Firestore 사용
-      if (isFirebaseConfigured && firestore && user?.uid) {
-        const portfoliosRef = collection(firestore, 'portfolios')
-        const q = query(portfoliosRef, where('userId', '==', user.uid))
-        const snapshot = await getDocs(q)
-
-        const portfolios: Portfolio[] = []
-        snapshot.forEach((doc) => {
-          const data = doc.data()
-          portfolios.push({
-            id: doc.id,
-            ticker: data.ticker,
-            name: data.name,
-            quantity: data.quantity,
-            averageCost: data.averageCost,
-            currentPrice: data.currentPrice || 0,
-            market: data.market,
-            categoryId: data.categoryId,
-            createdAt: data.createdAt?.toDate() || new Date(),
-            updatedAt: data.updatedAt?.toDate() || new Date(),
-          })
-        })
-
-        return portfolios
+      if (isFirebaseConfigured && user?.uid) {
+        return await getPortfolios(user.uid)
       }
 
       // 개발 모드: 로컬 스토리지 사용
@@ -85,13 +59,11 @@ export function useAddPortfolio() {
   return useMutation({
     mutationFn: async (portfolio: Omit<Portfolio, 'id' | 'createdAt' | 'updatedAt'>) => {
       // Firebase가 설정되어 있고 사용자가 있으면 Firestore 사용
-      if (isFirebaseConfigured && firestore && user?.uid) {
-        const portfoliosRef = collection(firestore, 'portfolios')
-        await addDoc(portfoliosRef, {
+      if (isFirebaseConfigured && user?.uid) {
+        await addPortfolio(user.uid, {
           ...portfolio,
-          userId: user.uid,
-          createdAt: Timestamp.now(),
-          updatedAt: Timestamp.now(),
+          createdAt: new Date(),
+          updatedAt: new Date(),
         })
         return
       }
@@ -121,12 +93,8 @@ export function useUpdatePortfolio() {
       data: Partial<Portfolio>
     }) => {
       // Firebase가 설정되어 있고 사용자가 있으면 Firestore 사용
-      if (isFirebaseConfigured && firestore && user?.uid) {
-        const portfolioRef = doc(firestore, 'portfolios', id)
-        await updateDoc(portfolioRef, {
-          ...data,
-          updatedAt: Timestamp.now(),
-        })
+      if (isFirebaseConfigured && user?.uid) {
+        await updatePortfolio(user.uid, id, data)
         return
       }
 
@@ -149,9 +117,8 @@ export function useDeletePortfolio() {
   return useMutation({
     mutationFn: async (id: string) => {
       // Firebase가 설정되어 있고 사용자가 있으면 Firestore 사용
-      if (isFirebaseConfigured && firestore && user?.uid) {
-        const portfolioRef = doc(firestore, 'portfolios', id)
-        await deleteDoc(portfolioRef)
+      if (isFirebaseConfigured && user?.uid) {
+        await deletePortfolio(user.uid, id)
         return
       }
 
@@ -247,4 +214,3 @@ export function usePortfoliosWithProfit() {
     totalCost: portfoliosWithProfit.reduce((sum, p) => sum + p.investment, 0),
   }
 }
-
