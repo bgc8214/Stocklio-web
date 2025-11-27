@@ -43,12 +43,14 @@ interface AddStockDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   portfolio?: Portfolio
+  defaultCategoryId?: number
 }
 
 export function AddStockDialog({
   open,
   onOpenChange,
   portfolio,
+  defaultCategoryId,
 }: AddStockDialogProps) {
   const { toast } = useToast()
   const addMutation = useAddPortfolio()
@@ -104,10 +106,10 @@ export function AddStockDialog({
         quantity: 1,
         averageCost: 0,
         market: 'US',
-        categoryId: undefined,
+        categoryId: defaultCategoryId,
       })
     }
-  }, [portfolio, reset])
+  }, [portfolio, defaultCategoryId, reset])
 
   const handleSearch = async () => {
     if (!searchQuery.trim()) return
