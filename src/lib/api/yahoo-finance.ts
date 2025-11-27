@@ -23,7 +23,23 @@ export async function getStockPrice(ticker: string): Promise<StockPrice> {
 
     if (!response.ok) {
       const error = await response.json().catch(() => ({ error: 'Failed to fetch stock price' }))
-      throw new Error(error.error || `Failed to fetch stock price for ${ticker}`)
+
+      // Rate limit 에러 처리
+      if (response.status === 429) {
+        throw new Error('API 호출 한도를 초과했습니다. 잠시 후 다시 시도해주세요.')
+      }
+
+      // 종목을 찾을 수 없음
+      if (response.status === 404) {
+        throw new Error(`종목 코드 "${ticker}"를 찾을 수 없습니다.`)
+      }
+
+      // 네트워크 에러
+      if (response.status === 503) {
+        throw new Error('네트워크 오류가 발생했습니다. 인터넷 연결을 확인해주세요.')
+      }
+
+      throw new Error(error.error || `${ticker}의 주가 조회에 실패했습니다.`)
     }
 
     const data = await response.json()
@@ -62,19 +78,30 @@ export async function searchStocks(query: string): Promise<Array<{
   symbol: string
   name: string
   exchange: string
+  currency?: string
 }>> {
   try {
     const response = await fetch(`/api/stocks/search?q=${encodeURIComponent(query)}`)
 
+    // Rate limit 에러 처리
+    if (response.status === 429) {
+      throw new Error('API 호출 한도를 초과했습니다. 잠시 후 다시 시도해주세요.')
+    }
+
+    // 네트워크 에러
+    if (response.status === 503) {
+      throw new Error('네트워크 오류가 발생했습니다. 인터넷 연결을 확인해주세요.')
+    }
+
     if (!response.ok) {
-      throw new Error('Failed to search stocks')
+      throw new Error('종목 검색에 실패했습니다.')
     }
 
     const data = await response.json()
     return Array.isArray(data) ? data : []
   } catch (error) {
     console.error('Error searching stocks:', error)
-    return []
+    throw error
   }
 }
 
