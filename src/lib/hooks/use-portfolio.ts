@@ -18,6 +18,7 @@ import {
   updateLocalPortfolio,
   deleteLocalPortfolio,
 } from '@/lib/storage/local-storage'
+import { toKrw } from '@/lib/utils'
 
 interface PortfolioWithProfit extends Portfolio {
   marketValue: number
@@ -206,11 +207,56 @@ export function usePortfoliosWithProfit() {
     updatePrices()
   }, [portfolios])
 
+  // 환율 적용한 총 자산과 총 비용 계산 (모두 원화로 통일)
+  const EXCHANGE_RATE = 1300 // USD/KRW 환율
+  const totalValue = portfoliosWithProfit.reduce((sum, p) => {
+    return sum + toKrw(p.marketValue, p.market, EXCHANGE_RATE)
+  }, 0)
+  const totalCost = portfoliosWithProfit.reduce((sum, p) => {
+    return sum + toKrw(p.investment, p.market, EXCHANGE_RATE)
+  }, 0)
+
   return {
     data: portfoliosWithProfit,
     isLoading: isLoading || isUpdatingPrices,
-    // 총 자산과 총 비용을 계산하여 반환 (스냅샷 생성용)
-    totalValue: portfoliosWithProfit.reduce((sum, p) => sum + p.marketValue, 0),
-    totalCost: portfoliosWithProfit.reduce((sum, p) => sum + p.investment, 0),
+    totalValue,
+    totalCost,
+    refetchPrices: async () => {
+      // 수동 주가 업데이트 트리거
+      if (portfolios && portfolios.length > 0) {
+        setIsUpdatingPrices(true)
+        try {
+          const uniqueTickers = Array.from(new Set(portfolios.map((p) => p.ticker)))
+          const prices = await getStockPrices(uniqueTickers)
+          const priceMap = new Map(prices.map((p) => [p.ticker, p.currentPrice]))
+
+          const updated = portfolios.map((portfolio) => {
+            const currentPrice = priceMap.get(portfolio.ticker) || portfolio.currentPrice
+            const marketValue = currentPrice * portfolio.quantity
+            const investment = portfolio.averageCost * portfolio.quantity
+            const profit = marketValue - investment
+            const profitRate = investment !== 0 ? (profit / investment) * 100 : 0
+
+            return {
+              ...portfolio,
+              currentPrice,
+              marketValue,
+              investment,
+              profit,
+              profitRate,
+            }
+          })
+
+          setPortfoliosWithProfit(updated)
+        } catch (error) {
+          console.error('Error refreshing prices:', error)
+          throw error
+        } finally {
+          setIsUpdatingPrices(false)
+        }
+      }
+    },
+    isUpdatingPrices,
+    lastUpdated: new Date(),
   }
 }
