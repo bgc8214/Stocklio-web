@@ -97,7 +97,7 @@ export function PortfolioTable({
               <TableHead className="text-right">수량</TableHead>
               <TableHead className="text-right">평단가</TableHead>
               <TableHead className="text-right">현재가</TableHead>
-              <TableHead className="text-right">시가총액</TableHead>
+              <TableHead className="text-right">평가액</TableHead>
               <TableHead
                 className="text-right cursor-pointer hover:bg-muted/50"
                 onClick={() => setSortBy('profit')}
