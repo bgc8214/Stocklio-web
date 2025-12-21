@@ -66,11 +66,11 @@ export function CategoryHero({
                 <div className="grid gap-4 md:grid-cols-3">
                   <div className="space-y-1">
                     <p className="text-sm text-muted-foreground">목표 금액</p>
-                    <p className="text-2xl font-bold">{formatCurrency(targetAmount)}</p>
+                    <p className="text-2xl font-bold">{formatCurrency(targetAmount, 'KRX')}</p>
                   </div>
                   <div className="space-y-1">
                     <p className="text-sm text-muted-foreground">현재 금액</p>
-                    <p className="text-2xl font-bold">{formatCurrency(currentAmount)}</p>
+                    <p className="text-2xl font-bold">{formatCurrency(currentAmount, 'KRX')}</p>
                   </div>
                   <div className="space-y-1">
                     <p className="text-sm text-muted-foreground">남은 금액</p>
@@ -80,7 +80,7 @@ export function CategoryHero({
                       }`}
                     >
                       {remainingAmount > 0
-                        ? formatCurrency(remainingAmount)
+                        ? formatCurrency(remainingAmount, 'KRX')
                         : '목표 달성!'}
                     </p>
                   </div>

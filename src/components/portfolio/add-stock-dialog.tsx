@@ -349,15 +349,16 @@ export function AddStockDialog({
           <div className="space-y-2">
             <Label htmlFor="categoryId">카테고리</Label>
             <Select
-              value={watch('categoryId')?.toString() || ''}
+              value={watch('categoryId')?.toString() || 'none'}
               onValueChange={(value) =>
-                setValue('categoryId', value ? Number(value) : undefined)
+                setValue('categoryId', value === 'none' ? undefined : Number(value))
               }
             >
               <SelectTrigger>
                 <SelectValue placeholder="카테고리 선택 (선택사항)" />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="none">선택 안함</SelectItem>
                 <SelectItem value="1">나스닥100</SelectItem>
                 <SelectItem value="2">S&P 500</SelectItem>
                 <SelectItem value="3">배당주</SelectItem>

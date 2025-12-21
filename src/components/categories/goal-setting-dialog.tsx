@@ -69,7 +69,7 @@ export function GoalSettingDialog({
 
       toast({
         title: '목표 설정 완료',
-        description: `${categoryName} 목표가 ${formatCurrency(amount)}(으)로 설정되었습니다.`,
+        description: `${categoryName} 목표가 ${formatCurrency(amount, 'KRX')}(으)로 설정되었습니다.`,
       })
 
       onOpenChange(false)
@@ -116,7 +116,7 @@ export function GoalSettingDialog({
               />
               {targetAmount && (
                 <p className="text-sm text-muted-foreground">
-                  {formatCurrency(parseFloat(targetAmount) || 0)}
+                  {formatCurrency(parseFloat(targetAmount) || 0, 'KRX')}
                 </p>
               )}
             </div>
@@ -132,7 +132,7 @@ export function GoalSettingDialog({
                     onClick={() => setTargetAmount(amount.toString())}
                     className="justify-start"
                   >
-                    {formatCurrency(amount)}
+                    {formatCurrency(amount, 'KRX')}
                   </Button>
                 ))}
               </div>
