@@ -58,7 +58,7 @@ export function AddStockDialog({
   const [isSearching, setIsSearching] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [searchResults, setSearchResults] = useState<
-    Array<{ symbol: string; name: string; exchange: string }>
+    Array<{ symbol: string; name: string; exchange: string; type?: string }>
   >([])
 
   const {
@@ -253,7 +253,14 @@ export function AddStockDialog({
                     onClick={() => handleSelectStock(stock)}
                     className="w-full text-left px-3 py-2 hover:bg-muted transition-colors"
                   >
-                    <div className="font-medium">{stock.symbol}</div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium">{stock.symbol}</span>
+                      {stock.type === 'ETF' && (
+                        <span className="text-xs px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-500 font-medium">
+                          ETF
+                        </span>
+                      )}
+                    </div>
                     <div className="text-sm text-muted-foreground">
                       {stock.name}
                     </div>
