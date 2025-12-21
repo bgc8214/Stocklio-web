@@ -28,11 +28,15 @@ export async function GET(request: NextRequest) {
     }
 
     const results = data.quotes
-      .filter((quote: any) => quote.quoteType === 'EQUITY')
+      .filter((quote: any) => {
+        // 주식(EQUITY)과 ETF만 허용
+        return quote.quoteType === 'EQUITY' || quote.quoteType === 'ETF'
+      })
       .map((quote: any) => ({
         symbol: quote.symbol,
         name: quote.longname || quote.shortname || quote.symbol,
         exchange: quote.exchange || '',
+        type: quote.quoteType, // ETF 여부 표시
       }))
       .slice(0, 10) // 최대 10개 결과만 반환
 
@@ -45,5 +49,7 @@ export async function GET(request: NextRequest) {
     )
   }
 }
+
+
 
 
