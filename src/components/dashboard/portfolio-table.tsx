@@ -127,13 +127,13 @@ export function PortfolioTable({
                   <TableCell>{portfolio.name}</TableCell>
                   <TableCell className="text-right">{portfolio.quantity}</TableCell>
                   <TableCell className="text-right">
-                    {formatCurrency(portfolio.averageCost)}
+                    {formatCurrency(portfolio.averageCost, portfolio.market)}
                   </TableCell>
                   <TableCell className="text-right">
-                    {formatCurrency(portfolio.currentPrice)}
+                    {formatCurrency(portfolio.currentPrice, portfolio.market)}
                   </TableCell>
                   <TableCell className="text-right">
-                    {formatCurrency(portfolio.marketValue)}
+                    {formatCurrency(portfolio.marketValue, portfolio.market)}
                   </TableCell>
                   <TableCell
                     className={`text-right font-semibold ${

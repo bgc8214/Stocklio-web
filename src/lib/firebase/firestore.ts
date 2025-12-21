@@ -21,17 +21,25 @@ import { SnapshotData } from '@/lib/storage/snapshots'
 
 // Portfolio Converter
 export const portfolioConverter: FirestoreDataConverter<Portfolio> = {
-  toFirestore: (portfolio: Portfolio): DocumentData => ({
-    ticker: portfolio.ticker,
-    name: portfolio.name,
-    quantity: portfolio.quantity,
-    averageCost: portfolio.averageCost,
-    currentPrice: portfolio.currentPrice,
-    market: portfolio.market,
-    categoryId: portfolio.categoryId,
-    createdAt: Timestamp.fromDate(portfolio.createdAt),
-    updatedAt: Timestamp.fromDate(portfolio.updatedAt),
-  }),
+  toFirestore: (portfolio: Portfolio): DocumentData => {
+    const data: DocumentData = {
+      ticker: portfolio.ticker,
+      name: portfolio.name,
+      quantity: portfolio.quantity,
+      averageCost: portfolio.averageCost,
+      currentPrice: portfolio.currentPrice,
+      market: portfolio.market,
+      createdAt: Timestamp.fromDate(portfolio.createdAt),
+      updatedAt: Timestamp.fromDate(portfolio.updatedAt),
+    }
+
+    // categoryId가 undefined가 아닐 때만 추가
+    if (portfolio.categoryId !== undefined) {
+      data.categoryId = portfolio.categoryId
+    }
+
+    return data
+  },
   fromFirestore: (snapshot: QueryDocumentSnapshot): Portfolio => {
     const data = snapshot.data()
     return {
@@ -90,11 +98,20 @@ export async function updatePortfolio(
     throw new Error('Firestore가 초기화되지 않았습니다.')
   }
 
-  const ref = doc(firestore, 'portfolios', userId, 'stocks', portfolioId)
-  await updateDoc(ref, {
-    ...data,
+  // undefined 값 제거
+  const updateData: any = {
     updatedAt: Timestamp.now(),
+  }
+
+  Object.keys(data).forEach((key) => {
+    const value = (data as any)[key]
+    if (value !== undefined) {
+      updateData[key] = value
+    }
   })
+
+  const ref = doc(firestore, 'portfolios', userId, 'stocks', portfolioId)
+  await updateDoc(ref, updateData)
 }
 
 export async function deletePortfolio(
