@@ -410,3 +410,11 @@ export default function SignUpPage() {
     </div>
   )
 }
+<<<<<<< Updated upstream
+=======
+
+
+
+
+
+>>>>>>> Stashed changes
