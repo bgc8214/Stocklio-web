@@ -65,9 +65,3 @@ export default function JournalsPage() {
 }
 
 
-<<<<<<< Updated upstream
-=======
-
-
-
->>>>>>> Stashed changes

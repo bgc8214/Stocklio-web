@@ -92,9 +92,3 @@ export default function SettingsPage() {
 }
 
 
-<<<<<<< Updated upstream
-=======
-
-
-
->>>>>>> Stashed changes
