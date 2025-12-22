@@ -68,9 +68,3 @@ export function clearLocalPortfolios(): void {
 }
 
 
-<<<<<<< Updated upstream
-=======
-
-
-
->>>>>>> Stashed changes

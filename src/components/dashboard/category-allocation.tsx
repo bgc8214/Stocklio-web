@@ -98,9 +98,3 @@ export function CategoryAllocation({ categories }: CategoryAllocationProps) {
 }
 
 
-<<<<<<< Updated upstream
-=======
-
-
-
->>>>>>> Stashed changes
