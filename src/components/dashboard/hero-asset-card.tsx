@@ -56,9 +56,3 @@ export function HeroAssetCard({
 }
 
 
-<<<<<<< Updated upstream
-=======
-
-
-
->>>>>>> Stashed changes
