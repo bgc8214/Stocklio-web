@@ -13,6 +13,6 @@ jobs:
     steps:
       - name: Trigger Daily Snapshot API
         run: |
-          curl -X POST https://stocklio-lv5rzkvkh-bgc8214s-projects.vercel.app/api/cron/daily-snapshot \
+          curl -X POST https://stocklio-web-l3zq-b5d3fh7rc-bgc8214s-projects.vercel.app/api/cron/daily-snapshot \
             -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
             -H "Content-Type: application/json"
