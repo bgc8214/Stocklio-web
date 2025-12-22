@@ -256,9 +256,3 @@ export default function PortfolioPage() {
 }
 
 
-<<<<<<< Updated upstream
-=======
-
-
-
->>>>>>> Stashed changes

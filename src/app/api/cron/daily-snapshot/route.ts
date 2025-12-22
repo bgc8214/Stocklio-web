@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { db } from '@/lib/firebase/firebase'
+import { db } from '@/lib/firebase/config'
 import { collection, getDocs, addDoc, query, where } from 'firebase/firestore'
 
 const EXCHANGE_RATE = 1300 // USD/KRW 환율
@@ -40,6 +40,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
+      )
+    }
+
+    // Firestore 초기화 확인
+    if (!db) {
+      return NextResponse.json(
+        { error: 'Firestore not initialized' },
+        { status: 500 }
       )
     }
 

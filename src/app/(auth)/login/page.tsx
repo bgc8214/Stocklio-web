@@ -387,11 +387,3 @@ export default function LoginPage() {
     </div>
   )
 }
-<<<<<<< Updated upstream
-=======
-
-
-
-
-
->>>>>>> Stashed changes

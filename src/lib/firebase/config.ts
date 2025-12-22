@@ -47,4 +47,7 @@ if (isFirebaseConfigured) {
   }
 }
 
+// db는 firestore의 alias
+export const db = firestore
+
 export { app, auth, firestore, storage, isFirebaseConfigured }
