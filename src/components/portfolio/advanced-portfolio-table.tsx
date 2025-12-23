@@ -228,7 +228,7 @@ export function AdvancedPortfolioTable({
                       {formatCurrency(portfolio.currentPrice, portfolio.market)}
                     </TableCell>
                     <TableCell className="text-right font-semibold" onClick={() => onEdit?.(portfolio)}>
-                      {formatCurrency(portfolio.marketValue)}
+                      {formatCurrency(portfolio.marketValue, portfolio.market)}
                     </TableCell>
                     <TableCell className="text-right" onClick={() => onEdit?.(portfolio)}>
                       <div className={`flex items-center justify-end gap-1 font-semibold ${
@@ -240,7 +240,7 @@ export function AdvancedPortfolioTable({
                           <TrendingDown className="h-4 w-4" />
                         )}
                         {portfolio.profit >= 0 ? '+' : ''}
-                        {formatCurrency(portfolio.profit)}
+                        {formatCurrency(portfolio.profit, portfolio.market)}
                       </div>
                     </TableCell>
                     <TableCell className="text-right" onClick={() => onEdit?.(portfolio)}>

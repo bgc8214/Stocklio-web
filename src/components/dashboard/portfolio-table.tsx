@@ -97,7 +97,7 @@ export function PortfolioTable({
               <TableHead className="text-right">수량</TableHead>
               <TableHead className="text-right">평단가</TableHead>
               <TableHead className="text-right">현재가</TableHead>
-              <TableHead className="text-right">시가총액</TableHead>
+              <TableHead className="text-right">총 평가액</TableHead>
               <TableHead
                 className="text-right cursor-pointer hover:bg-muted/50"
                 onClick={() => setSortBy('profit')}
@@ -127,13 +127,13 @@ export function PortfolioTable({
                   <TableCell>{portfolio.name}</TableCell>
                   <TableCell className="text-right">{portfolio.quantity}</TableCell>
                   <TableCell className="text-right">
-                    {formatCurrency(portfolio.averageCost)}
+                    {formatCurrency(portfolio.averageCost, portfolio.market)}
                   </TableCell>
                   <TableCell className="text-right">
-                    {formatCurrency(portfolio.currentPrice)}
+                    {formatCurrency(portfolio.currentPrice, portfolio.market)}
                   </TableCell>
                   <TableCell className="text-right">
-                    {formatCurrency(portfolio.marketValue)}
+                    {formatCurrency(portfolio.marketValue, portfolio.market)}
                   </TableCell>
                   <TableCell
                     className={`text-right font-semibold ${
