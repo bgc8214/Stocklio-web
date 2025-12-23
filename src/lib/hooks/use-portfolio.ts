@@ -38,15 +38,18 @@ export function usePortfolios() {
   return useQuery({
     queryKey: ['portfolios', user?.uid || 'local'],
     queryFn: async () => {
-      // Firebase가 설정되어 있고 사용자가 있으면 Firestore 사용
-      if (isFirebaseConfigured && user?.uid) {
+      // Firebase가 설정되어 있으면 무조건 Firestore 사용 (로그인 여부와 관계없이)
+      if (isFirebaseConfigured) {
+        if (!user?.uid) {
+          return [] // 로그인 안 했으면 빈 배열
+        }
         return await getPortfolios(user.uid)
       }
 
-      // 개발 모드: 로컬 스토리지 사용
+      // Firebase 미설정 시에만 로컬 스토리지 사용 (개발 모드)
       return getLocalPortfolios()
     },
-    enabled: true, // 항상 활성화 (로컬 모드 지원)
+    enabled: true, // 항상 활성화
   })
 }
 
@@ -59,8 +62,11 @@ export function useAddPortfolio() {
 
   return useMutation({
     mutationFn: async (portfolio: Omit<Portfolio, 'id' | 'createdAt' | 'updatedAt'>) => {
-      // Firebase가 설정되어 있고 사용자가 있으면 Firestore 사용
-      if (isFirebaseConfigured && user?.uid) {
+      // Firebase가 설정되어 있으면 무조건 Firestore 사용
+      if (isFirebaseConfigured) {
+        if (!user?.uid) {
+          throw new Error('로그인이 필요합니다.')
+        }
         await addPortfolio(user.uid, {
           ...portfolio,
           createdAt: new Date(),
@@ -69,7 +75,7 @@ export function useAddPortfolio() {
         return
       }
 
-      // 개발 모드: 로컬 스토리지 사용
+      // Firebase 미설정 시에만 로컬 스토리지 사용 (개발 모드)
       saveLocalPortfolio(portfolio)
     },
     onSuccess: () => {
@@ -93,13 +99,16 @@ export function useUpdatePortfolio() {
       id: string
       data: Partial<Portfolio>
     }) => {
-      // Firebase가 설정되어 있고 사용자가 있으면 Firestore 사용
-      if (isFirebaseConfigured && user?.uid) {
+      // Firebase가 설정되어 있으면 무조건 Firestore 사용
+      if (isFirebaseConfigured) {
+        if (!user?.uid) {
+          throw new Error('로그인이 필요합니다.')
+        }
         await updatePortfolio(user.uid, id, data)
         return
       }
 
-      // 개발 모드: 로컬 스토리지 사용
+      // Firebase 미설정 시에만 로컬 스토리지 사용 (개발 모드)
       updateLocalPortfolio(id, data)
     },
     onSuccess: () => {
@@ -117,13 +126,16 @@ export function useDeletePortfolio() {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      // Firebase가 설정되어 있고 사용자가 있으면 Firestore 사용
-      if (isFirebaseConfigured && user?.uid) {
+      // Firebase가 설정되어 있으면 무조건 Firestore 사용
+      if (isFirebaseConfigured) {
+        if (!user?.uid) {
+          throw new Error('로그인이 필요합니다.')
+        }
         await deletePortfolio(user.uid, id)
         return
       }
 
-      // 개발 모드: 로컬 스토리지 사용
+      // Firebase 미설정 시에만 로컬 스토리지 사용 (개발 모드)
       deleteLocalPortfolio(id)
     },
     onSuccess: () => {
