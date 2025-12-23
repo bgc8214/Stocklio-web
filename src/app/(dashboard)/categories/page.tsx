@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { CategoryAllocation } from '@/components/dashboard/category-allocation'
 import { usePortfoliosWithProfit } from '@/lib/hooks/use-portfolio'
 import { useMemo } from 'react'
-import { formatCurrency } from '@/lib/utils'
+import { formatCurrency, toKrw } from '@/lib/utils'
 import { Progress } from '@/components/ui/progress'
 
 const CATEGORIES = {
@@ -17,21 +17,25 @@ export default function CategoriesPage() {
   const { data: portfolios, isLoading } = usePortfoliosWithProfit()
 
   const totalAsset = useMemo(() => {
-    return portfolios.reduce((sum, p) => sum + p.marketValue, 0)
+    return portfolios.reduce(
+      (sum, p) => sum + toKrw(p.marketValue, p.market, 1300),
+      0
+    )
   }, [portfolios])
 
   const categoryData = useMemo(() => {
     const allocation: Record<string, { value: number; portfolios: typeof portfolios }> = {}
-    
+
     portfolios.forEach((portfolio) => {
       const categoryId = portfolio.categoryId
         ? CATEGORIES[portfolio.categoryId as keyof typeof CATEGORIES]?.id
         : 'other'
-      
+
       if (!allocation[categoryId]) {
         allocation[categoryId] = { value: 0, portfolios: [] }
       }
-      allocation[categoryId].value += portfolio.marketValue
+      // 모든 금액을 원화로 환산하여 합산
+      allocation[categoryId].value += toKrw(portfolio.marketValue, portfolio.market, 1300)
       allocation[categoryId].portfolios.push(portfolio)
     })
 

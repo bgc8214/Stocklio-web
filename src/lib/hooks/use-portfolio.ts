@@ -18,6 +18,7 @@ import {
   updateLocalPortfolio,
   deleteLocalPortfolio,
 } from '@/lib/storage/local-storage'
+import { toKrw } from '@/lib/utils'
 
 interface PortfolioWithProfit extends Portfolio {
   marketValue: number
@@ -214,8 +215,14 @@ export function usePortfoliosWithProfit() {
     isUpdatingPrices,
     lastUpdated,
     refetchPrices: updatePrices,
-    // 총 자산과 총 비용을 계산하여 반환 (스냅샷 생성용)
-    totalValue: portfoliosWithProfit.reduce((sum, p) => sum + p.marketValue, 0),
-    totalCost: portfoliosWithProfit.reduce((sum, p) => sum + p.investment, 0),
+    // 총 자산과 총 비용을 계산하여 반환 (스냅샷 생성용) - 모든 금액을 원화로 환산
+    totalValue: portfoliosWithProfit.reduce(
+      (sum, p) => sum + toKrw(p.marketValue, p.market, 1300),
+      0
+    ),
+    totalCost: portfoliosWithProfit.reduce(
+      (sum, p) => sum + toKrw(p.investment, p.market, 1300),
+      0
+    ),
   }
 }

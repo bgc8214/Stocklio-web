@@ -10,6 +10,7 @@ import { useCategoryGoal } from '@/lib/hooks/use-category-goals'
 import { useAuth } from '@/lib/hooks/use-auth'
 import { useToast } from '@/hooks/use-toast'
 import { Portfolio } from '@/types/portfolio'
+import { toKrw } from '@/lib/utils'
 
 const CATEGORY = {
   id: 1,
@@ -34,9 +35,12 @@ export default function Nasdaq100Page() {
     return portfolios.filter((p) => p.categoryId === CATEGORY.id)
   }, [portfolios])
 
-  // 현재 카테고리 총액
+  // 현재 카테고리 총액 (모든 금액을 원화로 환산)
   const currentAmount = useMemo(() => {
-    return categoryPortfolios.reduce((sum, p) => sum + p.marketValue, 0)
+    return categoryPortfolios.reduce(
+      (sum, p) => sum + toKrw(p.marketValue, p.market, 1300),
+      0
+    )
   }, [categoryPortfolios])
 
   // 평균 수익률 계산

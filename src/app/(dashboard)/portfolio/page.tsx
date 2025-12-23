@@ -11,6 +11,7 @@ import { useToast } from '@/hooks/use-toast'
 import { exportToCSV } from '@/lib/utils/export'
 import { Button } from '@/components/ui/button'
 import { RefreshCw } from 'lucide-react'
+import { toKrw } from '@/lib/utils'
 
 // 카테고리 정보
 const CATEGORIES = {
@@ -76,8 +77,15 @@ export default function PortfolioPage() {
   // 통계 계산
   const stats = useMemo(() => {
     const totalStocks = filteredPortfolios.length
-    const totalInvestment = filteredPortfolios.reduce((sum, p) => sum + p.investment, 0)
-    const totalValue = filteredPortfolios.reduce((sum, p) => sum + p.marketValue, 0)
+    // 모든 금액을 원화로 환산하여 합산 (환율: 1300원)
+    const totalInvestment = filteredPortfolios.reduce(
+      (sum, p) => sum + toKrw(p.investment, p.market, 1300),
+      0
+    )
+    const totalValue = filteredPortfolios.reduce(
+      (sum, p) => sum + toKrw(p.marketValue, p.market, 1300),
+      0
+    )
     const totalProfit = totalValue - totalInvestment
     const profitRate = totalInvestment > 0 ? (totalProfit / totalInvestment) * 100 : 0
     const averageReturn =

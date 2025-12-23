@@ -16,6 +16,7 @@ import { useCreateSnapshot } from '@/lib/hooks/use-snapshots'
 import { Button } from '@/components/ui/button'
 import { RefreshCw, Trash2 } from 'lucide-react'
 import { clearLocalSnapshots } from '@/lib/storage/snapshots'
+import { toKrw } from '@/lib/utils'
 
 // 카테고리 정보
 const CATEGORIES = {
@@ -109,16 +110,17 @@ export default function DashboardPage() {
   // 카테고리별 자산 배분 계산
   const categoryAllocation = useMemo(() => {
     const allocation: Record<string, number> = {}
-    
+
     portfolios.forEach((portfolio) => {
       const categoryId = portfolio.categoryId
         ? CATEGORIES[portfolio.categoryId as keyof typeof CATEGORIES]?.id
         : 'other'
-      
+
       if (!allocation[categoryId]) {
         allocation[categoryId] = 0
       }
-      allocation[categoryId] += portfolio.marketValue
+      // 모든 금액을 원화로 환산하여 합산
+      allocation[categoryId] += toKrw(portfolio.marketValue, portfolio.market, 1300)
     })
 
     return Object.entries(allocation).map(([id, value]) => {
@@ -137,8 +139,15 @@ export default function DashboardPage() {
     if (!snapshots || snapshots.length === 0) {
       // 스냅샷이 없으면 현재 포트폴리오 데이터로 오늘 스냅샷 생성
       if (portfolios.length > 0) {
-        const totalValue = portfolios.reduce((sum, p) => sum + p.marketValue, 0)
-        const totalCost = portfolios.reduce((sum, p) => sum + p.investment, 0)
+        // 모든 금액을 원화로 환산하여 합산
+        const totalValue = portfolios.reduce(
+          (sum, p) => sum + toKrw(p.marketValue, p.market, 1300),
+          0
+        )
+        const totalCost = portfolios.reduce(
+          (sum, p) => sum + toKrw(p.investment, p.market, 1300),
+          0
+        )
         const totalProfit = totalValue - totalCost
         
         return [
