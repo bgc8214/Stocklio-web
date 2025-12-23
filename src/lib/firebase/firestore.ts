@@ -21,7 +21,8 @@ import { SnapshotData } from '@/lib/storage/snapshots'
 
 // Portfolio Converter
 export const portfolioConverter: FirestoreDataConverter<Portfolio> = {
-  toFirestore: (portfolio: Portfolio): DocumentData => ({
+  toFirestore: (portfolio: Portfolio & { userId?: string }): DocumentData => ({
+    userId: portfolio.userId, // userId 필드 추가
     ticker: portfolio.ticker,
     name: portfolio.name,
     quantity: portfolio.quantity,
@@ -56,9 +57,10 @@ export async function getPortfolios(userId: string): Promise<Portfolio[]> {
   }
 
   const q = query(
-    collection(firestore, 'portfolios', userId, 'stocks'),
+    collection(firestore, 'portfolios').withConverter(portfolioConverter),
+    where('userId', '==', userId),
     orderBy('createdAt', 'desc')
-  ).withConverter(portfolioConverter)
+  )
 
   const snapshot = await getDocs(q)
   return snapshot.docs.map((doc) => doc.data())
@@ -73,10 +75,8 @@ export async function addPortfolio(
   }
 
   const ref = await addDoc(
-    collection(firestore, 'portfolios', userId, 'stocks').withConverter(
-      portfolioConverter
-    ),
-    portfolio as Portfolio
+    collection(firestore, 'portfolios').withConverter(portfolioConverter),
+    { ...portfolio, userId } as Portfolio & { userId: string }
   )
   return ref.id
 }
@@ -90,7 +90,7 @@ export async function updatePortfolio(
     throw new Error('Firestore가 초기화되지 않았습니다.')
   }
 
-  const ref = doc(firestore, 'portfolios', userId, 'stocks', portfolioId)
+  const ref = doc(firestore, 'portfolios', portfolioId)
   await updateDoc(ref, {
     ...data,
     updatedAt: Timestamp.now(),
@@ -105,7 +105,7 @@ export async function deletePortfolio(
     throw new Error('Firestore가 초기화되지 않았습니다.')
   }
 
-  const ref = doc(firestore, 'portfolios', userId, 'stocks', portfolioId)
+  const ref = doc(firestore, 'portfolios', portfolioId)
   await deleteDoc(ref)
 }
 

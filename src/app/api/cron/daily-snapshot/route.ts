@@ -57,9 +57,12 @@ export async function POST(request: NextRequest) {
     const portfoliosRef = collection(db, 'portfolios')
     const portfoliosSnapshot = await getDocs(portfoliosRef)
 
+    console.log(`[Cron] Total portfolio documents: ${portfoliosSnapshot.size}`)
+
     const userIds = new Set<string>()
     portfoliosSnapshot.forEach((doc) => {
       const data = doc.data()
+      console.log(`[Cron] Portfolio doc:`, { id: doc.id, userId: data.userId, ticker: data.ticker })
       if (data.userId) {
         userIds.add(data.userId)
       }
