@@ -16,7 +16,7 @@ import {
   setDoc,
 } from 'firebase/firestore'
 import { firestore } from './config'
-import { Portfolio, DailySnapshot } from '@/types/portfolio'
+import { Portfolio } from '@/types/portfolio'
 import { SnapshotData } from '@/lib/storage/snapshots'
 
 // Portfolio Converter
@@ -56,14 +56,32 @@ export async function getPortfolios(userId: string): Promise<Portfolio[]> {
     throw new Error('Firestore가 초기화되지 않았습니다.')
   }
 
-  const q = query(
-    collection(firestore, 'portfolios').withConverter(portfolioConverter),
-    where('userId', '==', userId),
-    orderBy('createdAt', 'desc')
-  )
+  try {
+    const q = query(
+      collection(firestore, 'portfolios').withConverter(portfolioConverter),
+      where('userId', '==', userId),
+      orderBy('createdAt', 'desc')
+    )
 
-  const snapshot = await getDocs(q)
-  return snapshot.docs.map((doc) => doc.data())
+    const snapshot = await getDocs(q)
+    return snapshot.docs.map((doc) => doc.data())
+  } catch (error: any) {
+    console.error('getPortfolios error:', error)
+    // 인덱스 오류인 경우 orderBy 없이 재시도
+    if (error.code === 'failed-precondition' || error.message?.includes('index')) {
+      console.warn('복합 인덱스가 없어서 orderBy 없이 조회합니다.')
+      const q = query(
+        collection(firestore, 'portfolios').withConverter(portfolioConverter),
+        where('userId', '==', userId)
+      )
+      const snapshot = await getDocs(q)
+      // 클라이언트에서 정렬
+      return snapshot.docs.map((doc) => doc.data()).sort((a, b) =>
+        b.createdAt.getTime() - a.createdAt.getTime()
+      )
+    }
+    throw error
+  }
 }
 
 export async function addPortfolio(
@@ -141,13 +159,30 @@ export async function getSnapshots(userId: string): Promise<SnapshotData[]> {
     throw new Error('Firestore가 초기화되지 않았습니다.')
   }
 
-  const q = query(
-    collection(firestore, 'portfolios', userId, 'snapshots'),
-    orderBy('__name__', 'asc') // 문서 ID(날짜)로 정렬
-  ).withConverter(snapshotConverter)
+  try {
+    const q = query(
+      collection(firestore, 'users', userId, 'snapshots'),
+      orderBy('__name__', 'asc') // 문서 ID(날짜)로 정렬
+    ).withConverter(snapshotConverter)
 
-  const snapshot = await getDocs(q)
-  return snapshot.docs.map((doc) => doc.data())
+    const snapshot = await getDocs(q)
+    return snapshot.docs.map((doc) => doc.data())
+  } catch (error: any) {
+    console.error('getSnapshots error:', error)
+    // 인덱스 오류인 경우 orderBy 없이 조회
+    if (error.code === 'failed-precondition' || error.message?.includes('index')) {
+      console.warn('인덱스가 없어서 orderBy 없이 조회합니다.')
+      const q = query(
+        collection(firestore, 'users', userId, 'snapshots')
+      ).withConverter(snapshotConverter)
+      const snapshot = await getDocs(q)
+      // 클라이언트에서 정렬 (날짜순)
+      return snapshot.docs.map((doc) => doc.data()).sort((a, b) =>
+        a.date.localeCompare(b.date)
+      )
+    }
+    throw error
+  }
 }
 
 export async function saveSnapshot(
@@ -160,7 +195,7 @@ export async function saveSnapshot(
 
   const ref = doc(
     firestore,
-    'portfolios',
+    'users',
     userId,
     'snapshots',
     snapshot.date
@@ -179,7 +214,7 @@ export async function getSnapshotByDate(
 
   const ref = doc(
     firestore,
-    'portfolios',
+    'users',
     userId,
     'snapshots',
     date
