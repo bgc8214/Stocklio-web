@@ -51,17 +51,24 @@ export async function GET(request: NextRequest) {
   try {
     const url = `https://query1.finance.yahoo.com/v1/finance/search?q=${encodeURIComponent(query)}`
 
+    console.log('[Stock Search] Searching for:', query)
+
     const response = await fetchWithRetry(
       url,
       {
         headers: {
-          'User-Agent': 'Mozilla/5.0',
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+          'Accept': 'application/json',
+          'Accept-Language': 'en-US,en;q=0.9',
+          'Referer': 'https://finance.yahoo.com',
         },
         next: { revalidate: 300 }, // 5분 캐싱
       },
       3,
       1000
     )
+
+    console.log('[Stock Search] Response status:', response.status)
 
     // Rate limit 에러 처리
     if (response.status === 429) {
@@ -91,12 +98,15 @@ export async function GET(request: NextRequest) {
       }))
       .slice(0, 10) // 최대 10개 결과만 반환
 
+    console.log('[Stock Search] Found results:', results.length)
+
     return NextResponse.json(results)
   } catch (error) {
-    console.error('Error searching stocks:', error)
+    console.error('[Stock Search] Error:', error)
 
     // 네트워크 에러 처리
     if (error instanceof TypeError && error.message.includes('fetch')) {
+      console.error('[Stock Search] Network error')
       return NextResponse.json(
         { error: 'Network error. Please check your connection.' },
         { status: 503 }
@@ -104,7 +114,7 @@ export async function GET(request: NextRequest) {
     }
 
     return NextResponse.json(
-      { error: 'Failed to search stocks' },
+      { error: 'Failed to search stocks', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     )
   }
