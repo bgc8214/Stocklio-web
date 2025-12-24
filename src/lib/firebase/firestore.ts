@@ -29,7 +29,7 @@ export const portfolioConverter: FirestoreDataConverter<Portfolio> = {
     averageCost: portfolio.averageCost,
     currentPrice: portfolio.currentPrice,
     market: portfolio.market,
-    categoryId: portfolio.categoryId,
+    categoryId: portfolio.categoryId ?? null, // undefined를 null로 변환
     createdAt: Timestamp.fromDate(portfolio.createdAt),
     updatedAt: Timestamp.fromDate(portfolio.updatedAt),
   }),
@@ -100,7 +100,7 @@ export async function addPortfolio(
 }
 
 export async function updatePortfolio(
-  userId: string,
+  _userId: string,
   portfolioId: string,
   data: Partial<Portfolio>
 ): Promise<void> {
@@ -116,7 +116,7 @@ export async function updatePortfolio(
 }
 
 export async function deletePortfolio(
-  userId: string,
+  _userId: string,
   portfolioId: string
 ): Promise<void> {
   if (!firestore) {
