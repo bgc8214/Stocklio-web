@@ -3,6 +3,7 @@
 import { useMemo, useState, useEffect } from 'react'
 import { HeroAssetCard } from '@/components/dashboard/hero-asset-card'
 import { ProfitChart } from '@/components/dashboard/profit-chart'
+import { ProfitChartTable } from '@/components/dashboard/profit-chart-table'
 import { CategoryAllocation } from '@/components/dashboard/category-allocation'
 import { PortfolioTable } from '@/components/dashboard/portfolio-table'
 import { AddStockDialog } from '@/components/portfolio/add-stock-dialog'
@@ -149,7 +150,7 @@ export default function DashboardPage() {
           0
         )
         const totalProfit = totalValue - totalCost
-        
+
         return [
           {
             date: new Date().toISOString().split('T')[0],
@@ -169,6 +170,53 @@ export default function DashboardPage() {
       yearlyProfit: snapshot.yearlyProfit,
     }))
   }, [snapshots, portfolios])
+
+  // 월별 집계 데이터 (테이블 차트용)
+  const monthlyChartData = useMemo(() => {
+    if (!snapshots || snapshots.length === 0) return []
+
+    // 월별로 그룹화
+    const monthlyMap = new Map<string, {
+      investment: number
+      value: number
+      monthlyProfit: number
+      totalProfit: number
+      count: number
+    }>()
+
+    snapshots.forEach((snapshot) => {
+      const month = snapshot.date.substring(0, 7) // YYYY-MM
+      const existing = monthlyMap.get(month)
+
+      if (!existing) {
+        monthlyMap.set(month, {
+          investment: snapshot.totalCost,
+          value: snapshot.totalValue,
+          monthlyProfit: snapshot.monthlyProfit,
+          totalProfit: snapshot.totalProfit,
+          count: 1,
+        })
+      } else {
+        // 월의 마지막 스냅샷 사용 (최신 데이터)
+        existing.investment = snapshot.totalCost
+        existing.value = snapshot.totalValue
+        existing.monthlyProfit = snapshot.monthlyProfit
+        existing.totalProfit = snapshot.totalProfit
+      }
+    })
+
+    // 배열로 변환하고 정렬
+    return Array.from(monthlyMap.entries())
+      .map(([month, data]) => ({
+        month,
+        investment: data.investment,
+        value: data.value,
+        monthlyProfit: data.monthlyProfit,
+        totalProfit: data.totalProfit,
+        profitRate: data.investment > 0 ? (data.totalProfit / data.investment) * 100 : 0,
+      }))
+      .sort((a, b) => a.month.localeCompare(b.month))
+  }, [snapshots])
 
   if (isLoading) {
     return (
@@ -223,6 +271,11 @@ export default function DashboardPage() {
         todayProfit={todayProfit}
         todayProfitRate={todayProfitRate}
       />
+
+      {/* 월별 테이블 차트 (전체 너비) */}
+      {monthlyChartData.length > 0 && (
+        <ProfitChartTable data={monthlyChartData} market="KRX" />
+      )}
 
       {/* 차트 섹션 */}
       <div className="grid gap-4 md:grid-cols-2">
