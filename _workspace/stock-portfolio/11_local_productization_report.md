@@ -22,10 +22,11 @@ Vercel 배포, 로그인, 다중 사용자 권한은 제외했다. 로컬에서 
 - 공통 도메인 계산 모듈 추가: 총자산, 계좌 집계, 스냅샷, 현금흐름 보정, 레이아웃 정규화
 - `/api/health` 제품 상태 점검 endpoint 추가
 - 제품 스모크 테스트 추가: 서버/API/브라우저/Craft.js 대시보드 렌더 검증
+- XLSX import preview와 확정 저장 흐름 추가
 
 ## 아직 남은 제품화
 
-- XLSX 업로드 preview를 앱 안에서 직접 처리
+- XLSX preview 행 단위 수정 화면
 - 종목 상세 편집에서 통화, 자동 가격 업데이트, 수동 현재가 수정
 - 거래 기반 수량 변경 내역 관리
 - 배당/세금/수수료를 예수금 잔액과 자동 연결할지 여부 결정
@@ -45,3 +46,4 @@ Vercel 배포, 로그인, 다중 사용자 권한은 제외했다. 로컬에서 
 - `node --test tests/domain.test.mjs`
 - `npm run test:product`
 - `npm run verify`
+- 실제 XLSX 파일을 `/api/import/preview`에 업로드해 보유/스냅샷/예수금 preview 응답 검증

@@ -15,6 +15,7 @@ Numbers로 관리하던 개인 주식 포트폴리오를 웹 서비스로 옮기
 - 가격 업데이트 로그, 최근 import 검증 리포트, JSON 백업/복원 UI 추가
 - Craft.js 기반 대시보드 편집 캔버스 추가
 - 공통 도메인 계산 모듈과 제품 스모크 테스트 추가
+- 앱 안에서 XLSX import preview 후 확정 저장 가능
 
 ## 실행
 
@@ -36,6 +37,10 @@ npm run verify
 ```
 
 `npm run verify`는 도메인 단위 테스트, Numbers 마이그레이션 테스트, 로컬 서버/API/브라우저/Craft.js 대시보드 스모크 테스트를 한 번에 실행한다.
+
+## Import
+
+`자동화/데이터` 탭에서 `.xlsx` 파일을 올리면 서버가 먼저 preview 상태를 만든다. 이 단계에서는 현재 포트폴리오가 바뀌지 않는다. 요약을 확인한 뒤 `Import 확정`을 눌러야 SQLite 상태가 교체된다.
 
 미국 주식/ETF 가격과 USD/KRW 환율은 Yahoo Finance chart endpoint를 작은 로컬 프록시로 가져온다. 별도 API key는 필요 없다. 가격 응답은 5분, 환율 응답은 1시간 캐시한다.
 
