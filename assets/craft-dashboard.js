@@ -12032,7 +12032,7 @@ function Aa({ id: e, state: t }) {
 	}) : e === "fx-rate" ? /* @__PURE__ */ (0, V.jsx)(ja, {
 		label: "USD/KRW",
 		value: qa(t.fxRate?.rate || 0, 2),
-		hint: `${t.fxRate?.source || "가격 데이터"} · ${Za(t.fxRate?.asOf)}`
+		hint: `${t.fxRate?.source || "환율 기준"} · ${Za(t.fxRate?.asOf)}`
 	}) : e === "allocation" ? /* @__PURE__ */ (0, V.jsx)(Ma, { state: t }) : e === "performance-flow" ? /* @__PURE__ */ (0, V.jsx)(Na, { state: t }) : /* @__PURE__ */ (0, V.jsx)(Pa, { state: t });
 }
 function ja({ label: e, value: t, hint: n, tone: r }) {

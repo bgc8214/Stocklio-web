@@ -363,7 +363,7 @@ window.addEventListener("stocklio:auth", (event) => {
   loadState().then((nextState) => {
     state = nextState;
     render();
-    setStatus(authState.signedIn ? "Supabase 포트폴리오 불러옴" : "로컬 데모 모드", authState.user?.email || "브라우저 저장소 사용");
+    setStatus(authState.signedIn ? "포트폴리오 불러옴" : "브라우저 저장", authState.user?.email || "현재 기기에 저장됩니다");
   });
 });
 
@@ -1624,7 +1624,8 @@ function updateEditControls() {
 
 function renderAutomation() {
   const automation = state.automation || {};
-  els.automationCurrent.textContent = `SQLite 저장소 · 스냅샷 ${state.portfolioSnapshots.length}개 · 보유 ${state.holdings.length}개 · 예수금 ${(state.cashBalances || []).length}개`;
+  const storageLabel = authState.signedIn ? "클라우드 저장" : "브라우저 저장";
+  els.automationCurrent.textContent = `${storageLabel} · 스냅샷 ${state.portfolioSnapshots.length}개 · 보유 ${state.holdings.length}개 · 예수금 ${(state.cashBalances || []).length}개`;
   els.automationSchedule.textContent = `매일 ${automation.snapshotTime || "09:10"} ${automation.timezone || "Asia/Seoul"}`;
   els.automationResult.textContent = automation.lastRunAt
     ? `${automation.lastResult || "자동화 실행 완료"} · ${formatAsOf(automation.lastRunAt)}`
@@ -1994,7 +1995,7 @@ async function restoreBackup(file) {
     saveState();
     render();
     els.backupStatus.textContent = `복원 완료 · ${file.name}`;
-    setStatus("백업 복원 완료", "SQLite 상태에 반영했습니다");
+    setStatus("백업 복원 완료", "현재 포트폴리오에 반영했습니다");
   } catch (error) {
     els.backupStatus.textContent = `복원 실패 · ${error.message}`;
     setStatus("백업 복원 실패", error.message);
@@ -2049,7 +2050,7 @@ async function commitImport() {
     state = await loadState();
     render();
     els.importSummary.textContent = `Import 확정 완료 · 보유 ${result.holdings}개 · 스냅샷 ${result.snapshots}개 · 예수금 ${result.cashBalances}개`;
-    setStatus("Import 확정 완료", "SQLite 상태에 새 포트폴리오를 저장했습니다");
+    setStatus("Import 확정 완료", "새 포트폴리오를 저장했습니다");
   } catch (error) {
     els.importSummary.textContent = `Import 확정 실패 · ${error.message}`;
     setStatus("Import 확정 실패", error.message);
