@@ -254,7 +254,7 @@ function CardContent({ id, state }) {
     return <Metric label="예수금" value={formatKrw(totals.cashKrw)} hint="총자산에 포함" />;
   }
   if (id === "fx-rate") {
-    return <Metric label="USD/KRW" value={formatNumber(state.fxRate?.rate || 0, 2)} hint={`${state.fxRate?.source || "가격 데이터"} · ${formatAsOf(state.fxRate?.asOf)}`} />;
+    return <Metric label="USD/KRW" value={formatNumber(state.fxRate?.rate || 0, 2)} hint={`${state.fxRate?.source || "환율 기준"} · ${formatAsOf(state.fxRate?.asOf)}`} />;
   }
   if (id === "allocation") {
     return <AllocationPanel state={state} />;
