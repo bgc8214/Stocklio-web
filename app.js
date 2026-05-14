@@ -248,6 +248,7 @@ const els = {
   viewSections: document.querySelectorAll("[data-view]"),
   refreshButton: document.querySelector("#refreshButton"),
   saveSnapshotButton: document.querySelector("#saveSnapshotButton"),
+  emptyPortfolioButton: document.querySelector("#emptyPortfolioButton"),
   resetButton: document.querySelector("#resetButton"),
   authStatus: document.querySelector("#authStatus"),
   googleLoginButton: document.querySelector("#googleLoginButton"),
@@ -327,6 +328,18 @@ els.refreshButton.addEventListener("click", () => {
 
 els.saveSnapshotButton.addEventListener("click", () => {
   saveTodaySnapshot();
+});
+
+els.emptyPortfolioButton.addEventListener("click", () => {
+  const ok = window.confirm("현재 포트폴리오 데이터를 비우고 빈 상태로 시작할까요?");
+  if (!ok) {
+    return;
+  }
+  state = createEmptyState();
+  isLayoutEditing = false;
+  saveState();
+  render();
+  setStatus("빈 포트폴리오로 전환했습니다", "보유 종목, 계좌, 예수금을 새로 입력하세요");
 });
 
 els.googleLoginButton.addEventListener("click", () => {

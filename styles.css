@@ -186,7 +186,7 @@ main {
 }
 
 .toolbar {
-  grid-template-columns: minmax(240px, 1fr) auto auto auto;
+  grid-template-columns: minmax(240px, 1fr) auto auto auto auto;
   align-items: end;
   margin-bottom: 18px;
 }
