@@ -242,6 +242,11 @@ let authState = {
   signedIn: false,
   user: null,
 };
+let activeView = "dashboard";
+let syncState = {
+  status: "idle",
+  message: "",
+};
 
 const els = {
   viewTabs: document.querySelectorAll("[data-view-tab]"),
@@ -251,6 +256,7 @@ const els = {
   emptyPortfolioButton: document.querySelector("#emptyPortfolioButton"),
   resetButton: document.querySelector("#resetButton"),
   authStatus: document.querySelector("#authStatus"),
+  syncStatus: document.querySelector("#syncStatus"),
   googleLoginButton: document.querySelector("#googleLoginButton"),
   logoutButton: document.querySelector("#logoutButton"),
   providerStatus: document.querySelector("#providerStatus"),
@@ -269,6 +275,7 @@ const els = {
   performanceStats: document.querySelector("#performanceStats"),
   breakdownList: document.querySelector("#breakdownList"),
   dashboardBoard: document.querySelector("#dashboardBoard"),
+  emptyPortfolioNotice: document.querySelector("#emptyPortfolioNotice"),
   layoutStatus: document.querySelector("#layoutStatus"),
   layoutEditButton: document.querySelector("#layoutEditButton"),
   layoutResetButton: document.querySelector("#layoutResetButton"),
@@ -643,10 +650,19 @@ function loadState() {
       .then((remoteState) => {
         const normalized = remoteState ? normalizeState(remoteState) : createEmptyState();
         localStorage.setItem(STORAGE_KEY, JSON.stringify(normalized));
+        syncState = remoteState ? { status: "synced", message: "저장됨" } : { status: "idle", message: "" };
         return normalized;
       })
       .catch((error) => {
         setStatus("Supabase 불러오기 실패", error.message);
+        syncState = { status: "failed", message: "동기화 실패" };
+        if (stored) {
+          try {
+            return normalizeState(JSON.parse(stored));
+          } catch {
+            return createEmptyState();
+          }
+        }
         return createEmptyState();
       });
   }
@@ -708,6 +724,7 @@ function normalizeState(input) {
 
 async function initialize() {
   try {
+    configureRuntimeSurface();
     authState = await waitForAuthState();
     state = await loadState();
     render();
@@ -717,6 +734,21 @@ async function initialize() {
     state = structuredClone(sampleState);
     render();
     setStatus("샘플 데이터 불러옴", "서버 저장소를 사용할 수 없습니다");
+  }
+}
+
+function configureRuntimeSurface() {
+  if (!isStaticDeployment()) {
+    return;
+  }
+  document.querySelectorAll("[data-local-only]").forEach((element) => {
+    element.hidden = true;
+  });
+  if (els.importSummary) {
+    els.importSummary.textContent = "Numbers import는 로컬 마이그레이션 전용입니다";
+  }
+  if (els.backupStatus) {
+    els.backupStatus.textContent = "JSON 백업과 복원은 현재 브라우저 포트폴리오에 적용됩니다";
   }
 }
 
@@ -735,9 +767,13 @@ function saveState() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   publishState();
   if (window.StocklioAuth?.isConfigured?.() && window.StocklioAuth.getState().signedIn) {
-    window.StocklioAuth.savePortfolioState(state).catch((error) => {
-      setStatus("Supabase 저장 실패", error.message);
-    });
+    setSyncState("saving", "저장 중");
+    window.StocklioAuth.savePortfolioState(state)
+      .then(() => setSyncState("synced", "저장됨"))
+      .catch((error) => {
+        setSyncState("failed", "저장 실패");
+        setStatus("Supabase 저장 실패", error.message);
+      });
     return;
   }
   if (isStaticDeployment()) {
@@ -778,6 +814,7 @@ function render() {
   renderPriceLogs();
   renderReconciliation();
   renderDashboardLayout();
+  renderEmptyPortfolioNotice();
   publishState();
   renderAuth();
 }
@@ -789,22 +826,53 @@ function renderAuth() {
   const configured = window.StocklioAuth?.isConfigured?.() || false;
   authState = window.StocklioAuth?.getState?.() || authState;
   if (!configured) {
-    els.authStatus.textContent = "Supabase 설정 필요 · 로컬 데모";
+    els.authStatus.textContent = "";
+    setSyncState("idle", "");
     els.googleLoginButton.disabled = true;
     els.googleLoginButton.hidden = false;
     els.logoutButton.hidden = true;
     return;
   }
   if (authState.signedIn) {
-    els.authStatus.textContent = `${authState.user?.name || authState.user?.email} · Supabase 저장`;
+    els.authStatus.textContent = authState.user?.name || authState.user?.email || "";
     els.googleLoginButton.hidden = true;
     els.logoutButton.hidden = false;
+    renderSyncStatus();
     return;
   }
-  els.authStatus.textContent = "로그인하면 개인 포트폴리오가 저장됩니다";
+  els.authStatus.textContent = "";
+  setSyncState("idle", "");
   els.googleLoginButton.disabled = false;
   els.googleLoginButton.hidden = false;
   els.logoutButton.hidden = true;
+}
+
+function setSyncState(status, message) {
+  syncState = { status, message };
+  renderSyncStatus();
+}
+
+function renderSyncStatus() {
+  if (!els.syncStatus) {
+    return;
+  }
+  const shouldShow = authState.signedIn && syncState.message;
+  els.syncStatus.hidden = !shouldShow;
+  els.syncStatus.textContent = syncState.message;
+  els.syncStatus.dataset.syncStatus = syncState.status;
+}
+
+function renderEmptyPortfolioNotice() {
+  if (!els.emptyPortfolioNotice) {
+    return;
+  }
+  const hasUserData =
+    state.holdings.length > 0 ||
+    state.accounts.length > 0 ||
+    state.cashBalances.length > 0 ||
+    state.cashFlows.length > 0 ||
+    state.portfolioSnapshots.length > 0;
+  els.emptyPortfolioNotice.hidden = hasUserData || activeView !== "dashboard";
 }
 
 function waitForAuthState() {
@@ -839,12 +907,14 @@ function publishState() {
 }
 
 function setView(view) {
+  activeView = view;
   els.viewTabs.forEach((button) => {
     button.classList.toggle("active", button.dataset.viewTab === view);
   });
   els.viewSections.forEach((section) => {
     section.hidden = section.dataset.view !== view;
   });
+  renderEmptyPortfolioNotice();
 }
 
 function normalizeDashboardLayout(layout) {
@@ -905,9 +975,10 @@ function renderDashboardLayout() {
     els.dashboardBoard.appendChild(card);
   }
   els.layoutStatus.textContent = isLayoutEditing
-    ? `${visibleCount}/${state.dashboardLayout.length} 카드 표시 · 이동/크기 조절 가능`
-    : `${visibleCount}/${state.dashboardLayout.length} 카드 표시`;
-  els.layoutEditButton.textContent = isLayoutEditing ? "편집 완료" : "레이아웃 편집";
+    ? `${visibleCount}/${state.dashboardLayout.length} 카드`
+    : "";
+  els.layoutEditButton.textContent = isLayoutEditing ? "완료" : "편집";
+  els.layoutResetButton.hidden = !isLayoutEditing;
 }
 
 function createLayoutControls(item) {

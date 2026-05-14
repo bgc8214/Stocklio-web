@@ -11865,7 +11865,7 @@ function Da() {
 		let c = () => r((e) => !e), l = () => {
 			r(!1), o(wa);
 		};
-		return e.textContent = n ? "편집 완료" : "레이아웃 편집", s.textContent = n ? `${a}/${i.length} 카드 표시 · Craft.js 캔버스 편집 중` : `${a}/${i.length} 카드 표시`, e.addEventListener("click", c), t.addEventListener("click", l), () => {
+		return e.textContent = n ? "완료" : "편집", t.hidden = !n, s.textContent = n ? `${a}/${i.length} 카드` : "", e.addEventListener("click", c), t.addEventListener("click", l), () => {
 			e.removeEventListener("click", c), t.removeEventListener("click", l);
 		};
 	}, [
@@ -11971,7 +11971,7 @@ function ka({ item: e, appState: t, editing: n, layout: r, saveLayout: i }) {
 				children: [
 					/* @__PURE__ */ (0, V.jsx)("span", {
 						className: "layout-drag-handle",
-						children: "이동"
+						children: "드래그"
 					}),
 					/* @__PURE__ */ (0, V.jsx)("span", {
 						className: "layout-card-label",

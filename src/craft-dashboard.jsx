@@ -62,8 +62,9 @@ function CraftDashboardApp() {
       setEditing(false);
       saveLayout(DEFAULT_LAYOUT);
     };
-    editButton.textContent = editing ? "편집 완료" : "레이아웃 편집";
-    status.textContent = editing ? `${visibleCount}/${layout.length} 카드 표시 · Craft.js 캔버스 편집 중` : `${visibleCount}/${layout.length} 카드 표시`;
+    editButton.textContent = editing ? "완료" : "편집";
+    resetButton.hidden = !editing;
+    status.textContent = editing ? `${visibleCount}/${layout.length} 카드` : "";
     editButton.addEventListener("click", handleEdit);
     resetButton.addEventListener("click", handleReset);
     return () => {
@@ -222,7 +223,7 @@ function CraftCard({ item, appState, editing, layout, saveLayout }) {
     >
       {editing ? (
         <div className="layout-controls">
-          <span className="layout-drag-handle">이동</span>
+          <span className="layout-drag-handle">드래그</span>
           <span className="layout-card-label">{LABELS[item.id] || item.id}</span>
           <span className="layout-size-readout">
             {Math.round(activeItem.widthPct)}% · {Math.round(activeItem.minHeight)}px
