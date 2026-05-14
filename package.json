@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "node server.mjs",
     "start": "node server.mjs",
-    "build": "vite build",
+    "build": "node scripts/build-static.mjs",
     "check": "node --check app.js && node --check server.mjs && node --test tests/domain.test.mjs && npm run build",
     "test:product": "node scripts/product-smoke.mjs",
     "verify": "npm run check && npm run test:migration && npm run test:product",
