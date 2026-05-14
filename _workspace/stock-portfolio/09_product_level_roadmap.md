@@ -1,6 +1,6 @@
 # 제품 레벨 로드맵
 
-현재 상태는 `MVP+`다. Numbers의 핵심 계산과 화면은 웹으로 옮겼고, 가격 자동 업데이트와 예수금/성과/백업까지 붙었다. 하지만 실제 제품이 되려면 사용자별 데이터 분리, 영구 DB, 인증, 장애 대응, import 확정 흐름, 배포 운영이 필요하다.
+현재 상태는 `제품화 로컬 베타`다. Numbers의 핵심 계산과 화면은 웹으로 옮겼고, 가격 자동 업데이트와 예수금/성과/백업까지 붙었다. Supabase/Google 로그인 연결 코드와 사용자별 저장 테이블도 준비했다. 실제 운영 제품으로 완전히 열려면 Supabase 프로젝트 값, Google OAuth 설정, 운영 환경변수, 배포 후 실계정 검증이 필요하다.
 
 ## 제품 레벨 정의
 
@@ -9,7 +9,7 @@
 - 여러 사용자가 각자 자기 포트폴리오를 안전하게 관리한다.
 - 데이터가 브라우저나 로컬 SQLite에만 있지 않고 운영 DB에 저장된다.
 - 가격 업데이트 실패, 환율 실패, 휴장일, 수동 가격 보정이 화면과 로그에 남는다.
-- Numbers/XLSX import는 미리보기, 검증, 계좌 매핑, 예수금 배분, 확정 저장 단계를 가진다.
+- Numbers/XLSX import는 관리자 마이그레이션 보조 기능으로 둔다. 일반 사용자 신규 온보딩에서는 직접 입력과 샘플 데이터 시작을 우선한다.
 - 총자산, 평가손익, 입출금 제외 성과, 배당/세금 반영 성과의 정의가 고정된다.
 - Vercel 배포, 환경변수, 백업, 모니터링, 롤백 절차가 있다.
 
@@ -64,13 +64,24 @@
 
 ## Phase 3: 사용자와 보안
 
-상태: `다음`
+상태: `구현 완료, 운영 설정 대기`
 
 - Vercel 배포용 인증 도입
 - 사용자별 포트폴리오 격리
+- Supabase `portfolio_states` 테이블과 Row Level Security 정책 추가
+- Google OAuth 로그인 버튼과 로그아웃 버튼 추가
+- 로그인 사용자는 Supabase에 저장하고, 미설정/비로그인 사용자는 로컬 데모 모드로 동작
 - 민감 데이터 export/import 권한 제어
 - 실제 계좌명, 투자자명, 보유 내역을 서버 로그에 과도하게 남기지 않도록 조정
 - 백업 파일에 개인정보 포함 경고와 암호화 옵션 검토
+
+운영 설정 대기:
+
+- Supabase project URL
+- Supabase anon public key
+- Supabase Google provider의 OAuth client id/secret
+- Vercel 환경변수 `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`
+- Supabase Auth redirect URL: `http://localhost:4173`, `https://stocklio-web.vercel.app`
 
 완료 기준:
 
@@ -80,11 +91,11 @@
 
 ## Phase 4: Vercel 운영 배포
 
-상태: `준비`
+상태: `배포 가능, Supabase 환경변수 대기`
 
 - 현재 정적 화면은 Vercel에 올릴 수 있게 `vercel.json`을 추가했다.
-- 실제 제품 API는 Vercel Functions로 분리한다.
-- 영구 DB는 Vercel Postgres, Neon, Supabase 중 하나로 둔다.
+- 실제 제품 데이터 저장은 Supabase client + RLS 우선으로 둔다.
+- 영구 DB는 Supabase Postgres로 결정했다.
 - Yahoo Finance 프록시와 가격 업데이트 작업은 서버리스 함수 또는 예약 작업으로 분리한다.
 - 로컬 SQLite는 개발/마이그레이션 용도로만 유지한다.
 
@@ -94,7 +105,7 @@
 - `api/state`: 사용자 포트폴리오 조회/저장
 - `api/yahoo/chart`: 가격 프록시
 - `api/automation/run`: 예약 가격 업데이트
-- 운영 DB: Postgres
+- 운영 DB: Supabase Postgres
 - 배포: Vercel
 
 완료 기준:
@@ -105,7 +116,7 @@
 
 ## Phase 5: Import 제품화
 
-상태: `부분 완료`
+상태: `후순위`
 
 - Numbers/XLSX 업로드 UI
 - import preview 화면
@@ -120,6 +131,12 @@
 - Preview 단계에서는 현재 포트폴리오를 바꾸지 않고, 서버의 private preview state와 검증 요약만 저장한다.
 - `Import 확정`을 눌러야 SQLite 상태가 교체된다.
 - 최근 import summary와 preview 결과를 화면에 표시한다.
+
+제품 결정:
+
+- 여러 사용자가 쓰는 SaaS에서는 import를 첫 제품 범위에서 제외한다.
+- 기존 Numbers 데이터 이전이나 관리자 마이그레이션에만 이 기능을 사용한다.
+- 일반 사용자는 기본 1포트폴리오를 생성하고, 보유 종목/계좌/예수금을 화면에서 직접 관리한다.
 
 완료 기준:
 

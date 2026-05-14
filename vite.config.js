@@ -10,9 +10,12 @@ export default defineConfig({
     emptyOutDir: false,
     outDir: "assets",
     lib: {
-      entry: "src/craft-dashboard.jsx",
+      entry: {
+        "craft-dashboard": "src/craft-dashboard.jsx",
+        "supabase-auth": "src/supabase-auth.js",
+      },
       formats: ["es"],
-      fileName: () => "craft-dashboard.js",
+      fileName: (_format, entryName) => `${entryName}.js`,
     },
     codeSplitting: false,
     rollupOptions: {

@@ -3,6 +3,7 @@ const CACHE_PREFIX = "stock-portfolio-lab-yahoo-cache";
 const QUOTE_CACHE_TTL_MS = 5 * 60 * 1000;
 const FX_CACHE_TTL_MS = 60 * 60 * 1000;
 const DATA_VERSION = 6;
+const AUTH_READY_TIMEOUT_MS = 1800;
 
 const palette = ["#1f7a5b", "#3366a8", "#a97819", "#7b5aa6", "#b94343"];
 const dashboardCardLabels = {
@@ -210,6 +211,11 @@ let editingAccountId = null;
 let isLayoutEditing = false;
 let draggedDashboardCardId = null;
 let resizingDashboardCard = null;
+let authState = {
+  configured: false,
+  signedIn: false,
+  user: null,
+};
 
 const els = {
   viewTabs: document.querySelectorAll("[data-view-tab]"),
@@ -217,6 +223,9 @@ const els = {
   refreshButton: document.querySelector("#refreshButton"),
   saveSnapshotButton: document.querySelector("#saveSnapshotButton"),
   resetButton: document.querySelector("#resetButton"),
+  authStatus: document.querySelector("#authStatus"),
+  googleLoginButton: document.querySelector("#googleLoginButton"),
+  logoutButton: document.querySelector("#logoutButton"),
   providerStatus: document.querySelector("#providerStatus"),
   lastUpdated: document.querySelector("#lastUpdated"),
   totalValue: document.querySelector("#totalValue"),
@@ -292,6 +301,24 @@ els.refreshButton.addEventListener("click", () => {
 
 els.saveSnapshotButton.addEventListener("click", () => {
   saveTodaySnapshot();
+});
+
+els.googleLoginButton.addEventListener("click", () => {
+  window.StocklioAuth?.signInWithGoogle?.().catch((error) => setStatus("로그인 실패", error.message));
+});
+
+els.logoutButton.addEventListener("click", () => {
+  window.StocklioAuth?.signOut?.().catch((error) => setStatus("로그아웃 실패", error.message));
+});
+
+window.addEventListener("stocklio:auth", (event) => {
+  authState = event.detail;
+  renderAuth();
+  loadState().then((nextState) => {
+    state = nextState;
+    render();
+    setStatus(authState.signedIn ? "Supabase 포트폴리오 불러옴" : "로컬 데모 모드", authState.user?.email || "브라우저 저장소 사용");
+  });
 });
 
 els.resetButton.addEventListener("click", () => {
@@ -572,6 +599,18 @@ els.loadImportSummaryButton.addEventListener("click", () => {
 
 function loadState() {
   const stored = localStorage.getItem(STORAGE_KEY);
+  if (window.StocklioAuth?.isConfigured?.() && window.StocklioAuth.getState().signedIn) {
+    return window.StocklioAuth.loadPortfolioState()
+      .then((remoteState) => {
+        const normalized = remoteState ? normalizeState(remoteState) : normalizeState(stored ? JSON.parse(stored) : sampleState);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(normalized));
+        return normalized;
+      })
+      .catch((error) => {
+        setStatus("Supabase 불러오기 실패", error.message);
+        return stored ? normalizeState(JSON.parse(stored)) : structuredClone(sampleState);
+      });
+  }
   if (isStaticDeployment()) {
     if (!stored) {
       return Promise.resolve(structuredClone(sampleState));
@@ -630,9 +669,11 @@ function normalizeState(input) {
 
 async function initialize() {
   try {
+    authState = await waitForAuthState();
     state = await loadState();
     render();
-    setStatus("SQLite 데이터 불러옴", state.automation?.lastResult || "서버 저장소와 연결됨");
+    renderAuth();
+    setStatus(authState.signedIn ? "Supabase 데이터 불러옴" : "데이터 불러옴", authState.user?.email || state.automation?.lastResult || "저장소와 연결됨");
   } catch {
     state = structuredClone(sampleState);
     render();
@@ -654,6 +695,12 @@ function clamp(value, min, max) {
 function saveState() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   publishState();
+  if (window.StocklioAuth?.isConfigured?.() && window.StocklioAuth.getState().signedIn) {
+    window.StocklioAuth.savePortfolioState(state).catch((error) => {
+      setStatus("Supabase 저장 실패", error.message);
+    });
+    return;
+  }
   if (isStaticDeployment()) {
     return;
   }
@@ -693,6 +740,50 @@ function render() {
   renderReconciliation();
   renderDashboardLayout();
   publishState();
+  renderAuth();
+}
+
+function renderAuth() {
+  if (!els.authStatus) {
+    return;
+  }
+  const configured = window.StocklioAuth?.isConfigured?.() || false;
+  authState = window.StocklioAuth?.getState?.() || authState;
+  if (!configured) {
+    els.authStatus.textContent = "Supabase 설정 필요 · 로컬 데모";
+    els.googleLoginButton.disabled = true;
+    els.googleLoginButton.hidden = false;
+    els.logoutButton.hidden = true;
+    return;
+  }
+  if (authState.signedIn) {
+    els.authStatus.textContent = `${authState.user?.name || authState.user?.email} · Supabase 저장`;
+    els.googleLoginButton.hidden = true;
+    els.logoutButton.hidden = false;
+    return;
+  }
+  els.authStatus.textContent = "로그인하면 개인 포트폴리오가 저장됩니다";
+  els.googleLoginButton.disabled = false;
+  els.googleLoginButton.hidden = false;
+  els.logoutButton.hidden = true;
+}
+
+function waitForAuthState() {
+  return new Promise((resolve) => {
+    if (window.StocklioAuth) {
+      resolve(window.StocklioAuth.getState());
+      return;
+    }
+    const timer = setTimeout(() => resolve(authState), AUTH_READY_TIMEOUT_MS);
+    window.addEventListener(
+      "stocklio:auth",
+      (event) => {
+        clearTimeout(timer);
+        resolve(event.detail);
+      },
+      { once: true },
+    );
+  });
 }
 
 function publishState() {

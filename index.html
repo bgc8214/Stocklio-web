@@ -6,6 +6,12 @@
     <title>주식 포트폴리오 랩</title>
     <link rel="stylesheet" href="styles.css">
     <script>window.STOCKLIO_USE_CRAFT = true;</script>
+    <script>
+      window.STOCKLIO_SUPABASE = {
+        url: "%VITE_SUPABASE_URL%",
+        anonKey: "%VITE_SUPABASE_ANON_KEY%"
+      };
+    </script>
   </head>
   <body>
     <header class="topbar">
@@ -16,6 +22,11 @@
       <div class="status-panel" aria-live="polite">
         <span id="providerStatus">샘플 가격 불러옴</span>
         <span id="lastUpdated">아직 실시간 업데이트 없음</span>
+      </div>
+      <div class="auth-panel">
+        <span id="authStatus">로컬 데모 모드</span>
+        <button id="googleLoginButton" class="secondary" type="button">Google 로그인</button>
+        <button id="logoutButton" class="ghost" type="button" hidden>로그아웃</button>
       </div>
     </header>
 
@@ -393,6 +404,7 @@
       </section>
     </main>
 
+    <script type="module" src="/assets/supabase-auth.js"></script>
     <script src="app.js"></script>
     <script type="module" src="/assets/craft-dashboard.js"></script>
   </body>

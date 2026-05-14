@@ -27,7 +27,7 @@ try {
   console.log("Product smoke passed");
 } finally {
   server.kill("SIGTERM");
-  await once(server, "exit").catch(() => {});
+  await waitForExit(server, 2_000);
 }
 
 async function waitForServer() {
@@ -43,6 +43,16 @@ async function waitForServer() {
     }
   }
   throw new Error(`Server did not start on ${baseUrl}\n${serverOutput}`);
+}
+
+async function waitForExit(child, timeoutMs) {
+  if (child.exitCode !== null || child.signalCode !== null) {
+    return;
+  }
+  await Promise.race([
+    once(child, "exit").catch(() => {}),
+    new Promise((resolve) => setTimeout(resolve, timeoutMs)),
+  ]);
 }
 
 async function verifyApi() {
