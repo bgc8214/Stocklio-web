@@ -7385,7 +7385,7 @@ function vi() {
 vi() && console.warn("⚠️  Node.js 18 and below are deprecated and will no longer be supported in future versions of @supabase/supabase-js. Please upgrade to Node.js 20 or later. For more information, visit: https://github.com/orgs/supabase/discussions/37217");
 //#endregion
 //#region src/supabase-auth.js
-var yi = window.STOCKLIO_SUPABASE || {}, bi = yi.url || "", xi = yi.anonKey || "", Q = null, $ = null;
+var yi = window.STOCKLIO_SUPABASE || {}, bi = yi.url || "", xi = yi.anonKey || "", Si = Ti(yi.siteUrl), Q = null, $ = null;
 if (bi && xi && !bi.includes("YOUR_") && !xi.includes("YOUR_") && !bi.includes("%") && !xi.includes("%")) {
 	Q = _i(bi, xi, { auth: {
 		persistSession: !0,
@@ -7394,18 +7394,18 @@ if (bi && xi && !bi.includes("YOUR_") && !xi.includes("YOUR_") && !bi.includes("
 	} });
 	let { data: e } = await Q.auth.getSession();
 	$ = e.session, Q.auth.onAuthStateChange((e, t) => {
-		$ = t, window.dispatchEvent(new CustomEvent("stocklio:auth", { detail: Si() }));
+		$ = t, window.dispatchEvent(new CustomEvent("stocklio:auth", { detail: Ci() }));
 	});
 }
 window.StocklioAuth = {
 	isConfigured: () => !!Q,
-	getState: Si,
-	signInWithGoogle: Ci,
-	signOut: wi,
-	loadPortfolioState: Ti,
-	savePortfolioState: Ei
-}, window.dispatchEvent(new CustomEvent("stocklio:auth", { detail: Si() }));
-function Si() {
+	getState: Ci,
+	signInWithGoogle: wi,
+	signOut: Ei,
+	loadPortfolioState: Di,
+	savePortfolioState: Oi
+}, window.dispatchEvent(new CustomEvent("stocklio:auth", { detail: Ci() }));
+function Ci() {
 	return {
 		configured: !!Q,
 		signedIn: !!$?.user,
@@ -7417,26 +7417,30 @@ function Si() {
 		} : null
 	};
 }
-async function Ci() {
+async function wi() {
 	if (!Q) throw Error("Supabase 설정이 없습니다");
 	let { error: e } = await Q.auth.signInWithOAuth({
 		provider: "google",
-		options: { redirectTo: window.location.origin }
+		options: { redirectTo: Si || window.location.origin }
 	});
 	if (e) throw e;
 }
-async function wi() {
+function Ti(e) {
+	let t = String(e || "").trim();
+	return !t || t.includes("%") || t.includes("YOUR_") ? "" : t.replace(/\/$/, "");
+}
+async function Ei() {
 	if (!Q) return;
 	let { error: e } = await Q.auth.signOut();
 	if (e) throw e;
 }
-async function Ti() {
+async function Di() {
 	if (!Q || !$?.user) return null;
 	let { data: e, error: t } = await Q.from("portfolio_states").select("state").eq("user_id", $.user.id).maybeSingle();
 	if (t) throw t;
 	return e?.state || null;
 }
-async function Ei(e) {
+async function Oi(e) {
 	if (!Q || !$?.user) return { skipped: !0 };
 	let { error: t } = await Q.from("portfolio_states").upsert({
 		user_id: $.user.id,
