@@ -3,6 +3,12 @@
   "outputDirectory": "dist",
   "cleanUrls": true,
   "trailingSlash": false,
+  "crons": [
+    {
+      "path": "/api/cron/daily-snapshot",
+      "schedule": "0 22 * * *"
+    }
+  ],
   "rewrites": [
     {
       "source": "/",
