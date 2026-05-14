@@ -4,6 +4,15 @@ import { createServer } from "node:http";
 import { DatabaseSync } from "node:sqlite";
 import { extname, join, normalize } from "node:path";
 import { fileURLToPath } from "node:url";
+import {
+  DEFAULT_DASHBOARD_LAYOUT,
+  buildAccountSnapshots as buildAccountSnapshotsCore,
+  buildPortfolioSnapshot as buildPortfolioSnapshotCore,
+  getNetInflowKrw,
+  groupByAccount as groupByAccountCore,
+  normalizeDashboardLayout,
+  validateStateShape,
+} from "./src/domain/portfolio-core.js";
 
 const rootDir = fileURLToPath(new URL(".", import.meta.url));
 const port = Number(process.env.PORT || 4173);
@@ -30,6 +39,11 @@ createServer(async (request, response) => {
 
     if (url.pathname === "/api/state" && request.method === "GET") {
       sendJson(response, 200, readState());
+      return;
+    }
+
+    if (url.pathname === "/api/health" && request.method === "GET") {
+      sendJson(response, 200, getHealthStatus());
       return;
     }
 
@@ -141,7 +155,7 @@ function normalizeState(input) {
   if (!input || typeof input !== "object") {
     return createSeedState();
   }
-  return {
+  const normalized = {
     version: 6,
     fxRate: input.fxRate || {
       pair: "USD/KRW",
@@ -162,6 +176,15 @@ function normalizeState(input) {
       lastResult: input.automation?.lastResult || "아직 자동 실행 없음",
       snapshotTime: input.automation?.snapshotTime || "09:10",
       timezone: input.automation?.timezone || "Asia/Seoul",
+    },
+  };
+  const issues = validateStateShape(normalized);
+  return {
+    ...normalized,
+    diagnostics: {
+      ...(input.diagnostics || {}),
+      stateIssues: issues,
+      checkedAt: new Date().toISOString(),
     },
   };
 }
@@ -234,6 +257,20 @@ function getAutomationStatus() {
     snapshotCount: state.portfolioSnapshots.length,
     holdingCount: state.holdings.length,
     cashBalanceCount: (state.cashBalances || []).length,
+  };
+}
+
+function getHealthStatus() {
+  const state = readState();
+  const issues = validateStateShape(state);
+  return {
+    ok: issues.length === 0,
+    version: state.version,
+    stateIssues: issues,
+    holdingCount: state.holdings.length,
+    cashBalanceCount: (state.cashBalances || []).length,
+    snapshotCount: state.portfolioSnapshots.length,
+    lastAutomationRunAt: state.automation?.lastRunAt || null,
   };
 }
 
@@ -342,117 +379,15 @@ async function fetchYahooChartData(symbol) {
 }
 
 function buildPortfolioSnapshot(state, date) {
-  const totals = getTotals(state.holdings, state.cashBalances, state.fxRate.rate);
-  return {
-    id: makeId(),
-    date,
-    totalValueUsd: totals.valueUsdEquivalent,
-    totalValueKrw: totals.valueKrw,
-    totalCostUsd: totals.costUsdEquivalent,
-    totalGainUsd: totals.gainUsdEquivalent,
-    fxRate: state.fxRate.rate,
-    netInflowKrw: getNetInflowKrw(state.cashFlows, date),
-  };
+  return buildPortfolioSnapshotCore(state, date, makeId);
 }
 
 function buildAccountSnapshots(state, date) {
-  return groupByAccount(state).map((item) => ({
-    id: makeId(),
-    date,
-    investor: item.investor,
-    account: item.account,
-    stockValueKrw: item.stockValueKrw,
-    cashKrw: item.cashKrw,
-    totalAssetsKrw: item.valueKrw,
-    gainKrw: item.gainKrw,
-    returnRate: item.returnRate,
-  }));
+  return buildAccountSnapshotsCore(state, date, makeId);
 }
 
 function groupByAccount(state) {
-  const map = new Map();
-  for (const holding of state.holdings || []) {
-    const key = `${holding.investor}|||${holding.account}`;
-    const current = map.get(key) || {
-      investor: holding.investor,
-      account: holding.account,
-      stockValueKrw: 0,
-      cashKrw: 0,
-      costKrw: 0,
-      gainKrw: 0,
-    };
-    const values = getHoldingValues(holding, state.fxRate.rate);
-    current.stockValueKrw += values.valueKrw;
-    current.costKrw += values.costKrw;
-    current.gainKrw += values.valueKrw - values.costKrw;
-    map.set(key, current);
-  }
-  for (const cash of state.cashBalances || []) {
-    const key = `${cash.investor}|||${cash.account}`;
-    const current = map.get(key) || {
-      investor: cash.investor,
-      account: cash.account,
-      stockValueKrw: 0,
-      cashKrw: 0,
-      costKrw: 0,
-      gainKrw: 0,
-    };
-    current.cashKrw += getCashValueKrw(cash, state.fxRate.rate);
-    map.set(key, current);
-  }
-  return [...map.values()].map((item) => ({
-    ...item,
-    valueKrw: item.stockValueKrw + item.cashKrw,
-    returnRate: item.costKrw ? item.gainKrw / item.costKrw : 0,
-  }));
-}
-
-function getTotals(holdings, cashBalances, fxRate) {
-  const values = holdings.map((holding) => getHoldingValues(holding, fxRate));
-  const stockValueKrw = values.reduce((sum, item) => sum + item.valueKrw, 0);
-  const cashKrw = (cashBalances || []).reduce((sum, cash) => sum + getCashValueKrw(cash, fxRate), 0);
-  const valueKrw = stockValueKrw + cashKrw;
-  const costKrw = values.reduce((sum, item) => sum + item.costKrw, 0);
-  const gainKrw = stockValueKrw - costKrw;
-  return {
-    valueKrw,
-    costKrw,
-    gainKrw,
-    valueUsdEquivalent: valueKrw / Number(fxRate || 1),
-    costUsdEquivalent: costKrw / Number(fxRate || 1),
-    gainUsdEquivalent: gainKrw / Number(fxRate || 1),
-  };
-}
-
-function getHoldingValues(holding, fxRate) {
-  const valueNative = Number(holding.quantity || 0) * Number(holding.price || 0);
-  const costNative = Number(holding.quantity || 0) * Number(holding.averageCost || 0);
-  const rate = holding.currency === "KRW" ? 1 : Number(fxRate || 1);
-  return {
-    valueKrw: valueNative * rate,
-    costKrw: costNative * rate,
-  };
-}
-
-function getCashValueKrw(cash, fxRate) {
-  const amount = Number(cash.amount || 0);
-  return cash.currency === "USD" ? amount * Number(fxRate || 1) : amount;
-}
-
-function getNetInflowKrw(cashFlows, date) {
-  return (cashFlows || [])
-    .filter((flow) => flow.date === date)
-    .reduce((sum, flow) => sum + getExternalFlowAmount(flow), 0);
-}
-
-function getExternalFlowAmount(flow) {
-  if (flow.type === "deposit") {
-    return Number(flow.amountKrw || 0);
-  }
-  if (flow.type === "withdrawal") {
-    return -Number(flow.amountKrw || 0);
-  }
-  return 0;
+  return groupByAccountCore(state);
 }
 
 function deriveAccounts(state) {
@@ -581,49 +516,7 @@ function createSeedState() {
 }
 
 function createDefaultDashboardLayout() {
-  return [
-    { id: "total-value", widthPct: 25, span: 3, minHeight: 128, visible: true },
-    { id: "total-cost", widthPct: 25, span: 3, minHeight: 128, visible: true },
-    { id: "total-gain", widthPct: 25, span: 3, minHeight: 128, visible: true },
-    { id: "cash-total", widthPct: 25, span: 3, minHeight: 128, visible: true },
-    { id: "fx-rate", widthPct: 25, span: 3, minHeight: 128, visible: true },
-    { id: "allocation", widthPct: 50, span: 6, minHeight: 320, visible: true },
-    { id: "performance-flow", widthPct: 50, span: 6, minHeight: 320, visible: true },
-    { id: "breakdown", widthPct: 50, span: 6, minHeight: 320, visible: true },
-  ];
-}
-
-function normalizeDashboardLayout(layout) {
-  const defaults = createDefaultDashboardLayout();
-  const defaultById = new Map(defaults.map((item) => [item.id, item]));
-  const sizeToSpan = { small: 3, medium: 4, wide: 6, full: 12 };
-  const seen = new Set();
-  const normalized = [];
-  for (const item of Array.isArray(layout) ? layout : []) {
-    if (!item || !defaultById.has(item.id) || seen.has(item.id)) {
-      continue;
-    }
-    const fallback = defaultById.get(item.id);
-    const span = clamp(Math.round(Number(item.span ?? sizeToSpan[item.size] ?? fallback.span)), 2, 12);
-    normalized.push({
-      id: item.id,
-      widthPct: clamp(Math.round(Number(item.widthPct ?? fallback.widthPct ?? (span / 12) * 100) * 10) / 10, 18, 100),
-      span,
-      minHeight: clamp(Math.round(Number(item.minHeight ?? fallback.minHeight)), 112, 720),
-      visible: item.visible !== false,
-    });
-    seen.add(item.id);
-  }
-  for (const fallback of defaults) {
-    if (!seen.has(fallback.id)) {
-      normalized.push(fallback);
-    }
-  }
-  return normalized;
-}
-
-function clamp(value, min, max) {
-  return Math.min(max, Math.max(min, value));
+  return DEFAULT_DASHBOARD_LAYOUT.map((item) => ({ ...item }));
 }
 
 function createHolding(investor, account, accountType, strategy, ticker, name, quantity, averageCost, price) {
