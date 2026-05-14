@@ -1,0 +1,22 @@
+.DS_Store
+.env
+.env.*
+node_modules/
+.next/
+dist/
+build/
+coverage/
+__pycache__/
+*.pyc
+
+# Private portfolio exports and local imports
+data/private/
+data/*.db
+data/*.db-*
+imports/private/
+exports/
+*.numbers
+*.xlsx
+*.xls
+*.csv
+*.tsv

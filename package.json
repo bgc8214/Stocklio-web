@@ -1,0 +1,20 @@
+{
+  "name": "stock-portfolio-lab",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node server.mjs",
+    "start": "node server.mjs",
+    "build": "vite build",
+    "check": "node --check app.js && node --check server.mjs && npm run build",
+    "test:migration": "/Users/boss.back/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3 -m unittest tests/test_migration.py"
+  },
+  "dependencies": {
+    "@craftjs/core": "^0.2.12",
+    "@vitejs/plugin-react": "^6.0.1",
+    "react": "^19.2.6",
+    "react-dom": "^19.2.6",
+    "vite": "^8.0.12"
+  }
+}
