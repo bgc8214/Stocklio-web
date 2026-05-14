@@ -16,31 +16,36 @@
   </head>
   <body>
     <header class="topbar">
-      <div>
-        <p class="eyebrow">미국 주식 우선 MVP</p>
-        <h1>주식 포트폴리오 랩</h1>
-      </div>
-      <div class="status-panel" aria-live="polite">
-        <span id="providerStatus">샘플 가격 불러옴</span>
-        <span id="lastUpdated">아직 실시간 업데이트 없음</span>
-      </div>
-      <div class="auth-panel">
-        <span id="authStatus">로컬 데모 모드</span>
-        <button id="googleLoginButton" class="secondary" type="button">Google 로그인</button>
-        <button id="logoutButton" class="ghost" type="button" hidden>로그아웃</button>
+      <div class="topbar-inner">
+        <div class="brand-lockup">
+          <h1>Stocklio</h1>
+        </div>
+        <div class="status-panel sr-only" aria-live="polite">
+          <span id="providerStatus">준비됨</span>
+          <span id="lastUpdated">작업 내역 없음</span>
+        </div>
+        <div class="auth-panel">
+          <span id="authStatus"></span>
+          <span id="syncStatus" class="sync-status" hidden></span>
+          <button id="googleLoginButton" class="ghost small-button" type="button">Google 로그인</button>
+          <button id="logoutButton" class="ghost small-button" type="button" hidden>로그아웃</button>
+        </div>
       </div>
     </header>
 
     <main>
-      <section class="toolbar" aria-label="가격 업데이트 설정">
-        <div class="provider-note">
-          <span>가격 데이터</span>
-          <strong>Yahoo Finance · API 키 없음</strong>
+      <section class="toolbar" aria-label="포트폴리오 작업">
+        <div class="toolbar-actions">
+          <button id="refreshButton" class="ghost small-button" type="button">가격 갱신</button>
+          <button id="saveSnapshotButton" class="ghost small-button" type="button">성과 저장</button>
+          <details class="more-actions">
+            <summary>더보기</summary>
+            <div>
+              <button id="emptyPortfolioButton" class="ghost small-button" type="button">빈 포트폴리오</button>
+              <button id="resetButton" class="ghost small-button" type="button">샘플 불러오기</button>
+            </div>
+          </details>
         </div>
-        <button id="refreshButton" type="button">가격 업데이트</button>
-        <button id="saveSnapshotButton" class="secondary" type="button">오늘 성과 저장</button>
-        <button id="emptyPortfolioButton" class="ghost" type="button">빈 포트폴리오</button>
-        <button id="resetButton" class="ghost" type="button">샘플 불러오기</button>
       </section>
 
       <nav class="view-tabs" aria-label="상세 메뉴">
@@ -52,13 +57,22 @@
         <button type="button" data-view-tab="automation">자동화/데이터</button>
       </nav>
 
+      <section id="emptyPortfolioNotice" class="empty-portfolio" data-view="dashboard" hidden>
+        <div>
+          <strong>포트폴리오를 시작하세요</strong>
+          <span>계좌를 만들고 보유 종목이나 예수금을 입력하면 대시보드와 성과가 자동으로 채워집니다.</span>
+        </div>
+      </section>
+
       <section class="dashboard-layout-toolbar" data-view="dashboard" aria-label="대시보드 레이아웃 설정">
-        <div class="provider-note">
+        <div class="layout-summary">
           <span>대시보드</span>
           <strong id="layoutStatus">기본 레이아웃</strong>
         </div>
-        <button id="layoutEditButton" class="secondary" type="button">레이아웃 편집</button>
-        <button id="layoutResetButton" class="ghost" type="button">기본값 복원</button>
+        <div class="toolbar-actions">
+          <button id="layoutEditButton" class="ghost small-button" type="button">편집</button>
+          <button id="layoutResetButton" class="ghost small-button" type="button" hidden>기본값 복원</button>
+        </div>
       </section>
 
       <section id="dashboardBoard" class="dashboard-board" data-view="dashboard" aria-label="포트폴리오 대시보드">
@@ -381,12 +395,12 @@
               JSON 복원
               <input id="restoreInput" type="file" accept="application/json">
             </label>
-            <label class="file-button">
+            <label class="file-button" data-local-only>
               XLSX preview
               <input id="importPreviewInput" type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
             </label>
-            <button id="commitImportButton" class="secondary" type="button" disabled>Import 확정</button>
-            <button id="loadImportSummaryButton" class="secondary" type="button">최근 import 검증</button>
+            <button id="commitImportButton" class="secondary" type="button" data-local-only disabled>Import 확정</button>
+            <button id="loadImportSummaryButton" class="secondary" type="button" data-local-only>최근 import 검증</button>
           </div>
           <div class="automation-list">
             <div>

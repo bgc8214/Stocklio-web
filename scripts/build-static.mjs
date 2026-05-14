@@ -11,6 +11,12 @@ await execFileAsync("npx", ["vite", "build"], {
 
 const root = new URL("..", import.meta.url);
 const dist = new URL("dist/", root);
+if (process.env.VERCEL_ENV === "production") {
+  const missing = ["VITE_SUPABASE_URL", "VITE_SUPABASE_ANON_KEY", "VITE_PUBLIC_SITE_URL"].filter((key) => !process.env[key]);
+  if (missing.length) {
+    throw new Error(`Missing production environment variables: ${missing.join(", ")}`);
+  }
+}
 await rm(dist, { recursive: true, force: true });
 await mkdir(dist, { recursive: true });
 
