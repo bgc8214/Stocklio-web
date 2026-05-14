@@ -22,14 +22,14 @@ const dashboardSizeToSpan = {
   full: 12,
 };
 const defaultDashboardLayout = [
-  { id: "total-value", span: 3, minHeight: 128, visible: true },
-  { id: "total-cost", span: 3, minHeight: 128, visible: true },
-  { id: "total-gain", span: 3, minHeight: 128, visible: true },
-  { id: "cash-total", span: 3, minHeight: 128, visible: true },
-  { id: "fx-rate", span: 3, minHeight: 128, visible: true },
-  { id: "allocation", span: 6, minHeight: 320, visible: true },
-  { id: "performance-flow", span: 6, minHeight: 320, visible: true },
-  { id: "breakdown", span: 6, minHeight: 320, visible: true },
+  { id: "total-value", widthPct: 25, span: 3, minHeight: 128, visible: true },
+  { id: "total-cost", widthPct: 25, span: 3, minHeight: 128, visible: true },
+  { id: "total-gain", widthPct: 25, span: 3, minHeight: 128, visible: true },
+  { id: "cash-total", widthPct: 25, span: 3, minHeight: 128, visible: true },
+  { id: "fx-rate", widthPct: 25, span: 3, minHeight: 128, visible: true },
+  { id: "allocation", widthPct: 50, span: 6, minHeight: 320, visible: true },
+  { id: "performance-flow", widthPct: 50, span: 6, minHeight: 320, visible: true },
+  { id: "breakdown", widthPct: 50, span: 6, minHeight: 320, visible: true },
 ];
 
 const sampleState = {
@@ -698,9 +698,11 @@ function normalizeDashboardLayout(layout) {
       continue;
     }
     const fallback = defaults.get(item.id);
+    const span = normalizeDashboardSpan(item, fallback);
     normalized.push({
       id: item.id,
-      span: normalizeDashboardSpan(item, fallback),
+      widthPct: normalizeDashboardWidth(item, fallback, span),
+      span,
       minHeight: normalizeDashboardHeight(item, fallback),
       visible: item.visible !== false,
     });
@@ -731,6 +733,7 @@ function renderDashboardLayout() {
     const isHidden = item.visible === false;
     visibleCount += isHidden ? 0 : 1;
     card.style.setProperty("--card-span", String(item.span));
+    card.style.setProperty("--card-width-pct", `${item.widthPct}%`);
     card.style.setProperty("--card-min-height", `${item.minHeight}px`);
     card.hidden = isHidden && !isLayoutEditing;
     card.draggable = isLayoutEditing;
@@ -781,6 +784,11 @@ function normalizeDashboardSpan(item, fallback) {
   const migratedSpan = dashboardSizeToSpan[item.size] || fallback.span || 3;
   const span = Number(item.span ?? migratedSpan);
   return clamp(Math.round(span), 2, 12);
+}
+
+function normalizeDashboardWidth(item, fallback, span) {
+  const width = Number(item.widthPct ?? fallback.widthPct ?? (span / 12) * 100);
+  return clamp(Math.round(width * 10) / 10, 18, 100);
 }
 
 function normalizeDashboardHeight(item, fallback) {

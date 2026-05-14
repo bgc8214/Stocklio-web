@@ -1,16 +1,16 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { Editor, Frame, Element, useNode } from "@craftjs/core";
 
 const DEFAULT_LAYOUT = [
-  { id: "total-value", span: 3, minHeight: 128, visible: true },
-  { id: "total-cost", span: 3, minHeight: 128, visible: true },
-  { id: "total-gain", span: 3, minHeight: 128, visible: true },
-  { id: "cash-total", span: 3, minHeight: 128, visible: true },
-  { id: "fx-rate", span: 3, minHeight: 128, visible: true },
-  { id: "allocation", span: 6, minHeight: 320, visible: true },
-  { id: "performance-flow", span: 6, minHeight: 320, visible: true },
-  { id: "breakdown", span: 6, minHeight: 320, visible: true },
+  { id: "total-value", widthPct: 25, span: 3, minHeight: 128, visible: true },
+  { id: "total-cost", widthPct: 25, span: 3, minHeight: 128, visible: true },
+  { id: "total-gain", widthPct: 25, span: 3, minHeight: 128, visible: true },
+  { id: "cash-total", widthPct: 25, span: 3, minHeight: 128, visible: true },
+  { id: "fx-rate", widthPct: 25, span: 3, minHeight: 128, visible: true },
+  { id: "allocation", widthPct: 50, span: 6, minHeight: 320, visible: true },
+  { id: "performance-flow", widthPct: 50, span: 6, minHeight: 320, visible: true },
+  { id: "breakdown", widthPct: 50, span: 6, minHeight: 320, visible: true },
 ];
 
 const LABELS = {
@@ -112,44 +112,59 @@ function CraftCard({ item, appState, editing, layout, saveLayout }) {
     connectors: { connect, drag },
   } = useNode();
   const [draft, setDraft] = useState(null);
+  const resizeActiveRef = useRef(false);
 
   const activeItem = draft || item;
   const style = {
     "--card-span": activeItem.span,
+    "--card-width-pct": `${activeItem.widthPct}%`,
     "--card-min-height": `${activeItem.minHeight}px`,
   };
 
   const handleResizeStart = (event) => {
+    if (resizeActiveRef.current) {
+      return;
+    }
+    resizeActiveRef.current = true;
     event.preventDefault();
     event.stopPropagation();
-    const card = event.currentTarget.closest("[data-dashboard-card]");
+    const card = event.target.closest("[data-dashboard-card]");
     const start = {
       x: event.clientX,
       y: event.clientY,
       span: item.span,
+      widthPct: item.widthPct,
       height: card.getBoundingClientRect().height,
     };
-    const columnWidth = getDashboardColumnWidth();
+    const board = document.querySelector("#dashboardBoard");
+    const boardWidth = Math.max(1, board?.clientWidth || card.parentElement?.clientWidth || 1);
+    const moveEventName = event.type === "mousedown" ? "mousemove" : "pointermove";
+    const upEventName = event.type === "mousedown" ? "mouseup" : "pointerup";
     const handleMove = (moveEvent) => {
+      const widthPct = clamp(start.widthPct + ((moveEvent.clientX - start.x) / boardWidth) * 100, 18, 100);
       const next = {
         ...item,
-        span: clamp(start.span + Math.round((moveEvent.clientX - start.x) / columnWidth), 2, 12),
+        widthPct,
+        span: clamp(Math.round((widthPct / 100) * 12), 2, 12),
         minHeight: clamp(Math.round(start.height + moveEvent.clientY - start.y), 112, 720),
       };
       setDraft(next);
     };
     const handleUp = (upEvent) => {
-      window.removeEventListener("pointermove", handleMove);
+      window.removeEventListener(moveEventName, handleMove);
+      const widthPct = clamp(start.widthPct + ((upEvent.clientX - start.x) / boardWidth) * 100, 18, 100);
       const next = {
         ...item,
-        span: clamp(start.span + Math.round((upEvent.clientX - start.x) / columnWidth), 2, 12),
+        widthPct: roundTo(widthPct, 0.1),
+        span: clamp(Math.round((widthPct / 100) * 12), 2, 12),
         minHeight: clamp(Math.round(start.height + upEvent.clientY - start.y), 112, 720),
       };
       setDraft(null);
+      resizeActiveRef.current = false;
       saveLayout(layout.map((layoutItem) => (layoutItem.id === item.id ? next : layoutItem)));
     };
-    window.addEventListener("pointermove", handleMove);
-    window.addEventListener("pointerup", handleUp, { once: true });
+    window.addEventListener(moveEventName, handleMove);
+    window.addEventListener(upEventName, handleUp, { once: true });
   };
 
   const handleDragStart = (event) => {
@@ -194,6 +209,16 @@ function CraftCard({ item, appState, editing, layout, saveLayout }) {
       data-dashboard-card={item.id}
       draggable={editing}
       onDragStart={handleDragStart}
+      onMouseDownCapture={(event) => {
+        if (event.target.closest(".layout-resize-handle")) {
+          handleResizeStart(event);
+        }
+      }}
+      onPointerDownCapture={(event) => {
+        if (event.target.closest(".layout-resize-handle")) {
+          handleResizeStart(event);
+        }
+      }}
       onDragOver={(event) => editing && event.preventDefault()}
       onDrop={handleDrop}
       style={style}
@@ -203,14 +228,14 @@ function CraftCard({ item, appState, editing, layout, saveLayout }) {
           <span className="layout-drag-handle">이동</span>
           <span className="layout-card-label">{LABELS[item.id] || item.id}</span>
           <span className="layout-size-readout">
-            {activeItem.span}/12 · {Math.round(activeItem.minHeight)}px
+            {Math.round(activeItem.widthPct)}% · {Math.round(activeItem.minHeight)}px
           </span>
           <button className="ghost layout-visibility-button" type="button" onClick={handleToggle}>
             {item.visible === false ? "표시" : "숨김"}
           </button>
-          <span className="layout-resize-handle" onPointerDown={handleResizeStart} aria-label="카드 크기 조절" />
         </div>
       ) : null}
+      {editing ? <span className="layout-resize-handle" aria-label="카드 크기 조절" /> : null}
       <CardContent id={item.id} state={appState} />
     </article>
   );
@@ -369,9 +394,12 @@ function normalizeLayout(layout) {
       continue;
     }
     const fallback = defaults.get(item.id);
+    const span = clamp(Math.round(Number(item.span ?? sizeToSpan[item.size] ?? fallback.span)), 2, 12);
+    const widthPct = Number(item.widthPct ?? (span / 12) * 100);
     next.push({
       id: item.id,
-      span: clamp(Math.round(Number(item.span ?? sizeToSpan[item.size] ?? fallback.span)), 2, 12),
+      widthPct: clamp(roundTo(widthPct, 0.1), 18, 100),
+      span,
       minHeight: clamp(Math.round(Number(item.minHeight ?? fallback.minHeight)), 112, 720),
       visible: item.visible !== false,
     });
@@ -400,18 +428,6 @@ function reorderLayout(layout, sourceId, targetId, insertAfter) {
 function shouldDropAfter(event, target) {
   const rect = target.getBoundingClientRect();
   return event.clientY > rect.top + rect.height / 2 || event.clientX > rect.left + rect.width / 2;
-}
-
-function getDashboardColumnWidth() {
-  const board = document.querySelector("#dashboardBoard");
-  if (!board) {
-    return 1;
-  }
-  const styles = getComputedStyle(board);
-  const columns = styles.gridTemplateColumns.split(" ").filter(Boolean);
-  const columnCount = columns.length || 1;
-  const gap = Number.parseFloat(styles.columnGap || "0") || 0;
-  return Math.max(1, (board.clientWidth - gap * (columnCount - 1)) / columnCount + gap);
 }
 
 function cardClass(id) {
@@ -533,7 +549,12 @@ function clamp(value, min, max) {
   return Math.min(max, Math.max(min, value));
 }
 
+function roundTo(value, step) {
+  return Math.round(value / step) * step;
+}
+
 const root = document.querySelector("#dashboardBoard");
 if (root) {
+  root.classList.add("craft-dashboard-board");
   createRoot(root).render(<CraftDashboardApp />);
 }

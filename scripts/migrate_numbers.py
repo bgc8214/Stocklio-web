@@ -104,14 +104,14 @@ def migrate_workbook(xlsx_path: Path) -> tuple[dict, dict]:
 
 def default_dashboard_layout() -> list[dict]:
     return [
-        {"id": "total-value", "span": 3, "minHeight": 128, "visible": True},
-        {"id": "total-cost", "span": 3, "minHeight": 128, "visible": True},
-        {"id": "total-gain", "span": 3, "minHeight": 128, "visible": True},
-        {"id": "cash-total", "span": 3, "minHeight": 128, "visible": True},
-        {"id": "fx-rate", "span": 3, "minHeight": 128, "visible": True},
-        {"id": "allocation", "span": 6, "minHeight": 320, "visible": True},
-        {"id": "performance-flow", "span": 6, "minHeight": 320, "visible": True},
-        {"id": "breakdown", "span": 6, "minHeight": 320, "visible": True},
+        {"id": "total-value", "widthPct": 25, "span": 3, "minHeight": 128, "visible": True},
+        {"id": "total-cost", "widthPct": 25, "span": 3, "minHeight": 128, "visible": True},
+        {"id": "total-gain", "widthPct": 25, "span": 3, "minHeight": 128, "visible": True},
+        {"id": "cash-total", "widthPct": 25, "span": 3, "minHeight": 128, "visible": True},
+        {"id": "fx-rate", "widthPct": 25, "span": 3, "minHeight": 128, "visible": True},
+        {"id": "allocation", "widthPct": 50, "span": 6, "minHeight": 320, "visible": True},
+        {"id": "performance-flow", "widthPct": 50, "span": 6, "minHeight": 320, "visible": True},
+        {"id": "breakdown", "widthPct": 50, "span": 6, "minHeight": 320, "visible": True},
     ]
 
 

@@ -220,11 +220,24 @@ main {
   margin-bottom: 18px;
 }
 
+.dashboard-board.craft-dashboard-board {
+  align-items: stretch;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+
 .dashboard-card {
   grid-column: span var(--card-span, 3);
   min-height: var(--card-min-height, 128px);
   min-width: 0;
   position: relative;
+}
+
+.craft-dashboard-board .dashboard-card {
+  flex: 0 0 calc(var(--card-width-pct, 25%) - 14px);
+  max-width: 100%;
+  transition: box-shadow 160ms ease, outline-color 160ms ease, opacity 160ms ease;
 }
 
 .dashboard-card.metric,
@@ -234,9 +247,9 @@ main {
 
 .dashboard-card.is-layout-editing {
   cursor: grab;
-  outline: 2px dashed rgba(31, 122, 91, 0.25);
-  outline-offset: -8px;
-  padding-top: 78px;
+  outline: 1px solid rgba(31, 122, 91, 0.24);
+  outline-offset: 0;
+  padding-top: 60px;
   user-select: none;
 }
 
@@ -255,6 +268,7 @@ main {
 .dashboard-card.is-resizing {
   cursor: nwse-resize;
   outline-color: var(--accent);
+  transition: none;
 }
 
 .dashboard-card.is-drag-over {
@@ -341,15 +355,32 @@ main {
 }
 
 .layout-resize-handle {
-  border-bottom: 3px solid var(--accent);
-  border-right: 3px solid var(--accent);
-  bottom: 12px;
+  background: var(--accent);
+  border: 3px solid var(--surface);
+  border-radius: 999px;
+  bottom: 10px;
+  box-shadow: 0 4px 12px rgba(23, 33, 27, 0.18);
   cursor: nwse-resize;
-  height: 22px;
+  height: 20px;
   position: absolute;
-  right: 12px;
+  right: 10px;
+  touch-action: none;
+  transform: translate(35%, 35%);
+  width: 20px;
   width: 22px;
   z-index: 4;
+}
+
+.layout-resize-handle::before {
+  background: var(--accent);
+  border-radius: 999px;
+  bottom: 7px;
+  content: "";
+  height: 3px;
+  position: absolute;
+  right: 6px;
+  transform: rotate(-45deg);
+  width: 16px;
 }
 
 .metric,
@@ -786,8 +817,18 @@ td:nth-child(4) {
     grid-template-columns: 1fr;
   }
 
+  .dashboard-board.craft-dashboard-board {
+    display: grid;
+    gap: 12px;
+  }
+
   .dashboard-card {
     grid-column: 1 / -1;
+  }
+
+  .craft-dashboard-board .dashboard-card {
+    flex-basis: auto;
+    width: 100%;
   }
 
   .layout-controls {

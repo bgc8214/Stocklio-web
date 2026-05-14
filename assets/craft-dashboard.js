@@ -11775,48 +11775,56 @@ var _a = () => {
 })))(), wa = [
 	{
 		id: "total-value",
+		widthPct: 25,
 		span: 3,
 		minHeight: 128,
 		visible: !0
 	},
 	{
 		id: "total-cost",
+		widthPct: 25,
 		span: 3,
 		minHeight: 128,
 		visible: !0
 	},
 	{
 		id: "total-gain",
+		widthPct: 25,
 		span: 3,
 		minHeight: 128,
 		visible: !0
 	},
 	{
 		id: "cash-total",
+		widthPct: 25,
 		span: 3,
 		minHeight: 128,
 		visible: !0
 	},
 	{
 		id: "fx-rate",
+		widthPct: 25,
 		span: 3,
 		minHeight: 128,
 		visible: !0
 	},
 	{
 		id: "allocation",
+		widthPct: 50,
 		span: 6,
 		minHeight: 320,
 		visible: !0
 	},
 	{
 		id: "performance-flow",
+		widthPct: 50,
 		span: 6,
 		minHeight: 320,
 		visible: !0
 	},
 	{
 		id: "breakdown",
+		widthPct: 50,
 		span: 6,
 		minHeight: 320,
 		visible: !0
@@ -11883,7 +11891,7 @@ function Da() {
 				layout: i,
 				saveLayout: o
 			}, t.id))
-		}) }, `${Ba(i)}:${n}`)
+		}) }, `${za(i)}:${n}`)
 	}) : /* @__PURE__ */ (0, V.jsx)("div", {
 		className: "empty-state",
 		children: "대시보드를 불러오는 중입니다"
@@ -11893,14 +11901,43 @@ function Oa({ children: e }) {
 	return /* @__PURE__ */ (0, V.jsx)(V.Fragment, { children: e });
 }
 function ka({ item: e, appState: t, editing: n, layout: r, saveLayout: i }) {
-	let { connectors: { connect: a, drag: o } } = Fi(), [s, c] = (0, _.useState)(null), l = s || e, u = {
-		"--card-span": l.span,
-		"--card-min-height": `${l.minHeight}px`
+	let { connectors: { connect: a, drag: o } } = Fi(), [s, c] = (0, _.useState)(null), l = (0, _.useRef)(!1), u = s || e, d = {
+		"--card-span": u.span,
+		"--card-width-pct": `${u.widthPct}%`,
+		"--card-min-height": `${u.minHeight}px`
+	}, f = (t) => {
+		if (l.current) return;
+		l.current = !0, t.preventDefault(), t.stopPropagation();
+		let n = t.target.closest("[data-dashboard-card]"), a = {
+			x: t.clientX,
+			y: t.clientY,
+			span: e.span,
+			widthPct: e.widthPct,
+			height: n.getBoundingClientRect().height
+		}, o = document.querySelector("#dashboardBoard"), s = Math.max(1, o?.clientWidth || n.parentElement?.clientWidth || 1), u = t.type === "mousedown" ? "mousemove" : "pointermove", d = t.type === "mousedown" ? "mouseup" : "pointerup", f = (t) => {
+			let n = Qa(a.widthPct + (t.clientX - a.x) / s * 100, 18, 100);
+			c({
+				...e,
+				widthPct: n,
+				span: Qa(Math.round(n / 100 * 12), 2, 12),
+				minHeight: Qa(Math.round(a.height + t.clientY - a.y), 112, 720)
+			});
+		};
+		window.addEventListener(u, f), window.addEventListener(d, (t) => {
+			window.removeEventListener(u, f);
+			let n = Qa(a.widthPct + (t.clientX - a.x) / s * 100, 18, 100), o = {
+				...e,
+				widthPct: $a(n, .1),
+				span: Qa(Math.round(n / 100 * 12), 2, 12),
+				minHeight: Qa(Math.round(a.height + t.clientY - a.y), 112, 720)
+			};
+			c(null), l.current = !1, i(r.map((t) => t.id === e.id ? o : t));
+		}, { once: !0 });
 	};
 	return /* @__PURE__ */ (0, V.jsxs)("article", {
 		ref: (e) => e && a(o(e)),
 		className: [
-			za(e.id),
+			Ra(e.id),
 			"dashboard-card",
 			n ? "is-layout-editing" : "",
 			e.visible === !1 && n ? "is-hidden-card" : ""
@@ -11914,6 +11951,12 @@ function ka({ item: e, appState: t, editing: n, layout: r, saveLayout: i }) {
 			}
 			t.dataTransfer.effectAllowed = "move", t.dataTransfer.setData("text/plain", e.id);
 		},
+		onMouseDownCapture: (e) => {
+			e.target.closest(".layout-resize-handle") && f(e);
+		},
+		onPointerDownCapture: (e) => {
+			e.target.closest(".layout-resize-handle") && f(e);
+		},
 		onDragOver: (e) => n && e.preventDefault(),
 		onDrop: (t) => {
 			if (!n) return;
@@ -11921,96 +11964,75 @@ function ka({ item: e, appState: t, editing: n, layout: r, saveLayout: i }) {
 			let a = t.dataTransfer.getData("text/plain");
 			!a || a === e.id || i(Ia(r, a, e.id, La(t, t.currentTarget)));
 		},
-		style: u,
-		children: [n ? /* @__PURE__ */ (0, V.jsxs)("div", {
-			className: "layout-controls",
-			children: [
-				/* @__PURE__ */ (0, V.jsx)("span", {
-					className: "layout-drag-handle",
-					children: "이동"
-				}),
-				/* @__PURE__ */ (0, V.jsx)("span", {
-					className: "layout-card-label",
-					children: Ta[e.id] || e.id
-				}),
-				/* @__PURE__ */ (0, V.jsxs)("span", {
-					className: "layout-size-readout",
-					children: [
-						l.span,
-						"/12 · ",
-						Math.round(l.minHeight),
-						"px"
-					]
-				}),
-				/* @__PURE__ */ (0, V.jsx)("button", {
-					className: "ghost layout-visibility-button",
-					type: "button",
-					onClick: (t) => {
-						t.stopPropagation(), i(r.map((t) => t.id === e.id ? {
-							...t,
-							visible: t.visible === !1
-						} : t));
-					},
-					children: e.visible === !1 ? "표시" : "숨김"
-				}),
-				/* @__PURE__ */ (0, V.jsx)("span", {
-					className: "layout-resize-handle",
-					onPointerDown: (t) => {
-						t.preventDefault(), t.stopPropagation();
-						let n = t.currentTarget.closest("[data-dashboard-card]"), a = {
-							x: t.clientX,
-							y: t.clientY,
-							span: e.span,
-							height: n.getBoundingClientRect().height
-						}, o = Ra(), s = (t) => {
-							c({
-								...e,
-								span: $a(a.span + Math.round((t.clientX - a.x) / o), 2, 12),
-								minHeight: $a(Math.round(a.height + t.clientY - a.y), 112, 720)
-							});
-						};
-						window.addEventListener("pointermove", s), window.addEventListener("pointerup", (t) => {
-							window.removeEventListener("pointermove", s);
-							let n = {
-								...e,
-								span: $a(a.span + Math.round((t.clientX - a.x) / o), 2, 12),
-								minHeight: $a(Math.round(a.height + t.clientY - a.y), 112, 720)
-							};
-							c(null), i(r.map((t) => t.id === e.id ? n : t));
-						}, { once: !0 });
-					},
-					"aria-label": "카드 크기 조절"
-				})
-			]
-		}) : null, /* @__PURE__ */ (0, V.jsx)(Aa, {
-			id: e.id,
-			state: t
-		})]
+		style: d,
+		children: [
+			n ? /* @__PURE__ */ (0, V.jsxs)("div", {
+				className: "layout-controls",
+				children: [
+					/* @__PURE__ */ (0, V.jsx)("span", {
+						className: "layout-drag-handle",
+						children: "이동"
+					}),
+					/* @__PURE__ */ (0, V.jsx)("span", {
+						className: "layout-card-label",
+						children: Ta[e.id] || e.id
+					}),
+					/* @__PURE__ */ (0, V.jsxs)("span", {
+						className: "layout-size-readout",
+						children: [
+							Math.round(u.widthPct),
+							"% · ",
+							Math.round(u.minHeight),
+							"px"
+						]
+					}),
+					/* @__PURE__ */ (0, V.jsx)("button", {
+						className: "ghost layout-visibility-button",
+						type: "button",
+						onClick: (t) => {
+							t.stopPropagation(), i(r.map((t) => t.id === e.id ? {
+								...t,
+								visible: t.visible === !1
+							} : t));
+						},
+						children: e.visible === !1 ? "표시" : "숨김"
+					})
+				]
+			}) : null,
+			n ? /* @__PURE__ */ (0, V.jsx)("span", {
+				className: "layout-resize-handle",
+				"aria-label": "카드 크기 조절"
+			}) : null,
+			/* @__PURE__ */ (0, V.jsx)(Aa, {
+				id: e.id,
+				state: t
+			})
+		]
 	});
 }
 function Aa({ id: e, state: t }) {
-	let n = Va(t);
+	let n = Ba(t);
 	return e === "total-value" ? /* @__PURE__ */ (0, V.jsx)(ja, {
 		label: "총 자산",
-		value: qa(n.valueKrw),
-		hint: `주식 ${qa(n.stockValueKrw)} · 예수금 ${qa(n.cashKrw)}`
+		value: Ka(n.valueKrw),
+		hint: `주식 ${Ka(n.stockValueKrw)} · 예수금 ${Ka(n.cashKrw)}`
 	}) : e === "total-cost" ? /* @__PURE__ */ (0, V.jsx)(ja, {
 		label: "주식 매입금액",
-		value: qa(n.costKrw),
+		value: Ka(n.costKrw),
 		hint: "평단 기준"
 	}) : e === "total-gain" ? /* @__PURE__ */ (0, V.jsx)(ja, {
 		label: "평가손익",
-		value: qa(n.gainKrw),
-		hint: Xa(n.returnRate),
+		value: Ka(n.gainKrw),
+		hint: Ya(n.returnRate),
 		tone: n.gainKrw >= 0 ? "positive" : "negative"
 	}) : e === "cash-total" ? /* @__PURE__ */ (0, V.jsx)(ja, {
 		label: "예수금",
-		value: qa(n.cashKrw),
+		value: Ka(n.cashKrw),
 		hint: "총자산에 포함"
 	}) : e === "fx-rate" ? /* @__PURE__ */ (0, V.jsx)(ja, {
 		label: "USD/KRW",
-		value: Ja(t.fxRate?.rate || 0, 2),
-		hint: `${t.fxRate?.source || "가격 데이터"} · ${Qa(t.fxRate?.asOf)}`
+		value: qa(t.fxRate?.rate || 0, 2),
+		hint: `${t.fxRate?.source || "가격 데이터"} · ${Za(t.fxRate?.asOf)}`
 	}) : e === "allocation" ? /* @__PURE__ */ (0, V.jsx)(Ma, { state: t }) : e === "performance-flow" ? /* @__PURE__ */ (0, V.jsx)(Na, { state: t }) : /* @__PURE__ */ (0, V.jsx)(Pa, { state: t });
 }
 function ja({ label: e, value: t, hint: n, tone: r }) {
@@ -12027,7 +12049,7 @@ function ja({ label: e, value: t, hint: n, tone: r }) {
 	] });
 }
 function Ma({ state: e }) {
-	let t = Wa(e), n = t.reduce((e, t) => e + t.value, 0);
+	let t = Ua(e), n = t.reduce((e, t) => e + t.value, 0);
 	return /* @__PURE__ */ (0, V.jsxs)(V.Fragment, { children: [/* @__PURE__ */ (0, V.jsxs)("div", {
 		className: "section-heading",
 		children: [/* @__PURE__ */ (0, V.jsx)("h2", { children: "자산 비중" }), /* @__PURE__ */ (0, V.jsx)("span", { children: "전략별" })]
@@ -12046,7 +12068,7 @@ function Ma({ state: e }) {
 					stroke: "#e6ebe5",
 					strokeWidth: "28"
 				}),
-				Ka(t),
+				Ga(t),
 				/* @__PURE__ */ (0, V.jsx)("text", {
 					x: "110",
 					y: "106",
@@ -12075,7 +12097,7 @@ function Ma({ state: e }) {
 						style: { background: Ea[t % Ea.length] }
 					}),
 					/* @__PURE__ */ (0, V.jsx)("span", { children: e.label }),
-					/* @__PURE__ */ (0, V.jsx)("strong", { children: Xa(n ? e.value / n : 0) })
+					/* @__PURE__ */ (0, V.jsx)("strong", { children: Ya(n ? e.value / n : 0) })
 				]
 			}, e.label))
 		})]
@@ -12096,14 +12118,14 @@ function Na({ state: e }) {
 		/* @__PURE__ */ (0, V.jsxs)("div", {
 			className: "performance-stats",
 			children: [
-				/* @__PURE__ */ (0, V.jsxs)("div", { children: [/* @__PURE__ */ (0, V.jsx)("span", { children: "최근 총자산" }), /* @__PURE__ */ (0, V.jsx)("strong", { children: qa(n.totalValueKrw) })] }),
+				/* @__PURE__ */ (0, V.jsxs)("div", { children: [/* @__PURE__ */ (0, V.jsx)("span", { children: "최근 총자산" }), /* @__PURE__ */ (0, V.jsx)("strong", { children: Ka(n.totalValueKrw) })] }),
 				/* @__PURE__ */ (0, V.jsxs)("div", { children: [/* @__PURE__ */ (0, V.jsx)("span", { children: "최근 일 증감" }), /* @__PURE__ */ (0, V.jsx)("strong", {
 					className: a >= 0 ? "positive" : "negative",
-					children: qa(a)
+					children: Ka(a)
 				})] }),
 				/* @__PURE__ */ (0, V.jsxs)("div", { children: [/* @__PURE__ */ (0, V.jsx)("span", { children: "표시기간 증감" }), /* @__PURE__ */ (0, V.jsx)("strong", {
 					className: o >= 0 ? "positive" : "negative",
-					children: qa(o)
+					children: Ka(o)
 				})] })
 			]
 		}),
@@ -12117,17 +12139,17 @@ function Na({ state: e }) {
 					children: [
 						/* @__PURE__ */ (0, V.jsx)("div", {
 							className: "bar-value",
-							children: Ya(e.totalValueKrw)
+							children: Ja(e.totalValueKrw)
 						}),
 						/* @__PURE__ */ (0, V.jsx)("div", {
 							className: "bar-fill",
 							style: { height: a },
-							title: qa(e.totalValueKrw)
+							title: Ka(e.totalValueKrw)
 						}),
-						/* @__PURE__ */ (0, V.jsx)("span", { children: Za(e.date) }),
+						/* @__PURE__ */ (0, V.jsx)("span", { children: Xa(e.date) }),
 						/* @__PURE__ */ (0, V.jsx)("small", {
 							className: i >= 0 ? "positive" : "negative",
-							children: r ? Ya(i) : "-"
+							children: r ? Ja(i) : "-"
 						})
 					]
 				}, e.id || e.date);
@@ -12136,7 +12158,7 @@ function Na({ state: e }) {
 	] });
 }
 function Pa({ state: e }) {
-	let t = [...Ga(e.holdings || [], e, "investor"), ...Ga(e.holdings || [], e, "accountType")];
+	let t = [...Wa(e.holdings || [], e, "investor"), ...Wa(e.holdings || [], e, "accountType")];
 	return /* @__PURE__ */ (0, V.jsxs)(V.Fragment, { children: [/* @__PURE__ */ (0, V.jsxs)("div", {
 		className: "section-heading",
 		children: [/* @__PURE__ */ (0, V.jsx)("h2", { children: "상세 분해" }), /* @__PURE__ */ (0, V.jsx)("span", { children: "투자자와 계좌 유형" })]
@@ -12150,7 +12172,7 @@ function Pa({ state: e }) {
 					style: { background: Ea[t % Ea.length] }
 				}),
 				/* @__PURE__ */ (0, V.jsx)("span", { children: e.label }),
-				/* @__PURE__ */ (0, V.jsx)("strong", { children: qa(e.value) })
+				/* @__PURE__ */ (0, V.jsx)("strong", { children: Ka(e.value) })
 			]
 		}, `${e.label}-${t}`))
 	})] });
@@ -12164,11 +12186,12 @@ function Fa(e) {
 	}, r = /* @__PURE__ */ new Set(), i = [];
 	for (let a of Array.isArray(e) ? e : []) {
 		if (!t.has(a.id) || r.has(a.id)) continue;
-		let e = t.get(a.id);
+		let e = t.get(a.id), o = Qa(Math.round(Number(a.span ?? n[a.size] ?? e.span)), 2, 12), s = Number(a.widthPct ?? o / 12 * 100);
 		i.push({
 			id: a.id,
-			span: $a(Math.round(Number(a.span ?? n[a.size] ?? e.span)), 2, 12),
-			minHeight: $a(Math.round(Number(a.minHeight ?? e.minHeight)), 112, 720),
+			widthPct: Qa($a(s, .1), 18, 100),
+			span: o,
+			minHeight: Qa(Math.round(Number(a.minHeight ?? e.minHeight)), 112, 720),
 			visible: a.visible !== !1
 		}), r.add(a.id);
 	}
@@ -12185,24 +12208,18 @@ function La(e, t) {
 	let n = t.getBoundingClientRect();
 	return e.clientY > n.top + n.height / 2 || e.clientX > n.left + n.width / 2;
 }
-function Ra() {
-	let e = document.querySelector("#dashboardBoard");
-	if (!e) return 1;
-	let t = getComputedStyle(e), n = t.gridTemplateColumns.split(" ").filter(Boolean).length || 1, r = Number.parseFloat(t.columnGap || "0") || 0;
-	return Math.max(1, (e.clientWidth - r * (n - 1)) / n + r);
-}
-function za(e) {
+function Ra(e) {
 	return [
 		"allocation",
 		"performance-flow",
 		"breakdown"
 	].includes(e) ? "panel" : "metric";
 }
-function Ba(e) {
+function za(e) {
 	return e.map((e) => `${e.id}:${e.span}:${e.minHeight}:${e.visible}`).join("|");
 }
-function Va(e) {
-	let t = Number(e.fxRate?.rate || 1), n = e.holdings || [], r = Ua(e), i = n.reduce((e, n) => e + Ha(n, t).valueKrw, 0), a = n.reduce((e, n) => e + Ha(n, t).costKrw, 0), o = i - a;
+function Ba(e) {
+	let t = Number(e.fxRate?.rate || 1), n = e.holdings || [], r = Ha(e), i = n.reduce((e, n) => e + Va(n, t).valueKrw, 0), a = n.reduce((e, n) => e + Va(n, t).costKrw, 0), o = i - a;
 	return {
 		valueKrw: i + r,
 		stockValueKrw: i,
@@ -12212,36 +12229,36 @@ function Va(e) {
 		returnRate: a ? o / a : 0
 	};
 }
-function Ha(e, t) {
+function Va(e, t) {
 	let n = e.currency === "USD" ? t : 1, r = Number(e.quantity || 0) * Number(e.price || 0), i = Number(e.quantity || 0) * Number(e.averageCost || 0);
 	return {
 		valueKrw: r * n,
 		costKrw: i * n
 	};
 }
-function Ua(e) {
+function Ha(e) {
 	let t = Number(e.fxRate?.rate || 1);
 	return (e.cashBalances || []).reduce((e, n) => e + Number(n.amount || 0) * (n.currency === "USD" ? t : 1), 0);
 }
-function Wa(e) {
-	let t = Ga(e.holdings || [], e, "strategy"), n = Ua(e);
+function Ua(e) {
+	let t = Wa(e.holdings || [], e, "strategy"), n = Ha(e);
 	return n > 0 && t.push({
 		label: "예수금",
 		value: n
 	}), t.sort((e, t) => t.value - e.value);
 }
-function Ga(e, t, n) {
+function Wa(e, t, n) {
 	let r = Number(t.fxRate?.rate || 1), i = /* @__PURE__ */ new Map();
 	for (let t of e) {
 		let e = t[n] || "미분류";
-		i.set(e, (i.get(e) || 0) + Ha(t, r).valueKrw);
+		i.set(e, (i.get(e) || 0) + Va(t, r).valueKrw);
 	}
 	return [...i.entries()].map(([e, t]) => ({
 		label: e,
 		value: t
 	})).sort((e, t) => t.value - e.value);
 }
-function Ka(e) {
+function Ga(e) {
 	let t = e.reduce((e, t) => e + t.value, 0), n = 2 * Math.PI * 78, r = 0;
 	return e.map((e, i) => {
 		let a = (t ? e.value / t : 0) * n, o = /* @__PURE__ */ (0, V.jsx)("circle", {
@@ -12258,37 +12275,37 @@ function Ka(e) {
 		return r += a, o;
 	});
 }
-function qa(e) {
+function Ka(e) {
 	return new Intl.NumberFormat("ko-KR", {
 		style: "currency",
 		currency: "KRW",
 		maximumFractionDigits: 0
 	}).format(e || 0);
 }
-function Ja(e, t = 2) {
+function qa(e, t = 2) {
 	return new Intl.NumberFormat("ko-KR", { maximumFractionDigits: t }).format(e || 0);
 }
-function Ya(e) {
+function Ja(e) {
 	return new Intl.NumberFormat("ko-KR", {
 		notation: "compact",
 		maximumFractionDigits: 1
 	}).format(e || 0);
 }
-function Xa(e) {
+function Ya(e) {
 	return new Intl.NumberFormat("en-US", {
 		style: "percent",
 		minimumFractionDigits: 2,
 		maximumFractionDigits: 2
 	}).format(e || 0);
 }
-function Za(e) {
+function Xa(e) {
 	let t = /* @__PURE__ */ new Date(`${e}T00:00:00`);
 	return Number.isNaN(t.getTime()) ? e : t.toLocaleDateString("ko-KR", {
 		month: "numeric",
 		day: "numeric"
 	});
 }
-function Qa(e) {
+function Za(e) {
 	if (!e || e === "샘플" || e === "Sample") return "샘플";
 	let t = new Date(e);
 	return Number.isNaN(t.getTime()) ? e : t.toLocaleString("ko-KR", {
@@ -12298,9 +12315,12 @@ function Qa(e) {
 		minute: "2-digit"
 	});
 }
-function $a(e, t, n) {
+function Qa(e, t, n) {
 	return Math.min(n, Math.max(t, e));
 }
+function $a(e, t) {
+	return Math.round(e / t) * t;
+}
 var eo = document.querySelector("#dashboardBoard");
-eo && (0, v.createRoot)(eo).render(/* @__PURE__ */ (0, V.jsx)(Da, {}));
+eo && (eo.classList.add("craft-dashboard-board"), (0, v.createRoot)(eo).render(/* @__PURE__ */ (0, V.jsx)(Da, {})));
 //#endregion
