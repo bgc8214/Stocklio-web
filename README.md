@@ -18,6 +18,7 @@ Numbers로 관리하던 개인 주식 포트폴리오를 웹 서비스로 옮기
 - 앱 안에서 XLSX import preview 후 확정 저장 가능
 - Supabase Google 로그인과 사용자별 포트폴리오 저장 경로 추가
 - Supabase 미설정 시에는 로컬 데모 모드로 안전하게 동작
+- Vercel Cron 기반 프로덕션 일일 스냅샷 함수 추가
 
 ## 실행
 
@@ -48,7 +49,7 @@ npm run verify
 
 미국 주식/ETF 가격과 USD/KRW 환율은 Yahoo Finance chart endpoint를 작은 로컬 프록시로 가져온다. 별도 API key는 필요 없다. 가격 응답은 5분, 환율 응답은 1시간 캐시한다.
 
-앱 상태는 `data/portfolio.db` SQLite 파일에 저장된다. 이 DB 파일은 개인 포트폴리오 데이터를 담을 수 있으므로 git에 포함하지 않는다. 서버는 15분마다 자동화 조건을 확인하고, `Asia/Seoul` 기준 매일 09:10 이후 가격/환율을 갱신한 뒤 당일 `PortfolioSnapshot`과 `accountSnapshots`를 생성하거나 갱신한다.
+로컬 개발 서버의 앱 상태는 `data/portfolio.db` SQLite 파일에 저장된다. 이 DB 파일은 개인 포트폴리오 데이터를 담을 수 있으므로 git에 포함하지 않는다. 로컬 서버는 15분마다 자동화 조건을 확인하고, `Asia/Seoul` 기준 자동화 시각 이후 가격/환율을 갱신한 뒤 당일 `PortfolioSnapshot`과 `accountSnapshots`를 생성하거나 갱신한다.
 
 ## 주요 문서
 
@@ -68,7 +69,9 @@ npm run verify
 
 ## Vercel 배포 메모
 
-`vercel.json`은 정적 화면과 `api/yahoo/chart` 가격 프록시 배포를 위한 설정이다. 운영 사용자 데이터는 로컬 SQLite가 아니라 Supabase의 `portfolio_states` 테이블에 저장한다. 현재 제품화 1차에서는 계산 로직을 `src/domain/portfolio-core.js`로 분리해 이후 API/DB 계층에서 같은 계산 경계를 재사용할 수 있게 했다.
+`vercel.json`은 정적 화면, `api/yahoo/chart` 가격 프록시, `api/cron/daily-snapshot` 일일 자동 스냅샷 배포를 위한 설정이다. 운영 사용자 데이터는 로컬 SQLite가 아니라 Supabase의 `portfolio_states` 테이블에 저장한다. 계산 로직은 `src/domain/portfolio-core.js`로 분리해 브라우저, 로컬 서버, Vercel Function이 같은 계산 경계를 재사용한다.
+
+Vercel Cron은 UTC 기준 `0 22 * * *`로 설정되어 있으며, 이는 `Asia/Seoul` 기준 매일 07:00 실행이다. 이 함수는 모든 사용자 포트폴리오를 순회하므로 브라우저용 anon key가 아니라 서버 전용 service role key가 필요하다.
 
 ## Supabase 설정
 
@@ -81,5 +84,14 @@ Vercel 환경변수에는 다음 값을 넣고 다시 배포한다.
 
 - `VITE_SUPABASE_URL`
 - `VITE_SUPABASE_ANON_KEY`
+- `SUPABASE_SERVICE_ROLE_KEY`: Vercel 서버 환경변수에만 저장한다. 브라우저 코드나 `.env` 공개 파일에 넣지 않는다.
+- `CRON_SECRET`: `/api/cron/daily-snapshot` 호출 보호용 비밀값이다.
 
 환경변수가 없으면 앱은 로그인 버튼을 비활성화하고 로컬 데모 모드로 동작한다.
+
+운영 자동화 활성화 체크리스트:
+
+1. Supabase SQL Editor에서 최신 `supabase/schema.sql`을 실행한다.
+2. Vercel Production 환경변수에 `SUPABASE_SERVICE_ROLE_KEY`와 `CRON_SECRET`을 추가한다.
+3. 재배포 후 `/api/health`의 `checks.automationEnv`와 `automationStatus`를 확인한다.
+4. 필요한 경우 `Authorization: Bearer $CRON_SECRET` 헤더로 `/api/cron/daily-snapshot`을 수동 호출해 오늘 스냅샷 upsert를 검증한다.

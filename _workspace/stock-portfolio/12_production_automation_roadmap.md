@@ -4,7 +4,7 @@
 
 Stocklio의 프로덕션 기준은 `사용자가 매일 누르지 않아도 포트폴리오가 기록되는 것`이다. 수동 `가격 갱신`, `성과 저장`은 비상/보정용이어야 하고, 기본 흐름은 예약 작업이 가격, 환율, 스냅샷, 실패 로그를 자동으로 만든다.
 
-현재 상태는 `로그인 + Supabase 저장 + 수동 스냅샷`이다. 다음 제품화의 1순위는 `자동 스냅샷 파이프라인`이다.
+현재 상태는 `로그인 + Supabase 저장 + Vercel Cron 자동 스냅샷 코드 준비`다. 운영 활성화의 마지막 조건은 Supabase 최신 스키마 적용과 Vercel 서버 비밀값 설정이다.
 
 ## 목표 상태
 
@@ -54,7 +54,7 @@ Vercel Cron이 production URL의 `/api/cron/daily-snapshot`을 호출하고, 함
 
 ## Phase A: 자동화 데이터 모델
 
-상태: `다음`
+상태: `구현 완료, 운영 스키마 적용 필요`
 
 추가 테이블 또는 JSON state 필드:
 
@@ -90,7 +90,7 @@ Vercel Cron이 production URL의 `/api/cron/daily-snapshot`을 호출하고, 함
 
 ## Phase B: 일일 스냅샷 함수
 
-상태: `다음`
+상태: `구현 완료`
 
 함수 책임:
 
@@ -113,13 +113,14 @@ Vercel Cron이 production URL의 `/api/cron/daily-snapshot`을 호출하고, 함
 
 ## Phase C: 예약 실행
 
-상태: `다음`
+상태: `구현 완료, Vercel Production secret 필요`
 
 기본 스케줄:
 
 - 한국 주식 포함 기준: KST 16:10 이후 1회
 - 미국 주식 중심 기준: KST 06:30 이후 1회
 - 현재 포트폴리오는 국내/미국 혼합이므로 초기값은 `KST 07:00`, 필요 시 `KST 16:30` 보조 실행
+- 현재 `vercel.json`은 `0 22 * * *`로 설정되어 `KST 07:00`에 실행된다.
 
 운영 정책:
 
@@ -136,7 +137,7 @@ Vercel Cron이 production URL의 `/api/cron/daily-snapshot`을 호출하고, 함
 
 ## Phase D: UI/UX
 
-상태: `다음`
+상태: `부분 완료`
 
 대시보드:
 
@@ -200,7 +201,7 @@ Vercel Cron이 production URL의 `/api/cron/daily-snapshot`을 호출하고, 함
 
 ## Phase G: 운영 안정성
 
-상태: `다음`
+상태: `부분 완료`
 
 필수 항목:
 
@@ -220,14 +221,14 @@ Vercel Cron이 production URL의 `/api/cron/daily-snapshot`을 호출하고, 함
 
 ## 즉시 구현 순서
 
-1. Supabase에 `automation_runs`, `price_logs`, `portfolio_snapshots` 초안 테이블 추가
-2. `src/domain/portfolio-core.js` 계산 함수를 서버/함수에서 재사용할 수 있게 정리
-3. Supabase Edge Function 또는 Vercel `/api/cron/daily-snapshot` 구현
-4. cron secret 적용
-5. 오늘 날짜 스냅샷 upsert 테스트
-6. 자동화/데이터 화면에 최근 실행 결과 표시
-7. production health에 `lastAutomationRunAt`, `lastSnapshotDate` 추가
-8. Playwright/API smoke에 자동 스냅샷 dry-run 추가
+1. Supabase에 `automation_runs`, `price_logs` 초안 테이블 추가 `완료`
+2. `src/domain/portfolio-core.js` 계산 함수를 서버/함수에서 재사용할 수 있게 정리 `완료`
+3. Vercel `/api/cron/daily-snapshot` 구현 `완료`
+4. cron secret 적용 `코드 완료, Vercel 환경변수 필요`
+5. 오늘 날짜 스냅샷 upsert 테스트 `서비스 롤 키 설정 후 필요`
+6. 자동화/데이터 화면에 최근 실행 결과 표시 `부분 완료: state price logs 표시`
+7. production health에 자동화 준비 상태와 최근 실행 결과 추가 `완료`
+8. 자동화 API 문법 검증을 기본 check에 포함 `완료`
 9. 한국/미국 시장별 실행 시간 정책 확정
 10. 실패 알림 채널 결정
 

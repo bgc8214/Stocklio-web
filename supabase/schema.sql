@@ -41,3 +41,45 @@ create trigger portfolio_states_set_updated_at
   before update on public.portfolio_states
   for each row
   execute function public.set_updated_at();
+
+create table if not exists public.automation_runs (
+  id uuid primary key,
+  started_at timestamptz not null default now(),
+  finished_at timestamptz,
+  status text not null check (status in ('running', 'success', 'partial', 'failed')),
+  scope text not null,
+  processed_portfolios integer not null default 0,
+  success_count integer not null default 0,
+  failure_count integer not null default 0,
+  message text,
+  created_at timestamptz not null default now()
+);
+
+alter table public.automation_runs enable row level security;
+
+drop policy if exists "Users can read automation runs" on public.automation_runs;
+create policy "Users can read automation runs"
+  on public.automation_runs
+  for select
+  using (auth.role() = 'authenticated');
+
+create table if not exists public.price_logs (
+  id bigint generated always as identity primary key,
+  portfolio_user_id uuid references auth.users(id) on delete cascade,
+  automation_run_id uuid references public.automation_runs(id) on delete set null,
+  symbol text not null,
+  status text not null check (status in ('success', 'error')),
+  price numeric,
+  source text,
+  as_of timestamptz not null default now(),
+  message text,
+  created_at timestamptz not null default now()
+);
+
+alter table public.price_logs enable row level security;
+
+drop policy if exists "Users can read own price logs" on public.price_logs;
+create policy "Users can read own price logs"
+  on public.price_logs
+  for select
+  using (auth.uid() = portfolio_user_id);
