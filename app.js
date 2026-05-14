@@ -270,6 +270,8 @@ const els = {
   priceLogsBody: document.querySelector("#priceLogsBody"),
   exportBackupButton: document.querySelector("#exportBackupButton"),
   restoreInput: document.querySelector("#restoreInput"),
+  importPreviewInput: document.querySelector("#importPreviewInput"),
+  commitImportButton: document.querySelector("#commitImportButton"),
   loadImportSummaryButton: document.querySelector("#loadImportSummaryButton"),
   importSummary: document.querySelector("#importSummary"),
   reconcileSummary: document.querySelector("#reconcileSummary"),
@@ -552,6 +554,16 @@ els.restoreInput.addEventListener("change", (event) => {
   restoreBackup(event.target.files?.[0]).finally(() => {
     event.target.value = "";
   });
+});
+
+els.importPreviewInput.addEventListener("change", (event) => {
+  previewImport(event.target.files?.[0]).finally(() => {
+    event.target.value = "";
+  });
+});
+
+els.commitImportButton.addEventListener("click", () => {
+  commitImport();
 });
 
 els.loadImportSummaryButton.addEventListener("click", () => {
@@ -1585,8 +1597,8 @@ async function fetchYahooChart(symbol) {
   return fetchJson(url);
 }
 
-async function fetchJson(url) {
-  const response = await fetch(url);
+async function fetchJson(url, options) {
+  const response = await fetch(url, options);
   if (!response.ok) {
     throw new Error(`HTTP ${response.status}`);
   }
@@ -1777,6 +1789,52 @@ async function loadImportSummary() {
     els.importSummary.textContent = `보유 ${summary.holdings}개 · 스냅샷 ${summary.snapshots}개 · 예수금 ${summary.cashBalances}개 · 총자산 ${formatKrw(summary.migratedTotalAssetsKrw)}`;
   } catch (error) {
     els.importSummary.textContent = `검증 리포트를 불러오지 못했습니다 · ${error.message}`;
+  }
+}
+
+async function previewImport(file) {
+  if (!file) {
+    return;
+  }
+  els.importSummary.textContent = `${file.name} 검증 중...`;
+  els.commitImportButton.disabled = true;
+  try {
+    const response = await fetch("/api/import/preview", {
+      method: "POST",
+      headers: {
+        "content-type": file.type || "application/octet-stream",
+      },
+      body: await file.arrayBuffer(),
+    });
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      throw new Error(error.error || `HTTP ${response.status}`);
+    }
+    const result = await response.json();
+    const summary = result.summary;
+    const names = result.preview.firstHoldingNames.length ? ` · 예: ${result.preview.firstHoldingNames.join(", ")}` : "";
+    els.importSummary.textContent = `Preview 완료 · 보유 ${summary.holdings}개 · 스냅샷 ${summary.snapshots}개 · 예수금 ${summary.cashBalances}개 · 총자산 ${formatKrw(summary.migratedTotalAssetsKrw)}${names}`;
+    els.commitImportButton.disabled = false;
+    setStatus("Import preview 완료", "확정 전까지 현재 포트폴리오는 바뀌지 않습니다");
+  } catch (error) {
+    els.importSummary.textContent = `Preview 실패 · ${error.message}`;
+    setStatus("Import preview 실패", error.message);
+  }
+}
+
+async function commitImport() {
+  els.commitImportButton.disabled = true;
+  try {
+    const result = await fetchJson("/api/import/commit", {
+      method: "POST",
+    });
+    state = await loadState();
+    render();
+    els.importSummary.textContent = `Import 확정 완료 · 보유 ${result.holdings}개 · 스냅샷 ${result.snapshots}개 · 예수금 ${result.cashBalances}개`;
+    setStatus("Import 확정 완료", "SQLite 상태에 새 포트폴리오를 저장했습니다");
+  } catch (error) {
+    els.importSummary.textContent = `Import 확정 실패 · ${error.message}`;
+    setStatus("Import 확정 실패", error.message);
   }
 }
 

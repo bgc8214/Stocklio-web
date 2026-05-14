@@ -60,9 +60,14 @@ def main() -> None:
     parser.add_argument("--xlsx", type=Path, default=DEFAULT_XLSX)
     parser.add_argument("--db", type=Path, default=DEFAULT_DB)
     parser.add_argument("--summary", type=Path, default=SUMMARY_PATH)
+    parser.add_argument("--preview", action="store_true", help="Print preview JSON and do not write SQLite state.")
     args = parser.parse_args()
 
     state, summary = migrate_workbook(args.xlsx)
+    if args.preview:
+        print(json.dumps({"summary": summary, "state": state}, ensure_ascii=False))
+        return
+
     write_state(args.db, state)
     args.summary.parent.mkdir(parents=True, exist_ok=True)
     args.summary.write_text(json.dumps(summary, ensure_ascii=False, indent=2), encoding="utf-8")

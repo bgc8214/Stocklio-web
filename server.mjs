@@ -1,9 +1,11 @@
 import { createReadStream } from "node:fs";
-import { mkdir, readFile, stat } from "node:fs/promises";
+import { execFile } from "node:child_process";
+import { mkdir, readFile, stat, writeFile } from "node:fs/promises";
 import { createServer } from "node:http";
 import { DatabaseSync } from "node:sqlite";
 import { extname, join, normalize } from "node:path";
 import { fileURLToPath } from "node:url";
+import { promisify } from "node:util";
 import {
   DEFAULT_DASHBOARD_LAYOUT,
   buildAccountSnapshots as buildAccountSnapshotsCore,
@@ -17,10 +19,14 @@ import {
 const rootDir = fileURLToPath(new URL(".", import.meta.url));
 const port = Number(process.env.PORT || 4173);
 const dataDir = join(rootDir, "data");
+const privateDataDir = join(dataDir, "private");
 const dbPath = join(dataDir, "portfolio.db");
-const importSummaryPath = join(dataDir, "private", "migration-summary.json");
+const importSummaryPath = join(privateDataDir, "migration-summary.json");
+const importPreviewStatePath = join(privateDataDir, "import-preview-state.json");
 const stateKey = "default";
 const automationIntervalMs = 15 * 60 * 1000;
+const execFileAsync = promisify(execFile);
+const pythonBin = process.env.PYTHON_BIN || "/Users/boss.back/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3";
 
 const mimeTypes = {
   ".html": "text/html; charset=utf-8",
@@ -29,7 +35,7 @@ const mimeTypes = {
   ".json": "application/json; charset=utf-8",
 };
 
-await mkdir(dataDir, { recursive: true });
+await mkdir(privateDataDir, { recursive: true });
 const db = new DatabaseSync(dbPath);
 initializeDb();
 
@@ -67,6 +73,16 @@ createServer(async (request, response) => {
 
     if (url.pathname === "/api/import/summary" && request.method === "GET") {
       await sendImportSummary(response);
+      return;
+    }
+
+    if (url.pathname === "/api/import/preview" && request.method === "POST") {
+      await previewImport(request, response);
+      return;
+    }
+
+    if (url.pathname === "/api/import/commit" && request.method === "POST") {
+      await commitImportPreview(response);
       return;
     }
 
@@ -434,6 +450,19 @@ async function readJsonBody(request) {
   return JSON.parse(body || "{}");
 }
 
+async function readBinaryBody(request) {
+  const chunks = [];
+  let size = 0;
+  for await (const chunk of request) {
+    size += chunk.length;
+    if (size > 30_000_000) {
+      throw new Error("Import file is too large");
+    }
+    chunks.push(chunk);
+  }
+  return Buffer.concat(chunks);
+}
+
 async function serveStatic(pathname, response) {
   const cleanPath = pathname === "/" ? "/index.html" : pathname;
   const absolutePath = normalize(join(rootDir, cleanPath));
@@ -467,6 +496,55 @@ async function sendImportSummary(response) {
   } catch {
     sendJson(response, 404, { error: "Import summary not found" });
   }
+}
+
+async function previewImport(request, response) {
+  const contentType = request.headers["content-type"] || "";
+  if (!contentType.includes("spreadsheet") && !contentType.includes("octet-stream")) {
+    sendJson(response, 415, { error: "XLSX 파일만 업로드할 수 있습니다" });
+    return;
+  }
+  const uploadPath = join(privateDataDir, `import-preview-${Date.now()}.xlsx`);
+  await writeFile(uploadPath, await readBinaryBody(request));
+  const { stdout, stderr } = await execFileAsync(pythonBin, [
+    "scripts/migrate_numbers.py",
+    "--xlsx",
+    uploadPath,
+    "--preview",
+  ], {
+    cwd: rootDir,
+    maxBuffer: 20 * 1024 * 1024,
+  });
+  if (stderr.trim()) {
+    console.warn(stderr.trim());
+  }
+  const preview = JSON.parse(stdout);
+  const normalized = normalizeState(preview.state);
+  await writeFile(importPreviewStatePath, JSON.stringify(normalized, null, 2), "utf8");
+  await writeFile(importSummaryPath, JSON.stringify(preview.summary, null, 2), "utf8");
+  sendJson(response, 200, {
+    summary: preview.summary,
+    preview: {
+      holdings: normalized.holdings.length,
+      snapshots: normalized.portfolioSnapshots.length,
+      cashBalances: normalized.cashBalances.length,
+      accounts: normalized.accounts.length,
+      firstHoldingNames: normalized.holdings.slice(0, 5).map((holding) => holding.name || holding.ticker),
+    },
+  });
+}
+
+async function commitImportPreview(response) {
+  const content = await readFile(importPreviewStatePath, "utf8");
+  const nextState = normalizeState(JSON.parse(content));
+  writeState(nextState);
+  sendJson(response, 200, {
+    ok: true,
+    savedAt: new Date().toISOString(),
+    holdings: nextState.holdings.length,
+    snapshots: nextState.portfolioSnapshots.length,
+    cashBalances: nextState.cashBalances.length,
+  });
 }
 
 function sendJson(response, statusCode, payload) {
