@@ -203,7 +203,33 @@ const sampleState = {
   },
 };
 
-let state = structuredClone(sampleState);
+function createEmptyState() {
+  return {
+    version: DATA_VERSION,
+    fxRate: {
+      pair: "USD/KRW",
+      rate: 1350,
+      source: "기본 환율",
+      asOf: "가격 업데이트 전",
+    },
+    holdings: [],
+    cashFlows: [],
+    cashBalances: [],
+    accounts: [],
+    dashboardLayout: structuredClone(defaultDashboardLayout),
+    accountSnapshots: [],
+    priceUpdateLogs: [],
+    portfolioSnapshots: [],
+    automation: {
+      lastRunAt: null,
+      lastResult: "아직 자동 실행 없음",
+      snapshotTime: "09:10",
+      timezone: "Asia/Seoul",
+    },
+  };
+}
+
+let state = createEmptyState();
 let editingHoldingId = null;
 let editingCashFlowId = null;
 let editingCashBalanceId = null;
@@ -326,7 +352,7 @@ els.resetButton.addEventListener("click", () => {
   isLayoutEditing = false;
   saveState();
   render();
-  setStatus("샘플 데이터로 초기화했습니다", "아직 실시간 업데이트 없음");
+  setStatus("샘플 데이터를 불러왔습니다", "실제 포트폴리오는 보유 종목과 계좌에서 직접 입력하세요");
 });
 
 els.layoutEditButton.addEventListener("click", () => {
@@ -602,13 +628,13 @@ function loadState() {
   if (window.StocklioAuth?.isConfigured?.() && window.StocklioAuth.getState().signedIn) {
     return window.StocklioAuth.loadPortfolioState()
       .then((remoteState) => {
-        const normalized = remoteState ? normalizeState(remoteState) : normalizeState(stored ? JSON.parse(stored) : sampleState);
+        const normalized = remoteState ? normalizeState(remoteState) : createEmptyState();
         localStorage.setItem(STORAGE_KEY, JSON.stringify(normalized));
         return normalized;
       })
       .catch((error) => {
         setStatus("Supabase 불러오기 실패", error.message);
-        return stored ? normalizeState(JSON.parse(stored)) : structuredClone(sampleState);
+        return createEmptyState();
       });
   }
   if (isStaticDeployment()) {
