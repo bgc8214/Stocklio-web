@@ -13,10 +13,14 @@ Numbers로 관리하던 개인 주식 포트폴리오를 웹 서비스로 옮기
 - Node 내장 SQLite 기반 저장소와 매일 자동 스냅샷 작업 추가
 - 총자산 계산에 예수금을 포함하고, 계좌별 자산 검증과 성과 상세 화면 추가
 - 가격 업데이트 로그, 최근 import 검증 리포트, JSON 백업/복원 UI 추가
+- Craft.js 기반 대시보드 편집 캔버스 추가
+- 공통 도메인 계산 모듈과 제품 스모크 테스트 추가
 
 ## 실행
 
 ```bash
+npm install
+npm run build
 npm run dev
 ```
 
@@ -27,7 +31,11 @@ npm run dev
 ```bash
 npm run check
 npm run test:migration
+npm run test:product
+npm run verify
 ```
+
+`npm run verify`는 도메인 단위 테스트, Numbers 마이그레이션 테스트, 로컬 서버/API/브라우저/Craft.js 대시보드 스모크 테스트를 한 번에 실행한다.
 
 미국 주식/ETF 가격과 USD/KRW 환율은 Yahoo Finance chart endpoint를 작은 로컬 프록시로 가져온다. 별도 API key는 필요 없다. 가격 응답은 5분, 환율 응답은 1시간 캐시한다.
 
@@ -50,4 +58,4 @@ npm run test:migration
 
 ## Vercel 배포 메모
 
-`vercel.json`은 현재 정적 화면 배포를 위한 기본 설정이다. 실제 제품 배포에서는 로컬 SQLite 대신 Vercel Functions와 외부 Postgres 계열 DB를 붙여야 사용자별 데이터가 영구 저장된다.
+`vercel.json`은 현재 정적 화면 배포를 위한 기본 설정이다. 실제 제품 배포에서는 로컬 SQLite 대신 Vercel Functions와 외부 Postgres 계열 DB를 붙여야 사용자별 데이터가 영구 저장된다. 현재 제품화 1차에서는 계산 로직을 `src/domain/portfolio-core.js`로 분리해 이후 API/DB 계층에서 같은 계산 경계를 재사용할 수 있게 했다.
