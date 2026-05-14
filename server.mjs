@@ -582,14 +582,14 @@ function createSeedState() {
 
 function createDefaultDashboardLayout() {
   return [
-    { id: "total-value", span: 3, minHeight: 128, visible: true },
-    { id: "total-cost", span: 3, minHeight: 128, visible: true },
-    { id: "total-gain", span: 3, minHeight: 128, visible: true },
-    { id: "cash-total", span: 3, minHeight: 128, visible: true },
-    { id: "fx-rate", span: 3, minHeight: 128, visible: true },
-    { id: "allocation", span: 6, minHeight: 320, visible: true },
-    { id: "performance-flow", span: 6, minHeight: 320, visible: true },
-    { id: "breakdown", span: 6, minHeight: 320, visible: true },
+    { id: "total-value", widthPct: 25, span: 3, minHeight: 128, visible: true },
+    { id: "total-cost", widthPct: 25, span: 3, minHeight: 128, visible: true },
+    { id: "total-gain", widthPct: 25, span: 3, minHeight: 128, visible: true },
+    { id: "cash-total", widthPct: 25, span: 3, minHeight: 128, visible: true },
+    { id: "fx-rate", widthPct: 25, span: 3, minHeight: 128, visible: true },
+    { id: "allocation", widthPct: 50, span: 6, minHeight: 320, visible: true },
+    { id: "performance-flow", widthPct: 50, span: 6, minHeight: 320, visible: true },
+    { id: "breakdown", widthPct: 50, span: 6, minHeight: 320, visible: true },
   ];
 }
 
@@ -604,9 +604,11 @@ function normalizeDashboardLayout(layout) {
       continue;
     }
     const fallback = defaultById.get(item.id);
+    const span = clamp(Math.round(Number(item.span ?? sizeToSpan[item.size] ?? fallback.span)), 2, 12);
     normalized.push({
       id: item.id,
-      span: clamp(Math.round(Number(item.span ?? sizeToSpan[item.size] ?? fallback.span)), 2, 12),
+      widthPct: clamp(Math.round(Number(item.widthPct ?? fallback.widthPct ?? (span / 12) * 100) * 10) / 10, 18, 100),
+      span,
       minHeight: clamp(Math.round(Number(item.minHeight ?? fallback.minHeight)), 112, 720),
       visible: item.visible !== false,
     });
