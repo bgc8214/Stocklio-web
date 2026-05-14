@@ -3,6 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 const config = window.STOCKLIO_SUPABASE || {};
 const url = config.url || "";
 const anonKey = config.anonKey || "";
+const siteUrl = getConfiguredUrl(config.siteUrl);
 
 let client = null;
 let session = null;
@@ -64,12 +65,20 @@ async function signInWithGoogle() {
   const { error } = await client.auth.signInWithOAuth({
     provider: "google",
     options: {
-      redirectTo: window.location.origin,
+      redirectTo: siteUrl || window.location.origin,
     },
   });
   if (error) {
     throw error;
   }
+}
+
+function getConfiguredUrl(value) {
+  const candidate = String(value || "").trim();
+  if (!candidate || candidate.includes("%") || candidate.includes("YOUR_")) {
+    return "";
+  }
+  return candidate.replace(/\/$/, "");
 }
 
 async function signOut() {

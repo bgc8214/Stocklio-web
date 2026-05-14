@@ -25,5 +25,6 @@ await writeFile(
   indexPath,
   html
     .replaceAll("%VITE_SUPABASE_URL%", process.env.VITE_SUPABASE_URL || "")
-    .replaceAll("%VITE_SUPABASE_ANON_KEY%", process.env.VITE_SUPABASE_ANON_KEY || ""),
+    .replaceAll("%VITE_SUPABASE_ANON_KEY%", process.env.VITE_SUPABASE_ANON_KEY || "")
+    .replaceAll("%VITE_PUBLIC_SITE_URL%", process.env.VITE_PUBLIC_SITE_URL || ""),
 );
