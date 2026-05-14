@@ -64,6 +64,7 @@ npm run verify
 - `_workspace/stock-portfolio/09_product_level_roadmap.md`
 - `_workspace/stock-portfolio/10_ux_review.md`
 - `_workspace/stock-portfolio/11_local_productization_report.md`
+- `_workspace/stock-portfolio/12_production_automation_roadmap.md`
 
 ## Vercel 배포 메모
 
