@@ -11848,7 +11848,7 @@ var _a = () => {
 function Da() {
 	let [e, t] = (0, _.useState)(null), [n, r] = (0, _.useState)(!1);
 	(0, _.useEffect)(() => {
-		fetch("/api/state").then((e) => e.json()).then(t).catch(() => t(window.StocklioApp?.getState?.() || null));
+		t(window.StocklioApp?.getState?.() || null);
 		let e = (e) => t(e.detail);
 		return window.addEventListener("stocklio:state", e), () => window.removeEventListener("stocklio:state", e);
 	}, []);

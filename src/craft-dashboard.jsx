@@ -31,10 +31,7 @@ function CraftDashboardApp() {
   const [editing, setEditing] = useState(false);
 
   useEffect(() => {
-    fetch("/api/state")
-      .then((response) => response.json())
-      .then(setState)
-      .catch(() => setState(window.StocklioApp?.getState?.() || null));
+    setState(window.StocklioApp?.getState?.() || null);
 
     const handleState = (event) => setState(event.detail);
     window.addEventListener("stocklio:state", handleState);
