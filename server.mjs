@@ -18,6 +18,7 @@ import {
 
 const rootDir = fileURLToPath(new URL(".", import.meta.url));
 const port = Number(process.env.PORT || 4173);
+const host = process.env.HOST || "127.0.0.1";
 const dataDir = join(rootDir, "data");
 const privateDataDir = join(dataDir, "private");
 const dbPath = join(dataDir, "portfolio.db");
@@ -95,8 +96,8 @@ createServer(async (request, response) => {
   } catch (error) {
     sendJson(response, 500, { error: error.message || "Internal server error" });
   }
-}).listen(port, () => {
-  console.log(`Stock Portfolio Lab running at http://localhost:${port}`);
+}).listen(port, host, () => {
+  console.log(`Stock Portfolio Lab running at http://${host}:${port}`);
   console.log(`SQLite state: ${dbPath}`);
 });
 

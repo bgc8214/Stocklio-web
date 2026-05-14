@@ -139,6 +139,29 @@ h2 {
   font-weight: 700;
 }
 
+.auth-panel {
+  display: grid;
+  gap: 8px;
+  justify-items: end;
+  min-width: min(260px, 100%);
+}
+
+.auth-panel span {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.35;
+  max-width: 260px;
+  overflow-wrap: anywhere;
+  text-align: right;
+}
+
+.auth-panel button {
+  min-height: 36px;
+  padding: 0 13px;
+  width: fit-content;
+}
+
 main {
   width: min(1440px, 100%);
   margin: 0 auto;
@@ -794,6 +817,14 @@ td:nth-child(4) {
   }
 
   .status-panel {
+    text-align: left;
+  }
+
+  .auth-panel {
+    justify-items: start;
+  }
+
+  .auth-panel span {
     text-align: left;
   }
 

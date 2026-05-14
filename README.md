@@ -16,6 +16,8 @@ Numbers로 관리하던 개인 주식 포트폴리오를 웹 서비스로 옮기
 - Craft.js 기반 대시보드 편집 캔버스 추가
 - 공통 도메인 계산 모듈과 제품 스모크 테스트 추가
 - 앱 안에서 XLSX import preview 후 확정 저장 가능
+- Supabase Google 로그인과 사용자별 포트폴리오 저장 경로 추가
+- Supabase 미설정 시에는 로컬 데모 모드로 안전하게 동작
 
 ## 실행
 
@@ -42,6 +44,8 @@ npm run verify
 
 `자동화/데이터` 탭에서 `.xlsx` 파일을 올리면 서버가 먼저 preview 상태를 만든다. 이 단계에서는 현재 포트폴리오가 바뀌지 않는다. 요약을 확인한 뒤 `Import 확정`을 눌러야 SQLite 상태가 교체된다.
 
+제품 방향상 신규 사용자용 import는 후순위다. 현재 구현은 기존 Numbers 데이터를 옮기는 관리자/마이그레이션 보조 기능으로 둔다.
+
 미국 주식/ETF 가격과 USD/KRW 환율은 Yahoo Finance chart endpoint를 작은 로컬 프록시로 가져온다. 별도 API key는 필요 없다. 가격 응답은 5분, 환율 응답은 1시간 캐시한다.
 
 앱 상태는 `data/portfolio.db` SQLite 파일에 저장된다. 이 DB 파일은 개인 포트폴리오 데이터를 담을 수 있으므로 git에 포함하지 않는다. 서버는 15분마다 자동화 조건을 확인하고, `Asia/Seoul` 기준 매일 09:10 이후 가격/환율을 갱신한 뒤 당일 `PortfolioSnapshot`과 `accountSnapshots`를 생성하거나 갱신한다.
@@ -63,4 +67,18 @@ npm run verify
 
 ## Vercel 배포 메모
 
-`vercel.json`은 현재 정적 화면 배포를 위한 기본 설정이다. 실제 제품 배포에서는 로컬 SQLite 대신 Vercel Functions와 외부 Postgres 계열 DB를 붙여야 사용자별 데이터가 영구 저장된다. 현재 제품화 1차에서는 계산 로직을 `src/domain/portfolio-core.js`로 분리해 이후 API/DB 계층에서 같은 계산 경계를 재사용할 수 있게 했다.
+`vercel.json`은 정적 화면과 `api/yahoo/chart` 가격 프록시 배포를 위한 설정이다. 운영 사용자 데이터는 로컬 SQLite가 아니라 Supabase의 `portfolio_states` 테이블에 저장한다. 현재 제품화 1차에서는 계산 로직을 `src/domain/portfolio-core.js`로 분리해 이후 API/DB 계층에서 같은 계산 경계를 재사용할 수 있게 했다.
+
+## Supabase 설정
+
+Supabase 프로젝트를 만든 뒤 `supabase/schema.sql`을 SQL Editor에서 실행한다. Authentication Providers에서 Google을 활성화하고, redirect URL에 로컬과 운영 주소를 모두 넣는다.
+
+- 로컬: `http://localhost:4173`
+- 운영: `https://stocklio-web.vercel.app`
+
+Vercel 환경변수에는 다음 값을 넣고 다시 배포한다.
+
+- `VITE_SUPABASE_URL`
+- `VITE_SUPABASE_ANON_KEY`
+
+환경변수가 없으면 앱은 로그인 버튼을 비활성화하고 로컬 데모 모드로 동작한다.
