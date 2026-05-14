@@ -572,6 +572,16 @@ els.loadImportSummaryButton.addEventListener("click", () => {
 
 function loadState() {
   const stored = localStorage.getItem(STORAGE_KEY);
+  if (isStaticDeployment()) {
+    if (!stored) {
+      return Promise.resolve(structuredClone(sampleState));
+    }
+    try {
+      return Promise.resolve(normalizeState(JSON.parse(stored)));
+    } catch {
+      return Promise.resolve(structuredClone(sampleState));
+    }
+  }
   return fetchJson("/api/state")
     .then((serverState) => {
       const normalized = normalizeState(serverState);
@@ -644,6 +654,9 @@ function clamp(value, min, max) {
 function saveState() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   publishState();
+  if (isStaticDeployment()) {
+    return;
+  }
   fetch("/api/state", {
     method: "PUT",
     headers: {
@@ -653,6 +666,10 @@ function saveState() {
   }).catch((error) => {
     setStatus("서버 저장 실패", error.message);
   });
+}
+
+function isStaticDeployment() {
+  return !["localhost", "127.0.0.1", ""].includes(window.location.hostname);
 }
 
 function render() {
