@@ -1,0 +1,50 @@
+export const STORAGE_KEY = "stock-portfolio-lab-state";
+export const CACHE_PREFIX = "stock-portfolio-lab-yahoo-cache";
+export const QUOTE_CACHE_TTL_MS = 5 * 60 * 1000;
+export const FX_CACHE_TTL_MS = 60 * 60 * 1000;
+export const AUTO_PRICE_REFRESH_TTL_MS = 10 * 60 * 1000;
+export const DATA_VERSION = 6;
+export const AUTH_READY_TIMEOUT_MS = 1800;
+
+export const palette = ["#1f7a5b", "#3366a8", "#a97819", "#7b5aa6", "#b94343"];
+
+export const dashboardCardLabels = {
+  "total-value": "총자산",
+  "total-cost": "주식 매입금액",
+  "total-gain": "주식 평가손익",
+  "cash-total": "예수금",
+  "fx-rate": "환율",
+  allocation: "자산 비중",
+  "performance-flow": "성과 흐름",
+  breakdown: "구성 상세",
+};
+
+export const DEFAULT_HOLDING_SORT = "value-desc";
+export const DEFAULT_CASH_FLOW_SORT = "date-desc";
+
+export const viewCopy = {
+  dashboard: { title: "대시보드", subtitle: "포트폴리오 현황" },
+  holdings: { title: "보유 종목", subtitle: "종목, 전략, 계좌별 보유 현황" },
+  accounts: { title: "계좌/예수금", subtitle: "계좌와 현금 잔액 관리" },
+  performance: { title: "성과", subtitle: "누적 수익과 일별 증감" },
+  cashflows: { title: "현금흐름", subtitle: "입출금 기록과 조정값" },
+  automation: { title: "자동화/데이터", subtitle: "가격 갱신, 백업, 동기화" },
+};
+
+export const dashboardSizeToSpan = {
+  small: 3,
+  medium: 4,
+  wide: 6,
+  full: 12,
+};
+
+export const defaultDashboardLayout = [
+  { id: "total-value", widthPct: 25, span: 3, minHeight: 128, visible: true },
+  { id: "total-cost", widthPct: 25, span: 3, minHeight: 128, visible: true },
+  { id: "total-gain", widthPct: 25, span: 3, minHeight: 128, visible: true },
+  { id: "cash-total", widthPct: 25, span: 3, minHeight: 128, visible: true },
+  { id: "fx-rate", widthPct: 25, span: 3, minHeight: 128, visible: true },
+  { id: "allocation", widthPct: 50, span: 6, minHeight: 320, visible: true },
+  { id: "performance-flow", widthPct: 50, span: 6, minHeight: 320, visible: true },
+  { id: "breakdown", widthPct: 50, span: 6, minHeight: 320, visible: true },
+];

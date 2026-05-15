@@ -9,6 +9,9 @@ import {
   normalizeDashboardLayout,
   validateStateShape,
 } from "../src/domain/portfolio-core.js";
+import { formatAccountType, normalizeAccountType } from "../src/app/account-types.js";
+import { cycleSortValue, parseSortValue } from "../src/app/sort.js";
+import { formatKrw, formatPercent } from "../src/app/formatters.js";
 
 const sample = {
   version: 6,
@@ -105,4 +108,23 @@ test("dashboard layout normalization migrates old preset sizes", () => {
 test("state shape validation catches product data issues", () => {
   assert.deepEqual(validateStateShape(sample), []);
   assert.ok(validateStateShape({ ...sample, fxRate: { rate: "nope" } }).includes("fxRate.rate must be numeric"));
+});
+
+test("account type taxonomy collapses to product categories", () => {
+  assert.equal(normalizeAccountType("brokerage"), "direct_investment");
+  assert.equal(normalizeAccountType("overseas_brokerage"), "direct_investment");
+  assert.equal(normalizeAccountType("irp"), "pension");
+  assert.equal(formatAccountType("retirement_pension"), "연금 계좌");
+});
+
+test("table sort helpers cycle through asc, desc, and fallback", () => {
+  assert.deepEqual(parseSortValue("", "value-desc"), { key: "value", dir: "desc" });
+  assert.equal(cycleSortValue("value-desc", "quantity", "value-desc"), "quantity-asc");
+  assert.equal(cycleSortValue("quantity-asc", "quantity", "value-desc"), "quantity-desc");
+  assert.equal(cycleSortValue("quantity-desc", "quantity", "value-desc"), "value-desc");
+});
+
+test("shared formatters keep display conventions stable", () => {
+  assert.equal(formatKrw(1234567), "₩1,234,567");
+  assert.equal(formatPercent(0.1234), "12.34%");
 });
