@@ -101,6 +101,15 @@ async function verifyBrowser() {
           letterBadges: pseudo.filter((value) => /^[A-Z]$/.test(value)).length,
         };
       })(),
+      toolbar: (() => {
+        const toolbar = document.querySelector(".toolbar");
+        return {
+          hasAccount: Boolean(toolbar.querySelector(".auth-panel")),
+          hasRefresh: Boolean(toolbar.querySelector("#refreshButton")),
+          hasSnapshot: Boolean(toolbar.querySelector("#saveSnapshotButton")),
+          hasMore: Boolean(toolbar.querySelector(".more-actions")),
+        };
+      })(),
     }));
 
     assert.equal(desktop.craftLoaded, true);
@@ -112,6 +121,10 @@ async function verifyBrowser() {
     assert.ok(desktop.nav.maxHeight - desktop.nav.minHeight <= 2);
     assert.ok(desktop.nav.totalHeight <= 360);
     assert.equal(desktop.nav.letterBadges, 0);
+    assert.equal(desktop.toolbar.hasAccount, true);
+    assert.equal(desktop.toolbar.hasRefresh, false);
+    assert.equal(desktop.toolbar.hasSnapshot, false);
+    assert.equal(desktop.toolbar.hasMore, false);
 
     for (const tab of ["dashboard", "holdings", "accounts", "performance", "cashflows", "automation"]) {
       await page.evaluate((view) => document.querySelector(`[data-view-tab="${view}"]`).click(), tab);
@@ -148,6 +161,18 @@ async function verifyBrowser() {
     assert.ok(performance.accountRows >= 1);
     assert.ok(performance.strategyRows >= 1);
     assert.equal(performance.bodyOverflow, false);
+
+    await page.evaluate(() => document.querySelector("[data-view-tab=\"automation\"]").click());
+    const automationActions = await page.evaluate(() => ({
+      refreshInAutomation: Boolean(document.querySelector("[data-view=\"automation\"] #refreshButton")),
+      snapshotInAutomation: Boolean(document.querySelector("[data-view=\"automation\"] #saveSnapshotButton")),
+      resetIsLocalOnly: document.querySelector("#resetButton")?.hasAttribute("data-local-only") || false,
+      bodyOverflow: document.documentElement.scrollWidth > document.documentElement.clientWidth,
+    }));
+    assert.equal(automationActions.refreshInAutomation, true);
+    assert.equal(automationActions.snapshotInAutomation, true);
+    assert.equal(automationActions.resetIsLocalOnly, true);
+    assert.equal(automationActions.bodyOverflow, false);
 
     await page.setViewportSize({ width: 390, height: 844 });
     await page.reload({ waitUntil: "networkidle" });

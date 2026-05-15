@@ -32,18 +32,6 @@
             <button type="button" data-view-tab="cashflows" data-nav-icon="⇅">현금흐름</button>
             <button type="button" data-view-tab="automation" data-nav-icon="⚙">자동화/데이터</button>
           </nav>
-          <div class="sidebar-footer">
-            <div class="status-panel sr-only" aria-live="polite">
-              <span id="providerStatus">준비됨</span>
-              <span id="lastUpdated">작업 내역 없음</span>
-            </div>
-            <div class="auth-panel">
-              <span id="authStatus"></span>
-              <span id="syncStatus" class="sync-status" hidden></span>
-              <button id="googleLoginButton" class="ghost small-button" type="button">Google 로그인</button>
-              <button id="logoutButton" class="ghost small-button" type="button" hidden>로그아웃</button>
-            </div>
-          </div>
         </div>
       </aside>
 
@@ -54,15 +42,16 @@
           <span id="pageSubtitle">포트폴리오 현황</span>
         </div>
         <div class="toolbar-actions">
-          <button id="refreshButton" class="ghost small-button" type="button">가격 갱신</button>
-          <button id="saveSnapshotButton" class="ghost small-button" type="button">성과 저장</button>
-          <details class="more-actions">
-            <summary>더보기</summary>
-            <div>
-              <button id="emptyPortfolioButton" class="ghost small-button" type="button">빈 포트폴리오</button>
-              <button id="resetButton" class="ghost small-button" type="button">샘플 불러오기</button>
-            </div>
-          </details>
+          <div class="status-panel sr-only" aria-live="polite">
+            <span id="providerStatus">준비됨</span>
+            <span id="lastUpdated">작업 내역 없음</span>
+          </div>
+          <div class="auth-panel">
+            <span id="authStatus"></span>
+            <span id="syncStatus" class="sync-status" hidden></span>
+            <button id="googleLoginButton" class="ghost small-button" type="button">Google 로그인</button>
+            <button id="logoutButton" class="ghost small-button" type="button" hidden>로그아웃</button>
+          </div>
         </div>
       </section>
 
@@ -460,6 +449,10 @@
               <span id="automationResult">아직 자동 실행 없음</span>
             </div>
           </div>
+          <div class="automation-actions">
+            <button id="refreshButton" class="secondary" type="button">가격 갱신</button>
+            <button id="saveSnapshotButton" class="secondary" type="button">오늘 성과 저장</button>
+          </div>
           <div class="table-wrap compact">
             <table>
               <thead>
@@ -507,6 +500,10 @@
               <strong>백업</strong>
               <span id="backupStatus">현재 포트폴리오를 JSON으로 내보내고 복원할 수 있습니다</span>
             </div>
+          </div>
+          <div class="danger-actions">
+            <button id="emptyPortfolioButton" class="ghost small-button" type="button">포트폴리오 초기화</button>
+            <button id="resetButton" class="ghost small-button" type="button" data-local-only>샘플 데이터 불러오기</button>
           </div>
         </div>
       </section>
