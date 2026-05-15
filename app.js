@@ -2,6 +2,7 @@ const STORAGE_KEY = "stock-portfolio-lab-state";
 const CACHE_PREFIX = "stock-portfolio-lab-yahoo-cache";
 const QUOTE_CACHE_TTL_MS = 5 * 60 * 1000;
 const FX_CACHE_TTL_MS = 60 * 60 * 1000;
+const AUTO_PRICE_REFRESH_TTL_MS = 10 * 60 * 1000;
 const DATA_VERSION = 6;
 const AUTH_READY_TIMEOUT_MS = 1800;
 
@@ -246,6 +247,9 @@ let isLayoutEditing = false;
 let draggedDashboardCardId = null;
 let resizingDashboardCard = null;
 let numbersPerformanceChart = null;
+let priceRefreshPromise = null;
+let snapshotSavePromise = null;
+let toastTimer = null;
 let authState = {
   configured: false,
   signedIn: false,
@@ -272,6 +276,9 @@ const els = {
   logoutButton: document.querySelector("#logoutButton"),
   providerStatus: document.querySelector("#providerStatus"),
   lastUpdated: document.querySelector("#lastUpdated"),
+  operationToast: document.querySelector("#operationToast"),
+  operationToastTitle: document.querySelector("#operationToastTitle"),
+  operationToastDetail: document.querySelector("#operationToastDetail"),
   totalValue: document.querySelector("#totalValue"),
   totalValueKrw: document.querySelector("#totalValueKrw"),
   totalCost: document.querySelector("#totalCost"),
@@ -313,6 +320,12 @@ const els = {
   investorFilter: document.querySelector("#investorFilter"),
   strategyFilter: document.querySelector("#strategyFilter"),
   accountTypeFilter: document.querySelector("#accountTypeFilter"),
+  holdingSearch: document.querySelector("#holdingSearch"),
+  holdingSort: document.querySelector("#holdingSort"),
+  addHoldingButton: document.querySelector("#addHoldingButton"),
+  holdingFormPanel: document.querySelector("#holdingFormPanel"),
+  holdingFormTitle: document.querySelector("#holdingFormTitle"),
+  holdingFormSubtitle: document.querySelector("#holdingFormSubtitle"),
   holdingsBody: document.querySelector("#holdingsBody"),
   holdingForm: document.querySelector("#holdingForm"),
   holdingSubmit: document.querySelector("#holdingSubmit"),
@@ -320,6 +333,8 @@ const els = {
   cashFlowForm: document.querySelector("#cashFlowForm"),
   cashFlowSubmit: document.querySelector("#cashFlowSubmit"),
   cashFlowCancel: document.querySelector("#cashFlowCancel"),
+  cashFlowTypeFilter: document.querySelector("#cashFlowTypeFilter"),
+  cashFlowSort: document.querySelector("#cashFlowSort"),
   cashFlowsBody: document.querySelector("#cashFlowsBody"),
   cashBalanceForm: document.querySelector("#cashBalanceForm"),
   cashBalanceSubmit: document.querySelector("#cashBalanceSubmit"),
@@ -349,13 +364,16 @@ els.viewTabs.forEach((button) => {
 });
 
 els.refreshButton.addEventListener("click", () => {
-  refreshPrices().catch((error) => {
+  refreshPrices({ reason: "manual" }).catch((error) => {
     setStatus("가격 업데이트 실패", error.message);
   });
 });
 
 els.saveSnapshotButton.addEventListener("click", () => {
-  saveTodaySnapshot();
+  saveTodaySnapshot({ reason: "manual" }).catch((error) => {
+    setStatus("오늘 성과 기록 실패", error.message);
+    showOperationToast("오늘 성과 기록 실패", error.message, "error");
+  });
 });
 
 els.emptyPortfolioButton.addEventListener("click", () => {
@@ -385,6 +403,7 @@ window.addEventListener("stocklio:auth", (event) => {
     state = nextState;
     render();
     setStatus(authState.signedIn ? "포트폴리오 불러옴" : "브라우저 저장", authState.user?.email || "현재 기기에 저장됩니다");
+    queueAutomaticPriceRefresh();
   });
 });
 
@@ -487,15 +506,29 @@ els.dashboardBoard.addEventListener("dragend", () => {
   clearDashboardDragState();
 });
 
-for (const filter of [els.investorFilter, els.strategyFilter, els.accountTypeFilter]) {
+for (const filter of [els.investorFilter, els.strategyFilter, els.accountTypeFilter, els.holdingSort]) {
   filter.addEventListener("change", renderHoldings);
 }
+
+els.holdingSearch.addEventListener("input", renderHoldings);
+
+els.addHoldingButton.addEventListener("click", () => {
+  editingHoldingId = null;
+  els.holdingForm.reset();
+  updateEditControls();
+  setView("holdings");
+  els.holdingFormPanel.scrollIntoView({ block: "center", behavior: "smooth" });
+  els.holdingForm.elements.accountKey.focus();
+});
 
 els.performanceRange.addEventListener("change", () => {
   renderPerformance();
   renderSnapshots();
   renderMonthlySummary();
 });
+
+els.cashFlowTypeFilter.addEventListener("change", renderCashFlows);
+els.cashFlowSort.addEventListener("change", renderCashFlows);
 
 els.accountDetailSelect.addEventListener("change", renderAccountDetail);
 
@@ -751,6 +784,7 @@ async function initialize() {
     render();
     renderAuth();
     setStatus(authState.signedIn ? "Supabase 데이터 불러옴" : "데이터 불러옴", authState.user?.email || state.automation?.lastResult || "저장소와 연결됨");
+    queueAutomaticPriceRefresh();
   } catch {
     state = structuredClone(sampleState);
     render();
@@ -1605,20 +1639,21 @@ function breakdownRow(item, index) {
 
 function renderHoldings() {
   const rows = filteredHoldings();
-  els.holdingsBody.innerHTML = rows
+  els.holdingsBody.innerHTML = rows.length
+    ? rows
     .map((holding) => {
       const values = getHoldingValues(holding);
       const value = values.valueNative;
       const cost = values.costNative;
       const gain = values.gainNative;
       const returnRate = cost ? gain / cost : 0;
-      return `<tr>
+      return `<tr class="${editingHoldingId === holding.id ? "is-editing-row" : ""}">
         <td data-label="투자자">${escapeHtml(holding.investor)}</td>
         <td data-label="계좌">${escapeHtml(holding.account)}</td>
         <td data-label="전략">${escapeHtml(holding.strategy)}</td>
         <td data-label="종목"><strong>${escapeHtml(holding.name || holding.ticker)}</strong>${holding.ticker && holding.ticker !== holding.name ? `<small>${escapeHtml(holding.ticker)}</small>` : ""}</td>
         <td data-label="수량">${formatNumber(holding.quantity, 4)}</td>
-        <td data-label="현재가">${formatMoney(holding.price, holding.currency)}</td>
+        <td data-label="현재가">${formatMoney(holding.price, holding.currency)}<small>${escapeHtml(holding.priceSource || "사용자 입력")} · ${formatAsOf(holding.priceAsOf)}</small></td>
         <td data-label="평단가">${formatMoney(holding.averageCost, holding.currency)}</td>
         <td data-label="평가금액">${formatMoney(value, holding.currency)}</td>
         <td data-label="손익" class="${gain >= 0 ? "positive" : "negative"}">${formatMoney(gain, holding.currency)}</td>
@@ -1631,7 +1666,8 @@ function renderHoldings() {
         </td>
       </tr>`;
     })
-    .join("");
+    .join("")
+    : `<tr><td colspan="11">조건에 맞는 보유 종목이 없습니다</td></tr>`;
 
   document.querySelectorAll("[data-edit-holding]").forEach((button) => {
     button.addEventListener("click", () => startEditHolding(button.dataset.editHolding));
@@ -1730,7 +1766,20 @@ function allocateUnclassifiedCash({ investor, account, amount }) {
 }
 
 function renderCashFlows() {
-  const rows = [...state.cashFlows].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 12);
+  const typeFilter = els.cashFlowTypeFilter?.value || "";
+  const sort = els.cashFlowSort?.value || "date-desc";
+  const rows = [...state.cashFlows]
+    .filter((flow) => !typeFilter || flow.type === typeFilter)
+    .sort((a, b) => {
+      if (sort === "date-asc") {
+        return a.date.localeCompare(b.date);
+      }
+      if (sort === "amount-desc") {
+        return Number(b.amountKrw || 0) - Number(a.amountKrw || 0);
+      }
+      return b.date.localeCompare(a.date);
+    })
+    .slice(0, 30);
   els.cashFlowsBody.innerHTML = rows
     .map((flow) => `<tr>
       <td>${escapeHtml(flow.date)}</td>
@@ -1774,8 +1823,10 @@ function startEditHolding(id) {
   els.holdingForm.elements.quantity.value = holding.quantity ?? "";
   els.holdingForm.elements.averageCost.value = holding.averageCost ?? "";
   updateEditControls();
+  renderHoldings();
   setView("holdings");
-  els.holdingForm.scrollIntoView({ block: "center" });
+  els.holdingFormPanel.scrollIntoView({ block: "center", behavior: "smooth" });
+  els.holdingForm.elements.quantity.focus();
 }
 
 function startEditAccount(id) {
@@ -1851,6 +1902,13 @@ function updateEditControls() {
   els.accountCancel.hidden = !editingAccountId;
   els.holdingSubmit.textContent = editingHoldingId ? "수정 저장" : "추가";
   els.holdingCancel.hidden = !editingHoldingId;
+  if (els.holdingFormTitle) {
+    const target = editingHoldingId ? state.holdings.find((holding) => holding.id === editingHoldingId) : null;
+    els.holdingFormTitle.textContent = target ? "보유 종목 수정" : "보유 종목 추가";
+    els.holdingFormSubtitle.textContent = target
+      ? `${target.name || target.ticker} · ${target.account} 수정 중`
+      : "계좌와 전략을 선택해 새 종목을 등록합니다";
+  }
   els.cashFlowSubmit.textContent = editingCashFlowId ? "수정 저장" : "기록";
   els.cashFlowCancel.hidden = !editingCashFlowId;
   els.cashBalanceSubmit.textContent = editingCashBalanceId ? "수정 저장" : "저장";
@@ -1890,16 +1948,53 @@ function renderReconciliation() {
 }
 
 function filteredHoldings() {
-  return state.holdings.filter((holding) => {
+  const query = (els.holdingSearch?.value || "").trim().toLowerCase();
+  const rows = state.holdings.filter((holding) => {
+    const haystack = [holding.name, holding.ticker, holding.account, holding.investor, holding.strategy].join(" ").toLowerCase();
     return (
       (!els.investorFilter.value || holding.investor === els.investorFilter.value) &&
       (!els.strategyFilter.value || holding.strategy === els.strategyFilter.value) &&
-      (!els.accountTypeFilter.value || holding.accountType === els.accountTypeFilter.value)
+      (!els.accountTypeFilter.value || holding.accountType === els.accountTypeFilter.value) &&
+      (!query || haystack.includes(query))
     );
+  });
+  const sort = els.holdingSort?.value || "value-desc";
+  return rows.sort((a, b) => {
+    const aValues = getHoldingValues(a);
+    const bValues = getHoldingValues(b);
+    if (sort === "gain-desc") {
+      return bValues.gainKrw - aValues.gainKrw;
+    }
+    if (sort === "return-desc") {
+      const aReturn = aValues.costKrw ? aValues.gainKrw / aValues.costKrw : 0;
+      const bReturn = bValues.costKrw ? bValues.gainKrw / bValues.costKrw : 0;
+      return bReturn - aReturn;
+    }
+    if (sort === "name-asc") {
+      return String(a.name || a.ticker).localeCompare(String(b.name || b.ticker));
+    }
+    return bValues.valueKrw - aValues.valueKrw;
   });
 }
 
-function saveTodaySnapshot() {
+async function saveTodaySnapshot({ reason = "manual" } = {}) {
+  if (snapshotSavePromise) {
+    return snapshotSavePromise;
+  }
+  snapshotSavePromise = Promise.resolve().then(() => {
+    setActionState("snapshot", true);
+    showOperationToast("오늘 성과 기록 중", "현재 총자산을 오늘 스냅샷으로 저장합니다", "busy");
+    return saveTodaySnapshotNow();
+  });
+  try {
+    return await snapshotSavePromise;
+  } finally {
+    snapshotSavePromise = null;
+    setActionState("snapshot", false);
+  }
+}
+
+function saveTodaySnapshotNow() {
   const snapshot = buildPortfolioSnapshot(todayKey());
   const accountSnapshots = buildAccountSnapshots(snapshot.date);
   const previousIndex = state.portfolioSnapshots.findIndex((item) => item.date === snapshot.date);
@@ -1919,7 +2014,10 @@ function saveTodaySnapshot() {
   state.portfolioSnapshots.sort((a, b) => a.date.localeCompare(b.date));
   saveState();
   render();
-  setStatus("오늘 성과 저장 완료", `${snapshot.date} · ${formatKrw(snapshot.totalValueKrw)}`);
+  const message = `${snapshot.date} · ${formatKrw(snapshot.totalValueKrw)}`;
+  setStatus("오늘 성과 기록 완료", message);
+  showOperationToast("오늘 성과 기록 완료", message, "success");
+  return snapshot;
 }
 
 function buildPortfolioSnapshot(date) {
@@ -1936,8 +2034,57 @@ function buildPortfolioSnapshot(date) {
   };
 }
 
-async function refreshPrices() {
-  setStatus("가격 업데이트 중", "Yahoo Finance에서 키 없이 조회 중");
+function queueAutomaticPriceRefresh() {
+  if (!shouldAutoRefreshPrices()) {
+    return;
+  }
+  window.setTimeout(() => {
+    refreshPrices({ reason: "auto" }).catch((error) => {
+      setStatus("자동 가격 갱신 실패", error.message);
+    });
+  }, 250);
+}
+
+function shouldAutoRefreshPrices() {
+  if (!state.holdings.length || priceRefreshPromise) {
+    return false;
+  }
+  const lastSuccess = getLastSuccessfulPriceUpdateTime();
+  if (!lastSuccess) {
+    return true;
+  }
+  return Date.now() - lastSuccess > AUTO_PRICE_REFRESH_TTL_MS;
+}
+
+function getLastSuccessfulPriceUpdateTime() {
+  const priceLogs = (state.priceUpdateLogs || [])
+    .filter((log) => log.status === "success" && log.at)
+    .map((log) => new Date(log.at).getTime())
+    .filter(Number.isFinite);
+  const holdingTimes = state.holdings
+    .map((holding) => new Date(holding.priceAsOf || 0).getTime())
+    .filter(Number.isFinite);
+  return Math.max(0, ...priceLogs, ...holdingTimes);
+}
+
+async function refreshPrices({ reason = "manual" } = {}) {
+  if (priceRefreshPromise) {
+    return priceRefreshPromise;
+  }
+  priceRefreshPromise = refreshPricesNow({ reason });
+  try {
+    return await priceRefreshPromise;
+  } finally {
+    priceRefreshPromise = null;
+    setActionState("price", false);
+  }
+}
+
+async function refreshPricesNow({ reason }) {
+  setActionState("price", true);
+  const isAuto = reason === "auto";
+  setStatus(isAuto ? "자동 가격 갱신 중" : "가격 업데이트 중", "Yahoo Finance에서 보유 종목 현재가와 USD/KRW를 조회 중");
+  showOperationToast(isAuto ? "가격 자동 갱신 중" : "가격 다시 가져오는 중", "보유 종목 현재가와 USD/KRW를 조회합니다", "busy");
 
   const tickers = unique(state.holdings.filter((holding) => holding.autoPrice !== false).map((holding) => holding.ticker));
   const quoteMap = {};
@@ -1976,10 +2123,15 @@ async function refreshPrices() {
   render();
   const updatedAt = new Date().toISOString();
   if (failures.length) {
-    setStatus("일부 가격 업데이트 완료", failures.slice(0, 2).join(" · "));
-    return;
+    const detail = `${tickers.length - failures.length}/${tickers.length}개 종목 갱신 · ${failures.slice(0, 2).join(" · ")}`;
+    setStatus("일부 가격 업데이트 완료", detail);
+    showOperationToast("일부 가격만 갱신됨", detail, "warning");
+    return { failures, updatedAt };
   }
-  setStatus("가격 업데이트 완료", `Yahoo Finance · 마지막 확인 ${formatAsOf(updatedAt)}`);
+  const detail = `${tickers.length}개 종목 + USD/KRW · ${formatAsOf(updatedAt)}`;
+  setStatus(isAuto ? "자동 가격 갱신 완료" : "가격 업데이트 완료", detail);
+  showOperationToast(isAuto ? "가격 자동 갱신 완료" : "가격 다시 가져오기 완료", detail, "success");
+  return { failures, updatedAt };
 }
 
 function addPriceLog(log) {
@@ -2300,7 +2452,7 @@ function renderTrendChart(rows) {
   }
   const width = 720;
   const height = 260;
-  const padding = { top: 20, right: 24, bottom: 36, left: 72 };
+  const padding = { top: 24, right: 40, bottom: 38, left: 78 };
   const values = chartRows.map((row) => row.totalValueKrw);
   const max = Math.max(...values);
   const min = Math.min(...values);
@@ -2310,21 +2462,27 @@ function renderTrendChart(rows) {
   const line = chartRows.map((row, index) => `${xFor(index)},${yFor(row.totalValueKrw)}`).join(" ");
   const area = `${padding.left},${height - padding.bottom} ${line} ${width - padding.right},${height - padding.bottom}`;
   const labels = [chartRows[0], chartRows[Math.floor(chartRows.length / 2)], chartRows[chartRows.length - 1]];
-  const valueLabels = [max, min];
+  const tickCount = 5;
+  const valueLabels = Array.from({ length: tickCount }, (_, index) => max - (span / (tickCount - 1)) * index);
+  const lastRow = chartRows[chartRows.length - 1];
+  const lastX = xFor(chartRows.length - 1);
+  const lastY = yFor(lastRow.totalValueKrw);
   return `
     <svg viewBox="0 0 ${width} ${height}" role="img" aria-label="총자산 추이">
-      <polyline class="trend-grid" points="${padding.left},${yFor(max)} ${width - padding.right},${yFor(max)}"></polyline>
-      <polyline class="trend-grid" points="${padding.left},${yFor(min)} ${width - padding.right},${yFor(min)}"></polyline>
+      ${valueLabels
+        .map((value) => `<polyline class="trend-grid" points="${padding.left},${yFor(value)} ${width - padding.right},${yFor(value)}"></polyline>`)
+        .join("")}
       <polygon class="trend-area" points="${area}"></polygon>
       <polyline class="trend-line" points="${line}"></polyline>
       ${chartRows
         .map((row, index) => `<circle class="trend-point" cx="${xFor(index)}" cy="${yFor(row.totalValueKrw)}" r="3"><title>${row.date} ${formatKrw(row.totalValueKrw)}</title></circle>`)
         .join("")}
+      <text class="trend-last-label" x="${Math.min(width - padding.right - 4, lastX + 8)}" y="${Math.max(16, lastY - 10)}" text-anchor="end">${formatCompactKrw(lastRow.totalValueKrw)}</text>
       ${labels
         .map((row, index) => `<text class="trend-label" x="${xFor(index === 0 ? 0 : index === 1 ? Math.floor((chartRows.length - 1) / 2) : chartRows.length - 1)}" y="${height - 10}" text-anchor="${index === 0 ? "start" : index === 1 ? "middle" : "end"}">${formatShortDate(row.date)}</text>`)
         .join("")}
       ${valueLabels
-        .map((value, index) => `<text class="trend-value-label" x="10" y="${yFor(value) + 4}">${formatCompactKrw(value)}</text>`)
+        .map((value) => `<text class="trend-value-label" x="10" y="${yFor(value) + 4}">${formatCompactKrw(value)}</text>`)
         .join("")}
     </svg>
   `;
@@ -2715,6 +2873,33 @@ function unique(values) {
 function setStatus(status, detail) {
   els.providerStatus.textContent = status;
   els.lastUpdated.textContent = detail;
+}
+
+function setActionState(kind, isRunning) {
+  if (kind === "price" && els.refreshButton) {
+    els.refreshButton.disabled = isRunning;
+    els.refreshButton.textContent = isRunning ? "가격 갱신 중..." : "가격 다시 가져오기";
+  }
+  if (kind === "snapshot" && els.saveSnapshotButton) {
+    els.saveSnapshotButton.disabled = isRunning;
+    els.saveSnapshotButton.textContent = isRunning ? "성과 기록 중..." : "오늘 스냅샷 다시 계산";
+  }
+}
+
+function showOperationToast(title, detail, tone = "info") {
+  if (!els.operationToast) {
+    return;
+  }
+  window.clearTimeout(toastTimer);
+  els.operationToast.hidden = false;
+  els.operationToast.dataset.tone = tone;
+  els.operationToastTitle.textContent = title;
+  els.operationToastDetail.textContent = detail;
+  if (tone !== "busy") {
+    toastTimer = window.setTimeout(() => {
+      els.operationToast.hidden = true;
+    }, 4200);
+  }
 }
 
 function formatUsd(value) {

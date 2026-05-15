@@ -223,6 +223,39 @@ h2 {
   color: var(--gold) !important;
 }
 
+.operation-toast {
+  background: var(--ink);
+  border-radius: 8px;
+  bottom: 20px;
+  box-shadow: var(--shadow);
+  color: white;
+  display: grid;
+  gap: 4px;
+  max-width: min(420px, calc(100vw - 40px));
+  padding: 12px 14px;
+  position: fixed;
+  right: 20px;
+  z-index: 50;
+}
+
+.operation-toast[data-tone="success"] {
+  background: var(--accent-dark);
+}
+
+.operation-toast[data-tone="warning"] {
+  background: var(--gold);
+}
+
+.operation-toast[data-tone="error"] {
+  background: var(--red);
+}
+
+.operation-toast span {
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 13px;
+  font-weight: 700;
+}
+
 .auth-panel button {
   min-height: 36px;
   padding: 0 13px;
@@ -804,6 +837,19 @@ main {
   padding-top: 14px;
 }
 
+.automation-actions > div {
+  display: grid;
+  gap: 6px;
+  max-width: 260px;
+}
+
+.automation-actions span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
 .automation-actions button,
 .danger-actions button {
   width: fit-content;
@@ -947,9 +993,15 @@ main {
 }
 
 .trend-label,
-.trend-value-label {
+.trend-value-label,
+.trend-last-label {
   fill: var(--muted);
   font-size: 12px;
+}
+
+.trend-last-label {
+  fill: var(--accent-dark);
+  font-weight: 900;
 }
 
 .numbers-source-wrap {
@@ -1083,8 +1135,12 @@ main {
 }
 
 .filters {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   margin-bottom: 14px;
+}
+
+.compact-filters {
+  grid-template-columns: repeat(auto-fit, minmax(150px, 220px));
 }
 
 .table-wrap {
@@ -1115,6 +1171,10 @@ td {
   padding: 11px 10px;
   text-align: right;
   white-space: nowrap;
+}
+
+tr.is-editing-row td {
+  background: rgba(47, 105, 255, 0.08);
 }
 
 td small {
@@ -1322,6 +1382,13 @@ td:nth-child(4) {
     position: fixed;
     right: 0;
     z-index: 20;
+  }
+
+  .operation-toast {
+    bottom: calc(82px + env(safe-area-inset-bottom));
+    left: 14px;
+    right: 14px;
+    max-width: none;
   }
 
   .view-tabs button {

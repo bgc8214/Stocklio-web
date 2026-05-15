@@ -55,6 +55,11 @@
         </div>
       </section>
 
+      <div id="operationToast" class="operation-toast" role="status" aria-live="polite" hidden>
+        <strong id="operationToastTitle">처리 중</strong>
+        <span id="operationToastDetail">작업 상태를 확인하고 있습니다</span>
+      </div>
+
       <section id="emptyPortfolioNotice" class="empty-portfolio" data-view="dashboard" hidden>
         <div>
           <strong>포트폴리오를 시작하세요</strong>
@@ -206,6 +211,14 @@
           <select id="investorFilter" aria-label="투자자 필터"></select>
           <select id="strategyFilter" aria-label="전략 필터"></select>
           <select id="accountTypeFilter" aria-label="계좌 유형 필터"></select>
+          <input id="holdingSearch" type="search" placeholder="종목/티커/계좌 검색" aria-label="보유 종목 검색">
+          <select id="holdingSort" aria-label="보유 종목 정렬">
+            <option value="value-desc">평가금액 높은 순</option>
+            <option value="gain-desc">손익 높은 순</option>
+            <option value="return-desc">수익률 높은 순</option>
+            <option value="name-asc">종목명 가나다순</option>
+          </select>
+          <button id="addHoldingButton" class="secondary small-button" type="button">종목 추가</button>
         </div>
         <div class="table-wrap holdings-table-wrap">
           <table class="holdings-table">
@@ -229,10 +242,10 @@
         </div>
       </section>
 
-      <section class="panel add-panel" data-view="holdings" hidden>
+      <section id="holdingFormPanel" class="panel add-panel" data-view="holdings" hidden>
         <div class="section-heading">
-          <h2>보유 종목 추가</h2>
-          <span>현재 브라우저에 저장</span>
+          <h2 id="holdingFormTitle">보유 종목 추가</h2>
+          <span id="holdingFormSubtitle">계좌와 전략을 선택해 새 종목을 등록합니다</span>
         </div>
         <form id="holdingForm" class="holding-form">
           <select name="accountKey" aria-label="계좌 선택" required></select>
@@ -410,6 +423,21 @@
             <button id="cashFlowSubmit" type="submit">기록</button>
             <button id="cashFlowCancel" class="ghost" type="button" hidden>취소</button>
           </form>
+          <div class="filters compact-filters" aria-label="입출금 필터">
+            <select id="cashFlowTypeFilter" aria-label="입출금 유형 필터">
+              <option value="">모든 유형</option>
+              <option value="deposit">입금</option>
+              <option value="withdrawal">출금</option>
+              <option value="dividend">배당</option>
+              <option value="tax">세금</option>
+              <option value="fee">수수료</option>
+            </select>
+            <select id="cashFlowSort" aria-label="입출금 정렬">
+              <option value="date-desc">최근 날짜순</option>
+              <option value="date-asc">오래된 날짜순</option>
+              <option value="amount-desc">금액 높은 순</option>
+            </select>
+          </div>
           <div class="table-wrap compact">
             <table>
               <thead>
@@ -450,8 +478,14 @@
             </div>
           </div>
           <div class="automation-actions">
-            <button id="refreshButton" class="secondary" type="button">가격 갱신</button>
-            <button id="saveSnapshotButton" class="secondary" type="button">오늘 성과 저장</button>
+            <div>
+              <button id="refreshButton" class="secondary" type="button">가격 다시 가져오기</button>
+              <span>보유 종목 현재가와 USD/KRW를 다시 조회합니다</span>
+            </div>
+            <div>
+              <button id="saveSnapshotButton" class="secondary" type="button">오늘 스냅샷 다시 계산</button>
+              <span>현재 총자산을 오늘 성과 기록으로 추가하거나 덮어씁니다</span>
+            </div>
           </div>
           <div class="table-wrap compact">
             <table>

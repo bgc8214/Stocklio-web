@@ -79,6 +79,19 @@ async function verifyBrowser() {
   });
 
   try {
+    await page.route("**/api/yahoo/chart?**", async (route) => {
+      const symbol = new URL(route.request().url()).searchParams.get("symbol");
+      const price = symbol === "KRW=X" ? 1350 : 100;
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          chart: {
+            result: [{ meta: { regularMarketPrice: price, previousClose: price * 0.99, regularMarketTime: 1778720400 } }],
+          },
+        }),
+      });
+    });
     await page.goto(baseUrl, { waitUntil: "networkidle" });
     await page.waitForSelector("[data-dashboard-card=\"performance-flow\"]", { timeout: 10_000 });
     await page.click("#layoutEditButton");
@@ -110,6 +123,7 @@ async function verifyBrowser() {
           hasMore: Boolean(toolbar.querySelector(".more-actions")),
         };
       })(),
+      toastExists: Boolean(document.querySelector("#operationToast")),
     }));
 
     assert.equal(desktop.craftLoaded, true);
@@ -125,6 +139,7 @@ async function verifyBrowser() {
     assert.equal(desktop.toolbar.hasRefresh, false);
     assert.equal(desktop.toolbar.hasSnapshot, false);
     assert.equal(desktop.toolbar.hasMore, false);
+    assert.equal(desktop.toastExists, true);
 
     for (const tab of ["dashboard", "holdings", "accounts", "performance", "cashflows", "automation"]) {
       await page.evaluate((view) => document.querySelector(`[data-view-tab="${view}"]`).click(), tab);
@@ -147,6 +162,8 @@ async function verifyBrowser() {
       statCards: document.querySelectorAll("#performanceDetailStats > div").length,
       sourceRows: document.querySelectorAll("#numbersSourceBody tr").length,
       numbersChartCanvas: Boolean(document.querySelector("#numbersPerformanceChart")),
+      trendValueLabels: document.querySelectorAll(".trend-value-label").length,
+      trendLastLabel: Boolean(document.querySelector(".trend-last-label")),
       waterfallRows: document.querySelectorAll("#performanceWaterfall .waterfall-row").length,
       accountRows: document.querySelectorAll("#accountPerformanceBody tr").length,
       strategyRows: document.querySelectorAll("#strategyPerformanceBody tr").length,
@@ -157,22 +174,46 @@ async function verifyBrowser() {
     assert.equal(performance.statCards, 6);
     assert.equal(performance.sourceRows, 3);
     assert.equal(performance.numbersChartCanvas, true);
+    assert.ok(performance.trendValueLabels >= 5);
+    assert.equal(performance.trendLastLabel, true);
     assert.equal(performance.waterfallRows, 3);
     assert.ok(performance.accountRows >= 1);
     assert.ok(performance.strategyRows >= 1);
     assert.equal(performance.bodyOverflow, false);
 
     await page.evaluate(() => document.querySelector("[data-view-tab=\"automation\"]").click());
+    await page.click("#saveSnapshotButton");
+    await page.waitForSelector("#operationToast:not([hidden])", { timeout: 10_000 });
     const automationActions = await page.evaluate(() => ({
       refreshInAutomation: Boolean(document.querySelector("[data-view=\"automation\"] #refreshButton")),
       snapshotInAutomation: Boolean(document.querySelector("[data-view=\"automation\"] #saveSnapshotButton")),
       resetIsLocalOnly: document.querySelector("#resetButton")?.hasAttribute("data-local-only") || false,
+      toastText: document.querySelector("#operationToast")?.textContent || "",
       bodyOverflow: document.documentElement.scrollWidth > document.documentElement.clientWidth,
     }));
     assert.equal(automationActions.refreshInAutomation, true);
     assert.equal(automationActions.snapshotInAutomation, true);
     assert.equal(automationActions.resetIsLocalOnly, true);
+    assert.match(automationActions.toastText, /성과 기록|스냅샷/);
     assert.equal(automationActions.bodyOverflow, false);
+
+    await page.evaluate(() => document.querySelector("[data-view-tab=\"holdings\"]").click());
+    await page.fill("#holdingSearch", "QQQ");
+    const holdingFilter = await page.evaluate(() => ({
+      rows: document.querySelectorAll("#holdingsBody tr").length,
+      firstText: document.querySelector("#holdingsBody tr")?.textContent || "",
+    }));
+    assert.ok(holdingFilter.rows >= 1);
+    assert.match(holdingFilter.firstText, /QQQ/i);
+    await page.click("[data-edit-holding]");
+    const holdingEdit = await page.evaluate(() => ({
+      title: document.querySelector("#holdingFormTitle")?.textContent || "",
+      subtitle: document.querySelector("#holdingFormSubtitle")?.textContent || "",
+      editingRows: document.querySelectorAll("tr.is-editing-row").length,
+    }));
+    assert.equal(holdingEdit.title, "보유 종목 수정");
+    assert.ok(holdingEdit.subtitle.length > 0);
+    assert.equal(holdingEdit.editingRows, 1);
 
     await page.setViewportSize({ width: 390, height: 844 });
     await page.reload({ waitUntil: "networkidle" });
