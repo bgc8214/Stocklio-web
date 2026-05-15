@@ -96,16 +96,36 @@ async function verifyBrowser() {
     assert.equal(desktop.controls, 8);
     assert.equal(desktop.bodyOverflow, false);
 
+    await page.evaluate(() => document.querySelector("[data-view-tab=\"performance\"]").click());
+    await page.waitForSelector("#performanceTrendChart svg", { timeout: 10_000 });
+    const performance = await page.evaluate(() => ({
+      statCards: document.querySelectorAll("#performanceDetailStats > div").length,
+      waterfallRows: document.querySelectorAll("#performanceWaterfall .waterfall-row").length,
+      accountRows: document.querySelectorAll("#accountPerformanceBody tr").length,
+      strategyRows: document.querySelectorAll("#strategyPerformanceBody tr").length,
+      bodyOverflow: document.documentElement.scrollWidth > document.documentElement.clientWidth,
+    }));
+
+    assert.equal(performance.statCards, 6);
+    assert.equal(performance.waterfallRows, 3);
+    assert.ok(performance.accountRows >= 1);
+    assert.ok(performance.strategyRows >= 1);
+    assert.equal(performance.bodyOverflow, false);
+
     await page.setViewportSize({ width: 390, height: 844 });
     await page.reload({ waitUntil: "networkidle" });
     await page.waitForSelector("[data-dashboard-card=\"performance-flow\"]", { timeout: 10_000 });
+    await page.evaluate(() => document.querySelector("[data-view-tab=\"performance\"]").click());
+    await page.waitForSelector("#performanceDetailStats", { timeout: 10_000 });
     const mobile = await page.evaluate(() => ({
       bodyOverflow: document.documentElement.scrollWidth > document.documentElement.clientWidth,
       cards: document.querySelectorAll("[data-dashboard-card]").length,
+      performanceStatCards: document.querySelectorAll("#performanceDetailStats > div").length,
     }));
 
     assert.equal(mobile.bodyOverflow, false);
     assert.equal(mobile.cards, 8);
+    assert.equal(mobile.performanceStatCards, 6);
     assert.deepEqual(errors, []);
   } finally {
     await browser.close();

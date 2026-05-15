@@ -603,6 +603,10 @@ main {
   margin-bottom: 18px;
 }
 
+.performance-overview-panel {
+  grid-column: 1 / -1;
+}
+
 .detail-grid > .panel:only-child {
   grid-column: 1 / -1;
 }
@@ -795,6 +799,146 @@ main {
   overflow-wrap: anywhere;
 }
 
+.performance-detail-stats {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.performance-detail-stats div {
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  padding: 12px;
+}
+
+.performance-detail-stats span,
+.performance-detail-stats small {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.performance-detail-stats strong {
+  font-size: clamp(16px, 1.2vw, 22px);
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+}
+
+.trend-chart {
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  min-height: 280px;
+  overflow-x: auto;
+  padding: 12px;
+}
+
+.trend-chart svg {
+  display: block;
+  min-width: 720px;
+  width: 100%;
+}
+
+.trend-grid {
+  fill: none;
+  stroke: var(--line);
+  stroke-width: 1;
+}
+
+.trend-area {
+  fill: rgba(31, 122, 91, 0.12);
+}
+
+.trend-line {
+  fill: none;
+  stroke: var(--accent);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 4;
+}
+
+.trend-point {
+  fill: var(--surface);
+  stroke: var(--accent-dark);
+  stroke-width: 2;
+}
+
+.trend-label,
+.trend-value-label {
+  fill: var(--muted);
+  font-size: 12px;
+}
+
+.waterfall-chart {
+  display: grid;
+  gap: 12px;
+}
+
+.waterfall-row {
+  align-items: center;
+  display: grid;
+  gap: 10px;
+  grid-template-columns: 76px minmax(0, 1fr) minmax(110px, auto);
+}
+
+.waterfall-row span {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.waterfall-row strong {
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+
+.waterfall-track {
+  background: var(--control-bg);
+  border-radius: 999px;
+  height: 12px;
+  overflow: hidden;
+}
+
+.waterfall-track b {
+  background: var(--muted);
+  border-radius: inherit;
+  display: block;
+  height: 100%;
+  min-width: 3px;
+}
+
+.waterfall-track b.positive {
+  background: var(--accent);
+}
+
+.waterfall-track b.negative {
+  background: var(--red);
+}
+
+.insight-list {
+  border-top: 1px solid var(--line);
+  display: grid;
+  gap: 10px;
+  margin-top: 16px;
+  padding-top: 14px;
+}
+
+.insight-list div {
+  display: grid;
+  gap: 3px;
+}
+
+.insight-list strong {
+  font-size: 14px;
+}
+
+.insight-list span {
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
 .empty-state {
   align-self: center;
   color: var(--muted);
@@ -985,7 +1129,8 @@ td:nth-child(4) {
   .cash-balance-form,
   .cash-allocation-form,
   .backup-actions,
-  .performance-stats {
+  .performance-stats,
+  .performance-detail-stats {
     grid-template-columns: 1fr;
   }
 
@@ -1030,6 +1175,10 @@ td:nth-child(4) {
     grid-template-columns: 1fr;
   }
 
+  .performance-overview-panel {
+    grid-column: auto;
+  }
+
   #allocationDonut {
     width: 220px;
     max-width: 100%;
@@ -1054,5 +1203,13 @@ td:nth-child(4) {
 
   .dashboard-layout-toolbar {
     gap: 10px;
+  }
+
+  .waterfall-row {
+    grid-template-columns: 1fr;
+  }
+
+  .waterfall-row strong {
+    text-align: left;
   }
 }
