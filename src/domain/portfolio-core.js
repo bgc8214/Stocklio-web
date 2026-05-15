@@ -63,13 +63,18 @@ export function getTotals({ holdings = [], cashBalances = [], fxRate = 1 }) {
 export function getHoldingValues(holding, fxRate = 1) {
   const valueNative = Number(holding.quantity || 0) * Number(holding.price || 0);
   const costNative = Number(holding.quantity || 0) * Number(holding.averageCost || 0);
+  const gainNative = valueNative - costNative;
   const rate = holding.currency === "KRW" ? 1 : Number(fxRate || 1);
   return {
     valueNative,
     costNative,
+    gainNative,
     valueKrw: valueNative * rate,
     costKrw: costNative * rate,
-    gainKrw: (valueNative - costNative) * rate,
+    gainKrw: gainNative * rate,
+    valueUsdEquivalent: holding.currency === "USD" ? valueNative : valueNative / Number(fxRate || 1),
+    costUsdEquivalent: holding.currency === "USD" ? costNative : costNative / Number(fxRate || 1),
+    gainUsdEquivalent: holding.currency === "USD" ? gainNative : gainNative / Number(fxRate || 1),
   };
 }
 
@@ -100,6 +105,9 @@ export function groupByAccount(state) {
     .map((item) => ({
       ...item,
       valueKrw: item.stockValueKrw + item.cashKrw,
+      valueUsd: (item.stockValueKrw + item.cashKrw) / fxRate,
+      costUsd: item.costKrw / fxRate,
+      gain: item.gainKrw,
       returnRate: item.costKrw ? item.gainKrw / item.costKrw : 0,
     }))
     .sort((a, b) => b.valueKrw - a.valueKrw);
