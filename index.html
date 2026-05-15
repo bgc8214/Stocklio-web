@@ -49,7 +49,9 @@
           <div class="auth-panel">
             <span id="authStatus"></span>
             <span id="syncStatus" class="sync-status" hidden></span>
+            <button id="naverLoginButton" class="ghost small-button naver-login-button" type="button">네이버 로그인</button>
             <button id="googleLoginButton" class="ghost small-button" type="button">Google 로그인</button>
+            <button id="emailLoginButton" class="ghost small-button" type="button">이메일 로그인</button>
             <button id="logoutButton" class="ghost small-button" type="button" hidden>로그아웃</button>
           </div>
         </div>
@@ -59,6 +61,23 @@
         <strong id="operationToastTitle">처리 중</strong>
         <span id="operationToastDetail">작업 상태를 확인하고 있습니다</span>
       </div>
+
+      <dialog id="emailLoginDialog" class="email-login-dialog" aria-labelledby="emailLoginTitle">
+        <form id="emailLoginForm" method="dialog">
+          <div>
+            <strong id="emailLoginTitle">이메일로 로그인</strong>
+            <span>메일로 받은 링크를 열면 Stocklio에 로그인됩니다.</span>
+          </div>
+          <label>
+            이메일
+            <input id="emailLoginInput" type="email" autocomplete="email" placeholder="you@example.com" required>
+          </label>
+          <div class="dialog-actions">
+            <button id="emailLoginCancelButton" class="ghost small-button" type="button">취소</button>
+            <button id="emailLoginSubmitButton" class="small-button" type="submit">로그인 링크 받기</button>
+          </div>
+        </form>
+      </dialog>
 
       <section id="emptyPortfolioNotice" class="empty-portfolio" data-view="dashboard" hidden>
         <div>

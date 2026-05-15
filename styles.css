@@ -256,10 +256,68 @@ h2 {
   font-weight: 700;
 }
 
+.email-login-dialog {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  box-shadow: var(--shadow);
+  color: var(--ink);
+  max-width: min(420px, calc(100vw - 32px));
+  padding: 0;
+  width: 420px;
+}
+
+.email-login-dialog::backdrop {
+  background: rgba(17, 31, 25, 0.35);
+}
+
+.email-login-dialog form {
+  display: grid;
+  gap: 16px;
+  padding: 22px;
+}
+
+.email-login-dialog form > div:first-child {
+  display: grid;
+  gap: 4px;
+}
+
+.email-login-dialog strong {
+  font-size: 20px;
+}
+
+.email-login-dialog span,
+.email-login-dialog label {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.email-login-dialog label {
+  display: grid;
+  gap: 8px;
+}
+
+.dialog-actions {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: 1fr 1.5fr;
+}
+
 .auth-panel button {
   min-height: 36px;
   padding: 0 13px;
   width: fit-content;
+}
+
+.naver-login-button {
+  background: #03c75a;
+  border-color: #03c75a;
+  color: white;
+}
+
+.naver-login-button:hover {
+  background: #02b350;
+  border-color: #02b350;
 }
 
 main {
