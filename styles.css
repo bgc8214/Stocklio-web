@@ -1177,6 +1177,29 @@ tr.is-editing-row td {
   background: rgba(47, 105, 255, 0.08);
 }
 
+.inline-edit-cell {
+  display: grid;
+  gap: 6px;
+  min-width: 150px;
+}
+
+.is-editing-row input,
+.is-editing-row select {
+  min-height: 34px;
+  padding: 0 9px;
+}
+
+.inline-edit-chip {
+  background: rgba(47, 105, 255, 0.1);
+  border-radius: 999px;
+  color: #2f69ff;
+  display: inline-flex;
+  font-size: 12px;
+  font-weight: 900;
+  padding: 5px 9px;
+  white-space: nowrap;
+}
+
 td small {
   color: var(--muted);
   display: block;
