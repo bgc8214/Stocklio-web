@@ -216,9 +216,37 @@
             <option value="value-desc">평가금액 높은 순</option>
             <option value="gain-desc">손익 높은 순</option>
             <option value="return-desc">수익률 높은 순</option>
+            <option value="quantity-desc">수량 많은 순</option>
+            <option value="price-desc">현재가 높은 순</option>
             <option value="name-asc">종목명 가나다순</option>
           </select>
           <button id="addHoldingButton" class="secondary small-button" type="button">종목 추가</button>
+        </div>
+        <div id="holdingFormPanel" class="inline-create-panel" hidden>
+          <div class="section-heading compact-heading">
+            <h2 id="holdingFormTitle">보유 종목 추가</h2>
+            <span id="holdingFormSubtitle">계좌와 전략을 선택해 새 종목을 등록합니다</span>
+          </div>
+          <form id="holdingForm" class="holding-form">
+            <select name="accountKey" aria-label="계좌 선택" required></select>
+            <select name="accountType" required>
+              <option value="brokerage">일반 계좌</option>
+              <option value="pension">연금</option>
+              <option value="irp">IRP</option>
+            </select>
+            <select name="strategy" required>
+              <option value="QQQ">QQQ</option>
+              <option value="S&P500">S&P500</option>
+              <option value="국내주식">국내주식</option>
+              <option value="Core">코어</option>
+              <option value="Growth">성장주</option>
+            </select>
+            <input name="ticker" placeholder="티커">
+            <input name="quantity" type="number" step="0.0001" min="0" placeholder="수량" required>
+            <input name="averageCost" type="number" step="0.01" min="0" placeholder="평단가" required>
+            <button id="holdingSubmit" type="submit">추가</button>
+            <button id="holdingCancel" class="ghost" type="button" hidden>취소</button>
+          </form>
         </div>
         <div class="table-wrap holdings-table-wrap">
           <table class="holdings-table">
@@ -227,46 +255,19 @@
                 <th>투자자</th>
                 <th>계좌</th>
                 <th>전략</th>
-                <th>종목</th>
-                <th>수량</th>
-                <th>현재가</th>
+                <th><button class="th-sort" type="button" data-holding-sort="name-asc">종목 <span aria-hidden="true">↕</span></button></th>
+                <th><button class="th-sort" type="button" data-holding-sort="quantity-desc">수량 <span aria-hidden="true">↕</span></button></th>
+                <th><button class="th-sort" type="button" data-holding-sort="price-desc">현재가 <span aria-hidden="true">↕</span></button></th>
                 <th>평단가</th>
-                <th>평가금액</th>
-                <th>손익</th>
-                <th>수익률</th>
+                <th><button class="th-sort" type="button" data-holding-sort="value-desc">평가금액 <span aria-hidden="true">↕</span></button></th>
+                <th><button class="th-sort" type="button" data-holding-sort="gain-desc">손익 <span aria-hidden="true">↕</span></button></th>
+                <th><button class="th-sort" type="button" data-holding-sort="return-desc">수익률 <span aria-hidden="true">↕</span></button></th>
                 <th></th>
               </tr>
             </thead>
             <tbody id="holdingsBody"></tbody>
           </table>
         </div>
-      </section>
-
-      <section id="holdingFormPanel" class="panel add-panel" hidden>
-        <div class="section-heading">
-          <h2 id="holdingFormTitle">보유 종목 추가</h2>
-          <span id="holdingFormSubtitle">계좌와 전략을 선택해 새 종목을 등록합니다</span>
-        </div>
-        <form id="holdingForm" class="holding-form">
-          <select name="accountKey" aria-label="계좌 선택" required></select>
-          <select name="accountType" required>
-            <option value="brokerage">일반 계좌</option>
-            <option value="pension">연금</option>
-            <option value="irp">IRP</option>
-          </select>
-          <select name="strategy" required>
-            <option value="QQQ">QQQ</option>
-            <option value="S&P500">S&P500</option>
-            <option value="국내주식">국내주식</option>
-            <option value="Core">코어</option>
-            <option value="Growth">성장주</option>
-          </select>
-          <input name="ticker" placeholder="티커">
-          <input name="quantity" type="number" step="0.0001" min="0" placeholder="수량" required>
-          <input name="averageCost" type="number" step="0.01" min="0" placeholder="평단가" required>
-          <button id="holdingSubmit" type="submit">추가</button>
-          <button id="holdingCancel" class="ghost" type="button" hidden>취소</button>
-        </form>
       </section>
 
       <section class="detail-grid" data-view="performance" hidden>
@@ -442,11 +443,11 @@
             <table>
               <thead>
                 <tr>
-                  <th>날짜</th>
+                  <th><button class="th-sort" type="button" data-flow-sort="date-toggle">날짜 <span aria-hidden="true">↕</span></button></th>
                   <th>투자자</th>
                   <th>계좌</th>
                   <th>유형</th>
-                  <th>금액</th>
+                  <th><button class="th-sort" type="button" data-flow-sort="amount-desc">금액 <span aria-hidden="true">↕</span></button></th>
                   <th>메모</th>
                   <th></th>
                 </tr>

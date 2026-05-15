@@ -164,6 +164,8 @@ async function verifyBrowser() {
       numbersChartCanvas: Boolean(document.querySelector("#numbersPerformanceChart")),
       trendValueLabels: document.querySelectorAll(".trend-value-label").length,
       trendLastLabel: Boolean(document.querySelector(".trend-last-label")),
+      trendTooltips: document.querySelectorAll(".trend-tooltip").length,
+      focusablePoints: document.querySelectorAll(".trend-point-group[tabindex='0']").length,
       waterfallRows: document.querySelectorAll("#performanceWaterfall .waterfall-row").length,
       accountRows: document.querySelectorAll("#accountPerformanceBody tr").length,
       strategyRows: document.querySelectorAll("#strategyPerformanceBody tr").length,
@@ -176,6 +178,8 @@ async function verifyBrowser() {
     assert.equal(performance.numbersChartCanvas, true);
     assert.ok(performance.trendValueLabels >= 5);
     assert.equal(performance.trendLastLabel, true);
+    assert.ok(performance.trendTooltips >= 2);
+    assert.ok(performance.focusablePoints >= 2);
     assert.equal(performance.waterfallRows, 3);
     assert.ok(performance.accountRows >= 1);
     assert.ok(performance.strategyRows >= 1);
@@ -199,13 +203,19 @@ async function verifyBrowser() {
 
     await page.evaluate(() => document.querySelector("[data-view-tab=\"holdings\"]").click());
     await page.fill("#holdingSearch", "QQQ");
+    await page.click("[data-holding-sort=\"quantity-desc\"]");
     const holdingFilter = await page.evaluate(() => ({
       rows: document.querySelectorAll("#holdingsBody tr").length,
       firstText: document.querySelector("#holdingsBody tr")?.textContent || "",
+      rowMenus: document.querySelectorAll("#holdingsBody .row-menu").length,
+      sortValue: document.querySelector("#holdingSort")?.value,
     }));
     assert.ok(holdingFilter.rows >= 1);
     assert.match(holdingFilter.firstText, /QQQ/i);
-    await page.click("[data-edit-holding]");
+    assert.ok(holdingFilter.rowMenus >= 1);
+    assert.equal(holdingFilter.sortValue, "quantity-desc");
+    await page.click("#holdingsBody .row-menu summary");
+    await page.click("#holdingsBody [data-edit-holding]");
     const holdingEdit = await page.evaluate(() => ({
       formHidden: document.querySelector("#holdingFormPanel")?.hidden,
       editingRows: document.querySelectorAll("tr.is-editing-row").length,

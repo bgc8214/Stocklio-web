@@ -957,7 +957,7 @@ main {
 .trend-chart {
   border: 1px solid var(--line);
   border-radius: 7px;
-  min-height: 280px;
+  min-height: 250px;
   overflow-x: auto;
   padding: 12px;
 }
@@ -990,6 +990,43 @@ main {
   fill: var(--surface);
   stroke: var(--accent-dark);
   stroke-width: 2;
+}
+
+.trend-hit {
+  cursor: pointer;
+  fill: transparent;
+}
+
+.trend-point-group:focus {
+  outline: none;
+}
+
+.trend-point-group:focus .trend-point,
+.trend-point-group:hover .trend-point {
+  fill: var(--accent-dark);
+  stroke: var(--surface);
+}
+
+.trend-tooltip {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 120ms ease;
+}
+
+.trend-tooltip rect {
+  fill: var(--ink);
+  filter: drop-shadow(0 8px 18px rgba(18, 31, 25, 0.16));
+}
+
+.trend-tooltip text {
+  fill: white;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.trend-point-group:focus .trend-tooltip,
+.trend-point-group:hover .trend-tooltip {
+  opacity: 1;
 }
 
 .trend-label,
@@ -1215,6 +1252,27 @@ th {
   text-transform: uppercase;
 }
 
+.th-sort {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  color: inherit;
+  cursor: pointer;
+  display: inline-flex;
+  font: inherit;
+  gap: 4px;
+  justify-content: flex-end;
+  min-height: auto;
+  padding: 0;
+  text-transform: inherit;
+}
+
+.th-sort:hover,
+.th-sort:focus-visible {
+  color: var(--ink);
+  outline: none;
+}
+
 th:first-child,
 td:first-child,
 th:nth-child(2),
@@ -1268,12 +1326,120 @@ td:nth-child(4) {
   margin-bottom: 14px;
 }
 
+.inline-create-panel {
+  background: var(--surface-soft);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  margin: 12px 0 14px;
+  padding: 14px;
+}
+
 .row-actions {
   display: inline-flex;
   flex-shrink: 0;
   flex-wrap: nowrap;
   gap: 6px;
   justify-content: flex-end;
+}
+
+.row-menu {
+  display: inline-flex;
+  justify-content: flex-end;
+  position: relative;
+}
+
+.row-menu summary {
+  align-items: center;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  cursor: pointer;
+  display: inline-flex;
+  font-size: 20px;
+  font-weight: 900;
+  height: 34px;
+  justify-content: center;
+  line-height: 1;
+  list-style: none;
+  width: 34px;
+}
+
+.row-menu summary::-webkit-details-marker {
+  display: none;
+}
+
+.row-menu summary:hover,
+.row-menu[open] summary {
+  border-color: var(--accent);
+  color: var(--accent-dark);
+}
+
+.row-menu-popover {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+  display: grid;
+  gap: 4px;
+  min-width: 118px;
+  padding: 6px;
+  position: absolute;
+  right: 0;
+  top: calc(100% + 6px);
+  z-index: 12;
+}
+
+.row-menu-popover button {
+  background: transparent;
+  border: 0;
+  color: var(--ink);
+  justify-content: flex-start;
+  min-height: 34px;
+  padding: 0 10px;
+  text-align: left;
+}
+
+.row-menu-popover button:hover,
+.row-menu-popover button:focus-visible {
+  background: var(--surface-soft);
+  outline: none;
+}
+
+.row-menu-popover button:disabled {
+  color: var(--muted);
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.row-menu-popover .row-menu-danger {
+  color: var(--red);
+}
+
+.account-card-row {
+  align-items: center;
+  grid-template-columns: minmax(180px, 1.1fr) minmax(320px, 1.8fr) auto;
+}
+
+.account-card-metrics {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  min-width: 0;
+}
+
+.account-card-metrics span {
+  background: var(--surface-soft);
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+  padding: 8px;
+}
+
+.account-card-metrics strong {
+  font-size: 14px;
+  overflow-wrap: anywhere;
 }
 
 .allocation-box {
@@ -1371,6 +1537,11 @@ td:nth-child(4) {
   .backup-actions,
   .performance-stats,
   .performance-detail-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .account-card-row,
+  .account-card-metrics {
     grid-template-columns: 1fr;
   }
 
@@ -1577,6 +1748,10 @@ td:nth-child(4) {
   .holdings-table td small {
     overflow-wrap: anywhere;
     white-space: normal;
+  }
+
+  .holdings-table .row-menu {
+    justify-content: flex-start;
   }
 
   .section-heading {
