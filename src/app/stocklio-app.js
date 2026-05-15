@@ -539,6 +539,7 @@ function normalizeState(input) {
     dashboardLayout: normalizeDashboardLayout(input.dashboardLayout),
     accountSnapshots: Array.isArray(input.accountSnapshots) ? input.accountSnapshots : fallback.accountSnapshots,
     priceUpdateLogs: Array.isArray(input.priceUpdateLogs) ? input.priceUpdateLogs : fallback.priceUpdateLogs,
+    lastPriceRefreshImpact: input.lastPriceRefreshImpact || fallback.lastPriceRefreshImpact,
     portfolioSnapshots: Array.isArray(input.portfolioSnapshots) ? input.portfolioSnapshots : fallback.portfolioSnapshots,
     automation: {
       ...fallback.automation,
@@ -1282,19 +1283,20 @@ function renderNumbersPerformanceChart(rows) {
 
 function renderBreakdown() {
   const movers = getDailyMoveRows().slice(0, 5);
+  const refreshImpact = getRecentPriceRefreshImpact();
   if (!movers.length) {
-    const investors = groupByValue(state.holdings, "investor");
-    const accountTypes = groupByValue(state.holdings.map((holding) => ({ ...holding, accountType: formatAccountType(holding.accountType) })), "accountType");
+    if (refreshImpact?.rows?.length) {
+      els.breakdownList.innerHTML = renderPriceRefreshImpact(refreshImpact);
+      return;
+    }
+    const fallback = renderBreakdownFallback();
     els.breakdownList.innerHTML = `
       <div class="daily-move-empty">
         <strong>가격 갱신 후 원인을 분석할 수 있습니다</strong>
-        <span>Yahoo Finance에서 전일 대비 가격을 받아오면 어떤 종목이 총자산을 움직였는지 표시합니다.</span>
+        <span>전일 대비 가격 데이터가 없는 캐시나 일부 종목 실패가 있으면 원인 분석이 제한됩니다. 가격을 다시 가져오면 새 데이터로 분석합니다.</span>
       </div>
       <div class="breakdown-subtitle">구성 참고</div>
-      ${[
-        ...investors.map((item, index) => breakdownRow(item, index)),
-        ...accountTypes.map((item, index) => breakdownRow(item, index + investors.length)),
-      ].join("")}
+      ${fallback}
     `;
     return;
   }
@@ -1310,6 +1312,30 @@ function renderBreakdown() {
     </div>
     <div class="daily-move-insight">${escapeHtml(insight)}</div>
     ${movers.map((item) => dailyMoveRow(item)).join("")}
+    ${refreshImpact && Math.abs(refreshImpact.totalDeltaKrw) > Math.max(100000, Math.abs(netMove) * 3) ? renderPriceRefreshImpact(refreshImpact, { compact: true }) : ""}
+  `;
+}
+
+function renderBreakdownFallback() {
+  const investors = groupByValue(state.holdings, "investor");
+  const accountTypes = groupByValue(state.holdings.map((holding) => ({ ...holding, accountType: formatAccountType(holding.accountType) })), "accountType");
+  return [
+    ...investors.map((item, index) => breakdownRow(item, index)),
+    ...accountTypes.map((item, index) => breakdownRow(item, index + investors.length)),
+  ].join("");
+}
+
+function renderPriceRefreshImpact(impact, { compact = false } = {}) {
+  const rows = (impact.rows || []).slice(0, compact ? 3 : 5);
+  const title = compact ? "이번 가격 갱신 전후" : "최근 가격 갱신 영향";
+  return `
+    <div class="daily-move-summary price-refresh-impact">
+      <span>${title}</span>
+      <strong class="${impact.totalDeltaKrw >= 0 ? "positive" : "negative"}">${impact.totalDeltaKrw >= 0 ? "+" : ""}${formatKrw(impact.totalDeltaKrw)}</strong>
+      <small>${formatAsOf(impact.at)} · 갱신 전 ${formatCompactKrw(impact.previousTotalKrw)} → 갱신 후 ${formatCompactKrw(impact.nextTotalKrw)}</small>
+    </div>
+    <div class="daily-move-insight">${escapeHtml(priceRefreshImpactInsight(impact))}</div>
+    ${rows.map((item) => priceRefreshImpactRow(item)).join("")}
   `;
 }
 
@@ -1530,6 +1556,28 @@ function dailyMoveInsight(movers, netMove, priceEffect, fxEffect) {
     return `오늘 ${direction}는 ${main}와 ${fxDirection} 영향이 큽니다.`;
   }
   return `오늘 ${direction}는 ${main}의 가격 변동이 대부분 설명합니다.`;
+}
+
+function priceRefreshImpactRow(item) {
+  const before = formatCompactKrw(item.beforeValueKrw);
+  const after = formatCompactKrw(item.afterValueKrw);
+  return `<div class="daily-move-row">
+    <div>
+      <strong>${escapeHtml(item.name)}</strong>
+      <small>${escapeHtml(item.ticker)} · ${before} → ${after}</small>
+    </div>
+    <span class="${item.deltaKrw >= 0 ? "positive" : "negative"}">${item.deltaKrw >= 0 ? "+" : ""}${formatKrw(item.deltaKrw)}</span>
+  </div>`;
+}
+
+function priceRefreshImpactInsight(impact) {
+  const rows = impact.rows || [];
+  const top = rows[0];
+  if (!top || Math.abs(impact.totalDeltaKrw) < 1000) {
+    return "이번 가격 갱신으로 평가금액 변화가 거의 없었습니다.";
+  }
+  const direction = impact.totalDeltaKrw >= 0 ? "증가" : "감소";
+  return `이번 ${direction}는 ${top.name} 등 Yahoo 가격으로 바뀐 종목 영향이 큽니다.`;
 }
 
 function renderHoldings() {
@@ -2208,6 +2256,9 @@ async function refreshPrices({ reason = "manual" } = {}) {
 async function refreshPricesNow({ reason }) {
   setActionState("price", true);
   const isAuto = reason === "auto";
+  const forceRefresh = !isAuto;
+  const beforeTotals = getTotals();
+  const previousFxRate = Number(state.fxRate?.rate || 1);
   setStatus(isAuto ? "자동 가격 갱신 중" : "가격 업데이트 중", "Yahoo Finance에서 보유 종목 현재가와 USD/KRW를 조회 중");
   showOperationToast(isAuto ? "가격 자동 갱신 중" : "가격 다시 가져오는 중", "보유 종목 현재가와 USD/KRW를 조회합니다", "busy");
 
@@ -2216,7 +2267,7 @@ async function refreshPricesNow({ reason }) {
   const failures = [];
   for (const ticker of tickers) {
     try {
-      quoteMap[ticker] = await getQuote(ticker);
+      quoteMap[ticker] = await getQuote(ticker, { force: forceRefresh });
       addPriceLog({ symbol: ticker, status: "success", price: quoteMap[ticker].price, source: quoteMap[ticker].source });
     } catch (error) {
       failures.push(`${ticker}: ${error.message}`);
@@ -2225,13 +2276,19 @@ async function refreshPricesNow({ reason }) {
   }
 
   try {
-    state.fxRate = await getUsdKrw();
+    state.fxRate = await getUsdKrw({ force: forceRefresh });
     addPriceLog({ symbol: "USD/KRW", status: "success", price: state.fxRate.rate, source: state.fxRate.source });
   } catch (error) {
     failures.push(`USD/KRW: ${error.message}`);
     addPriceLog({ symbol: "USD/KRW", status: "error", message: error.message });
   }
 
+  state.lastPriceRefreshImpact = buildPriceRefreshImpact({
+    beforeTotals,
+    quoteMap,
+    previousFxRate,
+    reason,
+  });
   state.holdings = state.holdings.map((holding) => {
     const quote = quoteMap[holding.ticker];
     return quote
@@ -2271,6 +2328,69 @@ function addPriceLog(log) {
       ...log,
     },
   ].slice(-200);
+}
+
+function buildPriceRefreshImpact({ beforeTotals, quoteMap, previousFxRate, reason }) {
+  const currentFxRate = Number(state.fxRate?.rate || previousFxRate || 1);
+  const rows = state.holdings
+    .map((holding) => {
+      const quote = quoteMap[holding.ticker];
+      if (!quote) {
+        return null;
+      }
+      const quantity = Number(holding.quantity || 0);
+      const oldPrice = Number(holding.price || 0);
+      const newPrice = Number(quote.price || oldPrice);
+      const beforeFx = holding.currency === "USD" ? previousFxRate : 1;
+      const afterFx = holding.currency === "USD" ? currentFxRate : 1;
+      const beforeValueKrw = quantity * oldPrice * beforeFx;
+      const afterValueKrw = quantity * newPrice * afterFx;
+      return {
+        id: holding.id,
+        name: holding.name || holding.ticker,
+        ticker: holding.ticker,
+        currency: holding.currency,
+        quantity,
+        oldPrice,
+        newPrice,
+        beforeValueKrw,
+        afterValueKrw,
+        deltaKrw: afterValueKrw - beforeValueKrw,
+      };
+    })
+    .filter(Boolean)
+    .sort((a, b) => Math.abs(b.deltaKrw) - Math.abs(a.deltaKrw));
+  const afterTotals = calculateTotals({
+    holdings: state.holdings.map((holding) => {
+      const quote = quoteMap[holding.ticker];
+      return quote ? { ...holding, price: quote.price } : holding;
+    }),
+    cashBalances: state.cashBalances,
+    fxRate: currentFxRate,
+  });
+
+  return {
+    at: new Date().toISOString(),
+    reason,
+    previousFxRate,
+    currentFxRate,
+    previousTotalKrw: beforeTotals.totalValueKrw,
+    nextTotalKrw: afterTotals.totalValueKrw,
+    totalDeltaKrw: afterTotals.totalValueKrw - beforeTotals.totalValueKrw,
+    rows,
+  };
+}
+
+function getRecentPriceRefreshImpact() {
+  const impact = state.lastPriceRefreshImpact;
+  if (!impact?.at || !Array.isArray(impact.rows)) {
+    return null;
+  }
+  const ageMs = Date.now() - new Date(impact.at).getTime();
+  if (!Number.isFinite(ageMs) || ageMs > 24 * 60 * 60 * 1000) {
+    return null;
+  }
+  return impact;
 }
 
 function groupByValue(holdings, key) {

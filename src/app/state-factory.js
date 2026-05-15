@@ -19,6 +19,7 @@ export function createEmptyState() {
     dashboardLayout: structuredClone(defaultDashboardLayout),
     accountSnapshots: [],
     priceUpdateLogs: [],
+    lastPriceRefreshImpact: null,
     portfolioSnapshots: [],
     automation: {
       lastRunAt: null,
@@ -153,6 +154,7 @@ export function createSampleState(makeId) {
     dashboardLayout: structuredClone(defaultDashboardLayout),
     accountSnapshots: [],
     priceUpdateLogs: [],
+    lastPriceRefreshImpact: null,
     portfolioSnapshots: [
       {
         id: makeId(),
