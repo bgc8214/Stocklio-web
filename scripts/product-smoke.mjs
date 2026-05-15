@@ -127,11 +127,21 @@ async function verifyBrowser() {
       bodyOverflow: document.documentElement.scrollWidth > document.documentElement.clientWidth,
       cards: document.querySelectorAll("[data-dashboard-card]").length,
       performanceStatCards: document.querySelectorAll("#performanceDetailStats > div").length,
+      tabOverlap: (() => {
+        const tabs = [...document.querySelectorAll(".view-tabs button")].map((button) => button.getBoundingClientRect());
+        return tabs.some((rect, index) => {
+          const next = tabs[index + 1];
+          return next && rect.right > next.left + 1 && rect.bottom > next.top && rect.top < next.bottom;
+        });
+      })(),
+      holdingRows: document.querySelectorAll("#holdingsBody tr").length,
     }));
 
     assert.equal(mobile.bodyOverflow, false);
     assert.equal(mobile.cards, 8);
     assert.equal(mobile.performanceStatCards, 6);
+    assert.equal(mobile.tabOverlap, false);
+    assert.ok(mobile.holdingRows >= 1);
     assert.deepEqual(errors, []);
   } finally {
     await browser.close();

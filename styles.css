@@ -19,12 +19,17 @@
   box-sizing: border-box;
 }
 
+html {
+  overflow-x: hidden;
+}
+
 body {
   margin: 0;
   background: var(--bg);
   color: var(--ink);
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   line-height: 1.5;
+  overflow-x: hidden;
 }
 
 button,
@@ -287,11 +292,13 @@ main {
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: 8px;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
+  display: flex;
   gap: 4px;
   margin-bottom: 18px;
   padding: 4px;
   overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: thin;
 }
 
 .view-tabs button {
@@ -299,8 +306,11 @@ main {
   border: 0;
   border-radius: 6px;
   color: var(--muted);
+  flex: 1 0 140px;
   min-height: 38px;
-  min-width: 140px;
+  min-width: 0;
+  padding: 0 14px;
+  white-space: nowrap;
 }
 
 .view-tabs button.active {
@@ -1194,6 +1204,22 @@ td:nth-child(4) {
     justify-content: flex-start;
   }
 
+  .view-tabs {
+    margin-left: calc(-1 * clamp(16px, 4vw, 48px));
+    margin-right: calc(-1 * clamp(16px, 4vw, 48px));
+    border-left: 0;
+    border-right: 0;
+    border-radius: 0;
+    padding: 6px clamp(16px, 4vw, 48px);
+  }
+
+  .view-tabs button {
+    flex-basis: auto;
+    font-size: 14px;
+    min-height: 36px;
+    padding: 0 12px;
+  }
+
   .dashboard-board {
     grid-template-columns: 1fr;
   }
@@ -1244,6 +1270,101 @@ td:nth-child(4) {
 
   .filters {
     grid-template-columns: 1fr;
+  }
+
+  .topbar-inner {
+    padding-left: 4px;
+    padding-right: 4px;
+  }
+
+  .brand-lockup h1 {
+    font-size: 34px;
+  }
+
+  .auth-panel button {
+    width: 100%;
+  }
+
+  .toolbar-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: 100%;
+  }
+
+  .toolbar-actions .more-actions {
+    grid-column: 1 / -1;
+  }
+
+  .more-actions summary {
+    justify-content: center;
+  }
+
+  .more-actions div {
+    left: 0;
+    right: auto;
+    width: min(260px, 100%);
+  }
+
+  .holdings-table-wrap {
+    overflow: visible;
+  }
+
+  .holdings-table {
+    min-width: 0;
+  }
+
+  .holdings-table,
+  .holdings-table thead,
+  .holdings-table tbody,
+  .holdings-table tr,
+  .holdings-table th,
+  .holdings-table td {
+    display: block;
+  }
+
+  .holdings-table thead {
+    clip: rect(0 0 0 0);
+    height: 1px;
+    overflow: hidden;
+    position: absolute;
+    white-space: nowrap;
+    width: 1px;
+  }
+
+  .holdings-table tr {
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    margin-bottom: 12px;
+    padding: 12px;
+  }
+
+  .holdings-table td {
+    align-items: start;
+    border-bottom: 0;
+    display: grid;
+    gap: 10px;
+    grid-template-columns: 92px minmax(0, 1fr);
+    padding: 7px 0;
+    text-align: left;
+    white-space: normal;
+  }
+
+  .holdings-table td::before {
+    color: var(--muted);
+    content: attr(data-label);
+    font-size: 12px;
+    font-weight: 800;
+  }
+
+  .holdings-table td > * {
+    min-width: 0;
+  }
+
+  .holdings-table td strong,
+  .holdings-table td span,
+  .holdings-table td small {
+    overflow-wrap: anywhere;
+    white-space: normal;
   }
 
   .section-heading {

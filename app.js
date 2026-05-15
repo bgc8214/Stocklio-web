@@ -1596,17 +1596,17 @@ function renderHoldings() {
       const gain = values.gainNative;
       const returnRate = cost ? gain / cost : 0;
       return `<tr>
-        <td>${escapeHtml(holding.investor)}</td>
-        <td>${escapeHtml(holding.account)}</td>
-        <td>${escapeHtml(holding.strategy)}</td>
-        <td><strong>${escapeHtml(holding.name || holding.ticker)}</strong>${holding.ticker && holding.ticker !== holding.name ? `<small>${escapeHtml(holding.ticker)}</small>` : ""}</td>
-        <td>${formatNumber(holding.quantity, 4)}</td>
-        <td>${formatMoney(holding.price, holding.currency)}</td>
-        <td>${formatMoney(holding.averageCost, holding.currency)}</td>
-        <td>${formatMoney(value, holding.currency)}</td>
-        <td class="${gain >= 0 ? "positive" : "negative"}">${formatMoney(gain, holding.currency)}</td>
-        <td class="${gain >= 0 ? "positive" : "negative"}">${formatPercent(returnRate)}</td>
-        <td>
+        <td data-label="투자자">${escapeHtml(holding.investor)}</td>
+        <td data-label="계좌">${escapeHtml(holding.account)}</td>
+        <td data-label="전략">${escapeHtml(holding.strategy)}</td>
+        <td data-label="종목"><strong>${escapeHtml(holding.name || holding.ticker)}</strong>${holding.ticker && holding.ticker !== holding.name ? `<small>${escapeHtml(holding.ticker)}</small>` : ""}</td>
+        <td data-label="수량">${formatNumber(holding.quantity, 4)}</td>
+        <td data-label="현재가">${formatMoney(holding.price, holding.currency)}</td>
+        <td data-label="평단가">${formatMoney(holding.averageCost, holding.currency)}</td>
+        <td data-label="평가금액">${formatMoney(value, holding.currency)}</td>
+        <td data-label="손익" class="${gain >= 0 ? "positive" : "negative"}">${formatMoney(gain, holding.currency)}</td>
+        <td data-label="수익률" class="${gain >= 0 ? "positive" : "negative"}">${formatPercent(returnRate)}</td>
+        <td data-label="작업">
           <div class="row-actions">
             <button class="ghost small-button" type="button" data-edit-holding="${holding.id}">수정</button>
             <button class="icon-danger" type="button" data-delete="${holding.id}" aria-label="${escapeHtml(holding.ticker)} 삭제">×</button>
