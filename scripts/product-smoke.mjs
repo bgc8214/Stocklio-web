@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
 import { once } from "node:events";
+import { access } from "node:fs/promises";
 import { chromium } from "playwright";
 
 const port = Number(process.env.PORT || 4273);
@@ -21,6 +22,7 @@ server.stderr.on("data", (chunk) => {
 });
 
 try {
+  await verifyStaticBuild();
   await waitForServer();
   await verifyApi();
   await verifyBrowser();
@@ -28,6 +30,15 @@ try {
 } finally {
   server.kill("SIGTERM");
   await waitForExit(server, 2_000);
+}
+
+async function verifyStaticBuild() {
+  const root = new URL("..", import.meta.url);
+  await Promise.all([
+    access(new URL("dist/index.html", root)),
+    access(new URL("dist/src/app/stocklio-app.js", root)),
+    access(new URL("dist/src/domain/portfolio-core.js", root)),
+  ]);
 }
 
 async function waitForServer() {
