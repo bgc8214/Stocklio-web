@@ -288,6 +288,12 @@ const els = {
   accountList: document.querySelector("#accountList"),
   snapshotsBody: document.querySelector("#snapshotsBody"),
   monthlySummaryBody: document.querySelector("#monthlySummaryBody"),
+  performanceDetailStats: document.querySelector("#performanceDetailStats"),
+  performanceTrendChart: document.querySelector("#performanceTrendChart"),
+  performanceWaterfall: document.querySelector("#performanceWaterfall"),
+  performanceInsight: document.querySelector("#performanceInsight"),
+  accountPerformanceBody: document.querySelector("#accountPerformanceBody"),
+  strategyPerformanceBody: document.querySelector("#strategyPerformanceBody"),
   performanceRange: document.querySelector("#performanceRange"),
   investorFilter: document.querySelector("#investorFilter"),
   strategyFilter: document.querySelector("#strategyFilter"),
@@ -1215,6 +1221,7 @@ function renderPerformance() {
   if (!points.length) {
     els.performanceStats.innerHTML = "";
     els.performanceChart.innerHTML = `<div class="empty-state">저장된 성과 스냅샷이 없습니다</div>`;
+    renderPerformanceDetails([]);
     return;
   }
   const latest = points[points.length - 1];
@@ -1243,6 +1250,35 @@ function renderPerformance() {
       </div>`;
     })
     .join("");
+  renderPerformanceDetails(getFilteredSnapshotRows());
+}
+
+function renderPerformanceDetails(rows) {
+  if (!rows.length) {
+    els.performanceDetailStats.innerHTML = "";
+    els.performanceTrendChart.innerHTML = `<div class="empty-state">저장된 성과 스냅샷이 없습니다</div>`;
+    els.performanceWaterfall.innerHTML = `<div class="empty-state">성과를 계산할 스냅샷이 없습니다</div>`;
+    els.performanceInsight.innerHTML = "";
+    els.accountPerformanceBody.innerHTML = `<tr><td colspan="7">계좌별 스냅샷이 없습니다</td></tr>`;
+    els.strategyPerformanceBody.innerHTML = `<tr><td colspan="6">보유 종목이 없습니다</td></tr>`;
+    return;
+  }
+
+  const stats = getPerformanceStats(rows);
+  els.performanceDetailStats.innerHTML = `
+    <div><span>최근 총자산</span><strong>${formatKrw(stats.latest.totalValueKrw)}</strong><small>${escapeHtml(stats.latest.date)}</small></div>
+    <div><span>기간 증감</span><strong class="${stats.periodChangeKrw >= 0 ? "positive" : "negative"}">${formatKrw(stats.periodChangeKrw)}</strong><small>${formatPercent(stats.periodReturn)}</small></div>
+    <div><span>입출금</span><strong>${formatKrw(stats.netInflowKrw)}</strong><small>외부 현금흐름</small></div>
+    <div><span>투자손익</span><strong class="${stats.investmentGainKrw >= 0 ? "positive" : "negative"}">${formatKrw(stats.investmentGainKrw)}</strong><small>증감 - 입출금</small></div>
+    <div><span>월 누적</span><strong class="${stats.monthToDateGainKrw >= 0 ? "positive" : "negative"}">${formatKrw(stats.monthToDateGainKrw)}</strong><small>${formatPercent(stats.monthToDateReturn)}</small></div>
+    <div><span>최대 낙폭</span><strong class="${stats.maxDrawdownKrw >= 0 ? "positive" : "negative"}">${formatKrw(stats.maxDrawdownKrw)}</strong><small>${formatPercent(stats.maxDrawdownRate)}</small></div>
+  `;
+
+  els.performanceTrendChart.innerHTML = renderTrendChart(rows);
+  els.performanceWaterfall.innerHTML = renderWaterfall(stats);
+  els.performanceInsight.innerHTML = renderPerformanceInsights(stats);
+  renderAccountPerformance(rows);
+  renderStrategyPerformance();
 }
 
 function renderBreakdown() {
@@ -1343,8 +1379,9 @@ function renderSnapshots() {
       <td>${formatKrw(row.netInflowKrw)}</td>
       <td class="${row.investmentGainKrw >= 0 ? "positive" : "negative"}">${formatKrw(row.investmentGainKrw)}</td>
       <td class="${row.dailyReturn >= 0 ? "positive" : "negative"}">${formatPercent(row.dailyReturn)}</td>
+      <td class="${row.monthToDateInvestmentGainKrw >= 0 ? "positive" : "negative"}">${formatKrw(row.monthToDateInvestmentGainKrw)}</td>
     </tr>`)
-    .join("");
+    .join("") || `<tr><td colspan="7">저장된 성과 스냅샷이 없습니다</td></tr>`;
 }
 
 function renderMonthlySummary() {
@@ -1352,12 +1389,43 @@ function renderMonthlySummary() {
   els.monthlySummaryBody.innerHTML = rows
     .map((row) => `<tr>
       <td>${escapeHtml(row.month)}</td>
+      <td>${formatKrw(row.startValueKrw)}</td>
       <td>${formatKrw(row.endValueKrw)}</td>
       <td class="${row.changeKrw >= 0 ? "positive" : "negative"}">${formatKrw(row.changeKrw)}</td>
       <td>${formatKrw(row.netInflowKrw)}</td>
       <td class="${row.investmentGainKrw >= 0 ? "positive" : "negative"}">${formatKrw(row.investmentGainKrw)}</td>
+      <td class="${row.returnRate >= 0 ? "positive" : "negative"}">${formatPercent(row.returnRate)}</td>
     </tr>`)
-    .join("");
+    .join("") || `<tr><td colspan="7">월별로 집계할 스냅샷이 없습니다</td></tr>`;
+}
+
+function renderAccountPerformance(rows) {
+  const accountRows = getAccountPerformanceRows(rows);
+  els.accountPerformanceBody.innerHTML = accountRows
+    .map((row) => `<tr>
+      <td>${escapeHtml(row.account)}<small>${escapeHtml(row.investor)}</small></td>
+      <td>${formatKrw(row.latestValueKrw)}</td>
+      <td class="${row.dailyChangeKrw >= 0 ? "positive" : "negative"}">${formatKrw(row.dailyChangeKrw)}</td>
+      <td class="${row.periodChangeKrw >= 0 ? "positive" : "negative"}">${formatKrw(row.periodChangeKrw)}</td>
+      <td>${formatKrw(row.stockValueKrw)}</td>
+      <td>${formatKrw(row.cashKrw)}</td>
+      <td class="${row.returnRate >= 0 ? "positive" : "negative"}">${formatPercent(row.returnRate)}</td>
+    </tr>`)
+    .join("") || `<tr><td colspan="7">계좌별 스냅샷이 없습니다. 오늘 성과 저장 또는 자동 기록 후 표시됩니다.</td></tr>`;
+}
+
+function renderStrategyPerformance() {
+  const rows = getStrategyPerformanceRows();
+  els.strategyPerformanceBody.innerHTML = rows
+    .map((row) => `<tr>
+      <td>${escapeHtml(row.strategy)}</td>
+      <td>${formatKrw(row.valueKrw)}</td>
+      <td>${formatPercent(row.weight)}</td>
+      <td class="${row.gainKrw >= 0 ? "positive" : "negative"}">${formatKrw(row.gainKrw)}</td>
+      <td class="${row.returnRate >= 0 ? "positive" : "negative"}">${formatPercent(row.returnRate)}</td>
+      <td>${formatNumber(row.count)}</td>
+    </tr>`)
+    .join("") || `<tr><td colspan="6">보유 종목이 없습니다</td></tr>`;
 }
 
 function breakdownRow(item, index) {
@@ -1911,18 +1979,27 @@ function buildAccountSnapshots(date) {
 
 function getSnapshotRows() {
   const snapshots = [...(state.portfolioSnapshots || [])].sort((a, b) => a.date.localeCompare(b.date));
+  const monthRunningGain = new Map();
+  const monthRunningInflow = new Map();
   return snapshots.map((snapshot, index) => {
     const previous = snapshots[index - 1];
     const dailyChangeKrw = previous ? snapshot.totalValueKrw - previous.totalValueKrw : 0;
     const netInflowKrw = Number(snapshot.netInflowKrw || 0);
     const investmentGainKrw = previous ? dailyChangeKrw - netInflowKrw : 0;
     const dailyReturn = previous?.totalValueKrw ? investmentGainKrw / previous.totalValueKrw : 0;
+    const month = snapshot.date.slice(0, 7);
+    const monthGain = (monthRunningGain.get(month) || 0) + investmentGainKrw;
+    const monthInflow = (monthRunningInflow.get(month) || 0) + netInflowKrw;
+    monthRunningGain.set(month, monthGain);
+    monthRunningInflow.set(month, monthInflow);
     return {
       ...snapshot,
       dailyChangeKrw,
       netInflowKrw,
       investmentGainKrw,
       dailyReturn,
+      monthToDateInvestmentGainKrw: monthGain,
+      monthToDateNetInflowKrw: monthInflow,
     };
   });
 }
@@ -1959,14 +2036,173 @@ function getMonthlyRows() {
     const last = monthRows[monthRows.length - 1];
     const changeKrw = last.totalValueKrw - first.totalValueKrw;
     const netInflowKrw = monthRows.reduce((sum, row) => sum + row.netInflowKrw, 0);
+    const investmentGainKrw = changeKrw - netInflowKrw;
     return {
       month,
+      startValueKrw: first.totalValueKrw,
       endValueKrw: last.totalValueKrw,
       changeKrw,
       netInflowKrw,
-      investmentGainKrw: changeKrw - netInflowKrw,
+      investmentGainKrw,
+      returnRate: first.totalValueKrw ? investmentGainKrw / first.totalValueKrw : 0,
     };
   });
+}
+
+function getPerformanceStats(rows) {
+  const latest = rows[rows.length - 1];
+  const first = rows[0];
+  const periodChangeKrw = latest.totalValueKrw - first.totalValueKrw;
+  const netInflowKrw = rows.reduce((sum, row, index) => sum + (index === 0 ? 0 : row.netInflowKrw), 0);
+  const investmentGainKrw = periodChangeKrw - netInflowKrw;
+  const latestMonth = latest.date.slice(0, 7);
+  const monthRows = rows.filter((row) => row.date.startsWith(latestMonth));
+  const monthFirst = monthRows[0] || latest;
+  const monthChangeKrw = latest.totalValueKrw - monthFirst.totalValueKrw;
+  const monthNetInflowKrw = monthRows.reduce((sum, row, index) => sum + (index === 0 ? 0 : row.netInflowKrw), 0);
+  const monthToDateGainKrw = monthChangeKrw - monthNetInflowKrw;
+  let peak = rows[0]?.totalValueKrw || 0;
+  let maxDrawdownKrw = 0;
+  let maxDrawdownRate = 0;
+  for (const row of rows) {
+    peak = Math.max(peak, row.totalValueKrw);
+    const drawdown = row.totalValueKrw - peak;
+    if (drawdown < maxDrawdownKrw) {
+      maxDrawdownKrw = drawdown;
+      maxDrawdownRate = peak ? drawdown / peak : 0;
+    }
+  }
+  return {
+    latest,
+    first,
+    periodChangeKrw,
+    netInflowKrw,
+    investmentGainKrw,
+    periodReturn: first.totalValueKrw ? investmentGainKrw / first.totalValueKrw : 0,
+    monthToDateGainKrw,
+    monthToDateReturn: monthFirst.totalValueKrw ? monthToDateGainKrw / monthFirst.totalValueKrw : 0,
+    maxDrawdownKrw,
+    maxDrawdownRate,
+  };
+}
+
+function renderTrendChart(rows) {
+  const chartRows = rows.slice(-30);
+  if (chartRows.length < 2) {
+    return `<div class="empty-state">추이를 그리려면 스냅샷이 2개 이상 필요합니다</div>`;
+  }
+  const width = 720;
+  const height = 260;
+  const padding = { top: 20, right: 24, bottom: 36, left: 72 };
+  const values = chartRows.map((row) => row.totalValueKrw);
+  const max = Math.max(...values);
+  const min = Math.min(...values);
+  const span = Math.max(1, max - min);
+  const xFor = (index) => padding.left + (index / Math.max(1, chartRows.length - 1)) * (width - padding.left - padding.right);
+  const yFor = (value) => padding.top + ((max - value) / span) * (height - padding.top - padding.bottom);
+  const line = chartRows.map((row, index) => `${xFor(index)},${yFor(row.totalValueKrw)}`).join(" ");
+  const area = `${padding.left},${height - padding.bottom} ${line} ${width - padding.right},${height - padding.bottom}`;
+  const labels = [chartRows[0], chartRows[Math.floor(chartRows.length / 2)], chartRows[chartRows.length - 1]];
+  const valueLabels = [max, min];
+  return `
+    <svg viewBox="0 0 ${width} ${height}" role="img" aria-label="총자산 추이">
+      <polyline class="trend-grid" points="${padding.left},${yFor(max)} ${width - padding.right},${yFor(max)}"></polyline>
+      <polyline class="trend-grid" points="${padding.left},${yFor(min)} ${width - padding.right},${yFor(min)}"></polyline>
+      <polygon class="trend-area" points="${area}"></polygon>
+      <polyline class="trend-line" points="${line}"></polyline>
+      ${chartRows
+        .map((row, index) => `<circle class="trend-point" cx="${xFor(index)}" cy="${yFor(row.totalValueKrw)}" r="3"><title>${row.date} ${formatKrw(row.totalValueKrw)}</title></circle>`)
+        .join("")}
+      ${labels
+        .map((row, index) => `<text class="trend-label" x="${xFor(index === 0 ? 0 : index === 1 ? Math.floor((chartRows.length - 1) / 2) : chartRows.length - 1)}" y="${height - 10}" text-anchor="${index === 0 ? "start" : index === 1 ? "middle" : "end"}">${formatShortDate(row.date)}</text>`)
+        .join("")}
+      ${valueLabels
+        .map((value, index) => `<text class="trend-value-label" x="10" y="${yFor(value) + 4}">${formatCompactKrw(value)}</text>`)
+        .join("")}
+    </svg>
+  `;
+}
+
+function renderWaterfall(stats) {
+  const items = [
+    { label: "총 증감", value: stats.periodChangeKrw, tone: stats.periodChangeKrw >= 0 ? "positive" : "negative" },
+    { label: "입출금", value: stats.netInflowKrw, tone: "neutral" },
+    { label: "투자손익", value: stats.investmentGainKrw, tone: stats.investmentGainKrw >= 0 ? "positive" : "negative" },
+  ];
+  const max = Math.max(1, ...items.map((item) => Math.abs(item.value)));
+  return items
+    .map((item) => {
+      const width = Math.max(6, Math.round((Math.abs(item.value) / max) * 100));
+      return `<div class="waterfall-row">
+        <span>${escapeHtml(item.label)}</span>
+        <div class="waterfall-track"><b class="${item.tone}" style="width:${width}%"></b></div>
+        <strong class="${item.tone === "negative" ? "negative" : item.tone === "positive" ? "positive" : ""}">${formatKrw(item.value)}</strong>
+      </div>`;
+    })
+    .join("");
+}
+
+function renderPerformanceInsights(stats) {
+  const flowShare = stats.periodChangeKrw ? stats.netInflowKrw / stats.periodChangeKrw : 0;
+  const gainLabel = stats.investmentGainKrw >= 0 ? "투자손익이 총자산 증가에 기여했습니다" : "투자손익이 총자산을 낮췄습니다";
+  return `
+    <div><strong>기간 해석</strong><span>${gainLabel}. 입출금 보정 후 수익률은 ${formatPercent(stats.periodReturn)}입니다.</span></div>
+    <div><strong>현금흐름 영향</strong><span>총 증감 중 입출금 비중은 ${Number.isFinite(flowShare) ? formatPercent(flowShare) : "0.00%"}입니다.</span></div>
+    <div><strong>리스크</strong><span>선택 기간 최대 낙폭은 ${formatKrw(stats.maxDrawdownKrw)} (${formatPercent(stats.maxDrawdownRate)})입니다.</span></div>
+  `;
+}
+
+function getAccountPerformanceRows(rows) {
+  const snapshots = [...(state.accountSnapshots || [])].sort((a, b) => a.date.localeCompare(b.date));
+  if (!snapshots.length || !rows.length) {
+    return [];
+  }
+  const dateSet = new Set(rows.map((row) => row.date));
+  const availableDates = unique(snapshots.map((snapshot) => snapshot.date).filter((date) => dateSet.has(date)));
+  const latestDate = availableDates[availableDates.length - 1];
+  const previousDate = availableDates[availableDates.length - 2];
+  const firstDate = availableDates[0];
+  if (!latestDate) {
+    return [];
+  }
+  const byDateKey = new Map(snapshots.map((snapshot) => [`${snapshot.date}|||${snapshot.investor}|||${snapshot.account}`, snapshot]));
+  return snapshots
+    .filter((snapshot) => snapshot.date === latestDate)
+    .map((latest) => {
+      const key = `${latest.investor}|||${latest.account}`;
+      const previous = previousDate ? byDateKey.get(`${previousDate}|||${key}`) : null;
+      const first = firstDate ? byDateKey.get(`${firstDate}|||${key}`) : null;
+      return {
+        investor: latest.investor,
+        account: latest.account,
+        latestValueKrw: Number(latest.totalAssetsKrw || 0),
+        dailyChangeKrw: previous ? Number(latest.totalAssetsKrw || 0) - Number(previous.totalAssetsKrw || 0) : 0,
+        periodChangeKrw: first ? Number(latest.totalAssetsKrw || 0) - Number(first.totalAssetsKrw || 0) : 0,
+        stockValueKrw: Number(latest.stockValueKrw || 0),
+        cashKrw: Number(latest.cashKrw || 0),
+        returnRate: Number(latest.returnRate || 0),
+      };
+    })
+    .sort((a, b) => Math.abs(b.periodChangeKrw) - Math.abs(a.periodChangeKrw));
+}
+
+function getStrategyPerformanceRows() {
+  const totals = getTotals(state.holdings);
+  return groupByValue(state.holdings, "strategy")
+    .map((item) => {
+      const holdings = state.holdings.filter((holding) => holding.strategy === item.label);
+      const costKrw = holdings.reduce((sum, holding) => sum + getHoldingValues(holding).costKrw, 0);
+      const gainKrw = holdings.reduce((sum, holding) => sum + getHoldingValues(holding).gainKrw, 0);
+      return {
+        strategy: item.label,
+        valueKrw: item.value,
+        weight: totals.stockValueKrw ? item.value / totals.stockValueKrw : 0,
+        gainKrw,
+        returnRate: costKrw ? gainKrw / costKrw : 0,
+        count: holdings.length,
+      };
+    })
+    .sort((a, b) => b.valueKrw - a.valueKrw);
 }
 
 async function exportBackup() {

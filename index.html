@@ -259,15 +259,33 @@
       </section>
 
       <section class="detail-grid" data-view="performance" hidden>
-        <div class="panel">
+        <div class="panel performance-overview-panel">
           <div class="section-heading">
-            <h2>일별 성과</h2>
+            <h2>성과 요약</h2>
             <select id="performanceRange" aria-label="성과 기간">
               <option value="all">전체</option>
               <option value="30d">최근 30일</option>
               <option value="7d">최근 7일</option>
               <option value="ytd">올해</option>
             </select>
+          </div>
+          <div id="performanceDetailStats" class="performance-detail-stats"></div>
+          <div id="performanceTrendChart" class="trend-chart" aria-label="총자산 추이 차트"></div>
+        </div>
+
+        <div class="panel">
+          <div class="section-heading">
+            <h2>증감 분석</h2>
+            <span>입출금 보정</span>
+          </div>
+          <div id="performanceWaterfall" class="waterfall-chart" aria-label="입출금과 투자손익 분해"></div>
+          <div id="performanceInsight" class="insight-list"></div>
+        </div>
+
+        <div class="panel">
+          <div class="section-heading">
+            <h2>일별 성과</h2>
+            <span>Numbers 일별 스냅샷 기준</span>
           </div>
           <div class="table-wrap compact tall">
             <table>
@@ -279,6 +297,7 @@
                   <th>입출금</th>
                   <th>투자손익</th>
                   <th>일 수익률</th>
+                  <th>월 누적</th>
                 </tr>
               </thead>
               <tbody id="snapshotsBody"></tbody>
@@ -296,13 +315,60 @@
               <thead>
                 <tr>
                   <th>월</th>
+                  <th>월초 총자산</th>
                   <th>월말 총자산</th>
                   <th>월 증감</th>
                   <th>입출금</th>
                   <th>투자손익</th>
+                  <th>월 수익률</th>
                 </tr>
               </thead>
               <tbody id="monthlySummaryBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="section-heading">
+            <h2>계좌별 기여</h2>
+            <span>최근 기록 기준</span>
+          </div>
+          <div class="table-wrap compact tall">
+            <table>
+              <thead>
+                <tr>
+                  <th>계좌</th>
+                  <th>최근 총액</th>
+                  <th>일 증감</th>
+                  <th>기간 증감</th>
+                  <th>주식</th>
+                  <th>예수금</th>
+                  <th>수익률</th>
+                </tr>
+              </thead>
+              <tbody id="accountPerformanceBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="section-heading">
+            <h2>전략별 현황</h2>
+            <span>현재 보유 기준</span>
+          </div>
+          <div class="table-wrap compact tall">
+            <table>
+              <thead>
+                <tr>
+                  <th>전략</th>
+                  <th>평가금액</th>
+                  <th>비중</th>
+                  <th>평가손익</th>
+                  <th>수익률</th>
+                  <th>종목 수</th>
+                </tr>
+              </thead>
+              <tbody id="strategyPerformanceBody"></tbody>
             </table>
           </div>
         </div>
