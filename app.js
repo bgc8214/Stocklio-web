@@ -1749,11 +1749,79 @@ function holdingAccountTypeOptions(value) {
     .join("");
 }
 
+function currencyOptions(value) {
+  return ["KRW", "USD"]
+    .map((currency) => `<option value="${currency}" ${currency === value ? "selected" : ""}>${currency}</option>`)
+    .join("");
+}
+
+function cashFlowTypeOptions(value) {
+  return [
+    ["deposit", "입금"],
+    ["withdrawal", "출금"],
+    ["dividend", "배당"],
+    ["tax", "세금"],
+    ["fee", "수수료"],
+  ]
+    .map(([optionValue, label]) => `<option value="${optionValue}" ${optionValue === value ? "selected" : ""}>${label}</option>`)
+    .join("");
+}
+
 function strategyOptions(value) {
   const strategies = unique(["QQQ", "S&P500", "국내주식", "Core", "Growth", ...state.holdings.map((holding) => holding.strategy)]);
   return strategies
     .map((strategy) => `<option value="${escapeHtml(strategy)}" ${strategy === value ? "selected" : ""}>${escapeHtml(strategy)}</option>`)
     .join("");
+}
+
+function saveInlineCashBalanceEdit(id) {
+  const row = document.querySelector(`[data-save-cash="${CSS.escape(id)}"]`)?.closest(".detail-row");
+  const existingCash = (state.cashBalances || []).find((cash) => cash.id === id);
+  if (!row || !existingCash) {
+    return;
+  }
+  const field = (name) => row.querySelector(`[data-inline-cash-field="${name}"]`)?.value || "";
+  const account = parseAccountKey(field("accountKey"));
+  const nextCash = {
+    ...existingCash,
+    investor: account.investor,
+    account: account.account,
+    currency: field("currency"),
+    amount: Number(field("amount")),
+    asOf: todayKey(),
+    source: "사용자 수정",
+  };
+  state.cashBalances = state.cashBalances.map((cash) => (cash.id === id ? nextCash : cash));
+  editingCashBalanceId = null;
+  saveState();
+  render();
+  setStatus("예수금 수정 완료", `${nextCash.account} · ${formatMoney(nextCash.amount, nextCash.currency)}`);
+  showOperationToast("예수금 수정 완료", `${nextCash.account} · ${formatMoney(nextCash.amount, nextCash.currency)}`, "success");
+}
+
+function saveInlineCashFlowEdit(id) {
+  const row = document.querySelector(`[data-save-flow="${CSS.escape(id)}"]`)?.closest("tr");
+  const existingFlow = state.cashFlows.find((flow) => flow.id === id);
+  if (!row || !existingFlow) {
+    return;
+  }
+  const field = (name) => row.querySelector(`[data-inline-flow-field="${name}"]`)?.value || "";
+  const account = parseAccountKey(field("accountKey"));
+  const nextFlow = {
+    ...existingFlow,
+    date: field("date") || todayKey(),
+    investor: account.investor,
+    account: account.account,
+    type: field("type"),
+    amountKrw: Number(field("amountKrw")),
+    note: field("note").trim(),
+  };
+  state.cashFlows = state.cashFlows.map((flow) => (flow.id === id ? nextFlow : flow));
+  editingCashFlowId = null;
+  saveState();
+  render();
+  setStatus("입출금 수정 완료", `${formatFlowType(nextFlow.type)} · ${formatKrw(nextFlow.amountKrw)}`);
+  showOperationToast("입출금 수정 완료", `${nextFlow.date} · ${formatKrw(nextFlow.amountKrw)}`, "success");
 }
 
 function saveInlineHoldingEdit(id) {
@@ -1797,7 +1865,7 @@ function renderCashBalances() {
   const rows = [...(state.cashBalances || [])].sort((a, b) => `${a.investor}${a.account}`.localeCompare(`${b.investor}${b.account}`));
   els.cashBalanceList.innerHTML = rows.length
     ? rows
-        .map((cash) => `<div class="detail-row">
+        .map((cash) => editingCashBalanceId === cash.id ? renderCashBalanceEditRow(cash) : `<div class="detail-row">
           <span>
             <strong>${escapeHtml(cash.account)}</strong>
             <small>${escapeHtml(cash.investor)} · ${escapeHtml(cash.currency)} · ${escapeHtml(cash.source || "직접 입력")}</small>
@@ -1815,6 +1883,14 @@ function renderCashBalances() {
     button.addEventListener("click", () => startEditCashBalance(button.dataset.editCash));
   });
 
+  document.querySelectorAll("[data-save-cash]").forEach((button) => {
+    button.addEventListener("click", () => saveInlineCashBalanceEdit(button.dataset.saveCash));
+  });
+
+  document.querySelectorAll("[data-cancel-cash-edit]").forEach((button) => {
+    button.addEventListener("click", () => cancelEdit("cashBalance"));
+  });
+
   document.querySelectorAll("[data-delete-cash]").forEach((button) => {
     button.addEventListener("click", () => {
       state.cashBalances = state.cashBalances.filter((cash) => cash.id !== button.dataset.deleteCash);
@@ -1822,6 +1898,28 @@ function renderCashBalances() {
       render();
     });
   });
+}
+
+function renderCashBalanceEditRow(cash) {
+  const accountOptions = getKnownAccounts()
+    .map((account) => `<option value="${escapeHtml(account.key)}" ${account.key === accountKeyFor(cash) ? "selected" : ""}>${escapeHtml(account.investor)} · ${escapeHtml(account.account)}</option>`)
+    .join("");
+  return `<div class="detail-row is-editing-row">
+    <span>
+      <strong>예수금 수정</strong>
+      <small>계좌와 금액을 이 행에서 바로 수정합니다</small>
+    </span>
+    <div class="inline-edit-cell">
+      <select data-inline-cash-field="accountKey" aria-label="예수금 계좌">${accountOptions}</select>
+      <select data-inline-cash-field="currency" aria-label="통화">${currencyOptions(cash.currency)}</select>
+      <input data-inline-cash-field="amount" type="number" step="0.01" value="${escapeHtml(cash.amount ?? "")}" aria-label="예수금">
+    </div>
+    <div class="row-actions">
+      <button class="secondary small-button" type="button" data-save-cash="${cash.id}">저장</button>
+      <button class="ghost small-button" type="button" data-cancel-cash-edit>취소</button>
+      <button class="icon-danger" type="button" data-delete-cash="${cash.id}" aria-label="예수금 삭제">×</button>
+    </div>
+  </div>`;
 }
 
 function renderUnclassifiedCashAllocation() {
@@ -1891,7 +1989,7 @@ function renderCashFlows() {
     })
     .slice(0, 30);
   els.cashFlowsBody.innerHTML = rows
-    .map((flow) => `<tr>
+    .map((flow) => editingCashFlowId === flow.id ? renderCashFlowEditRow(flow) : `<tr>
       <td>${escapeHtml(flow.date)}</td>
       <td>${escapeHtml(flow.investor)}</td>
       <td>${escapeHtml(flow.account)}</td>
@@ -1911,6 +2009,14 @@ function renderCashFlows() {
     button.addEventListener("click", () => startEditCashFlow(button.dataset.editFlow));
   });
 
+  document.querySelectorAll("[data-save-flow]").forEach((button) => {
+    button.addEventListener("click", () => saveInlineCashFlowEdit(button.dataset.saveFlow));
+  });
+
+  document.querySelectorAll("[data-cancel-flow-edit]").forEach((button) => {
+    button.addEventListener("click", () => cancelEdit("cashFlow"));
+  });
+
   document.querySelectorAll("[data-delete-flow]").forEach((button) => {
     button.addEventListener("click", () => {
       state.cashFlows = state.cashFlows.filter((flow) => flow.id !== button.dataset.deleteFlow);
@@ -1918,6 +2024,28 @@ function renderCashFlows() {
       render();
     });
   });
+}
+
+function renderCashFlowEditRow(flow) {
+  const accountOptions = getKnownAccounts()
+    .map((account) => `<option value="${escapeHtml(account.key)}" ${account.key === accountKeyFor(flow) ? "selected" : ""}>${escapeHtml(account.investor)} · ${escapeHtml(account.account)}</option>`)
+    .join("");
+  return `<tr class="is-editing-row">
+    <td><input data-inline-flow-field="date" type="date" value="${escapeHtml(flow.date || todayKey())}" aria-label="날짜"></td>
+    <td colspan="2">
+      <select data-inline-flow-field="accountKey" aria-label="계좌">${accountOptions}</select>
+    </td>
+    <td><select data-inline-flow-field="type" aria-label="유형">${cashFlowTypeOptions(flow.type)}</select></td>
+    <td><input data-inline-flow-field="amountKrw" type="number" step="1" min="0" value="${escapeHtml(flow.amountKrw ?? "")}" aria-label="금액 KRW"></td>
+    <td><input data-inline-flow-field="note" value="${escapeHtml(flow.note || "")}" placeholder="메모" aria-label="메모"></td>
+    <td>
+      <div class="row-actions">
+        <button class="secondary small-button" type="button" data-save-flow="${flow.id}">저장</button>
+        <button class="ghost small-button" type="button" data-cancel-flow-edit>취소</button>
+        <button class="icon-danger" type="button" data-delete-flow="${flow.id}" aria-label="입출금 기록 삭제">×</button>
+      </div>
+    </td>
+  </tr>`;
 }
 
 function startEditHolding(id) {
@@ -1957,14 +2085,11 @@ function startEditCashFlow(id) {
     return;
   }
   editingCashFlowId = id;
-  els.cashFlowForm.elements.date.value = flow.date || todayKey();
-  setFormAccount(els.cashFlowForm, flow);
-  els.cashFlowForm.elements.type.value = flow.type || "deposit";
-  els.cashFlowForm.elements.amountKrw.value = flow.amountKrw ?? "";
-  els.cashFlowForm.elements.note.value = flow.note || "";
   updateEditControls();
-  setView("cashflows");
-  els.cashFlowForm.scrollIntoView({ block: "center" });
+  renderCashFlows();
+  const row = document.querySelector(`[data-save-flow="${CSS.escape(id)}"]`)?.closest("tr");
+  row?.scrollIntoView({ block: "center", behavior: "smooth" });
+  row?.querySelector("[data-inline-flow-field='amountKrw']")?.focus();
 }
 
 function startEditCashBalance(id) {
@@ -1973,12 +2098,11 @@ function startEditCashBalance(id) {
     return;
   }
   editingCashBalanceId = id;
-  setFormAccount(els.cashBalanceForm, cash);
-  els.cashBalanceForm.elements.currency.value = cash.currency || "KRW";
-  els.cashBalanceForm.elements.amount.value = cash.amount ?? "";
   updateEditControls();
-  setView("accounts");
-  els.cashBalanceForm.scrollIntoView({ block: "center" });
+  renderCashBalances();
+  const row = document.querySelector(`[data-save-cash="${CSS.escape(id)}"]`)?.closest(".detail-row");
+  row?.scrollIntoView({ block: "center", behavior: "smooth" });
+  row?.querySelector("[data-inline-cash-field='amount']")?.focus();
 }
 
 function cancelEdit(kind) {
@@ -1992,10 +2116,12 @@ function cancelEdit(kind) {
     editingCashFlowId = null;
     els.cashFlowForm.reset();
     els.cashFlowForm.elements.date.value = todayKey();
+    renderCashFlows();
   }
   if (kind === "cashBalance") {
     editingCashBalanceId = null;
     els.cashBalanceForm.reset();
+    renderCashBalances();
   }
   if (kind === "account") {
     editingAccountId = null;
