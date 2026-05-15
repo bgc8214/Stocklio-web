@@ -97,7 +97,7 @@ select {
 }
 
 .topbar {
-  padding: 0 clamp(16px, 4vw, 48px);
+  padding: 0 24px;
   border-bottom: 1px solid var(--line);
   background: rgba(255, 255, 255, 0.8);
   position: sticky;
@@ -111,9 +111,8 @@ select {
   display: flex;
   gap: 18px;
   justify-content: space-between;
-  margin: 0 auto;
   min-height: 64px;
-  width: min(1440px, 100%);
+  width: 100%;
 }
 
 h1,
@@ -204,9 +203,9 @@ h2 {
 }
 
 main {
-  width: min(1440px, 100%);
-  margin: 0 auto;
-  padding: 24px clamp(16px, 4vw, 48px) 56px;
+  margin: 0;
+  padding: 0;
+  width: 100%;
 }
 
 .toolbar,
@@ -323,28 +322,35 @@ main {
   main {
     align-items: start;
     display: grid;
-    gap: 18px 22px;
-    grid-template-columns: 232px minmax(0, 1fr);
+    gap: 0;
+    grid-template-columns: 280px minmax(0, 1fr);
+    min-height: calc(100vh - 65px);
   }
 
   .view-tabs {
     align-self: start;
+    background: var(--surface);
+    border: 0;
+    border-radius: 0;
+    border-right: 1px solid var(--line);
     display: grid;
-    gap: 6px;
+    gap: 8px;
     grid-column: 1;
     grid-row: 1 / span 30;
+    min-height: calc(100vh - 65px);
     margin-bottom: 0;
-    padding: 10px;
+    overflow: visible;
+    padding: 20px 16px;
     position: sticky;
-    top: 88px;
+    top: 65px;
   }
 
   .view-tabs::before {
     color: var(--muted);
-    content: "메뉴";
+    content: "워크스페이스";
     font-size: 12px;
     font-weight: 900;
-    padding: 4px 8px 8px;
+    padding: 4px 8px 14px;
   }
 
   .view-tabs button {
@@ -352,8 +358,8 @@ main {
     display: flex;
     flex: none;
     justify-content: flex-start;
-    min-height: 42px;
-    padding: 0 12px;
+    min-height: 48px;
+    padding: 0 14px;
     text-align: left;
     width: 100%;
   }
@@ -386,16 +392,31 @@ main {
   .add-panel {
     grid-column: 2;
     min-width: 0;
+    margin-left: 24px;
+    margin-right: 24px;
   }
 
   .toolbar {
-    background: rgba(246, 247, 243, 0.88);
+    align-items: center;
+    background: rgba(246, 247, 243, 0.94);
     border-bottom: 1px solid rgba(219, 225, 218, 0.7);
-    margin: -24px 0 0;
-    padding: 18px 0 14px;
+    justify-content: space-between;
+    margin: 0;
+    padding: 18px 24px 14px;
     position: sticky;
     top: 65px;
     z-index: 4;
+  }
+
+  .toolbar::before {
+    color: var(--ink);
+    content: "포트폴리오";
+    font-size: 18px;
+    font-weight: 900;
+  }
+
+  .dashboard-layout-toolbar {
+    margin-top: 18px;
   }
 }
 
