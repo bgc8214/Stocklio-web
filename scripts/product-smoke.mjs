@@ -89,12 +89,43 @@ async function verifyBrowser() {
       cards: document.querySelectorAll("[data-dashboard-card]").length,
       controls: document.querySelectorAll(".layout-controls").length,
       bodyOverflow: document.documentElement.scrollWidth > document.documentElement.clientWidth,
+      nav: (() => {
+        const tabs = [...document.querySelectorAll(".view-tabs button")];
+        const rects = tabs.map((button) => button.getBoundingClientRect());
+        const pseudo = tabs.map((button) => getComputedStyle(button, "::before").content.replaceAll("\"", ""));
+        return {
+          count: tabs.length,
+          maxHeight: Math.max(...rects.map((rect) => rect.height)),
+          minHeight: Math.min(...rects.map((rect) => rect.height)),
+          totalHeight: rects.reduce((sum, rect) => sum + rect.height, 0),
+          letterBadges: pseudo.filter((value) => /^[A-Z]$/.test(value)).length,
+        };
+      })(),
     }));
 
     assert.equal(desktop.craftLoaded, true);
     assert.equal(desktop.cards, 8);
     assert.equal(desktop.controls, 8);
     assert.equal(desktop.bodyOverflow, false);
+    assert.equal(desktop.nav.count, 6);
+    assert.ok(desktop.nav.maxHeight <= 56);
+    assert.ok(desktop.nav.maxHeight - desktop.nav.minHeight <= 2);
+    assert.ok(desktop.nav.totalHeight <= 360);
+    assert.equal(desktop.nav.letterBadges, 0);
+
+    for (const tab of ["dashboard", "holdings", "accounts", "performance", "cashflows", "automation"]) {
+      await page.evaluate((view) => document.querySelector(`[data-view-tab="${view}"]`).click(), tab);
+      const viewHealth = await page.evaluate(() => ({
+        bodyOverflow: document.documentElement.scrollWidth > document.documentElement.clientWidth,
+        activeTabs: document.querySelectorAll(".view-tabs button.active").length,
+        navMaxHeight: Math.max(
+          ...[...document.querySelectorAll(".view-tabs button")].map((button) => button.getBoundingClientRect().height),
+        ),
+      }));
+      assert.equal(viewHealth.bodyOverflow, false, `${tab} should not overflow on desktop`);
+      assert.equal(viewHealth.activeTabs, 1, `${tab} should have one active tab on desktop`);
+      assert.ok(viewHealth.navMaxHeight <= 56, `${tab} desktop nav should stay compact`);
+    }
 
     await page.evaluate(() => document.querySelector("[data-view-tab=\"performance\"]").click());
     await page.waitForSelector("#performanceTrendChart svg", { timeout: 10_000 });
@@ -123,10 +154,30 @@ async function verifyBrowser() {
     await page.waitForSelector("[data-dashboard-card=\"performance-flow\"]", { timeout: 10_000 });
     await page.evaluate(() => document.querySelector("[data-view-tab=\"performance\"]").click());
     await page.waitForSelector("#performanceDetailStats", { timeout: 10_000 });
+    for (const tab of ["dashboard", "holdings", "accounts", "performance", "cashflows", "automation"]) {
+      await page.evaluate((view) => document.querySelector(`[data-view-tab="${view}"]`).click(), tab);
+      const viewHealth = await page.evaluate(() => ({
+        bodyOverflow: document.documentElement.scrollWidth > document.documentElement.clientWidth,
+        activeTabs: document.querySelectorAll(".view-tabs button.active").length,
+      }));
+      assert.equal(viewHealth.bodyOverflow, false, `${tab} should not overflow on mobile`);
+      assert.equal(viewHealth.activeTabs, 1, `${tab} should have one active tab`);
+    }
+    await page.evaluate(() => document.querySelector("[data-view-tab=\"performance\"]").click());
     const mobile = await page.evaluate(() => ({
       bodyOverflow: document.documentElement.scrollWidth > document.documentElement.clientWidth,
       cards: document.querySelectorAll("[data-dashboard-card]").length,
       performanceStatCards: document.querySelectorAll("#performanceDetailStats > div").length,
+      tabRail: (() => {
+        const rail = document.querySelector(".view-tabs");
+        const tabs = [...rail.querySelectorAll("button")].map((button) => button.getBoundingClientRect());
+        return {
+          height: rail.getBoundingClientRect().height,
+          scrollOverflow: rail.scrollWidth - rail.clientWidth,
+          maxButtonHeight: Math.max(...tabs.map((rect) => rect.height)),
+          bottomGap: Math.abs(window.innerHeight - rail.getBoundingClientRect().bottom),
+        };
+      })(),
       tabOverlap: (() => {
         const tabs = [...document.querySelectorAll(".view-tabs button")].map((button) => button.getBoundingClientRect());
         return tabs.some((rect, index) => {
@@ -140,6 +191,10 @@ async function verifyBrowser() {
     assert.equal(mobile.bodyOverflow, false);
     assert.equal(mobile.cards, 8);
     assert.equal(mobile.performanceStatCards, 6);
+    assert.ok(mobile.tabRail.height <= 72);
+    assert.ok(mobile.tabRail.maxButtonHeight <= 52);
+    assert.ok(mobile.tabRail.scrollOverflow <= 0);
+    assert.ok(mobile.tabRail.bottomGap <= 1);
     assert.equal(mobile.tabOverlap, false);
     assert.ok(mobile.holdingRows >= 1);
     assert.deepEqual(errors, []);

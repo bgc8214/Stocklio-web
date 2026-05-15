@@ -16,6 +16,14 @@ const dashboardCardLabels = {
   "performance-flow": "성과 흐름",
   breakdown: "상세 분해",
 };
+const viewCopy = {
+  dashboard: { title: "대시보드", subtitle: "포트폴리오 현황" },
+  holdings: { title: "보유 종목", subtitle: "종목, 전략, 계좌별 보유 현황" },
+  accounts: { title: "계좌/예수금", subtitle: "계좌와 현금 잔액 관리" },
+  performance: { title: "성과", subtitle: "누적 수익과 일별 증감" },
+  cashflows: { title: "현금흐름", subtitle: "입출금 기록과 조정값" },
+  automation: { title: "자동화/데이터", subtitle: "가격 갱신, 백업, 동기화" },
+};
 const dashboardSizeToSpan = {
   small: 3,
   medium: 4,
@@ -250,6 +258,8 @@ let syncState = {
 };
 
 const els = {
+  pageTitle: document.querySelector("#pageTitle"),
+  pageSubtitle: document.querySelector("#pageSubtitle"),
   viewTabs: document.querySelectorAll("[data-view-tab]"),
   viewSections: document.querySelectorAll("[data-view]"),
   refreshButton: document.querySelector("#refreshButton"),
@@ -919,6 +929,13 @@ function publishState() {
 
 function setView(view) {
   activeView = view;
+  const copy = viewCopy[view] || viewCopy.dashboard;
+  if (els.pageTitle) {
+    els.pageTitle.textContent = copy.title;
+  }
+  if (els.pageSubtitle) {
+    els.pageSubtitle.textContent = copy.subtitle;
+  }
   els.viewTabs.forEach((button) => {
     button.classList.toggle("active", button.dataset.viewTab === view);
   });
