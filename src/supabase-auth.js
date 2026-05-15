@@ -35,7 +35,9 @@ if (hasSupabaseConfig) {
 window.StocklioAuth = {
   isConfigured: () => Boolean(client),
   getState: getAuthState,
+  signInWithNaver,
   signInWithGoogle,
+  signInWithEmail,
   signOut,
   loadPortfolioState,
   savePortfolioState,
@@ -59,13 +61,41 @@ function getAuthState() {
 }
 
 async function signInWithGoogle() {
+  return signInWithOAuthProvider("google");
+}
+
+async function signInWithNaver() {
+  return signInWithOAuthProvider("custom:naver");
+}
+
+async function signInWithOAuthProvider(provider) {
   if (!client) {
     throw new Error("Supabase 설정이 없습니다");
   }
   const { error } = await client.auth.signInWithOAuth({
-    provider: "google",
+    provider,
     options: {
       redirectTo: siteUrl || window.location.origin,
+    },
+  });
+  if (error) {
+    throw error;
+  }
+}
+
+async function signInWithEmail(email) {
+  if (!client) {
+    throw new Error("Supabase 설정이 없습니다");
+  }
+  const normalizedEmail = String(email || "").trim();
+  if (!normalizedEmail) {
+    throw new Error("이메일을 입력하세요");
+  }
+  const { error } = await client.auth.signInWithOtp({
+    email: normalizedEmail,
+    options: {
+      emailRedirectTo: siteUrl || window.location.origin,
+      shouldCreateUser: true,
     },
   });
   if (error) {
