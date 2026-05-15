@@ -511,7 +511,7 @@ main {
 
 .dashboard-card.is-layout-editing {
   cursor: grab;
-  outline: 1px solid rgba(31, 122, 91, 0.24);
+  outline: 1px solid rgba(18, 31, 25, 0.16);
   outline-offset: 0;
   padding-top: 60px;
   user-select: none;
@@ -558,56 +558,70 @@ main {
 
 .layout-controls {
   align-items: center;
+  background: rgba(255, 255, 255, 0.94);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  box-shadow: 0 8px 22px rgba(18, 31, 25, 0.08);
   display: grid;
-  gap: 6px;
+  gap: 8px;
   grid-template-columns: auto minmax(0, 1fr) auto auto;
-  left: 12px;
+  left: 10px;
+  padding: 6px;
   position: absolute;
-  right: 12px;
-  top: 12px;
+  right: 10px;
+  top: 10px;
   z-index: 2;
 }
 
 .layout-drag-handle,
 .layout-card-label {
   border-radius: 999px;
-  color: var(--muted);
   font-size: 12px;
   font-weight: 800;
 }
 
 .layout-drag-handle {
-  background: var(--accent);
+  background: var(--ink);
   color: white;
   cursor: grab;
-  padding: 5px 9px;
+  padding: 6px 10px;
 }
 
 .layout-card-label {
+  color: var(--ink);
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
+.layout-controls .layout-drag-handle {
+  color: #fff;
+}
+
+.layout-controls .layout-card-label {
+  color: var(--ink);
+}
+
 .layout-size-readout {
-  background: var(--control-bg);
-  border: 1px solid var(--line);
-  border-radius: 7px;
+  background: transparent;
+  border: 0;
+  border-left: 1px solid var(--line);
   color: var(--muted);
   font-size: 12px;
   font-weight: 800;
   min-width: 0;
-  padding: 6px 9px;
+  padding: 2px 0 2px 10px;
   white-space: nowrap;
 }
 
 .layout-controls button {
-  background: transparent;
+  background: var(--surface-soft);
+  border-radius: 999px;
   color: var(--ink);
   min-height: 30px;
-  min-width: 44px;
-  padding: 0 8px;
+  min-width: 50px;
+  padding: 0 10px;
 }
 
 .layout-controls button:hover {
@@ -615,7 +629,7 @@ main {
 }
 
 .layout-visibility-button {
-  background: var(--control-bg) !important;
+  background: var(--surface-soft) !important;
 }
 
 .layout-resize-handle {
@@ -703,6 +717,14 @@ main {
   margin-bottom: 18px;
 }
 
+.detail-grid[data-view="accounts"] {
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 0.8fr);
+}
+
+.detail-grid[data-view="accounts"] > .panel:first-child {
+  grid-column: 1 / -1;
+}
+
 .performance-overview-panel {
   grid-column: 1 / -1;
 }
@@ -713,6 +735,14 @@ main {
 
 .panel {
   padding: 18px;
+}
+
+.detail-grid .panel {
+  padding: 16px;
+}
+
+.detail-grid .section-heading {
+  margin-bottom: 12px;
 }
 
 .section-heading {
@@ -779,6 +809,83 @@ main {
 .detail-row span {
   min-width: 0;
   overflow-wrap: anywhere;
+}
+
+.daily-move-summary {
+  align-items: center;
+  background: var(--surface-soft);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  justify-content: space-between;
+  padding: 10px 12px;
+}
+
+.daily-move-summary span,
+.daily-move-summary small,
+.daily-move-empty span,
+.daily-move-row small {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.daily-move-summary small {
+  flex-basis: 100%;
+}
+
+.daily-move-summary strong {
+  font-size: 18px;
+  font-variant-numeric: tabular-nums;
+}
+
+.daily-move-insight {
+  background: rgba(33, 126, 94, 0.08);
+  border-radius: 8px;
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.45;
+  padding: 10px 12px;
+}
+
+.daily-move-row {
+  align-items: center;
+  border-bottom: 1px solid var(--line);
+  display: grid;
+  gap: 12px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  padding: 8px 0;
+}
+
+.daily-move-row:last-child {
+  border-bottom: 0;
+}
+
+.daily-move-row strong {
+  display: block;
+}
+
+.daily-move-row > span {
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.daily-move-empty {
+  border: 1px dashed var(--line);
+  border-radius: 8px;
+  display: grid;
+  gap: 4px;
+  padding: 12px;
+}
+
+.breakdown-subtitle {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+  margin-top: 4px;
 }
 
 .account-detail {
@@ -1450,33 +1557,43 @@ td:nth-child(4) {
 
 .account-card-row {
   align-items: center;
-  grid-template-columns: minmax(180px, 1.1fr) minmax(0, 1.8fr) auto;
+  grid-template-columns: minmax(220px, 1fr) minmax(0, 2fr) auto;
+  gap: 16px;
 }
 
 .account-card-metrics {
-  display: grid;
-  gap: 8px;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  align-items: stretch;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
   min-width: 0;
 }
 
 .account-card-metrics span {
-  background: var(--surface-soft);
+  align-items: baseline;
+  background: transparent;
   border: 1px solid var(--line);
-  border-radius: 7px;
-  display: grid;
-  gap: 2px;
+  border-radius: 999px;
+  display: inline-flex;
+  flex: 0 1 auto;
+  gap: 6px;
+  justify-content: space-between;
   min-width: 0;
-  padding: 8px;
+  padding: 6px 10px;
 }
 
 .account-card-metrics strong {
-  font-size: 14px;
-  overflow: hidden;
-  overflow-wrap: normal;
-  text-overflow: ellipsis;
+  font-size: 13px;
+  line-height: 1.25;
+  overflow: visible;
+  overflow-wrap: anywhere;
   white-space: nowrap;
   font-variant-numeric: tabular-nums;
+}
+
+.account-card-metrics small {
+  font-size: 11px;
+  white-space: nowrap;
 }
 
 .money-value,
