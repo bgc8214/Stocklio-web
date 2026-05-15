@@ -3,7 +3,7 @@ import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 
 const execFileAsync = promisify(execFile);
-const roots = ["app.js", "server.mjs", "api", "src/app"];
+const roots = ["app.js", "server.mjs", "api", "src/app", "src/domain"];
 const files = [];
 
 for (const root of roots) {
