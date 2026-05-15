@@ -96,23 +96,56 @@ select {
   padding: 0 12px;
 }
 
-.topbar {
-  padding: 0 24px;
-  border-bottom: 1px solid var(--line);
-  background: rgba(255, 255, 255, 0.8);
-  position: sticky;
-  top: 0;
-  z-index: 5;
-  backdrop-filter: blur(14px);
+.app-shell {
+  display: grid;
+  grid-template-columns: 248px minmax(0, 1fr);
+  min-height: 100dvh;
 }
 
-.topbar-inner {
-  align-items: center;
+.sidebar {
+  background: var(--surface);
+  border-right: 1px solid var(--line);
+  height: 100dvh;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.sidebar-inner {
   display: flex;
-  gap: 18px;
-  justify-content: space-between;
-  min-height: 64px;
-  width: 100%;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+.sidebar-brand {
+  align-items: center;
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  gap: 12px;
+  min-height: 68px;
+  padding: 16px 18px;
+}
+
+.brand-mark {
+  align-items: center;
+  background: var(--accent);
+  border-radius: 10px;
+  color: white;
+  display: inline-flex;
+  flex: 0 0 auto;
+  font-size: 14px;
+  font-weight: 900;
+  height: 36px;
+  justify-content: center;
+  letter-spacing: 0;
+  width: 36px;
+}
+
+.sidebar-footer {
+  border-top: 1px solid var(--line);
+  margin-top: auto;
+  padding: 14px 14px 18px;
 }
 
 h1,
@@ -204,8 +237,12 @@ h2 {
 
 main {
   margin: 0;
-  padding: 0;
   width: 100%;
+}
+
+.content {
+  min-width: 0;
+  padding: 0 24px 44px;
 }
 
 .toolbar,
@@ -227,10 +264,16 @@ main {
 
 .toolbar {
   align-items: center;
+  background: rgba(246, 247, 243, 0.94);
+  border-bottom: 1px solid rgba(219, 225, 218, 0.78);
   display: flex;
-  justify-content: flex-end;
-  margin-bottom: 14px;
-  min-height: 34px;
+  justify-content: space-between;
+  margin: 0 -24px 22px;
+  min-height: 68px;
+  padding: 14px 24px;
+  position: sticky;
+  top: 0;
+  z-index: 5;
 }
 
 .toolbar-actions {
@@ -239,6 +282,26 @@ main {
   flex-wrap: wrap;
   gap: 8px;
   justify-content: flex-end;
+}
+
+.page-heading {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.page-heading strong {
+  color: var(--ink);
+  font-size: 20px;
+  font-weight: 900;
+  line-height: 1.1;
+}
+
+.page-heading span {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.3;
 }
 
 .more-actions {
@@ -288,135 +351,71 @@ main {
 }
 
 .view-tabs {
+  align-content: start;
   background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  display: flex;
-  gap: 4px;
-  margin-bottom: 18px;
-  padding: 4px;
-  overflow-x: auto;
-  overscroll-behavior-x: contain;
-  scrollbar-width: thin;
+  display: grid;
+  gap: 6px;
+  padding: 14px 12px;
 }
 
 .view-tabs button {
+  align-items: center;
   background: transparent;
   border: 0;
-  border-radius: 6px;
+  border-radius: 8px;
   color: var(--muted);
-  flex: 1 0 140px;
-  min-height: 38px;
+  display: flex;
+  font-size: 15px;
+  font-weight: 800;
+  justify-content: flex-start;
+  line-height: 1.2;
+  min-height: 44px;
   min-width: 0;
-  padding: 0 14px;
+  padding: 0 11px;
   white-space: nowrap;
 }
 
 .view-tabs button.active {
-  background: var(--ink);
-  border-color: var(--ink);
-  color: white;
+  background: rgba(47, 105, 255, 0.1);
+  color: #2f69ff;
+}
+
+.view-tabs button::before {
+  align-items: center;
+  color: currentColor;
+  content: attr(data-nav-icon);
+  display: inline-flex;
+  flex: 0 0 auto;
+  font-size: 18px;
+  font-weight: 500;
+  height: 26px;
+  justify-content: center;
+  margin-right: 10px;
+  width: 26px;
 }
 
 @media (min-width: 981px) {
-  main {
-    align-items: start;
-    display: grid;
-    gap: 0;
-    grid-template-columns: 280px minmax(0, 1fr);
-    min-height: calc(100vh - 65px);
-  }
-
-  .view-tabs {
-    align-self: start;
-    background: var(--surface);
-    border: 0;
-    border-radius: 0;
-    border-right: 1px solid var(--line);
-    display: grid;
-    gap: 8px;
-    grid-column: 1;
-    grid-row: 1 / span 30;
-    min-height: calc(100vh - 65px);
-    margin-bottom: 0;
-    overflow: visible;
-    padding: 20px 16px;
-    position: sticky;
-    top: 65px;
-  }
-
-  .view-tabs::before {
-    color: var(--muted);
-    content: "워크스페이스";
-    font-size: 12px;
-    font-weight: 900;
-    padding: 4px 8px 14px;
-  }
-
-  .view-tabs button {
-    align-items: center;
-    display: flex;
-    flex: none;
-    justify-content: flex-start;
-    min-height: 48px;
-    padding: 0 14px;
-    text-align: left;
-    width: 100%;
+  .view-tabs button:hover,
+  .view-tabs button:focus-visible {
+    background: rgba(47, 105, 255, 0.07);
+    color: #2f69ff;
   }
 
   .view-tabs button::before {
     background: var(--surface-soft);
     border-radius: 6px;
-    color: var(--muted);
-    content: attr(data-nav-icon);
     display: inline-grid;
-    font-size: 13px;
-    font-weight: 900;
     height: 26px;
-    margin-right: 10px;
     place-items: center;
     width: 26px;
   }
 
   .view-tabs button.active::before {
-    background: rgba(255, 255, 255, 0.16);
-    color: white;
-  }
-
-  .toolbar,
-  .empty-portfolio,
-  .dashboard-layout-toolbar,
-  .dashboard-board,
-  .detail-grid,
-  .holdings-panel,
-  .add-panel {
-    grid-column: 2;
-    min-width: 0;
-    margin-left: 24px;
-    margin-right: 24px;
-  }
-
-  .toolbar {
-    align-items: center;
-    background: rgba(246, 247, 243, 0.94);
-    border-bottom: 1px solid rgba(219, 225, 218, 0.7);
-    justify-content: space-between;
-    margin: 0;
-    padding: 18px 24px 14px;
-    position: sticky;
-    top: 65px;
-    z-index: 4;
-  }
-
-  .toolbar::before {
-    color: var(--ink);
-    content: "포트폴리오";
-    font-size: 18px;
-    font-weight: 900;
+    background: rgba(47, 105, 255, 0.12);
   }
 
   .dashboard-layout-toolbar {
-    margin-top: 18px;
+    margin-top: 0;
   }
 }
 
@@ -1263,14 +1262,41 @@ td:nth-child(4) {
 
 @media (max-width: 980px) {
   body {
-    padding-bottom: 76px;
+    padding-bottom: calc(72px + env(safe-area-inset-bottom));
   }
 
-  .topbar-inner {
-    align-items: flex-start;
-    flex-direction: column;
-    gap: 10px;
-    padding: 14px 0;
+  .app-shell {
+    display: block;
+  }
+
+  .sidebar {
+    border-bottom: 1px solid var(--line);
+    border-right: 0;
+    height: auto;
+    position: static;
+  }
+
+  .sidebar-inner {
+    height: auto;
+  }
+
+  .sidebar-brand {
+    min-height: 70px;
+    padding: 16px 20px 10px;
+  }
+
+  .brand-mark {
+    display: none;
+  }
+
+  .sidebar-footer {
+    border-top: 0;
+    margin-top: 0;
+    padding: 0 20px 16px;
+  }
+
+  .content {
+    padding: 0 20px 32px;
   }
 
   .auth-panel {
@@ -1305,6 +1331,12 @@ td:nth-child(4) {
     flex-direction: column;
   }
 
+  .toolbar {
+    margin: 0 -20px 20px;
+    padding: 14px 20px;
+    position: static;
+  }
+
   .toolbar-actions {
     justify-content: flex-start;
   }
@@ -1317,7 +1349,8 @@ td:nth-child(4) {
     border-right: 0;
     bottom: 0;
     box-shadow: 0 -10px 30px rgba(23, 33, 27, 0.12);
-    gap: 6px;
+    display: flex;
+    gap: 4px;
     left: 0;
     margin: 0;
     padding: 8px 10px calc(8px + env(safe-area-inset-bottom));
@@ -1327,10 +1360,21 @@ td:nth-child(4) {
   }
 
   .view-tabs button {
-    flex: 1 0 auto;
-    font-size: 12px;
-    min-height: 44px;
-    padding: 0 10px;
+    flex: 1 1 0;
+    flex-direction: column;
+    font-size: 0;
+    gap: 2px;
+    justify-content: center;
+    min-height: 46px;
+    min-width: 0;
+    padding: 0 4px;
+  }
+
+  .view-tabs button::before {
+    font-size: 19px;
+    height: 22px;
+    margin-right: 0;
+    width: 22px;
   }
 
   .dashboard-board {
@@ -1377,41 +1421,32 @@ td:nth-child(4) {
 
 @media (max-width: 640px) {
   main {
-    padding-left: 12px;
-    padding-right: 12px;
+    padding-left: 14px;
+    padding-right: 14px;
   }
 
-  .topbar {
-    position: static;
+  .content {
+    padding-left: 14px;
+    padding-right: 14px;
   }
 
   .filters {
     grid-template-columns: 1fr;
   }
 
-  .topbar-inner {
-    padding-left: 4px;
-    padding-right: 4px;
+  .toolbar {
+    margin-left: -14px;
+    margin-right: -14px;
+    padding-left: 14px;
+    padding-right: 14px;
   }
 
   .brand-lockup h1 {
-    font-size: 34px;
+    font-size: 28px;
   }
 
   .auth-panel button {
-    width: 100%;
-  }
-
-  .view-tabs button {
-    min-width: 72px;
-  }
-
-  .view-tabs button[data-view-tab="accounts"] {
-    min-width: 96px;
-  }
-
-  .view-tabs button[data-view-tab="automation"] {
-    min-width: 112px;
+    width: fit-content;
   }
 
   .toolbar-actions {

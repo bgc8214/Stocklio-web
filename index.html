@@ -15,26 +15,44 @@
     </script>
   </head>
   <body>
-    <header class="topbar">
-      <div class="topbar-inner">
-        <div class="brand-lockup">
-          <h1>Stocklio</h1>
+    <div class="app-shell">
+      <aside class="sidebar" aria-label="Stocklio 메뉴">
+        <div class="sidebar-inner">
+          <div class="sidebar-brand">
+            <span class="brand-mark" aria-hidden="true">St</span>
+            <div class="brand-lockup">
+              <h1>Stocklio</h1>
+            </div>
+          </div>
+          <nav class="view-tabs" aria-label="상세 메뉴">
+            <button class="active" type="button" data-view-tab="dashboard" data-nav-icon="⌂">대시보드</button>
+            <button type="button" data-view-tab="holdings" data-nav-icon="▦">보유 종목</button>
+            <button type="button" data-view-tab="accounts" data-nav-icon="◫">계좌/예수금</button>
+            <button type="button" data-view-tab="performance" data-nav-icon="↗">성과</button>
+            <button type="button" data-view-tab="cashflows" data-nav-icon="⇅">현금흐름</button>
+            <button type="button" data-view-tab="automation" data-nav-icon="⚙">자동화/데이터</button>
+          </nav>
+          <div class="sidebar-footer">
+            <div class="status-panel sr-only" aria-live="polite">
+              <span id="providerStatus">준비됨</span>
+              <span id="lastUpdated">작업 내역 없음</span>
+            </div>
+            <div class="auth-panel">
+              <span id="authStatus"></span>
+              <span id="syncStatus" class="sync-status" hidden></span>
+              <button id="googleLoginButton" class="ghost small-button" type="button">Google 로그인</button>
+              <button id="logoutButton" class="ghost small-button" type="button" hidden>로그아웃</button>
+            </div>
+          </div>
         </div>
-        <div class="status-panel sr-only" aria-live="polite">
-          <span id="providerStatus">준비됨</span>
-          <span id="lastUpdated">작업 내역 없음</span>
-        </div>
-        <div class="auth-panel">
-          <span id="authStatus"></span>
-          <span id="syncStatus" class="sync-status" hidden></span>
-          <button id="googleLoginButton" class="ghost small-button" type="button">Google 로그인</button>
-          <button id="logoutButton" class="ghost small-button" type="button" hidden>로그아웃</button>
-        </div>
-      </div>
-    </header>
+      </aside>
 
-    <main>
+      <main class="content">
       <section class="toolbar" aria-label="포트폴리오 작업">
+        <div class="page-heading">
+          <strong id="pageTitle">대시보드</strong>
+          <span id="pageSubtitle">포트폴리오 현황</span>
+        </div>
         <div class="toolbar-actions">
           <button id="refreshButton" class="ghost small-button" type="button">가격 갱신</button>
           <button id="saveSnapshotButton" class="ghost small-button" type="button">성과 저장</button>
@@ -47,15 +65,6 @@
           </details>
         </div>
       </section>
-
-      <nav class="view-tabs" aria-label="상세 메뉴">
-        <button class="active" type="button" data-view-tab="dashboard" data-nav-icon="D">대시보드</button>
-        <button type="button" data-view-tab="holdings" data-nav-icon="H">보유 종목</button>
-        <button type="button" data-view-tab="accounts" data-nav-icon="A">계좌/예수금</button>
-        <button type="button" data-view-tab="performance" data-nav-icon="P">성과</button>
-        <button type="button" data-view-tab="cashflows" data-nav-icon="C">현금흐름</button>
-        <button type="button" data-view-tab="automation" data-nav-icon="O">자동화/데이터</button>
-      </nav>
 
       <section id="emptyPortfolioNotice" class="empty-portfolio" data-view="dashboard" hidden>
         <div>
@@ -502,6 +511,7 @@
         </div>
       </section>
     </main>
+    </div>
 
     <script src="/assets/chart.umd.min.js"></script>
     <script src="/assets/chartjs-plugin-datalabels.min.js"></script>
