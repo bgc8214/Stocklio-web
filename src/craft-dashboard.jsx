@@ -14,17 +14,21 @@ const DEFAULT_LAYOUT = [
 ];
 
 const LABELS = {
-  "total-value": "총 자산",
+  "total-value": "총자산",
   "total-cost": "주식 매입금액",
-  "total-gain": "평가손익",
+  "total-gain": "주식 평가손익",
   "cash-total": "예수금",
   "fx-rate": "USD/KRW",
   allocation: "자산 비중",
   "performance-flow": "성과 흐름",
-  breakdown: "상세 분해",
+  breakdown: "구성 상세",
 };
 
 const palette = ["#1f7a5b", "#3366a8", "#a97819", "#7b5aa6", "#b94343"];
+const accountTypeLabels = {
+  direct_investment: "직접투자 계좌",
+  pension: "연금 계좌",
+};
 
 function CraftDashboardApp() {
   const [state, setState] = useState(null);
@@ -242,13 +246,13 @@ function CraftCard({ item, appState, editing, layout, saveLayout }) {
 function CardContent({ id, state }) {
   const totals = getTotals(state);
   if (id === "total-value") {
-    return <Metric label="총 자산" value={formatKrw(totals.valueKrw)} hint={`주식 ${formatKrw(totals.stockValueKrw)} · 예수금 ${formatKrw(totals.cashKrw)}`} />;
+    return <Metric label="총자산" value={formatKrw(totals.valueKrw)} hint={`주식 ${formatKrw(totals.stockValueKrw)} · 예수금 ${formatKrw(totals.cashKrw)}`} />;
   }
   if (id === "total-cost") {
     return <Metric label="주식 매입금액" value={formatKrw(totals.costKrw)} hint="평단 기준" />;
   }
   if (id === "total-gain") {
-    return <Metric label="평가손익" value={formatKrw(totals.gainKrw)} hint={formatPercent(totals.returnRate)} tone={totals.gainKrw >= 0 ? "positive" : "negative"} />;
+    return <Metric label="주식 평가손익" value={formatKrw(totals.gainKrw)} hint={formatPercent(totals.returnRate)} tone={totals.gainKrw >= 0 ? "positive" : "negative"} />;
   }
   if (id === "cash-total") {
     return <Metric label="예수금" value={formatKrw(totals.cashKrw)} hint="총자산에 포함" />;
@@ -362,12 +366,13 @@ function PerformancePanel({ state }) {
 }
 
 function BreakdownPanel({ state }) {
-  const rows = [...groupByValue(state.holdings || [], state, "investor"), ...groupByValue(state.holdings || [], state, "accountType")];
+  const accountTypeRows = (state.holdings || []).map((holding) => ({ ...holding, accountType: formatAccountType(holding.accountType) }));
+  const rows = [...groupByValue(state.holdings || [], state, "investor"), ...groupByValue(accountTypeRows, state, "accountType")];
   return (
     <>
       <div className="section-heading">
-        <h2>상세 분해</h2>
-        <span>투자자와 계좌 유형</span>
+        <h2>구성 상세</h2>
+        <span>투자자 · 계좌 유형별</span>
       </div>
       <div className="breakdown-list">
         {rows.map((item, index) => (
@@ -380,6 +385,14 @@ function BreakdownPanel({ state }) {
       </div>
     </>
   );
+}
+
+function normalizeAccountType(value) {
+  return ["pension", "irp", "retirement_pension"].includes(String(value || "")) ? "pension" : "direct_investment";
+}
+
+function formatAccountType(value) {
+  return accountTypeLabels[normalizeAccountType(value)] || "직접투자 계좌";
 }
 
 function normalizeLayout(layout) {

@@ -269,15 +269,9 @@ def infer_ticker(instrument: str, currency: str) -> tuple[str, bool]:
 
 
 def infer_account_type(account: str, currency: str) -> str:
-    if "IRP" in account:
-        return "irp"
-    if "퇴직" in account:
-        return "retirement_pension"
-    if "연금" in account:
+    if "IRP" in account or "퇴직" in account or "연금" in account:
         return "pension"
-    if currency == "USD":
-        return "overseas_brokerage"
-    return "brokerage"
+    return "direct_investment"
 
 
 def number_at(row, index: int):

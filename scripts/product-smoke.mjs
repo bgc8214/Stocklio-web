@@ -203,17 +203,20 @@ async function verifyBrowser() {
 
     await page.evaluate(() => document.querySelector("[data-view-tab=\"holdings\"]").click());
     await page.fill("#holdingSearch", "QQQ");
-    await page.click("[data-holding-sort=\"quantity-desc\"]");
+    await page.click("[data-holding-sort-key=\"quantity\"]");
+    await page.click("[data-holding-sort-key=\"quantity\"]");
     const holdingFilter = await page.evaluate(() => ({
       rows: document.querySelectorAll("#holdingsBody tr").length,
       firstText: document.querySelector("#holdingsBody tr")?.textContent || "",
       rowMenus: document.querySelectorAll("#holdingsBody .row-menu").length,
       sortValue: document.querySelector("#holdingSort")?.value,
+      sortAria: document.querySelector("[data-holding-sort-key=\"quantity\"]")?.getAttribute("aria-sort"),
     }));
     assert.ok(holdingFilter.rows >= 1);
     assert.match(holdingFilter.firstText, /QQQ/i);
     assert.ok(holdingFilter.rowMenus >= 1);
     assert.equal(holdingFilter.sortValue, "quantity-desc");
+    assert.equal(holdingFilter.sortAria, "descending");
     await page.click("#holdingsBody .row-menu summary");
     await page.click("#holdingsBody [data-edit-holding]");
     const holdingEdit = await page.evaluate(() => ({
