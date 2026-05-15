@@ -127,8 +127,8 @@
 
         <div class="panel dashboard-card" data-dashboard-card="breakdown">
           <div class="section-heading">
-            <h2>구성 상세</h2>
-            <span>투자자 · 계좌 유형별</span>
+            <h2>오늘 변동 원인</h2>
+            <span>종목 기여도</span>
           </div>
           <div id="breakdownList" class="breakdown-list"></div>
         </div>
@@ -215,6 +215,8 @@
             <option value="gain-asc">손익 낮은 순</option>
             <option value="return-desc">수익률 높은 순</option>
             <option value="return-asc">수익률 낮은 순</option>
+            <option value="dayChange-desc">일 영향 큰 순</option>
+            <option value="dayChange-asc">일 영향 낮은 순</option>
             <option value="quantity-desc">수량 많은 순</option>
             <option value="quantity-asc">수량 적은 순</option>
             <option value="price-desc">현재가 높은 순</option>
@@ -261,6 +263,7 @@
                 <th><button class="th-sort" type="button" data-holding-sort-key="price" aria-sort="none">현재가 <span class="sort-indicator" aria-hidden="true">↕</span></button></th>
                 <th>평단가</th>
                 <th><button class="th-sort" type="button" data-holding-sort-key="value" aria-sort="descending">평가금액 <span class="sort-indicator" aria-hidden="true">↓</span></button></th>
+                <th><button class="th-sort" type="button" data-holding-sort-key="dayChange" aria-sort="none">일 영향 <span class="sort-indicator" aria-hidden="true">↕</span></button></th>
                 <th><button class="th-sort" type="button" data-holding-sort-key="gain" aria-sort="none">손익 <span class="sort-indicator" aria-hidden="true">↕</span></button></th>
                 <th><button class="th-sort" type="button" data-holding-sort-key="return" aria-sort="none">수익률 <span class="sort-indicator" aria-hidden="true">↕</span></button></th>
                 <th></th>

@@ -28,10 +28,14 @@ export async function getUsdKrw() {
     if (!Number.isFinite(rate) || rate <= 0) {
       throw new Error("USD/KRW 환율 응답이 없습니다");
     }
+    const previousClose = Number(meta?.previousClose ?? meta?.chartPreviousClose ?? rate);
     const timestamp = Number(meta?.regularMarketTime);
     return {
       pair: "USD/KRW",
       rate,
+      previousClose,
+      change: rate - previousClose,
+      changePercent: previousClose ? (rate - previousClose) / previousClose : 0,
       source: "Yahoo Finance",
       asOf: timestamp ? new Date(timestamp * 1000).toISOString() : new Date().toISOString(),
     };

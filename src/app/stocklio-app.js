@@ -43,6 +43,10 @@ import {
 import { cycleSortValue, parseSortValue } from "./sort.js";
 import { createEmptyState, createSampleState } from "./state-factory.js";
 import { getDomElements } from "./dom-elements.js";
+import {
+  getDailyMoveRows as selectDailyMoveRows,
+  getHoldingDailyMove as selectHoldingDailyMove,
+} from "./daily-move-selectors.js";
 import { fetchJson, getQuote, getUsdKrw } from "./services/market-data-service.js";
 import {
   buildAccountSnapshots as createAccountSnapshots,
@@ -1277,12 +1281,36 @@ function renderNumbersPerformanceChart(rows) {
 }
 
 function renderBreakdown() {
-  const investors = groupByValue(state.holdings, "investor");
-  const accountTypes = groupByValue(state.holdings.map((holding) => ({ ...holding, accountType: formatAccountType(holding.accountType) })), "accountType");
-  els.breakdownList.innerHTML = [
-    ...investors.map((item, index) => breakdownRow(item, index)),
-    ...accountTypes.map((item, index) => breakdownRow(item, index + investors.length)),
-  ].join("");
+  const movers = getDailyMoveRows().slice(0, 5);
+  if (!movers.length) {
+    const investors = groupByValue(state.holdings, "investor");
+    const accountTypes = groupByValue(state.holdings.map((holding) => ({ ...holding, accountType: formatAccountType(holding.accountType) })), "accountType");
+    els.breakdownList.innerHTML = `
+      <div class="daily-move-empty">
+        <strong>가격 갱신 후 원인을 분석할 수 있습니다</strong>
+        <span>Yahoo Finance에서 전일 대비 가격을 받아오면 어떤 종목이 총자산을 움직였는지 표시합니다.</span>
+      </div>
+      <div class="breakdown-subtitle">구성 참고</div>
+      ${[
+        ...investors.map((item, index) => breakdownRow(item, index)),
+        ...accountTypes.map((item, index) => breakdownRow(item, index + investors.length)),
+      ].join("")}
+    `;
+    return;
+  }
+  const netMove = movers.reduce((sum, item) => sum + item.value, 0);
+  const priceEffect = movers.reduce((sum, item) => sum + item.priceEffectKrw, 0);
+  const fxEffect = movers.reduce((sum, item) => sum + item.fxEffectKrw, 0);
+  const insight = dailyMoveInsight(movers, netMove, priceEffect, fxEffect);
+  els.breakdownList.innerHTML = `
+    <div class="daily-move-summary">
+      <span>오늘 추정 변동</span>
+      <strong class="${netMove >= 0 ? "positive" : "negative"}">${formatKrw(netMove)}</strong>
+      <small>가격 ${priceEffect >= 0 ? "+" : ""}${formatCompactKrw(priceEffect)} · 환율 ${fxEffect >= 0 ? "+" : ""}${formatCompactKrw(fxEffect)}</small>
+    </div>
+    <div class="daily-move-insight">${escapeHtml(insight)}</div>
+    ${movers.map((item) => dailyMoveRow(item)).join("")}
+  `;
 }
 
 function renderAccounts() {
@@ -1476,6 +1504,34 @@ function breakdownRow(item, index) {
   </div>`;
 }
 
+function dailyMoveRow(item) {
+  const share = Number.isFinite(item.contributionShare) ? Math.abs(item.contributionShare) : 0;
+  const detail = Math.abs(item.fxEffectKrw) >= 1000
+    ? `가격 ${item.priceEffectKrw >= 0 ? "+" : ""}${formatCompactKrw(item.priceEffectKrw)} · 환율 ${item.fxEffectKrw >= 0 ? "+" : ""}${formatCompactKrw(item.fxEffectKrw)}`
+    : `${formatNumber(item.quantity, 4)}주 · ${formatPercent(item.changePercent)}`;
+  return `<div class="daily-move-row">
+    <div>
+      <strong>${escapeHtml(item.name)}</strong>
+      <small>${escapeHtml(item.ticker)} · ${detail} · 영향 ${formatPercent(share)}</small>
+    </div>
+    <span class="${item.value >= 0 ? "positive" : "negative"}">${item.value >= 0 ? "+" : ""}${formatKrw(item.value)}</span>
+  </div>`;
+}
+
+function dailyMoveInsight(movers, netMove, priceEffect, fxEffect) {
+  const top = movers.slice(0, 2).map((item) => item.name).filter(Boolean);
+  if (!top.length || Math.abs(netMove) < 1000) {
+    return "오늘은 뚜렷하게 총자산을 움직인 종목이 없습니다.";
+  }
+  const direction = netMove >= 0 ? "증가" : "하락";
+  const main = top.join(", ");
+  if (Math.abs(fxEffect) > Math.abs(priceEffect) * 0.35) {
+    const fxDirection = fxEffect >= 0 ? "환율 상승" : "환율 하락";
+    return `오늘 ${direction}는 ${main}와 ${fxDirection} 영향이 큽니다.`;
+  }
+  return `오늘 ${direction}는 ${main}의 가격 변동이 대부분 설명합니다.`;
+}
+
 function renderHoldings() {
   const rows = filteredHoldings();
   els.holdingsBody.innerHTML = rows.length
@@ -1489,6 +1545,7 @@ function renderHoldings() {
       const cost = values.costNative;
       const gain = values.gainNative;
       const returnRate = cost ? gain / cost : 0;
+      const dailyMove = getHoldingDailyMove(holding);
       return `<tr>
         <td data-label="투자자">${escapeHtml(holding.investor)}</td>
         <td data-label="계좌"><span class="name-cell">${escapeHtml(holding.account)}</span></td>
@@ -1498,6 +1555,10 @@ function renderHoldings() {
         <td data-label="현재가"><span class="money-value">${formatMoney(holding.price, holding.currency)}</span><small>${escapeHtml(holding.priceSource || "사용자 입력")} · ${formatAsOf(holding.priceAsOf)}</small></td>
         <td data-label="평단가"><span class="money-value">${formatMoney(holding.averageCost, holding.currency)}</span></td>
         <td data-label="평가금액"><span class="money-value">${formatMoney(value, holding.currency)}</span></td>
+        <td data-label="일 영향" class="${dailyMove.valueKrw >= 0 ? "positive" : "negative"}">
+          <span class="money-value">${dailyMove.hasData ? `${dailyMove.valueKrw >= 0 ? "+" : ""}${formatKrw(dailyMove.valueKrw)}` : "-"}</span>
+          ${dailyMove.hasData ? `<small>${formatPercent(dailyMove.changePercent)}</small>` : ""}
+        </td>
         <td data-label="손익" class="${gain >= 0 ? "positive" : "negative"}"><span class="money-value">${formatMoney(gain, holding.currency)}</span></td>
         <td data-label="수익률" class="${gain >= 0 ? "positive" : "negative"}"><span class="amount-cell">${formatPercent(returnRate)}</span></td>
         <td data-label="작업">
@@ -1509,7 +1570,7 @@ function renderHoldings() {
       </tr>`;
     })
     .join("")
-    : `<tr><td colspan="11">조건에 맞는 보유 종목이 없습니다</td></tr>`;
+    : `<tr><td colspan="12">조건에 맞는 보유 종목이 없습니다</td></tr>`;
 
   document.querySelectorAll("[data-edit-holding]").forEach((button) => {
     button.addEventListener("click", () => startEditHolding(button.dataset.editHolding));
@@ -1563,6 +1624,7 @@ function renderHoldingEditRow(holding) {
     <td data-label="현재가">${formatMoney(holding.price, holding.currency)}<small>${escapeHtml(holding.priceSource || "사용자 입력")} · ${formatAsOf(holding.priceAsOf)}</small></td>
     <td data-label="평단가"><input data-inline-holding-field="averageCost" type="number" step="0.01" min="0" value="${escapeHtml(holding.averageCost ?? "")}" aria-label="평단가"></td>
     <td data-label="평가금액">${formatMoney(values.valueNative, holding.currency)}</td>
+    <td data-label="일 영향">가격 갱신 기준</td>
     <td data-label="손익" class="${values.gainNative >= 0 ? "positive" : "negative"}">${formatMoney(values.gainNative, holding.currency)}</td>
     <td data-label="수익률" class="${values.gainNative >= 0 ? "positive" : "negative"}">${formatPercent(values.costNative ? values.gainNative / values.costNative : 0)}</td>
     <td data-label="작업">
@@ -2034,7 +2096,10 @@ function filteredHoldings() {
     const bReturn = bValues.costKrw ? bValues.gainKrw / bValues.costKrw : 0;
     const aPriceKrw = Number(a.price || 0) * (a.currency === "USD" ? Number(state.fxRate.rate || 1) : 1);
     const bPriceKrw = Number(b.price || 0) * (b.currency === "USD" ? Number(state.fxRate.rate || 1) : 1);
+    const aDailyMove = getHoldingDailyMove(a).valueKrw;
+    const bDailyMove = getHoldingDailyMove(b).valueKrw;
     const comparisons = {
+      dayChange: aDailyMove - bDailyMove,
       gain: aValues.gainKrw - bValues.gainKrw,
       return: aReturn - bReturn,
       quantity: Number(a.quantity || 0) - Number(b.quantity || 0),
@@ -2173,6 +2238,9 @@ async function refreshPricesNow({ reason }) {
       ? {
           ...holding,
           price: quote.price,
+          priceChange: quote.priceChange,
+          priceChangePercent: quote.priceChangePercent,
+          previousClose: quote.price - quote.priceChange,
           priceSource: quote.source,
           priceAsOf: quote.asOf,
         }
@@ -2222,6 +2290,14 @@ function getAllocationItems() {
     grouped.push({ label: "예수금", value: cashKrw });
   }
   return grouped.sort((a, b) => b.value - a.value);
+}
+
+function getDailyMoveRows() {
+  return selectDailyMoveRows({ holdings: state.holdings, fxRate: state.fxRate });
+}
+
+function getHoldingDailyMove(holding) {
+  return selectHoldingDailyMove(holding, state.fxRate);
 }
 
 function groupByAccount(holdings) {

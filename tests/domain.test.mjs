@@ -27,6 +27,7 @@ import {
   getPerformanceStats,
   getSnapshotRows,
 } from "../src/app/performance-selectors.js";
+import { getDailyMoveRows, getHoldingDailyMove } from "../src/app/daily-move-selectors.js";
 import { createEmptyState, createSampleState } from "../src/app/state-factory.js";
 
 const sample = {
@@ -230,6 +231,49 @@ test("account performance selector compares latest, previous, and period account
   assert.equal(accounts[0].dailyChangeKrw, 300);
   assert.equal(accounts[0].periodChangeKrw, 300);
   assert.equal(accounts[0].cashKrw, 200);
+});
+
+test("daily move selectors explain which holdings moved portfolio value", () => {
+  const holdings = [
+    { id: "h1", name: "Microsoft", ticker: "MSFT", quantity: 10, currency: "USD", priceChange: 2, priceChangePercent: 0.01 },
+    { id: "h2", name: "삼성전자", ticker: "005930.KS", quantity: 3, currency: "KRW", priceChange: -1000, priceChangePercent: -0.02 },
+    { id: "h3", name: "No data", ticker: "NODATA", quantity: 1, currency: "USD" },
+  ];
+
+  assert.deepEqual(getHoldingDailyMove(holdings[0], 1400), {
+    hasData: true,
+    valueKrw: 28_000,
+    priceEffectKrw: 28_000,
+    fxEffectKrw: 0,
+    changePercent: 0.01,
+    previousPrice: null,
+  });
+
+  const rows = getDailyMoveRows({ holdings, fxRate: 1400 });
+  assert.equal(rows.length, 2);
+  assert.equal(rows[0].ticker, "MSFT");
+  assert.equal(rows[0].value, 28_000);
+  assert.equal(rows[0].contributionShare, 28_000 / 31_000);
+  assert.equal(rows[1].value, -3000);
+});
+
+test("daily move selectors split price and fx effects when previous fx is available", () => {
+  const holding = {
+    id: "h1",
+    name: "Microsoft",
+    ticker: "MSFT",
+    quantity: 10,
+    currency: "USD",
+    price: 105,
+    previousClose: 100,
+    priceChange: 5,
+    priceChangePercent: 0.05,
+  };
+
+  const move = getHoldingDailyMove(holding, { rate: 1400, previousClose: 1390 });
+  assert.equal(move.priceEffectKrw, 69_500);
+  assert.equal(move.fxEffectKrw, 10_500);
+  assert.equal(move.valueKrw, 80_000);
 });
 
 function idFactory() {

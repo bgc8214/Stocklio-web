@@ -21,7 +21,7 @@ const LABELS = {
   "fx-rate": "USD/KRW",
   allocation: "자산 비중",
   "performance-flow": "성과 흐름",
-  breakdown: "구성 상세",
+  breakdown: "오늘 변동 원인",
 };
 
 const palette = ["#1f7a5b", "#3366a8", "#a97819", "#7b5aa6", "#b94343"];
@@ -227,7 +227,7 @@ function CraftCard({ item, appState, editing, layout, saveLayout }) {
     >
       {editing ? (
         <div className="layout-controls">
-          <span className="layout-drag-handle">드래그</span>
+          <span className="layout-drag-handle">이동</span>
           <span className="layout-card-label">{LABELS[item.id] || item.id}</span>
           <span className="layout-size-readout">
             {Math.round(activeItem.widthPct)}% · {Math.round(activeItem.minHeight)}px
@@ -366,25 +366,122 @@ function PerformancePanel({ state }) {
 }
 
 function BreakdownPanel({ state }) {
+  const movers = getDailyMoveRows(state).slice(0, 5);
   const accountTypeRows = (state.holdings || []).map((holding) => ({ ...holding, accountType: formatAccountType(holding.accountType) }));
-  const rows = [...groupByValue(state.holdings || [], state, "investor"), ...groupByValue(accountTypeRows, state, "accountType")];
+  const fallbackRows = [...groupByValue(state.holdings || [], state, "investor"), ...groupByValue(accountTypeRows, state, "accountType")];
+  const netMove = movers.reduce((sum, item) => sum + item.value, 0);
+  const priceEffect = movers.reduce((sum, item) => sum + item.priceEffectKrw, 0);
+  const fxEffect = movers.reduce((sum, item) => sum + item.fxEffectKrw, 0);
+  const insight = dailyMoveInsight(movers, netMove, priceEffect, fxEffect);
   return (
     <>
       <div className="section-heading">
-        <h2>구성 상세</h2>
-        <span>투자자 · 계좌 유형별</span>
+        <h2>오늘 변동 원인</h2>
+        <span>종목 기여도</span>
       </div>
       <div className="breakdown-list">
-        {rows.map((item, index) => (
-          <div className="breakdown-row" key={`${item.label}-${index}`}>
-            <span className="swatch" style={{ background: palette[index % palette.length] }} />
-            <span>{item.label}</span>
-            <strong>{formatKrw(item.value)}</strong>
-          </div>
-        ))}
+        {movers.length ? (
+          <>
+            <div className="daily-move-summary">
+              <span>오늘 추정 변동</span>
+              <strong className={netMove >= 0 ? "positive" : "negative"}>{formatKrw(netMove)}</strong>
+              <small>가격 {priceEffect >= 0 ? "+" : ""}{formatCompactKrw(priceEffect)} · 환율 {fxEffect >= 0 ? "+" : ""}{formatCompactKrw(fxEffect)}</small>
+            </div>
+            <div className="daily-move-insight">{insight}</div>
+            {movers.map((item) => (
+              <div className="daily-move-row" key={item.id || item.ticker}>
+                <div>
+                  <strong>{item.name}</strong>
+                  <small>{item.ticker} · {dailyMoveDetail(item)} · 영향 {formatPercent(Math.abs(item.contributionShare || 0))}</small>
+                </div>
+                <span className={item.value >= 0 ? "positive" : "negative"}>{item.value >= 0 ? "+" : ""}{formatKrw(item.value)}</span>
+              </div>
+            ))}
+          </>
+        ) : (
+          <>
+            <div className="daily-move-empty">
+              <strong>가격 갱신 후 원인을 분석할 수 있습니다</strong>
+              <span>전일 대비 가격을 받아오면 어떤 종목이 총자산을 움직였는지 표시합니다.</span>
+            </div>
+            <div className="breakdown-subtitle">구성 참고</div>
+            {fallbackRows.map((item, index) => (
+              <div className="breakdown-row" key={`${item.label}-${index}`}>
+                <span className="swatch" style={{ background: palette[index % palette.length] }} />
+                <span>{item.label}</span>
+                <strong>{formatKrw(item.value)}</strong>
+              </div>
+            ))}
+          </>
+        )}
       </div>
     </>
   );
+}
+
+function getDailyMoveRows(state) {
+  const rows = (state.holdings || [])
+    .map((holding) => {
+      const move = getHoldingDailyMove(state, holding);
+      return {
+        id: holding.id,
+        name: holding.name || holding.ticker,
+        ticker: holding.ticker,
+        quantity: Number(holding.quantity || 0),
+        value: move.valueKrw,
+        priceEffectKrw: move.priceEffectKrw,
+        fxEffectKrw: move.fxEffectKrw,
+        changePercent: move.changePercent,
+        hasData: move.hasData,
+      };
+    })
+    .filter((item) => item.hasData && item.value !== 0)
+    .sort((a, b) => Math.abs(b.value) - Math.abs(a.value));
+  const grossMove = rows.reduce((sum, row) => sum + Math.abs(row.value), 0);
+  return rows.map((row) => ({ ...row, contributionShare: grossMove ? Math.abs(row.value) / grossMove : 0 }));
+}
+
+function getHoldingDailyMove(state, holding) {
+  const priceChange = Number(holding.priceChange);
+  const changePercent = Number(holding.priceChangePercent || 0);
+  if (!Number.isFinite(priceChange)) {
+    return { hasData: false, valueKrw: 0, priceEffectKrw: 0, fxEffectKrw: 0, changePercent: 0 };
+  }
+  const currentFx = Number(state.fxRate?.rate || 1);
+  const previousFx = Number(state.fxRate?.previousClose || state.fxRate?.rate || 1);
+  const quantity = Number(holding.quantity || 0);
+  const isUsd = holding.currency === "USD";
+  const currentPrice = Number(holding.price);
+  const priceEffectKrw = quantity * priceChange * (isUsd ? previousFx : 1);
+  const fxEffectKrw = isUsd && Number.isFinite(currentPrice) ? quantity * currentPrice * (currentFx - previousFx) : 0;
+  return {
+    hasData: true,
+    valueKrw: priceEffectKrw + fxEffectKrw,
+    priceEffectKrw,
+    fxEffectKrw,
+    changePercent,
+  };
+}
+
+function dailyMoveDetail(item) {
+  if (Math.abs(item.fxEffectKrw) >= 1000) {
+    return `가격 ${item.priceEffectKrw >= 0 ? "+" : ""}${formatCompactKrw(item.priceEffectKrw)} · 환율 ${item.fxEffectKrw >= 0 ? "+" : ""}${formatCompactKrw(item.fxEffectKrw)}`;
+  }
+  return `${formatNumber(item.quantity, 4)}주 · ${formatPercent(item.changePercent)}`;
+}
+
+function dailyMoveInsight(movers, netMove, priceEffect, fxEffect) {
+  const top = movers.slice(0, 2).map((item) => item.name).filter(Boolean);
+  if (!top.length || Math.abs(netMove) < 1000) {
+    return "오늘은 뚜렷하게 총자산을 움직인 종목이 없습니다.";
+  }
+  const direction = netMove >= 0 ? "증가" : "하락";
+  const main = top.join(", ");
+  if (Math.abs(fxEffect) > Math.abs(priceEffect) * 0.35) {
+    const fxDirection = fxEffect >= 0 ? "환율 상승" : "환율 하락";
+    return `오늘 ${direction}는 ${main}와 ${fxDirection} 영향이 큽니다.`;
+  }
+  return `오늘 ${direction}는 ${main}의 가격 변동이 대부분 설명합니다.`;
 }
 
 function normalizeAccountType(value) {

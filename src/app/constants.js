@@ -16,7 +16,7 @@ export const dashboardCardLabels = {
   "fx-rate": "환율",
   allocation: "자산 비중",
   "performance-flow": "성과 흐름",
-  breakdown: "구성 상세",
+  breakdown: "오늘 변동 원인",
 };
 
 export const DEFAULT_HOLDING_SORT = "value-desc";
