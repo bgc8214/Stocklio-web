@@ -8,15 +8,23 @@ const AUTH_READY_TIMEOUT_MS = 1800;
 
 const palette = ["#1f7a5b", "#3366a8", "#a97819", "#7b5aa6", "#b94343"];
 const dashboardCardLabels = {
-  "total-value": "총 자산",
-  "total-cost": "매입금액",
-  "total-gain": "평가손익",
+  "total-value": "총자산",
+  "total-cost": "주식 매입금액",
+  "total-gain": "주식 평가손익",
   "cash-total": "예수금",
   "fx-rate": "환율",
   allocation: "자산 비중",
   "performance-flow": "성과 흐름",
-  breakdown: "상세 분해",
+  breakdown: "구성 상세",
 };
+const DEFAULT_HOLDING_SORT = "value-desc";
+const DEFAULT_CASH_FLOW_SORT = "date-desc";
+const accountTypeLabels = {
+  direct_investment: "직접투자 계좌",
+  pension: "연금 계좌",
+};
+let holdingHeaderSort = { key: "value", dir: "desc" };
+let cashFlowHeaderSort = { key: "date", dir: "desc" };
 const viewCopy = {
   dashboard: { title: "대시보드", subtitle: "포트폴리오 현황" },
   holdings: { title: "보유 종목", subtitle: "종목, 전략, 계좌별 보유 현황" },
@@ -70,7 +78,7 @@ const sampleState = {
       id: makeId(),
       investor: "투자자 A",
       account: "일반 계좌",
-      accountType: "brokerage",
+      accountType: "direct_investment",
       strategy: "성장주",
       ticker: "MSFT",
       name: "Microsoft",
@@ -85,7 +93,7 @@ const sampleState = {
       id: makeId(),
       investor: "투자자 B",
       account: "일반 계좌",
-      accountType: "brokerage",
+      accountType: "direct_investment",
       strategy: "성장주",
       ticker: "NVDA",
       name: "NVIDIA",
@@ -100,7 +108,7 @@ const sampleState = {
       id: makeId(),
       investor: "투자자 B",
       account: "코어 계좌",
-      accountType: "brokerage",
+      accountType: "direct_investment",
       strategy: "S&P500",
       ticker: "VOO",
       name: "Vanguard S&P 500 ETF",
@@ -115,7 +123,7 @@ const sampleState = {
       id: makeId(),
       investor: "투자자 A",
       account: "전술 계좌",
-      accountType: "brokerage",
+      accountType: "direct_investment",
       strategy: "S&P500",
       ticker: "SSO",
       name: "ProShares Ultra S&P500",
@@ -507,12 +515,21 @@ els.dashboardBoard.addEventListener("dragend", () => {
 });
 
 for (const filter of [els.investorFilter, els.strategyFilter, els.accountTypeFilter, els.holdingSort]) {
-  filter.addEventListener("change", renderHoldings);
+  filter.addEventListener("change", () => {
+    if (filter === els.holdingSort) {
+      holdingHeaderSort = parseSortValue(els.holdingSort.value, DEFAULT_HOLDING_SORT);
+      renderSortHeaders();
+    }
+    renderHoldings();
+  });
 }
 
-document.querySelectorAll("[data-holding-sort]").forEach((button) => {
+document.querySelectorAll("[data-holding-sort-key]").forEach((button) => {
   button.addEventListener("click", () => {
-    els.holdingSort.value = button.dataset.holdingSort;
+    const nextSort = cycleSortValue(els.holdingSort.value, button.dataset.holdingSortKey, DEFAULT_HOLDING_SORT);
+    els.holdingSort.value = nextSort;
+    holdingHeaderSort = parseSortValue(nextSort, DEFAULT_HOLDING_SORT);
+    renderSortHeaders();
     renderHoldings();
   });
 });
@@ -538,14 +555,17 @@ els.performanceRange.addEventListener("change", () => {
 });
 
 els.cashFlowTypeFilter.addEventListener("change", renderCashFlows);
-els.cashFlowSort.addEventListener("change", renderCashFlows);
-document.querySelectorAll("[data-flow-sort]").forEach((button) => {
+els.cashFlowSort.addEventListener("change", () => {
+  cashFlowHeaderSort = parseSortValue(els.cashFlowSort.value, DEFAULT_CASH_FLOW_SORT);
+  renderSortHeaders();
+  renderCashFlows();
+});
+document.querySelectorAll("[data-flow-sort-key]").forEach((button) => {
   button.addEventListener("click", () => {
-    if (button.dataset.flowSort === "date-toggle") {
-      els.cashFlowSort.value = els.cashFlowSort.value === "date-desc" ? "date-asc" : "date-desc";
-    } else {
-      els.cashFlowSort.value = button.dataset.flowSort;
-    }
+    const nextSort = cycleSortValue(els.cashFlowSort.value, button.dataset.flowSortKey, DEFAULT_CASH_FLOW_SORT);
+    els.cashFlowSort.value = nextSort;
+    cashFlowHeaderSort = parseSortValue(nextSort, DEFAULT_CASH_FLOW_SORT);
+    renderSortHeaders();
     renderCashFlows();
   });
 });
@@ -560,7 +580,7 @@ els.accountForm.addEventListener("submit", (event) => {
     investor: String(form.get("investor")).trim(),
     account: String(form.get("account")).trim(),
     provider: String(form.get("provider")).trim(),
-    accountType: String(form.get("accountType")),
+    accountType: normalizeAccountType(String(form.get("accountType"))),
     baseCurrency: String(form.get("baseCurrency")),
   };
   if (editingAccountId) {
@@ -596,7 +616,7 @@ els.holdingForm.addEventListener("submit", (event) => {
     id: editingHoldingId || makeId(),
     investor: account.investor,
     account: account.account,
-    accountType: String(form.get("accountType")),
+    accountType: normalizeAccountType(String(form.get("accountType"))),
     strategy: String(form.get("strategy")),
     ticker: ticker || name,
     name,
@@ -785,7 +805,10 @@ function normalizeState(input) {
     ...input,
     version: DATA_VERSION,
     fxRate: input.fxRate || fallback.fxRate,
-    holdings: Array.isArray(input.holdings) ? input.holdings : fallback.holdings,
+    holdings: (Array.isArray(input.holdings) ? input.holdings : fallback.holdings).map((holding) => ({
+      ...holding,
+      accountType: normalizeAccountType(holding.accountType),
+    })),
     cashFlows: Array.isArray(input.cashFlows) ? input.cashFlows : fallback.cashFlows,
     cashBalances: Array.isArray(input.cashBalances) ? input.cashBalances : fallback.cashBalances,
     accounts: normalizeAccounts(input),
@@ -876,6 +899,7 @@ function isStaticDeployment() {
 function render() {
   renderFilters();
   renderAccountSelectors();
+  renderSortHeaders();
   updateEditControls();
   renderSummary();
   renderAllocation();
@@ -1220,15 +1244,51 @@ function clearDashboardDragState() {
 function renderFilters() {
   fillSelect(els.investorFilter, "모든 투자자", unique(state.holdings.map((h) => h.investor)));
   fillSelect(els.strategyFilter, "모든 전략", unique(state.holdings.map((h) => h.strategy)));
-  fillSelect(els.accountTypeFilter, "모든 계좌 유형", unique(state.holdings.map((h) => h.accountType)));
+  fillSelect(els.accountTypeFilter, "모든 계좌 유형", unique(state.holdings.map((h) => normalizeAccountType(h.accountType))), accountTypeLabels);
 }
 
-function fillSelect(select, label, values) {
+function fillSelect(select, label, values, labels = {}) {
   const previous = select.value;
   select.innerHTML = `<option value="">${label}</option>${values
-    .map((value) => `<option value="${escapeHtml(value)}">${escapeHtml(value)}</option>`)
+    .map((value) => `<option value="${escapeHtml(value)}">${escapeHtml(labels[value] || value)}</option>`)
     .join("")}`;
   select.value = values.includes(previous) ? previous : "";
+}
+
+function parseSortValue(value, fallback) {
+  const [key, dir] = String(value || fallback).split("-");
+  return { key, dir: dir === "asc" ? "asc" : "desc" };
+}
+
+function cycleSortValue(currentValue, key, fallback) {
+  const current = parseSortValue(currentValue, fallback);
+  if (current.key !== key) {
+    return `${key}-asc`;
+  }
+  if (current.dir === "asc") {
+    return `${key}-desc`;
+  }
+  return fallback;
+}
+
+function renderSortHeaders() {
+  updateSortHeaderButtons("[data-holding-sort-key]", holdingHeaderSort, DEFAULT_HOLDING_SORT);
+  updateSortHeaderButtons("[data-flow-sort-key]", cashFlowHeaderSort, DEFAULT_CASH_FLOW_SORT);
+}
+
+function updateSortHeaderButtons(selector, activeSort, fallback) {
+  const fallbackSort = parseSortValue(fallback, fallback);
+  document.querySelectorAll(selector).forEach((button) => {
+    const key = button.dataset.holdingSortKey || button.dataset.flowSortKey;
+    const isActive = activeSort.key === key && !(activeSort.key === fallbackSort.key && activeSort.dir === fallbackSort.dir && key !== fallbackSort.key);
+    const direction = isActive ? activeSort.dir : "none";
+    button.classList.toggle("is-sorted", direction !== "none");
+    button.setAttribute("aria-sort", direction === "asc" ? "ascending" : direction === "desc" ? "descending" : "none");
+    const indicator = button.querySelector(".sort-indicator");
+    if (indicator) {
+      indicator.textContent = direction === "asc" ? "↑" : direction === "desc" ? "↓" : "↕";
+    }
+  });
 }
 
 function renderAccountSelectors() {
@@ -1246,7 +1306,7 @@ function renderAccountSelectors() {
 }
 
 function accountOption(account) {
-  const type = account.accountType ? ` · ${account.accountType}` : "";
+  const type = ` · ${formatAccountType(account.accountType)}`;
   return `<option value="${escapeHtml(account.key)}">${escapeHtml(account.investor)} · ${escapeHtml(account.account)}${escapeHtml(type)}</option>`;
 }
 
@@ -1514,7 +1574,7 @@ function renderNumbersPerformanceChart(rows) {
 
 function renderBreakdown() {
   const investors = groupByValue(state.holdings, "investor");
-  const accountTypes = groupByValue(state.holdings, "accountType");
+  const accountTypes = groupByValue(state.holdings.map((holding) => ({ ...holding, accountType: formatAccountType(holding.accountType) })), "accountType");
   els.breakdownList.innerHTML = [
     ...investors.map((item, index) => breakdownRow(item, index)),
     ...accountTypes.map((item, index) => breakdownRow(item, index + investors.length)),
@@ -1533,7 +1593,7 @@ function renderAccounts() {
           return `<div class="detail-row account-card-row">
             <div>
               <strong>${escapeHtml(account.account)}</strong>
-              <small>${escapeHtml(account.investor)} · ${escapeHtml(account.provider || "기관 미지정")} · ${formatAccountType(account.accountType || "brokerage")} · ${escapeHtml(account.baseCurrency || "KRW")}</small>
+              <small>${escapeHtml(account.investor)} · ${escapeHtml(account.provider || "기관 미지정")} · ${formatAccountType(account.accountType)} · ${escapeHtml(account.baseCurrency || "KRW")}</small>
             </div>
             <div class="account-card-metrics">
               <span><small>총자산</small><strong>${formatKrw(stats.stockValueKrw + stats.cashKrw)}</strong></span>
@@ -1600,15 +1660,7 @@ function getAccountStats() {
 }
 
 function formatAccountType(value) {
-  const labels = {
-    brokerage: "일반 계좌",
-    overseas_brokerage: "해외 직접투자",
-    pension: "연금저축",
-    irp: "IRP",
-    retirement_pension: "퇴직연금",
-    cash: "현금",
-  };
-  return labels[value] || value || "계좌";
+  return accountTypeLabels[normalizeAccountType(value)] || "직접투자 계좌";
 }
 
 function renderAccountSummary() {
@@ -1739,15 +1791,15 @@ function renderHoldings() {
       const returnRate = cost ? gain / cost : 0;
       return `<tr>
         <td data-label="투자자">${escapeHtml(holding.investor)}</td>
-        <td data-label="계좌">${escapeHtml(holding.account)}</td>
-        <td data-label="전략">${escapeHtml(holding.strategy)}</td>
-        <td data-label="종목"><strong>${escapeHtml(holding.name || holding.ticker)}</strong>${holding.ticker && holding.ticker !== holding.name ? `<small>${escapeHtml(holding.ticker)}</small>` : ""}</td>
-        <td data-label="수량">${formatNumber(holding.quantity, 4)}</td>
-        <td data-label="현재가">${formatMoney(holding.price, holding.currency)}<small>${escapeHtml(holding.priceSource || "사용자 입력")} · ${formatAsOf(holding.priceAsOf)}</small></td>
-        <td data-label="평단가">${formatMoney(holding.averageCost, holding.currency)}</td>
-        <td data-label="평가금액">${formatMoney(value, holding.currency)}</td>
-        <td data-label="손익" class="${gain >= 0 ? "positive" : "negative"}">${formatMoney(gain, holding.currency)}</td>
-        <td data-label="수익률" class="${gain >= 0 ? "positive" : "negative"}">${formatPercent(returnRate)}</td>
+        <td data-label="계좌"><span class="name-cell">${escapeHtml(holding.account)}</span></td>
+        <td data-label="전략"><span class="name-cell">${escapeHtml(holding.strategy)}</span></td>
+        <td data-label="종목"><strong class="name-cell">${escapeHtml(holding.name || holding.ticker)}</strong>${holding.ticker && holding.ticker !== holding.name ? `<small class="name-cell">${escapeHtml(holding.ticker)}</small>` : ""}</td>
+        <td data-label="수량"><span class="amount-cell">${formatNumber(holding.quantity, 4)}</span></td>
+        <td data-label="현재가"><span class="money-value">${formatMoney(holding.price, holding.currency)}</span><small>${escapeHtml(holding.priceSource || "사용자 입력")} · ${formatAsOf(holding.priceAsOf)}</small></td>
+        <td data-label="평단가"><span class="money-value">${formatMoney(holding.averageCost, holding.currency)}</span></td>
+        <td data-label="평가금액"><span class="money-value">${formatMoney(value, holding.currency)}</span></td>
+        <td data-label="손익" class="${gain >= 0 ? "positive" : "negative"}"><span class="money-value">${formatMoney(gain, holding.currency)}</span></td>
+        <td data-label="수익률" class="${gain >= 0 ? "positive" : "negative"}"><span class="amount-cell">${formatPercent(returnRate)}</span></td>
         <td data-label="작업">
           ${rowActionMenu(`${holding.name || holding.ticker} 작업`, [
             `<button type="button" data-edit-holding="${holding.id}">수정</button>`,
@@ -1794,7 +1846,7 @@ function renderHoldingEditRow(holding) {
       <div class="inline-edit-cell">
         <select data-inline-holding-field="accountKey" aria-label="계좌 선택">${accountOptions}</select>
         <select data-inline-holding-field="accountType" aria-label="계좌 유형">
-          ${holdingAccountTypeOptions(holding.accountType)}
+          ${holdingAccountTypeOptions(normalizeAccountType(holding.accountType))}
         </select>
       </div>
     </td>
@@ -1824,13 +1876,7 @@ function renderHoldingEditRow(holding) {
 }
 
 function holdingAccountTypeOptions(value) {
-  return [
-    ["brokerage", "일반 계좌"],
-    ["overseas_brokerage", "해외 직접투자"],
-    ["pension", "연금"],
-    ["irp", "IRP"],
-    ["retirement_pension", "퇴직연금"],
-  ]
+  return Object.entries(accountTypeLabels)
     .map(([optionValue, label]) => `<option value="${optionValue}" ${optionValue === value ? "selected" : ""}>${label}</option>`)
     .join("");
 }
@@ -1929,7 +1975,7 @@ function saveInlineHoldingEdit(id) {
           ...holding,
           investor: account.investor,
           account: account.account,
-          accountType: field("accountType"),
+          accountType: normalizeAccountType(field("accountType")),
           strategy: field("strategy"),
           ticker: ticker || name,
           name,
@@ -2064,17 +2110,16 @@ function allocateUnclassifiedCash({ investor, account, amount }) {
 
 function renderCashFlows() {
   const typeFilter = els.cashFlowTypeFilter?.value || "";
-  const sort = els.cashFlowSort?.value || "date-desc";
+  const sort = parseSortValue(els.cashFlowSort?.value, DEFAULT_CASH_FLOW_SORT);
   const rows = [...state.cashFlows]
     .filter((flow) => !typeFilter || flow.type === typeFilter)
     .sort((a, b) => {
-      if (sort === "date-asc") {
-        return a.date.localeCompare(b.date);
-      }
-      if (sort === "amount-desc") {
-        return Number(b.amountKrw || 0) - Number(a.amountKrw || 0);
-      }
-      return b.date.localeCompare(a.date);
+      const comparisons = {
+        date: a.date.localeCompare(b.date),
+        amount: Number(a.amountKrw || 0) - Number(b.amountKrw || 0),
+      };
+      const result = comparisons[sort.key] ?? comparisons.date;
+      return sort.dir === "asc" ? result : -result;
     })
     .slice(0, 30);
   els.cashFlowsBody.innerHTML = rows
@@ -2083,7 +2128,7 @@ function renderCashFlows() {
       <td>${escapeHtml(flow.investor)}</td>
       <td>${escapeHtml(flow.account)}</td>
       <td>${formatFlowType(flow.type)}</td>
-      <td>${formatKrw(flow.amountKrw)}</td>
+      <td><span class="money-value">${formatKrw(flow.amountKrw)}</span></td>
       <td>${escapeHtml(flow.note || "")}</td>
       <td>
         ${rowActionMenu(`${flow.date} 입출금 작업`, [
@@ -2164,7 +2209,7 @@ function startEditAccount(id) {
   els.accountForm.elements.investor.value = account.investor || "";
   els.accountForm.elements.account.value = account.account || "";
   els.accountForm.elements.provider.value = account.provider || "";
-  els.accountForm.elements.accountType.value = account.accountType || "brokerage";
+  els.accountForm.elements.accountType.value = normalizeAccountType(account.accountType);
   els.accountForm.elements.baseCurrency.value = account.baseCurrency || "KRW";
   updateEditControls();
   setView("accounts");
@@ -2277,34 +2322,28 @@ function filteredHoldings() {
     return (
       (!els.investorFilter.value || holding.investor === els.investorFilter.value) &&
       (!els.strategyFilter.value || holding.strategy === els.strategyFilter.value) &&
-      (!els.accountTypeFilter.value || holding.accountType === els.accountTypeFilter.value) &&
+      (!els.accountTypeFilter.value || normalizeAccountType(holding.accountType) === els.accountTypeFilter.value) &&
       (!query || haystack.includes(query))
     );
   });
-  const sort = els.holdingSort?.value || "value-desc";
+  const sort = parseSortValue(els.holdingSort?.value, DEFAULT_HOLDING_SORT);
   return rows.sort((a, b) => {
     const aValues = getHoldingValues(a);
     const bValues = getHoldingValues(b);
-    if (sort === "gain-desc") {
-      return bValues.gainKrw - aValues.gainKrw;
-    }
-    if (sort === "return-desc") {
-      const aReturn = aValues.costKrw ? aValues.gainKrw / aValues.costKrw : 0;
-      const bReturn = bValues.costKrw ? bValues.gainKrw / bValues.costKrw : 0;
-      return bReturn - aReturn;
-    }
-    if (sort === "quantity-desc") {
-      return Number(b.quantity || 0) - Number(a.quantity || 0);
-    }
-    if (sort === "price-desc") {
-      const aPriceKrw = Number(a.price || 0) * (a.currency === "USD" ? Number(state.fxRate.rate || 1) : 1);
-      const bPriceKrw = Number(b.price || 0) * (b.currency === "USD" ? Number(state.fxRate.rate || 1) : 1);
-      return bPriceKrw - aPriceKrw;
-    }
-    if (sort === "name-asc") {
-      return String(a.name || a.ticker).localeCompare(String(b.name || b.ticker));
-    }
-    return bValues.valueKrw - aValues.valueKrw;
+    const aReturn = aValues.costKrw ? aValues.gainKrw / aValues.costKrw : 0;
+    const bReturn = bValues.costKrw ? bValues.gainKrw / bValues.costKrw : 0;
+    const aPriceKrw = Number(a.price || 0) * (a.currency === "USD" ? Number(state.fxRate.rate || 1) : 1);
+    const bPriceKrw = Number(b.price || 0) * (b.currency === "USD" ? Number(state.fxRate.rate || 1) : 1);
+    const comparisons = {
+      gain: aValues.gainKrw - bValues.gainKrw,
+      return: aReturn - bReturn,
+      quantity: Number(a.quantity || 0) - Number(b.quantity || 0),
+      price: aPriceKrw - bPriceKrw,
+      name: String(a.name || a.ticker).localeCompare(String(b.name || b.ticker), "ko"),
+      value: aValues.valueKrw - bValues.valueKrw,
+    };
+    const result = comparisons[sort.key] ?? comparisons.value;
+    return sort.dir === "asc" ? result : -result;
   });
 }
 
@@ -2592,7 +2631,7 @@ function groupByAccount(holdings) {
     const current = map.get(key) || {
       investor: cash.investor,
       account: cash.account,
-      accountType: "cash",
+      accountType: "direct_investment",
       valueUsd: 0,
       costUsd: 0,
       gain: 0,
@@ -3075,6 +3114,10 @@ function isUnclassifiedCash(cash) {
   return cash.currency === "KRW" && String(cash.account || "").includes("미분류");
 }
 
+function normalizeAccountType(value) {
+  return ["pension", "irp", "retirement_pension"].includes(String(value || "")) ? "pension" : "direct_investment";
+}
+
 function normalizeAccounts(input) {
   const explicit = Array.isArray(input.accounts) ? input.accounts : [];
   const sourceState = {
@@ -3089,7 +3132,7 @@ function normalizeAccounts(input) {
       investor: account.investor,
       account: account.account,
       provider: account.provider || inferProvider(account.account),
-      accountType: account.accountType || "brokerage",
+      accountType: normalizeAccountType(account.accountType),
       baseCurrency: account.baseCurrency || "KRW",
     });
   }
@@ -3105,7 +3148,7 @@ function deriveAccounts(sourceState = state) {
       investor: holding.investor,
       account: holding.account,
       provider: inferProvider(holding.account),
-      accountType: holding.accountType || "brokerage",
+      accountType: normalizeAccountType(holding.accountType),
       baseCurrency: holding.currency || "KRW",
     });
   }
@@ -3120,7 +3163,7 @@ function deriveAccounts(sourceState = state) {
         investor: cash.investor,
         account: cash.account,
         provider: inferProvider(cash.account),
-        accountType: "cash",
+        accountType: "direct_investment",
         baseCurrency: cash.currency || "KRW",
       });
     }
@@ -3143,7 +3186,7 @@ function getKnownAccounts() {
         investor: holding.investor,
         account: holding.account,
         provider: inferProvider(holding.account),
-        accountType: holding.accountType,
+        accountType: normalizeAccountType(holding.accountType),
         baseCurrency: holding.currency || "KRW",
       });
     }
@@ -3154,7 +3197,7 @@ function getKnownAccounts() {
     }
     const key = `${cash.investor}|||${cash.account}`;
     if (!map.has(key)) {
-      map.set(key, { key, investor: cash.investor, account: cash.account, accountType: "" });
+      map.set(key, { key, investor: cash.investor, account: cash.account, accountType: "direct_investment" });
     }
   }
   return [...map.values()].sort((a, b) => `${a.investor}${a.account}`.localeCompare(`${b.investor}${b.account}`));

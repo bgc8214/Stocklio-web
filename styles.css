@@ -677,7 +677,12 @@ main {
   letter-spacing: 0;
   line-height: 1.15;
   max-width: 100%;
-  overflow-wrap: anywhere;
+  min-width: 0;
+  overflow: hidden;
+  overflow-wrap: normal;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
 }
 
 .positive {
@@ -717,6 +722,13 @@ main {
   align-items: baseline;
   margin-bottom: 16px;
   min-width: 0;
+}
+
+.section-heading h2 {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .donut-wrap {
@@ -923,7 +935,11 @@ main {
 
 .performance-stats strong {
   font-size: 15px;
-  overflow-wrap: anywhere;
+  overflow: hidden;
+  overflow-wrap: normal;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
 }
 
 .performance-detail-stats {
@@ -951,7 +967,11 @@ main {
 .performance-detail-stats strong {
   font-size: clamp(16px, 1.2vw, 22px);
   line-height: 1.15;
-  overflow-wrap: anywhere;
+  overflow: hidden;
+  overflow-wrap: normal;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
 }
 
 .trend-chart {
@@ -1265,12 +1285,25 @@ th {
   min-height: auto;
   padding: 0;
   text-transform: inherit;
+  white-space: nowrap;
 }
 
 .th-sort:hover,
 .th-sort:focus-visible {
+  background: transparent;
   color: var(--ink);
   outline: none;
+}
+
+.th-sort.is-sorted {
+  color: var(--ink);
+}
+
+.sort-indicator {
+  color: var(--muted);
+  display: inline-flex;
+  font-size: 11px;
+  width: 12px;
 }
 
 th:first-child,
@@ -1417,7 +1450,7 @@ td:nth-child(4) {
 
 .account-card-row {
   align-items: center;
-  grid-template-columns: minmax(180px, 1.1fr) minmax(320px, 1.8fr) auto;
+  grid-template-columns: minmax(180px, 1.1fr) minmax(0, 1.8fr) auto;
 }
 
 .account-card-metrics {
@@ -1439,7 +1472,33 @@ td:nth-child(4) {
 
 .account-card-metrics strong {
   font-size: 14px;
-  overflow-wrap: anywhere;
+  overflow: hidden;
+  overflow-wrap: normal;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.money-value,
+.amount-cell {
+  display: inline-block;
+  max-width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  overflow-wrap: normal;
+  text-overflow: ellipsis;
+  vertical-align: bottom;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.name-cell {
+  display: block;
+  max-width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .allocation-box {
@@ -1748,6 +1807,13 @@ td:nth-child(4) {
   .holdings-table td small {
     overflow-wrap: anywhere;
     white-space: normal;
+  }
+
+  .holdings-table .money-value,
+  .holdings-table .amount-cell,
+  .holdings-table .name-cell {
+    overflow-wrap: normal;
+    white-space: nowrap;
   }
 
   .holdings-table .row-menu {
