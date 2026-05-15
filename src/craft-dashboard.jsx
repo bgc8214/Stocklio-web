@@ -367,6 +367,7 @@ function PerformancePanel({ state }) {
 
 function BreakdownPanel({ state }) {
   const movers = getDailyMoveRows(state).slice(0, 5);
+  const refreshImpact = getRecentPriceRefreshImpact(state);
   const accountTypeRows = (state.holdings || []).map((holding) => ({ ...holding, accountType: formatAccountType(holding.accountType) }));
   const fallbackRows = [...groupByValue(state.holdings || [], state, "investor"), ...groupByValue(accountTypeRows, state, "accountType")];
   const netMove = movers.reduce((sum, item) => sum + item.value, 0);
@@ -397,21 +398,28 @@ function BreakdownPanel({ state }) {
                 <span className={item.value >= 0 ? "positive" : "negative"}>{item.value >= 0 ? "+" : ""}{formatKrw(item.value)}</span>
               </div>
             ))}
+            {refreshImpact && Math.abs(refreshImpact.totalDeltaKrw) > Math.max(100000, Math.abs(netMove) * 3) ? <PriceRefreshImpact impact={refreshImpact} compact /> : null}
           </>
         ) : (
           <>
-            <div className="daily-move-empty">
-              <strong>가격 갱신 후 원인을 분석할 수 있습니다</strong>
-              <span>전일 대비 가격을 받아오면 어떤 종목이 총자산을 움직였는지 표시합니다.</span>
-            </div>
-            <div className="breakdown-subtitle">구성 참고</div>
-            {fallbackRows.map((item, index) => (
-              <div className="breakdown-row" key={`${item.label}-${index}`}>
-                <span className="swatch" style={{ background: palette[index % palette.length] }} />
-                <span>{item.label}</span>
-                <strong>{formatKrw(item.value)}</strong>
-              </div>
-            ))}
+            {refreshImpact?.rows?.length ? (
+              <PriceRefreshImpact impact={refreshImpact} />
+            ) : (
+              <>
+                <div className="daily-move-empty">
+                  <strong>가격 갱신 후 원인을 분석할 수 있습니다</strong>
+                  <span>전일 대비 가격 데이터가 없는 캐시나 일부 종목 실패가 있으면 원인 분석이 제한됩니다. 가격을 다시 가져오면 새 데이터로 분석합니다.</span>
+                </div>
+                <div className="breakdown-subtitle">구성 참고</div>
+                {fallbackRows.map((item, index) => (
+                  <div className="breakdown-row" key={`${item.label}-${index}`}>
+                    <span className="swatch" style={{ background: palette[index % palette.length] }} />
+                    <span>{item.label}</span>
+                    <strong>{formatKrw(item.value)}</strong>
+                  </div>
+                ))}
+              </>
+            )}
           </>
         )}
       </div>
@@ -461,6 +469,50 @@ function getHoldingDailyMove(state, holding) {
     fxEffectKrw,
     changePercent,
   };
+}
+
+function PriceRefreshImpact({ impact, compact = false }) {
+  const rows = (impact.rows || []).slice(0, compact ? 3 : 5);
+  return (
+    <>
+      <div className="daily-move-summary price-refresh-impact">
+        <span>{compact ? "이번 가격 갱신 전후" : "최근 가격 갱신 영향"}</span>
+        <strong className={impact.totalDeltaKrw >= 0 ? "positive" : "negative"}>{impact.totalDeltaKrw >= 0 ? "+" : ""}{formatKrw(impact.totalDeltaKrw)}</strong>
+        <small>{formatAsOf(impact.at)} · 갱신 전 {formatCompactKrw(impact.previousTotalKrw)} → 갱신 후 {formatCompactKrw(impact.nextTotalKrw)}</small>
+      </div>
+      <div className="daily-move-insight">{priceRefreshImpactInsight(impact)}</div>
+      {rows.map((item) => (
+        <div className="daily-move-row" key={`${item.id || item.ticker}-refresh-impact`}>
+          <div>
+            <strong>{item.name}</strong>
+            <small>{item.ticker} · {formatCompactKrw(item.beforeValueKrw)} → {formatCompactKrw(item.afterValueKrw)}</small>
+          </div>
+          <span className={item.deltaKrw >= 0 ? "positive" : "negative"}>{item.deltaKrw >= 0 ? "+" : ""}{formatKrw(item.deltaKrw)}</span>
+        </div>
+      ))}
+    </>
+  );
+}
+
+function getRecentPriceRefreshImpact(state) {
+  const impact = state.lastPriceRefreshImpact;
+  if (!impact?.at || !Array.isArray(impact.rows)) {
+    return null;
+  }
+  const ageMs = Date.now() - new Date(impact.at).getTime();
+  if (!Number.isFinite(ageMs) || ageMs > 24 * 60 * 60 * 1000) {
+    return null;
+  }
+  return impact;
+}
+
+function priceRefreshImpactInsight(impact) {
+  const top = impact.rows?.[0];
+  if (!top || Math.abs(impact.totalDeltaKrw) < 1000) {
+    return "이번 가격 갱신으로 평가금액 변화가 거의 없었습니다.";
+  }
+  const direction = impact.totalDeltaKrw >= 0 ? "증가" : "감소";
+  return `이번 ${direction}는 ${top.name} 등 Yahoo 가격으로 바뀐 종목 영향이 큽니다.`;
 }
 
 function dailyMoveDetail(item) {

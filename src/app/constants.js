@@ -1,5 +1,5 @@
 export const STORAGE_KEY = "stock-portfolio-lab-state";
-export const CACHE_PREFIX = "stock-portfolio-lab-yahoo-cache";
+export const CACHE_PREFIX = "stock-portfolio-lab-yahoo-cache-v2";
 export const QUOTE_CACHE_TTL_MS = 5 * 60 * 1000;
 export const FX_CACHE_TTL_MS = 60 * 60 * 1000;
 export const AUTO_PRICE_REFRESH_TTL_MS = 10 * 60 * 1000;

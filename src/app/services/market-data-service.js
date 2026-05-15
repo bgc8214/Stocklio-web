@@ -1,6 +1,6 @@
 import { CACHE_PREFIX, FX_CACHE_TTL_MS, QUOTE_CACHE_TTL_MS } from "../constants.js";
 
-export async function getQuote(ticker) {
+export async function getQuote(ticker, options = {}) {
   return cached(`quote:${ticker}`, QUOTE_CACHE_TTL_MS, async () => {
     const data = await fetchYahooChart(ticker);
     const meta = data?.chart?.result?.[0]?.meta;
@@ -17,10 +17,10 @@ export async function getQuote(ticker) {
       source: "Yahoo Finance",
       asOf: timestamp ? new Date(timestamp * 1000).toISOString() : new Date().toISOString(),
     };
-  });
+  }, { ...options, validate: isQuotePayload });
 }
 
-export async function getUsdKrw() {
+export async function getUsdKrw(options = {}) {
   return cached("fx:USD:KRW", FX_CACHE_TTL_MS, async () => {
     const data = await fetchYahooChart("KRW=X");
     const meta = data?.chart?.result?.[0]?.meta;
@@ -39,7 +39,7 @@ export async function getUsdKrw() {
       source: "Yahoo Finance",
       asOf: timestamp ? new Date(timestamp * 1000).toISOString() : new Date().toISOString(),
     };
-  });
+  }, { ...options, validate: isFxPayload });
 }
 
 export async function fetchJson(url, options) {
@@ -55,13 +55,19 @@ export async function fetchJson(url, options) {
   return data;
 }
 
-async function cached(key, ttlMs, loader) {
+async function cached(key, ttlMs, loader, { force = false, validate = () => true } = {}) {
   const cacheKey = `${CACHE_PREFIX}:${key}`;
-  const stored = localStorage.getItem(cacheKey);
-  if (stored) {
-    const cachedValue = JSON.parse(stored);
-    if (Date.now() - cachedValue.cachedAt < ttlMs) {
-      return cachedValue.payload;
+  if (!force) {
+    const stored = localStorage.getItem(cacheKey);
+    if (stored) {
+      try {
+        const cachedValue = JSON.parse(stored);
+        if (Date.now() - cachedValue.cachedAt < ttlMs && validate(cachedValue.payload)) {
+          return cachedValue.payload;
+        }
+      } catch {
+        localStorage.removeItem(cacheKey);
+      }
     }
   }
   const payload = await loader();
@@ -73,4 +79,23 @@ async function fetchYahooChart(symbol) {
   const url = new URL("/api/yahoo/chart", window.location.origin);
   url.searchParams.set("symbol", symbol);
   return fetchJson(url);
+}
+
+function isQuotePayload(payload) {
+  return Boolean(
+    payload &&
+      Number.isFinite(Number(payload.price)) &&
+      Number.isFinite(Number(payload.priceChange)) &&
+      Number.isFinite(Number(payload.priceChangePercent)),
+  );
+}
+
+function isFxPayload(payload) {
+  return Boolean(
+    payload &&
+      Number.isFinite(Number(payload.rate)) &&
+      Number.isFinite(Number(payload.previousClose)) &&
+      Number.isFinite(Number(payload.change)) &&
+      Number.isFinite(Number(payload.changePercent)),
+  );
 }
