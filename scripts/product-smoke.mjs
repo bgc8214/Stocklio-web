@@ -207,13 +207,17 @@ async function verifyBrowser() {
     assert.match(holdingFilter.firstText, /QQQ/i);
     await page.click("[data-edit-holding]");
     const holdingEdit = await page.evaluate(() => ({
-      title: document.querySelector("#holdingFormTitle")?.textContent || "",
-      subtitle: document.querySelector("#holdingFormSubtitle")?.textContent || "",
+      formHidden: document.querySelector("#holdingFormPanel")?.hidden,
       editingRows: document.querySelectorAll("tr.is-editing-row").length,
+      inlineInputs: document.querySelectorAll("tr.is-editing-row [data-inline-holding-field]").length,
+      hasSave: Boolean(document.querySelector("tr.is-editing-row [data-save-holding]")),
+      hasCancel: Boolean(document.querySelector("tr.is-editing-row [data-cancel-holding-edit]")),
     }));
-    assert.equal(holdingEdit.title, "보유 종목 수정");
-    assert.ok(holdingEdit.subtitle.length > 0);
+    assert.equal(holdingEdit.formHidden, true);
     assert.equal(holdingEdit.editingRows, 1);
+    assert.ok(holdingEdit.inlineInputs >= 6);
+    assert.equal(holdingEdit.hasSave, true);
+    assert.equal(holdingEdit.hasCancel, true);
 
     await page.setViewportSize({ width: 390, height: 844 });
     await page.reload({ waitUntil: "networkidle" });

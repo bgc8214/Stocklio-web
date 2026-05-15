@@ -515,7 +515,10 @@ els.holdingSearch.addEventListener("input", renderHoldings);
 els.addHoldingButton.addEventListener("click", () => {
   editingHoldingId = null;
   els.holdingForm.reset();
+  els.holdingFormPanel.hidden = false;
   updateEditControls();
+  renderAccountSelectors();
+  renderHoldings();
   setView("holdings");
   els.holdingFormPanel.scrollIntoView({ block: "center", behavior: "smooth" });
   els.holdingForm.elements.accountKey.focus();
@@ -592,6 +595,7 @@ els.holdingForm.addEventListener("submit", (event) => {
   }
   editingHoldingId = null;
   event.currentTarget.reset();
+  els.holdingFormPanel.hidden = true;
   updateEditControls();
   saveState();
   render();
@@ -1642,12 +1646,15 @@ function renderHoldings() {
   els.holdingsBody.innerHTML = rows.length
     ? rows
     .map((holding) => {
+      if (editingHoldingId === holding.id) {
+        return renderHoldingEditRow(holding);
+      }
       const values = getHoldingValues(holding);
       const value = values.valueNative;
       const cost = values.costNative;
       const gain = values.gainNative;
       const returnRate = cost ? gain / cost : 0;
-      return `<tr class="${editingHoldingId === holding.id ? "is-editing-row" : ""}">
+      return `<tr>
         <td data-label="투자자">${escapeHtml(holding.investor)}</td>
         <td data-label="계좌">${escapeHtml(holding.account)}</td>
         <td data-label="전략">${escapeHtml(holding.strategy)}</td>
@@ -1673,6 +1680,14 @@ function renderHoldings() {
     button.addEventListener("click", () => startEditHolding(button.dataset.editHolding));
   });
 
+  document.querySelectorAll("[data-save-holding]").forEach((button) => {
+    button.addEventListener("click", () => saveInlineHoldingEdit(button.dataset.saveHolding));
+  });
+
+  document.querySelectorAll("[data-cancel-holding-edit]").forEach((button) => {
+    button.addEventListener("click", () => cancelEdit("holding"));
+  });
+
   document.querySelectorAll("[data-delete]").forEach((button) => {
     button.addEventListener("click", () => {
       state.holdings = state.holdings.filter((holding) => holding.id !== button.dataset.delete);
@@ -1680,6 +1695,101 @@ function renderHoldings() {
       render();
     });
   });
+}
+
+function renderHoldingEditRow(holding) {
+  const values = getHoldingValues(holding);
+  const accountOptions = getKnownAccounts()
+    .map((account) => `<option value="${escapeHtml(account.key)}" ${account.key === accountKeyFor(holding) ? "selected" : ""}>${escapeHtml(account.investor)} · ${escapeHtml(account.account)}</option>`)
+    .join("");
+  return `<tr class="is-editing-row">
+    <td data-label="투자자"><span class="inline-edit-chip">수정 중</span></td>
+    <td data-label="계좌">
+      <div class="inline-edit-cell">
+        <select data-inline-holding-field="accountKey" aria-label="계좌 선택">${accountOptions}</select>
+        <select data-inline-holding-field="accountType" aria-label="계좌 유형">
+          ${holdingAccountTypeOptions(holding.accountType)}
+        </select>
+      </div>
+    </td>
+    <td data-label="전략">
+      <select data-inline-holding-field="strategy" aria-label="전략">${strategyOptions(holding.strategy)}</select>
+    </td>
+    <td data-label="종목">
+      <div class="inline-edit-cell">
+        <input data-inline-holding-field="name" value="${escapeHtml(holding.name || "")}" placeholder="종목명" aria-label="종목명">
+        <input data-inline-holding-field="ticker" value="${escapeHtml(holding.ticker || "")}" placeholder="티커" aria-label="티커">
+      </div>
+    </td>
+    <td data-label="수량"><input data-inline-holding-field="quantity" type="number" step="0.0001" min="0" value="${escapeHtml(holding.quantity ?? "")}" aria-label="수량"></td>
+    <td data-label="현재가">${formatMoney(holding.price, holding.currency)}<small>${escapeHtml(holding.priceSource || "사용자 입력")} · ${formatAsOf(holding.priceAsOf)}</small></td>
+    <td data-label="평단가"><input data-inline-holding-field="averageCost" type="number" step="0.01" min="0" value="${escapeHtml(holding.averageCost ?? "")}" aria-label="평단가"></td>
+    <td data-label="평가금액">${formatMoney(values.valueNative, holding.currency)}</td>
+    <td data-label="손익" class="${values.gainNative >= 0 ? "positive" : "negative"}">${formatMoney(values.gainNative, holding.currency)}</td>
+    <td data-label="수익률" class="${values.gainNative >= 0 ? "positive" : "negative"}">${formatPercent(values.costNative ? values.gainNative / values.costNative : 0)}</td>
+    <td data-label="작업">
+      <div class="row-actions">
+        <button class="secondary small-button" type="button" data-save-holding="${holding.id}">저장</button>
+        <button class="ghost small-button" type="button" data-cancel-holding-edit>취소</button>
+        <button class="icon-danger" type="button" data-delete="${holding.id}" aria-label="${escapeHtml(holding.ticker)} 삭제">×</button>
+      </div>
+    </td>
+  </tr>`;
+}
+
+function holdingAccountTypeOptions(value) {
+  return [
+    ["brokerage", "일반 계좌"],
+    ["overseas_brokerage", "해외 직접투자"],
+    ["pension", "연금"],
+    ["irp", "IRP"],
+    ["retirement_pension", "퇴직연금"],
+  ]
+    .map(([optionValue, label]) => `<option value="${optionValue}" ${optionValue === value ? "selected" : ""}>${label}</option>`)
+    .join("");
+}
+
+function strategyOptions(value) {
+  const strategies = unique(["QQQ", "S&P500", "국내주식", "Core", "Growth", ...state.holdings.map((holding) => holding.strategy)]);
+  return strategies
+    .map((strategy) => `<option value="${escapeHtml(strategy)}" ${strategy === value ? "selected" : ""}>${escapeHtml(strategy)}</option>`)
+    .join("");
+}
+
+function saveInlineHoldingEdit(id) {
+  const row = document.querySelector(`[data-save-holding="${CSS.escape(id)}"]`)?.closest("tr");
+  const existingHolding = state.holdings.find((holding) => holding.id === id);
+  if (!row || !existingHolding) {
+    return;
+  }
+  const field = (name) => row.querySelector(`[data-inline-holding-field="${name}"]`)?.value || "";
+  const account = parseAccountKey(field("accountKey"));
+  const ticker = field("ticker").trim().toUpperCase();
+  const name = field("name").trim() || ticker || field("strategy");
+  const averageCost = Number(field("averageCost"));
+  const quantity = Number(field("quantity"));
+  const currency = existingHolding.currency || (/^[0-9]{6}\.KS$/.test(ticker) ? "KRW" : "USD");
+  state.holdings = state.holdings.map((holding) =>
+    holding.id === id
+      ? {
+          ...holding,
+          investor: account.investor,
+          account: account.account,
+          accountType: field("accountType"),
+          strategy: field("strategy"),
+          ticker: ticker || name,
+          name,
+          quantity,
+          averageCost,
+          currency,
+        }
+      : holding,
+  );
+  editingHoldingId = null;
+  saveState();
+  render();
+  setStatus("보유 종목 수정 완료", `${name} · ${account.account}`);
+  showOperationToast("보유 종목 수정 완료", `${name} · ${formatNumber(quantity, 4)}주`, "success");
 }
 
 function renderCashBalances() {
@@ -1816,17 +1926,13 @@ function startEditHolding(id) {
     return;
   }
   editingHoldingId = id;
-  setFormAccount(els.holdingForm, holding);
-  els.holdingForm.elements.accountType.value = holding.accountType || "brokerage";
-  els.holdingForm.elements.strategy.value = holding.strategy || "Core";
-  els.holdingForm.elements.ticker.value = holding.ticker || "";
-  els.holdingForm.elements.quantity.value = holding.quantity ?? "";
-  els.holdingForm.elements.averageCost.value = holding.averageCost ?? "";
+  els.holdingFormPanel.hidden = true;
   updateEditControls();
   renderHoldings();
   setView("holdings");
-  els.holdingFormPanel.scrollIntoView({ block: "center", behavior: "smooth" });
-  els.holdingForm.elements.quantity.focus();
+  const row = document.querySelector(`[data-save-holding="${CSS.escape(id)}"]`)?.closest("tr");
+  row?.scrollIntoView({ block: "center", behavior: "smooth" });
+  row?.querySelector("[data-inline-holding-field='quantity']")?.focus();
 }
 
 function startEditAccount(id) {
@@ -1879,6 +1985,8 @@ function cancelEdit(kind) {
   if (kind === "holding") {
     editingHoldingId = null;
     els.holdingForm.reset();
+    els.holdingFormPanel.hidden = true;
+    renderHoldings();
   }
   if (kind === "cashFlow") {
     editingCashFlowId = null;
@@ -1900,14 +2008,11 @@ function cancelEdit(kind) {
 function updateEditControls() {
   els.accountSubmit.textContent = editingAccountId ? "수정 저장" : "계좌 저장";
   els.accountCancel.hidden = !editingAccountId;
-  els.holdingSubmit.textContent = editingHoldingId ? "수정 저장" : "추가";
-  els.holdingCancel.hidden = !editingHoldingId;
+  els.holdingSubmit.textContent = "추가";
+  els.holdingCancel.hidden = Boolean(els.holdingFormPanel?.hidden);
   if (els.holdingFormTitle) {
-    const target = editingHoldingId ? state.holdings.find((holding) => holding.id === editingHoldingId) : null;
-    els.holdingFormTitle.textContent = target ? "보유 종목 수정" : "보유 종목 추가";
-    els.holdingFormSubtitle.textContent = target
-      ? `${target.name || target.ticker} · ${target.account} 수정 중`
-      : "계좌와 전략을 선택해 새 종목을 등록합니다";
+    els.holdingFormTitle.textContent = "보유 종목 추가";
+    els.holdingFormSubtitle.textContent = "계좌와 전략을 선택해 새 종목을 등록합니다";
   }
   els.cashFlowSubmit.textContent = editingCashFlowId ? "수정 저장" : "기록";
   els.cashFlowCancel.hidden = !editingCashFlowId;
