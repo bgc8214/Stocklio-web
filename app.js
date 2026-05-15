@@ -510,6 +510,13 @@ for (const filter of [els.investorFilter, els.strategyFilter, els.accountTypeFil
   filter.addEventListener("change", renderHoldings);
 }
 
+document.querySelectorAll("[data-holding-sort]").forEach((button) => {
+  button.addEventListener("click", () => {
+    els.holdingSort.value = button.dataset.holdingSort;
+    renderHoldings();
+  });
+});
+
 els.holdingSearch.addEventListener("input", renderHoldings);
 
 els.addHoldingButton.addEventListener("click", () => {
@@ -532,6 +539,16 @@ els.performanceRange.addEventListener("change", () => {
 
 els.cashFlowTypeFilter.addEventListener("change", renderCashFlows);
 els.cashFlowSort.addEventListener("change", renderCashFlows);
+document.querySelectorAll("[data-flow-sort]").forEach((button) => {
+  button.addEventListener("click", () => {
+    if (button.dataset.flowSort === "date-toggle") {
+      els.cashFlowSort.value = els.cashFlowSort.value === "date-desc" ? "date-asc" : "date-desc";
+    } else {
+      els.cashFlowSort.value = button.dataset.flowSort;
+    }
+    renderCashFlows();
+  });
+});
 
 els.accountDetailSelect.addEventListener("change", renderAccountDetail);
 
@@ -547,8 +564,11 @@ els.accountForm.addEventListener("submit", (event) => {
     baseCurrency: String(form.get("baseCurrency")),
   };
   if (editingAccountId) {
-    const previous = state.accounts.find((account) => account.id === editingAccountId);
-    state.accounts = state.accounts.map((account) => (account.id === editingAccountId ? nextAccount : account));
+    const previous = state.accounts.find((account) => account.id === editingAccountId) || getKnownAccounts().find((account) => account.id === editingAccountId);
+    const hasPersistedAccount = state.accounts.some((account) => account.id === editingAccountId);
+    state.accounts = hasPersistedAccount
+      ? state.accounts.map((account) => (account.id === editingAccountId ? nextAccount : account))
+      : [...state.accounts, nextAccount];
     if (previous) {
       renameAccountReferences(previous, nextAccount);
     }
@@ -966,6 +986,12 @@ function publishState() {
 }
 
 function setView(view) {
+  if (activeView === "holdings" && view !== "holdings") {
+    editingHoldingId = null;
+    els.holdingFormPanel.hidden = true;
+    els.holdingForm.reset();
+    renderHoldings();
+  }
   activeView = view;
   const copy = viewCopy[view] || viewCopy.dashboard;
   if (els.pageTitle) {
@@ -1497,20 +1523,28 @@ function renderBreakdown() {
 
 function renderAccounts() {
   const accounts = getKnownAccounts();
+  const accountStats = getAccountStats();
   els.accountList.innerHTML = accounts.length
     ? accounts
         .map((account) => {
           const inUse = isAccountInUse(account);
-          return `<div class="detail-row">
-            <span>
+          const stats = accountStats.get(account.key) || { stockValueKrw: 0, cashKrw: 0, flowsKrw: 0, holdingCount: 0 };
+          const deleteLabel = inUse ? "사용 중인 계좌라 삭제할 수 없습니다" : "계좌 삭제";
+          return `<div class="detail-row account-card-row">
+            <div>
               <strong>${escapeHtml(account.account)}</strong>
-              <small>${escapeHtml(account.investor)} · ${escapeHtml(account.provider || "기관 미지정")} · ${escapeHtml(account.accountType || "brokerage")} · ${escapeHtml(account.baseCurrency || "KRW")}</small>
-            </span>
-            <span>${formatKrw(getAccountValueKrw(account))}</span>
-            <div class="row-actions">
-              <button class="ghost small-button" type="button" data-edit-account="${account.id}">수정</button>
-              <button class="icon-danger" type="button" data-delete-account="${account.id}" ${inUse ? "disabled" : ""} aria-label="계좌 삭제">×</button>
+              <small>${escapeHtml(account.investor)} · ${escapeHtml(account.provider || "기관 미지정")} · ${formatAccountType(account.accountType || "brokerage")} · ${escapeHtml(account.baseCurrency || "KRW")}</small>
             </div>
+            <div class="account-card-metrics">
+              <span><small>총자산</small><strong>${formatKrw(stats.stockValueKrw + stats.cashKrw)}</strong></span>
+              <span><small>주식</small><strong>${formatKrw(stats.stockValueKrw)}</strong></span>
+              <span><small>예수금</small><strong>${formatKrw(stats.cashKrw)}</strong></span>
+              <span><small>종목</small><strong>${formatNumber(stats.holdingCount)}</strong></span>
+            </div>
+            ${rowActionMenu(`계좌 ${account.account} 작업`, [
+              `<button type="button" data-edit-account="${account.id}">수정</button>`,
+              `<button class="row-menu-danger" type="button" data-delete-account="${account.id}" ${inUse ? "disabled" : ""} title="${deleteLabel}">삭제</button>`,
+            ])}
           </div>`;
         })
         .join("")
@@ -1521,11 +1555,60 @@ function renderAccounts() {
   });
   document.querySelectorAll("[data-delete-account]").forEach((button) => {
     button.addEventListener("click", () => {
+      if (!window.confirm("이 계좌를 삭제할까요? 보유 종목이나 예수금에 연결된 계좌는 삭제할 수 없습니다.")) {
+        return;
+      }
       state.accounts = state.accounts.filter((account) => account.id !== button.dataset.deleteAccount);
       saveState();
       render();
     });
   });
+}
+
+function rowActionMenu(label, actions) {
+  return `<details class="row-menu">
+    <summary aria-label="${escapeHtml(label)}" title="작업 더보기">⋮</summary>
+    <div class="row-menu-popover">${actions.join("")}</div>
+  </details>`;
+}
+
+function getAccountStats() {
+  const stats = new Map();
+  for (const account of getKnownAccounts()) {
+    stats.set(account.key, { stockValueKrw: 0, cashKrw: 0, flowsKrw: 0, holdingCount: 0 });
+  }
+  for (const holding of state.holdings) {
+    const key = accountKeyFor(holding);
+    const current = stats.get(key) || { stockValueKrw: 0, cashKrw: 0, flowsKrw: 0, holdingCount: 0 };
+    current.stockValueKrw += getHoldingValues(holding).valueKrw;
+    current.holdingCount += 1;
+    stats.set(key, current);
+  }
+  for (const cash of state.cashBalances || []) {
+    const key = accountKeyFor(cash);
+    const current = stats.get(key) || { stockValueKrw: 0, cashKrw: 0, flowsKrw: 0, holdingCount: 0 };
+    current.cashKrw += getCashValueKrw(cash);
+    stats.set(key, current);
+  }
+  for (const flow of state.cashFlows || []) {
+    const key = accountKeyFor(flow);
+    const current = stats.get(key) || { stockValueKrw: 0, cashKrw: 0, flowsKrw: 0, holdingCount: 0 };
+    current.flowsKrw += Number(flow.amountKrw || 0);
+    stats.set(key, current);
+  }
+  return stats;
+}
+
+function formatAccountType(value) {
+  const labels = {
+    brokerage: "일반 계좌",
+    overseas_brokerage: "해외 직접투자",
+    pension: "연금저축",
+    irp: "IRP",
+    retirement_pension: "퇴직연금",
+    cash: "현금",
+  };
+  return labels[value] || value || "계좌";
 }
 
 function renderAccountSummary() {
@@ -1666,10 +1749,10 @@ function renderHoldings() {
         <td data-label="손익" class="${gain >= 0 ? "positive" : "negative"}">${formatMoney(gain, holding.currency)}</td>
         <td data-label="수익률" class="${gain >= 0 ? "positive" : "negative"}">${formatPercent(returnRate)}</td>
         <td data-label="작업">
-          <div class="row-actions">
-            <button class="ghost small-button" type="button" data-edit-holding="${holding.id}">수정</button>
-            <button class="icon-danger" type="button" data-delete="${holding.id}" aria-label="${escapeHtml(holding.ticker)} 삭제">×</button>
-          </div>
+          ${rowActionMenu(`${holding.name || holding.ticker} 작업`, [
+            `<button type="button" data-edit-holding="${holding.id}">수정</button>`,
+            `<button class="row-menu-danger" type="button" data-delete="${holding.id}">삭제</button>`,
+          ])}
         </td>
       </tr>`;
     })
@@ -1690,6 +1773,9 @@ function renderHoldings() {
 
   document.querySelectorAll("[data-delete]").forEach((button) => {
     button.addEventListener("click", () => {
+      if (!window.confirm("이 보유 종목을 삭제할까요? 삭제 후에는 직접 다시 추가해야 합니다.")) {
+        return;
+      }
       state.holdings = state.holdings.filter((holding) => holding.id !== button.dataset.delete);
       saveState();
       render();
@@ -1871,10 +1957,10 @@ function renderCashBalances() {
             <small>${escapeHtml(cash.investor)} · ${escapeHtml(cash.currency)} · ${escapeHtml(cash.source || "직접 입력")}</small>
           </span>
           <span>${formatMoney(cash.amount, cash.currency)}</span>
-          <div class="row-actions">
-            <button class="ghost small-button" type="button" data-edit-cash="${cash.id}">수정</button>
-            <button class="icon-danger" type="button" data-delete-cash="${cash.id}" aria-label="예수금 삭제">×</button>
-          </div>
+          ${rowActionMenu(`${cash.account} 예수금 작업`, [
+            `<button type="button" data-edit-cash="${cash.id}">수정</button>`,
+            `<button class="row-menu-danger" type="button" data-delete-cash="${cash.id}">삭제</button>`,
+          ])}
         </div>`)
         .join("")
     : `<div class="empty-state">등록된 예수금이 없습니다</div>`;
@@ -1893,6 +1979,9 @@ function renderCashBalances() {
 
   document.querySelectorAll("[data-delete-cash]").forEach((button) => {
     button.addEventListener("click", () => {
+      if (!window.confirm("이 예수금 기록을 삭제할까요?")) {
+        return;
+      }
       state.cashBalances = state.cashBalances.filter((cash) => cash.id !== button.dataset.deleteCash);
       saveState();
       render();
@@ -1997,10 +2086,10 @@ function renderCashFlows() {
       <td>${formatKrw(flow.amountKrw)}</td>
       <td>${escapeHtml(flow.note || "")}</td>
       <td>
-        <div class="row-actions">
-          <button class="ghost small-button" type="button" data-edit-flow="${flow.id}">수정</button>
-          <button class="icon-danger" type="button" data-delete-flow="${flow.id}" aria-label="입출금 기록 삭제">×</button>
-        </div>
+        ${rowActionMenu(`${flow.date} 입출금 작업`, [
+          `<button type="button" data-edit-flow="${flow.id}">수정</button>`,
+          `<button class="row-menu-danger" type="button" data-delete-flow="${flow.id}">삭제</button>`,
+        ])}
       </td>
     </tr>`)
     .join("");
@@ -2019,6 +2108,9 @@ function renderCashFlows() {
 
   document.querySelectorAll("[data-delete-flow]").forEach((button) => {
     button.addEventListener("click", () => {
+      if (!window.confirm("이 입출금 기록을 삭제할까요? 성과 계산에도 반영됩니다.")) {
+        return;
+      }
       state.cashFlows = state.cashFlows.filter((flow) => flow.id !== button.dataset.deleteFlow);
       saveState();
       render();
@@ -2200,6 +2292,14 @@ function filteredHoldings() {
       const aReturn = aValues.costKrw ? aValues.gainKrw / aValues.costKrw : 0;
       const bReturn = bValues.costKrw ? bValues.gainKrw / bValues.costKrw : 0;
       return bReturn - aReturn;
+    }
+    if (sort === "quantity-desc") {
+      return Number(b.quantity || 0) - Number(a.quantity || 0);
+    }
+    if (sort === "price-desc") {
+      const aPriceKrw = Number(a.price || 0) * (a.currency === "USD" ? Number(state.fxRate.rate || 1) : 1);
+      const bPriceKrw = Number(b.price || 0) * (b.currency === "USD" ? Number(state.fxRate.rate || 1) : 1);
+      return bPriceKrw - aPriceKrw;
     }
     if (sort === "name-asc") {
       return String(a.name || a.ticker).localeCompare(String(b.name || b.ticker));
@@ -2682,8 +2782,8 @@ function renderTrendChart(rows) {
     return `<div class="empty-state">추이를 그리려면 스냅샷이 2개 이상 필요합니다</div>`;
   }
   const width = 720;
-  const height = 260;
-  const padding = { top: 24, right: 40, bottom: 38, left: 78 };
+  const height = 230;
+  const padding = { top: 22, right: 38, bottom: 34, left: 78 };
   const values = chartRows.map((row) => row.totalValueKrw);
   const max = Math.max(...values);
   const min = Math.min(...values);
@@ -2698,6 +2798,28 @@ function renderTrendChart(rows) {
   const lastRow = chartRows[chartRows.length - 1];
   const lastX = xFor(chartRows.length - 1);
   const lastY = yFor(lastRow.totalValueKrw);
+  const pointGroups = chartRows
+    .map((row, index) => {
+      const x = xFor(index);
+      const y = yFor(row.totalValueKrw);
+      const previous = chartRows[index - 1];
+      const dailyChange = Number(row.dailyChangeKrw ?? (previous ? row.totalValueKrw - previous.totalValueKrw : 0));
+      const tooltipWidth = 164;
+      const tooltipHeight = 48;
+      const tooltipX = Math.max(padding.left, Math.min(width - padding.right - tooltipWidth, x - tooltipWidth / 2));
+      const tooltipY = Math.max(6, y - tooltipHeight - 12);
+      const tone = dailyChange >= 0 ? "+" : "";
+      return `<g class="trend-point-group" tabindex="0" aria-label="${escapeHtml(`${row.date} 총자산 ${formatKrw(row.totalValueKrw)}, 일 증감 ${tone}${formatKrw(dailyChange)}`)}">
+        <circle class="trend-hit" cx="${x}" cy="${y}" r="13"></circle>
+        <circle class="trend-point" cx="${x}" cy="${y}" r="3.5"></circle>
+        <g class="trend-tooltip" transform="translate(${tooltipX} ${tooltipY})">
+          <rect width="${tooltipWidth}" height="${tooltipHeight}" rx="7"></rect>
+          <text x="10" y="18">${escapeHtml(formatShortDate(row.date))} · ${escapeHtml(formatKrw(row.totalValueKrw))}</text>
+          <text x="10" y="36">일 증감 ${escapeHtml(tone + formatKrw(dailyChange))}</text>
+        </g>
+      </g>`;
+    })
+    .join("");
   return `
     <svg viewBox="0 0 ${width} ${height}" role="img" aria-label="총자산 추이">
       ${valueLabels
@@ -2705,9 +2827,7 @@ function renderTrendChart(rows) {
         .join("")}
       <polygon class="trend-area" points="${area}"></polygon>
       <polyline class="trend-line" points="${line}"></polyline>
-      ${chartRows
-        .map((row, index) => `<circle class="trend-point" cx="${xFor(index)}" cy="${yFor(row.totalValueKrw)}" r="3"><title>${row.date} ${formatKrw(row.totalValueKrw)}</title></circle>`)
-        .join("")}
+      ${pointGroups}
       <text class="trend-last-label" x="${Math.min(width - padding.right - 4, lastX + 8)}" y="${Math.max(16, lastY - 10)}" text-anchor="end">${formatCompactKrw(lastRow.totalValueKrw)}</text>
       ${labels
         .map((row, index) => `<text class="trend-label" x="${xFor(index === 0 ? 0 : index === 1 ? Math.floor((chartRows.length - 1) / 2) : chartRows.length - 1)}" y="${height - 10}" text-anchor="${index === 0 ? "start" : index === 1 ? "middle" : "end"}">${formatShortDate(row.date)}</text>`)
