@@ -871,6 +871,56 @@ main {
   font-size: 12px;
 }
 
+.numbers-source-wrap {
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  margin-bottom: 18px;
+  max-height: none;
+}
+
+.numbers-source-table {
+  font-size: 13px;
+  min-width: 1200px;
+}
+
+.numbers-source-table caption {
+  caption-side: top;
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 800;
+  padding: 4px 0 10px;
+  text-align: center;
+}
+
+.numbers-source-table th {
+  background: #c8ccca;
+  color: #0f1712;
+}
+
+.numbers-source-table tbody th {
+  background: var(--surface-soft);
+  font-size: 13px;
+  text-transform: none;
+}
+
+.numbers-source-table th,
+.numbers-source-table td {
+  border-color: #b7beb9;
+  padding: 7px 8px;
+}
+
+.numbers-chart-wrap {
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  height: 440px;
+  overflow-x: auto;
+  padding: 12px;
+}
+
+.numbers-chart-wrap canvas {
+  min-width: 960px;
+}
+
 .waterfall-chart {
   display: grid;
   gap: 12px;
