@@ -1,54 +1,37 @@
-const STORAGE_KEY = "stock-portfolio-lab-state";
-const CACHE_PREFIX = "stock-portfolio-lab-yahoo-cache";
-const QUOTE_CACHE_TTL_MS = 5 * 60 * 1000;
-const FX_CACHE_TTL_MS = 60 * 60 * 1000;
-const AUTO_PRICE_REFRESH_TTL_MS = 10 * 60 * 1000;
-const DATA_VERSION = 6;
-const AUTH_READY_TIMEOUT_MS = 1800;
+import {
+  AUTH_READY_TIMEOUT_MS,
+  AUTO_PRICE_REFRESH_TTL_MS,
+  CACHE_PREFIX,
+  dashboardCardLabels,
+  dashboardSizeToSpan,
+  DATA_VERSION,
+  DEFAULT_CASH_FLOW_SORT,
+  DEFAULT_HOLDING_SORT,
+  defaultDashboardLayout,
+  FX_CACHE_TTL_MS,
+  palette,
+  QUOTE_CACHE_TTL_MS,
+  STORAGE_KEY,
+  viewCopy,
+} from "./src/app/constants.js";
+import { accountTypeLabels, formatAccountType, normalizeAccountType } from "./src/app/account-types.js";
+import {
+  escapeHtml,
+  formatAsOf,
+  formatChartLabel,
+  formatCompactKrw,
+  formatKrw,
+  formatMoney,
+  formatMonthDay,
+  formatNumber,
+  formatPercent,
+  formatShortDate,
+  formatUsd,
+} from "./src/app/formatters.js";
+import { cycleSortValue, parseSortValue } from "./src/app/sort.js";
 
-const palette = ["#1f7a5b", "#3366a8", "#a97819", "#7b5aa6", "#b94343"];
-const dashboardCardLabels = {
-  "total-value": "총자산",
-  "total-cost": "주식 매입금액",
-  "total-gain": "주식 평가손익",
-  "cash-total": "예수금",
-  "fx-rate": "환율",
-  allocation: "자산 비중",
-  "performance-flow": "성과 흐름",
-  breakdown: "구성 상세",
-};
-const DEFAULT_HOLDING_SORT = "value-desc";
-const DEFAULT_CASH_FLOW_SORT = "date-desc";
-const accountTypeLabels = {
-  direct_investment: "직접투자 계좌",
-  pension: "연금 계좌",
-};
 let holdingHeaderSort = { key: "value", dir: "desc" };
 let cashFlowHeaderSort = { key: "date", dir: "desc" };
-const viewCopy = {
-  dashboard: { title: "대시보드", subtitle: "포트폴리오 현황" },
-  holdings: { title: "보유 종목", subtitle: "종목, 전략, 계좌별 보유 현황" },
-  accounts: { title: "계좌/예수금", subtitle: "계좌와 현금 잔액 관리" },
-  performance: { title: "성과", subtitle: "누적 수익과 일별 증감" },
-  cashflows: { title: "현금흐름", subtitle: "입출금 기록과 조정값" },
-  automation: { title: "자동화/데이터", subtitle: "가격 갱신, 백업, 동기화" },
-};
-const dashboardSizeToSpan = {
-  small: 3,
-  medium: 4,
-  wide: 6,
-  full: 12,
-};
-const defaultDashboardLayout = [
-  { id: "total-value", widthPct: 25, span: 3, minHeight: 128, visible: true },
-  { id: "total-cost", widthPct: 25, span: 3, minHeight: 128, visible: true },
-  { id: "total-gain", widthPct: 25, span: 3, minHeight: 128, visible: true },
-  { id: "cash-total", widthPct: 25, span: 3, minHeight: 128, visible: true },
-  { id: "fx-rate", widthPct: 25, span: 3, minHeight: 128, visible: true },
-  { id: "allocation", widthPct: 50, span: 6, minHeight: 320, visible: true },
-  { id: "performance-flow", widthPct: 50, span: 6, minHeight: 320, visible: true },
-  { id: "breakdown", widthPct: 50, span: 6, minHeight: 320, visible: true },
-];
 
 const sampleState = {
   version: DATA_VERSION,
@@ -1255,22 +1238,6 @@ function fillSelect(select, label, values, labels = {}) {
   select.value = values.includes(previous) ? previous : "";
 }
 
-function parseSortValue(value, fallback) {
-  const [key, dir] = String(value || fallback).split("-");
-  return { key, dir: dir === "asc" ? "asc" : "desc" };
-}
-
-function cycleSortValue(currentValue, key, fallback) {
-  const current = parseSortValue(currentValue, fallback);
-  if (current.key !== key) {
-    return `${key}-asc`;
-  }
-  if (current.dir === "asc") {
-    return `${key}-desc`;
-  }
-  return fallback;
-}
-
 function renderSortHeaders() {
   updateSortHeaderButtons("[data-holding-sort-key]", holdingHeaderSort, DEFAULT_HOLDING_SORT);
   updateSortHeaderButtons("[data-flow-sort-key]", cashFlowHeaderSort, DEFAULT_CASH_FLOW_SORT);
@@ -1657,10 +1624,6 @@ function getAccountStats() {
     stats.set(key, current);
   }
   return stats;
-}
-
-function formatAccountType(value) {
-  return accountTypeLabels[normalizeAccountType(value)] || "직접투자 계좌";
 }
 
 function renderAccountSummary() {
@@ -3114,10 +3077,6 @@ function isUnclassifiedCash(cash) {
   return cash.currency === "KRW" && String(cash.account || "").includes("미분류");
 }
 
-function normalizeAccountType(value) {
-  return ["pension", "irp", "retirement_pension"].includes(String(value || "")) ? "pension" : "direct_investment";
-}
-
 function normalizeAccounts(input) {
   const explicit = Array.isArray(input.accounts) ? input.accounts : [];
   const sourceState = {
@@ -3296,109 +3255,12 @@ function showOperationToast(title, detail, tone = "info") {
   }
 }
 
-function formatUsd(value) {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    maximumFractionDigits: 2,
-  }).format(value || 0);
-}
-
-function formatKrw(value) {
-  return new Intl.NumberFormat("ko-KR", {
-    style: "currency",
-    currency: "KRW",
-    maximumFractionDigits: 0,
-  }).format(value || 0);
-}
-
-function formatMoney(value, currency = "USD") {
-  return currency === "KRW" ? formatKrw(value) : formatUsd(value);
-}
-
-function formatCompactKrw(value) {
-  const abs = Math.abs(value || 0);
-  if (abs >= 100000000) {
-    return `${formatNumber((value || 0) / 100000000, 1)}억`;
-  }
-  if (abs >= 10000) {
-    return `${formatNumber((value || 0) / 10000, 0)}만`;
-  }
-  return formatKrw(value);
-}
-
-function formatChartLabel(value) {
-  return Number(value || 0) === 0 ? "0" : formatNumber(value, 0);
-}
-
-function formatNumber(value, digits = 2) {
-  return new Intl.NumberFormat("en-US", {
-    maximumFractionDigits: digits,
-  }).format(value || 0);
-}
-
-function formatPercent(value) {
-  return new Intl.NumberFormat("en-US", {
-    style: "percent",
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(value || 0);
-}
-
-function formatAsOf(value) {
-  if (!value || value === "Sample" || value === "샘플") {
-    return "샘플";
-  }
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) {
-    return value;
-  }
-  return date.toLocaleString("ko-KR", {
-    month: "short",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
-
-function formatShortDate(value) {
-  const date = new Date(`${value}T00:00:00`);
-  if (Number.isNaN(date.getTime())) {
-    return value;
-  }
-  return date.toLocaleDateString("ko-KR", {
-    month: "numeric",
-    day: "numeric",
-  });
-}
-
-function formatMonthDay(value) {
-  const date = new Date(`${value}T00:00:00`);
-  if (Number.isNaN(date.getTime())) {
-    return value;
-  }
-  return `${date.getMonth() + 1}/${date.getDate()}`;
-}
-
 function todayKey() {
   const date = new Date();
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const day = String(date.getDate()).padStart(2, "0");
   return `${year}-${month}-${day}`;
-}
-
-function escapeHtml(value) {
-  return String(value).replace(/[&<>"']/g, (char) => {
-    const entities = {
-      "&": "&amp;",
-      "<": "&lt;",
-      ">": "&gt;",
-      '"': "&quot;",
-      "'": "&#039;",
-    };
-    return entities[char];
-  });
 }
 
 initialize();
