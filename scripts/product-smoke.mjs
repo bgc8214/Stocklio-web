@@ -99,14 +99,20 @@ async function verifyBrowser() {
     await page.evaluate(() => document.querySelector("[data-view-tab=\"performance\"]").click());
     await page.waitForSelector("#performanceTrendChart svg", { timeout: 10_000 });
     const performance = await page.evaluate(() => ({
+      chartLoaded: Boolean(window.Chart && window.ChartDataLabels),
       statCards: document.querySelectorAll("#performanceDetailStats > div").length,
+      sourceRows: document.querySelectorAll("#numbersSourceBody tr").length,
+      numbersChartCanvas: Boolean(document.querySelector("#numbersPerformanceChart")),
       waterfallRows: document.querySelectorAll("#performanceWaterfall .waterfall-row").length,
       accountRows: document.querySelectorAll("#accountPerformanceBody tr").length,
       strategyRows: document.querySelectorAll("#strategyPerformanceBody tr").length,
       bodyOverflow: document.documentElement.scrollWidth > document.documentElement.clientWidth,
     }));
 
+    assert.equal(performance.chartLoaded, true);
     assert.equal(performance.statCards, 6);
+    assert.equal(performance.sourceRows, 3);
+    assert.equal(performance.numbersChartCanvas, true);
     assert.equal(performance.waterfallRows, 3);
     assert.ok(performance.accountRows >= 1);
     assert.ok(performance.strategyRows >= 1);

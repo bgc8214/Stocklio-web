@@ -273,6 +273,23 @@
           <div id="performanceTrendChart" class="trend-chart" aria-label="총자산 추이 차트"></div>
         </div>
 
+        <div class="panel performance-overview-panel">
+          <div class="section-heading">
+            <h2>월간 수익 흐름</h2>
+            <span id="numbersChartCaption">표 데이터를 참조한 복합 차트</span>
+          </div>
+          <div class="table-wrap numbers-source-wrap">
+            <table class="numbers-source-table">
+              <caption>표 1</caption>
+              <thead id="numbersSourceHead"></thead>
+              <tbody id="numbersSourceBody"></tbody>
+            </table>
+          </div>
+          <div class="numbers-chart-wrap">
+            <canvas id="numbersPerformanceChart" aria-label="Numbers 스타일 월간 수익 차트"></canvas>
+          </div>
+        </div>
+
         <div class="panel">
           <div class="section-heading">
             <h2>증감 분석</h2>
@@ -486,6 +503,8 @@
       </section>
     </main>
 
+    <script src="/assets/chart.umd.min.js"></script>
+    <script src="/assets/chartjs-plugin-datalabels.min.js"></script>
     <script type="module" src="/assets/supabase-auth.js"></script>
     <script src="app.js"></script>
     <script type="module" src="/assets/craft-dashboard.js"></script>

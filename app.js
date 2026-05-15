@@ -237,6 +237,7 @@ let editingAccountId = null;
 let isLayoutEditing = false;
 let draggedDashboardCardId = null;
 let resizingDashboardCard = null;
+let numbersPerformanceChart = null;
 let authState = {
   configured: false,
   signedIn: false,
@@ -292,6 +293,10 @@ const els = {
   performanceTrendChart: document.querySelector("#performanceTrendChart"),
   performanceWaterfall: document.querySelector("#performanceWaterfall"),
   performanceInsight: document.querySelector("#performanceInsight"),
+  numbersChartCaption: document.querySelector("#numbersChartCaption"),
+  numbersSourceHead: document.querySelector("#numbersSourceHead"),
+  numbersSourceBody: document.querySelector("#numbersSourceBody"),
+  numbersPerformanceChart: document.querySelector("#numbersPerformanceChart"),
   accountPerformanceBody: document.querySelector("#accountPerformanceBody"),
   strategyPerformanceBody: document.querySelector("#strategyPerformanceBody"),
   performanceRange: document.querySelector("#performanceRange"),
@@ -1275,10 +1280,155 @@ function renderPerformanceDetails(rows) {
   `;
 
   els.performanceTrendChart.innerHTML = renderTrendChart(rows);
+  renderNumbersPerformanceChart(rows);
   els.performanceWaterfall.innerHTML = renderWaterfall(stats);
   els.performanceInsight.innerHTML = renderPerformanceInsights(stats);
   renderAccountPerformance(rows);
   renderStrategyPerformance();
+}
+
+function renderNumbersPerformanceChart(rows) {
+  const source = getNumbersChartSource(rows);
+  if (!source.points.length) {
+    els.numbersChartCaption.textContent = "월간 성과 데이터 없음";
+    els.numbersSourceHead.innerHTML = "";
+    els.numbersSourceBody.innerHTML = `<tr><td>선택 기간에 월간 차트를 만들 스냅샷이 없습니다</td></tr>`;
+    if (numbersPerformanceChart) {
+      numbersPerformanceChart.destroy();
+      numbersPerformanceChart = null;
+    }
+    return;
+  }
+
+  els.numbersChartCaption.textContent = `${source.monthLabel} · 단위 만원`;
+  els.numbersSourceHead.innerHTML = `<tr><th></th>${source.points.map((point) => `<th>${escapeHtml(point.label)}</th>`).join("")}</tr>`;
+  els.numbersSourceBody.innerHTML = source.rows
+    .map((row) => `<tr><th>${escapeHtml(row.label)}</th>${row.values.map((value) => `<td>${formatNumber(value, 0)}</td>`).join("")}</tr>`)
+    .join("");
+
+  if (!window.Chart || !window.ChartDataLabels) {
+    els.numbersChartCaption.textContent = `${source.monthLabel} · 차트 라이브러리 로드 대기`;
+    return;
+  }
+
+  const ctx = els.numbersPerformanceChart.getContext("2d");
+  if (numbersPerformanceChart) {
+    numbersPerformanceChart.destroy();
+  }
+  window.Chart.register(window.ChartDataLabels);
+  numbersPerformanceChart = new window.Chart(ctx, {
+    type: "line",
+    data: {
+      labels: source.points.map((point) => point.label),
+      datasets: [
+        {
+          label: source.yearLabel,
+          data: source.points.map((point) => point.yearCumulativeMan),
+          borderColor: "#4f7f36",
+          backgroundColor: "rgba(190, 224, 166, 0.72)",
+          borderWidth: 4,
+          fill: "origin",
+          pointRadius: 0,
+          pointHitRadius: 10,
+          tension: 0,
+          datalabels: {
+            align: "top",
+            anchor: "end",
+            color: "#101a14",
+            font: { weight: "800", size: 11 },
+            formatter: formatChartLabel,
+          },
+        },
+        {
+          label: source.monthLabel,
+          data: source.points.map((point) => point.monthCumulativeMan),
+          borderColor: "#0866e8",
+          backgroundColor: "rgba(8, 102, 232, 0.08)",
+          borderWidth: 5,
+          fill: false,
+          pointRadius: 0,
+          pointHitRadius: 10,
+          tension: 0,
+          datalabels: {
+            align: "top",
+            anchor: "end",
+            color: "#0866e8",
+            font: { weight: "800", size: 11 },
+            formatter: formatChartLabel,
+          },
+        },
+        {
+          label: "일일 수익",
+          data: source.points.map((point) => point.dailyMan),
+          borderColor: "#ff2419",
+          backgroundColor: "rgba(255, 36, 25, 0.08)",
+          borderWidth: 5,
+          fill: false,
+          pointRadius: 0,
+          pointHitRadius: 10,
+          tension: 0,
+          datalabels: {
+            align: (context) => (Number(context.dataset.data[context.dataIndex]) < 0 ? "bottom" : "top"),
+            anchor: (context) => (Number(context.dataset.data[context.dataIndex]) < 0 ? "start" : "end"),
+            color: "#ff2419",
+            font: { weight: "800", size: 11 },
+            formatter: formatChartLabel,
+          },
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: false,
+      interaction: { mode: "index", intersect: false },
+      layout: { padding: { top: 30, right: 24, bottom: 8, left: 8 } },
+      plugins: {
+        legend: {
+          align: "center",
+          labels: {
+            boxWidth: 18,
+            color: "#17211b",
+            font: { weight: "700" },
+            usePointStyle: false,
+          },
+        },
+        tooltip: {
+          callbacks: {
+            label: (context) => `${context.dataset.label}: ${formatNumber(context.parsed.y, 0)}만원`,
+          },
+        },
+        datalabels: {
+          clip: false,
+          display: true,
+        },
+      },
+      scales: {
+        x: {
+          grid: { display: false },
+          ticks: {
+            color: "#17211b",
+            maxRotation: 0,
+            minRotation: 0,
+            autoSkip: source.points.length > 24,
+            font: { size: 12 },
+          },
+        },
+        y: {
+          beginAtZero: false,
+          grid: {
+            color: "#17211b",
+            lineWidth: 1.2,
+          },
+          ticks: {
+            color: "#17211b",
+            callback: (value) => formatNumber(value, 0),
+            font: { size: 12, weight: "700" },
+          },
+        },
+      },
+    },
+  });
 }
 
 function renderBreakdown() {
@@ -2086,6 +2236,46 @@ function getPerformanceStats(rows) {
   };
 }
 
+function getNumbersChartSource(rows) {
+  const latest = rows[rows.length - 1];
+  if (!latest) {
+    return { points: [], rows: [], monthLabel: "", yearLabel: "" };
+  }
+  const year = latest.date.slice(0, 4);
+  const month = latest.date.slice(5, 7);
+  const monthRows = rows.filter((row) => row.date.startsWith(`${year}-${month}`));
+  let yearCumulativeKrw = 0;
+  let monthCumulativeKrw = 0;
+  const yearRows = getSnapshotRows().filter((row) => row.date <= latest.date && row.date.startsWith(year));
+  const yearGainByDate = new Map();
+  for (const row of yearRows) {
+    yearCumulativeKrw += row.investmentGainKrw;
+    yearGainByDate.set(row.date, yearCumulativeKrw);
+  }
+  const points = monthRows.map((row) => {
+    monthCumulativeKrw += row.investmentGainKrw;
+    return {
+      date: row.date,
+      label: formatMonthDay(row.date),
+      yearCumulativeMan: Math.round((yearGainByDate.get(row.date) || 0) / 10000),
+      monthCumulativeMan: Math.round(monthCumulativeKrw / 10000),
+      dailyMan: Math.round(row.investmentGainKrw / 10000),
+    };
+  });
+  const shortYear = `${year.slice(2)}년`;
+  const monthNumber = Number(month);
+  return {
+    points,
+    yearLabel: `${shortYear} 누적수익`,
+    monthLabel: `${monthNumber}월 누적 수익`,
+    rows: [
+      { label: `${shortYear} 누적 수익`, values: points.map((point) => point.yearCumulativeMan) },
+      { label: `${monthNumber}월 누적 수익`, values: points.map((point) => point.monthCumulativeMan) },
+      { label: "일일 수익", values: points.map((point) => point.dailyMan) },
+    ],
+  };
+}
+
 function renderTrendChart(rows) {
   const chartRows = rows.slice(-30);
   if (chartRows.length < 2) {
@@ -2541,6 +2731,10 @@ function formatCompactKrw(value) {
   return formatKrw(value);
 }
 
+function formatChartLabel(value) {
+  return Number(value || 0) === 0 ? "0" : formatNumber(value, 0);
+}
+
 function formatNumber(value, digits = 2) {
   return new Intl.NumberFormat("en-US", {
     maximumFractionDigits: digits,
@@ -2580,6 +2774,14 @@ function formatShortDate(value) {
     month: "numeric",
     day: "numeric",
   });
+}
+
+function formatMonthDay(value) {
+  const date = new Date(`${value}T00:00:00`);
+  if (Number.isNaN(date.getTime())) {
+    return value;
+  }
+  return `${date.getMonth() + 1}/${date.getDate()}`;
 }
 
 function todayKey() {
