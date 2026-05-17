@@ -530,6 +530,59 @@
 
         <div class="panel">
           <div class="section-heading">
+            <h2>텔레그램 알림</h2>
+            <span id="notificationStatus">로그인 후 설정 가능</span>
+          </div>
+          <form id="notificationForm" class="notification-form">
+            <label>
+              <span>Telegram chat id</span>
+              <input id="telegramChatId" type="text" inputmode="numeric" placeholder="예: 123456789">
+            </label>
+            <label>
+              <span>큰 변동 기준 KRW</span>
+              <input id="largeMoveThreshold" type="number" min="0" step="10000" placeholder="0이면 매일 발송">
+            </label>
+            <label class="toggle-row">
+              <input id="telegramEnabled" type="checkbox">
+              <span>텔레그램 알림 사용</span>
+            </label>
+            <label class="toggle-row">
+              <input id="dailyDigestEnabled" type="checkbox" checked>
+              <span>매일 스냅샷 요약 받기</span>
+            </label>
+            <div class="form-actions inline-actions">
+              <button id="saveNotificationButton" type="submit">알림 설정 저장</button>
+              <button id="findTelegramChatButton" class="ghost" type="button">chat id 찾기</button>
+              <button id="testNotificationButton" class="secondary" type="button">테스트 메시지</button>
+            </div>
+          </form>
+          <div class="automation-list">
+            <div>
+              <strong>받는 내용</strong>
+              <span>총자산, 전일 대비, 투자손익 추정, 입출금 영향, 변동 원인 상위 종목</span>
+            </div>
+            <div>
+              <strong>최근 발송</strong>
+              <span id="notificationLogSummary">발송 기록이 없습니다</span>
+            </div>
+          </div>
+          <div class="table-wrap compact">
+            <table>
+              <thead>
+                <tr>
+                  <th>시각</th>
+                  <th>유형</th>
+                  <th>상태</th>
+                  <th>메시지</th>
+                </tr>
+              </thead>
+              <tbody id="notificationLogsBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="section-heading">
             <h2>가져오기와 백업</h2>
             <span>검증과 복원</span>
           </div>

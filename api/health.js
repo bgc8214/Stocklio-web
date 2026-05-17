@@ -6,6 +6,7 @@ export default async function handler(_request, response) {
     supabaseEnv: Boolean(process.env.VITE_SUPABASE_URL && supabaseKey),
     supabaseTable: false,
     automationEnv: hasAutomationSecret,
+    telegramEnv: Boolean(process.env.TELEGRAM_BOT_TOKEN),
     automationRuns: false,
   };
   let supabaseStatus = "not_configured";
@@ -64,6 +65,6 @@ export default async function handler(_request, response) {
     supabaseStatus,
     automationStatus,
     lastAutomationRun,
-    api: ["yahoo/chart", "health", "cron/daily-snapshot", "naver/userinfo"],
+    api: ["yahoo/chart", "health", "cron/daily-snapshot", "notifications/test", "notifications/telegram-updates", "naver/userinfo"],
   });
 }

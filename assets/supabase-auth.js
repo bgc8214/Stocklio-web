@@ -2587,24 +2587,24 @@ var vt = class {
 		}
 	}
 };
-function E(e) {
+function yt(e) {
 	return e.join("");
 }
-var yt = class {
+var bt = class {
 	constructor(e, t = "", n) {
 		this.client = e, this.prefix = t, this.accessDelegation = n;
 	}
 	async listTables(e) {
 		return (await this.client.request({
 			method: "GET",
-			path: `${this.prefix}/namespaces/${E(e.namespace)}/tables`
+			path: `${this.prefix}/namespaces/${yt(e.namespace)}/tables`
 		})).data.identifiers;
 	}
 	async createTable(e, t) {
 		let n = {};
 		return this.accessDelegation && (n["X-Iceberg-Access-Delegation"] = this.accessDelegation), (await this.client.request({
 			method: "POST",
-			path: `${this.prefix}/namespaces/${E(e.namespace)}/tables`,
+			path: `${this.prefix}/namespaces/${yt(e.namespace)}/tables`,
 			body: t,
 			headers: n
 		})).data.metadata;
@@ -2612,7 +2612,7 @@ var yt = class {
 	async updateTable(e, t) {
 		let n = await this.client.request({
 			method: "POST",
-			path: `${this.prefix}/namespaces/${E(e.namespace)}/tables/${e.name}`,
+			path: `${this.prefix}/namespaces/${yt(e.namespace)}/tables/${e.name}`,
 			body: t
 		});
 		return {
@@ -2623,7 +2623,7 @@ var yt = class {
 	async dropTable(e, t) {
 		await this.client.request({
 			method: "DELETE",
-			path: `${this.prefix}/namespaces/${E(e.namespace)}/tables/${e.name}`,
+			path: `${this.prefix}/namespaces/${yt(e.namespace)}/tables/${e.name}`,
 			query: { purgeRequested: String(t?.purge ?? !1) }
 		});
 	}
@@ -2631,7 +2631,7 @@ var yt = class {
 		let t = {};
 		return this.accessDelegation && (t["X-Iceberg-Access-Delegation"] = this.accessDelegation), (await this.client.request({
 			method: "GET",
-			path: `${this.prefix}/namespaces/${E(e.namespace)}/tables/${e.name}`,
+			path: `${this.prefix}/namespaces/${yt(e.namespace)}/tables/${e.name}`,
 			headers: t
 		})).data.metadata;
 	}
@@ -2641,7 +2641,7 @@ var yt = class {
 		try {
 			return await this.client.request({
 				method: "HEAD",
-				path: `${this.prefix}/namespaces/${E(e.namespace)}/tables/${e.name}`,
+				path: `${this.prefix}/namespaces/${yt(e.namespace)}/tables/${e.name}`,
 				headers: t
 			}), !0;
 		} catch (e) {
@@ -2660,7 +2660,7 @@ var yt = class {
 			throw n;
 		}
 	}
-}, bt = class {
+}, xt = class {
 	constructor(e) {
 		let t = "v1";
 		e.catalogName && (t += `/${e.catalogName}`);
@@ -2669,7 +2669,7 @@ var yt = class {
 			baseUrl: n,
 			auth: e.auth,
 			fetchImpl: e.fetch
-		}), this.accessDelegation = e.accessDelegation?.join(","), this.namespaceOps = new vt(this.client, t), this.tableOps = new yt(this.client, t, this.accessDelegation);
+		}), this.accessDelegation = e.accessDelegation?.join(","), this.namespaceOps = new vt(this.client, t), this.tableOps = new bt(this.client, t, this.accessDelegation);
 	}
 	async listNamespaces(e) {
 		return this.namespaceOps.listNamespaces(e);
@@ -2713,37 +2713,37 @@ var yt = class {
 };
 //#endregion
 //#region node_modules/@supabase/storage-js/dist/index.mjs
-function xt(e) {
+function St(e) {
 	"@babel/helpers - typeof";
-	return xt = typeof Symbol == "function" && typeof Symbol.iterator == "symbol" ? function(e) {
+	return St = typeof Symbol == "function" && typeof Symbol.iterator == "symbol" ? function(e) {
 		return typeof e;
 	} : function(e) {
 		return e && typeof Symbol == "function" && e.constructor === Symbol && e !== Symbol.prototype ? "symbol" : typeof e;
-	}, xt(e);
+	}, St(e);
 }
-function St(e, t) {
-	if (xt(e) != "object" || !e) return e;
+function Ct(e, t) {
+	if (St(e) != "object" || !e) return e;
 	var n = e[Symbol.toPrimitive];
 	if (n !== void 0) {
 		var r = n.call(e, t || "default");
-		if (xt(r) != "object") return r;
+		if (St(r) != "object") return r;
 		throw TypeError("@@toPrimitive must return a primitive value.");
 	}
 	return (t === "string" ? String : Number)(e);
 }
-function Ct(e) {
-	var t = St(e, "string");
-	return xt(t) == "symbol" ? t : t + "";
+function wt(e) {
+	var t = Ct(e, "string");
+	return St(t) == "symbol" ? t : t + "";
 }
-function wt(e, t, n) {
-	return (t = Ct(t)) in e ? Object.defineProperty(e, t, {
+function Tt(e, t, n) {
+	return (t = wt(t)) in e ? Object.defineProperty(e, t, {
 		value: n,
 		enumerable: !0,
 		configurable: !0,
 		writable: !0
 	}) : e[t] = n, e;
 }
-function Tt(e, t) {
+function Et(e, t) {
 	var n = Object.keys(e);
 	if (Object.getOwnPropertySymbols) {
 		var r = Object.getOwnPropertySymbols(e);
@@ -2753,18 +2753,18 @@ function Tt(e, t) {
 	}
 	return n;
 }
-function D(e) {
+function E(e) {
 	for (var t = 1; t < arguments.length; t++) {
 		var n = arguments[t] == null ? {} : arguments[t];
-		t % 2 ? Tt(Object(n), !0).forEach(function(t) {
-			wt(e, t, n[t]);
-		}) : Object.getOwnPropertyDescriptors ? Object.defineProperties(e, Object.getOwnPropertyDescriptors(n)) : Tt(Object(n)).forEach(function(t) {
+		t % 2 ? Et(Object(n), !0).forEach(function(t) {
+			Tt(e, t, n[t]);
+		}) : Object.getOwnPropertyDescriptors ? Object.defineProperties(e, Object.getOwnPropertyDescriptors(n)) : Et(Object(n)).forEach(function(t) {
 			Object.defineProperty(e, t, Object.getOwnPropertyDescriptor(n, t));
 		});
 	}
 	return e;
 }
-var Et = class extends Error {
+var Dt = class extends Error {
 	constructor(e, t = "storage", n, r) {
 		super(e), this.__isStorageError = !0, this.namespace = t, this.name = t === "vectors" ? "StorageVectorsError" : "StorageError", this.status = n, this.statusCode = r;
 	}
@@ -2777,44 +2777,44 @@ var Et = class extends Error {
 		};
 	}
 };
-function Dt(e) {
+function Ot(e) {
 	return typeof e == "object" && !!e && "__isStorageError" in e;
 }
-var Ot = class extends Et {
+var kt = class extends Dt {
 	constructor(e, t, n, r = "storage") {
 		super(e, r, t, n), this.name = r === "vectors" ? "StorageVectorsApiError" : "StorageApiError", this.status = t, this.statusCode = n;
 	}
 	toJSON() {
-		return D({}, super.toJSON());
+		return E({}, super.toJSON());
 	}
-}, kt = class extends Et {
+}, At = class extends Dt {
 	constructor(e, t, n = "storage") {
 		super(e, n), this.name = n === "vectors" ? "StorageVectorsUnknownError" : "StorageUnknownError", this.originalError = t;
 	}
 };
-function At(e, t, n) {
-	let r = D({}, e), i = t.toLowerCase();
+function jt(e, t, n) {
+	let r = E({}, e), i = t.toLowerCase();
 	for (let e of Object.keys(r)) e.toLowerCase() === i && delete r[e];
 	return r[i] = n, r;
 }
-function jt(e) {
+function Mt(e) {
 	let t = {};
 	for (let [n, r] of Object.entries(e)) t[n.toLowerCase()] = r;
 	return t;
 }
-var Mt = (e) => e ? (...t) => e(...t) : (...e) => fetch(...e), Nt = (e) => {
+var Nt = (e) => e ? (...t) => e(...t) : (...e) => fetch(...e), Pt = (e) => {
 	if (typeof e != "object" || !e) return !1;
 	let t = Object.getPrototypeOf(e);
 	return (t === null || t === Object.prototype || Object.getPrototypeOf(t) === null) && !(Symbol.toStringTag in e) && !(Symbol.iterator in e);
-}, Pt = (e) => {
-	if (Array.isArray(e)) return e.map((e) => Pt(e));
+}, Ft = (e) => {
+	if (Array.isArray(e)) return e.map((e) => Ft(e));
 	if (typeof e == "function" || e !== Object(e)) return e;
 	let t = {};
 	return Object.entries(e).forEach(([e, n]) => {
 		let r = e.replace(/([-_][a-z])/gi, (e) => e.toUpperCase().replace(/[-_]/g, ""));
-		t[r] = Pt(n);
+		t[r] = Ft(n);
 	}), t;
-}, Ft = (e) => !e || typeof e != "string" || e.length === 0 || e.length > 100 || e.trim() !== e || e.includes("/") || e.includes("\\") ? !1 : /^[\w!.\*'() &$@=;:+,?-]+$/.test(e), It = (e) => {
+}, It = (e) => !e || typeof e != "string" || e.length === 0 || e.length > 100 || e.trim() !== e || e.includes("/") || e.includes("\\") ? !1 : /^[\w!.\*'() &$@=;:+,?-]+$/.test(e), Lt = (e) => {
 	if (typeof e == "object" && e) {
 		let t = e;
 		if (typeof t.msg == "string") return t.msg;
@@ -2827,33 +2827,33 @@ var Mt = (e) => e ? (...t) => e(...t) : (...e) => fetch(...e), Nt = (e) => {
 		}
 	}
 	return JSON.stringify(e);
-}, Lt = async (e, t, n, r) => {
+}, Rt = async (e, t, n, r) => {
 	if (typeof e == "object" && e && "json" in e && typeof e.json == "function") {
 		let n = e, i = parseInt(String(n.status), 10);
 		Number.isFinite(i) || (i = 500), n.json().then((e) => {
 			let n = e?.statusCode || e?.code || i + "";
-			t(new Ot(It(e), i, n, r));
+			t(new kt(Lt(e), i, n, r));
 		}).catch(() => {
 			let e = i + "";
-			t(new Ot(n.statusText || `HTTP ${i} error`, i, e, r));
+			t(new kt(n.statusText || `HTTP ${i} error`, i, e, r));
 		});
-	} else t(new kt(It(e), e, r));
-}, Rt = (e, t, n, r) => {
+	} else t(new At(Lt(e), e, r));
+}, zt = (e, t, n, r) => {
 	let i = {
 		method: e,
 		headers: t?.headers || {}
 	};
-	if (e === "GET" || e === "HEAD" || !r) return D(D({}, i), n);
-	if (Nt(r)) {
+	if (e === "GET" || e === "HEAD" || !r) return E(E({}, i), n);
+	if (Pt(r)) {
 		let e = t?.headers || {}, n;
 		for (let [t, r] of Object.entries(e)) t.toLowerCase() === "content-type" && (n = r);
-		i.headers = At(e, "Content-Type", n ?? "application/json"), i.body = JSON.stringify(r);
+		i.headers = jt(e, "Content-Type", n ?? "application/json"), i.body = JSON.stringify(r);
 	} else i.body = r;
-	return t?.duplex && (i.duplex = t.duplex), D(D({}, i), n);
+	return t?.duplex && (i.duplex = t.duplex), E(E({}, i), n);
 };
-async function zt(e, t, n, r, i, a, o) {
+async function Bt(e, t, n, r, i, a, o) {
 	return new Promise((s, c) => {
-		e(n, Rt(t, r, i, a)).then((e) => {
+		e(n, zt(t, r, i, a)).then((e) => {
 			if (!e.ok) throw e;
 			if (r?.noResolveJson) return e;
 			if (o === "vectors") {
@@ -2861,27 +2861,27 @@ async function zt(e, t, n, r, i, a, o) {
 				if (e.headers.get("content-length") === "0" || e.status === 204 || !t || !t.includes("application/json")) return {};
 			}
 			return e.json();
-		}).then((e) => s(e)).catch((e) => Lt(e, c, r, o));
+		}).then((e) => s(e)).catch((e) => Rt(e, c, r, o));
 	});
 }
-function Bt(e = "storage") {
+function Vt(e = "storage") {
 	return {
-		get: async (t, n, r, i) => zt(t, "GET", n, r, i, void 0, e),
-		post: async (t, n, r, i, a) => zt(t, "POST", n, i, a, r, e),
-		put: async (t, n, r, i, a) => zt(t, "PUT", n, i, a, r, e),
-		head: async (t, n, r, i) => zt(t, "HEAD", n, D(D({}, r), {}, { noResolveJson: !0 }), i, void 0, e),
-		remove: async (t, n, r, i, a) => zt(t, "DELETE", n, i, a, r, e)
+		get: async (t, n, r, i) => Bt(t, "GET", n, r, i, void 0, e),
+		post: async (t, n, r, i, a) => Bt(t, "POST", n, i, a, r, e),
+		put: async (t, n, r, i, a) => Bt(t, "PUT", n, i, a, r, e),
+		head: async (t, n, r, i) => Bt(t, "HEAD", n, E(E({}, r), {}, { noResolveJson: !0 }), i, void 0, e),
+		remove: async (t, n, r, i, a) => Bt(t, "DELETE", n, i, a, r, e)
 	};
 }
-var { get: Vt, post: O, put: Ht, head: Ut, remove: Wt } = Bt("storage"), k = Bt("vectors"), Gt = class {
+var { get: Ht, post: D, put: Ut, head: Wt, remove: Gt } = Vt("storage"), O = Vt("vectors"), k = class {
 	constructor(e, t = {}, n, r = "storage") {
-		this.shouldThrowOnError = !1, this.url = e, this.headers = jt(t), this.fetch = Mt(n), this.namespace = r;
+		this.shouldThrowOnError = !1, this.url = e, this.headers = Mt(t), this.fetch = Nt(n), this.namespace = r;
 	}
 	throwOnError() {
 		return this.shouldThrowOnError = !0, this;
 	}
 	setHeader(e, t) {
-		return this.headers = At(this.headers, e, t), this;
+		return this.headers = jt(this.headers, e, t), this;
 	}
 	async handleOperation(e) {
 		var t = this;
@@ -2892,7 +2892,7 @@ var { get: Vt, post: O, put: Ht, head: Ut, remove: Wt } = Bt("storage"), k = Bt(
 			};
 		} catch (e) {
 			if (t.shouldThrowOnError) throw e;
-			if (Dt(e)) return {
+			if (Ot(e)) return {
 				data: null,
 				error: e
 			};
@@ -2915,7 +2915,7 @@ var { get: Vt, post: O, put: Ht, head: Ut, remove: Wt } = Bt("storage"), k = Bt(
 			};
 		} catch (t) {
 			if (e.shouldThrowOnError) throw t;
-			if (Dt(t)) return {
+			if (Ot(t)) return {
 				data: null,
 				error: t
 			};
@@ -2950,7 +2950,7 @@ var { get: Vt, post: O, put: Ht, head: Ut, remove: Wt } = Bt("storage"), k = Bt(
 			};
 		} catch (t) {
 			if (e.shouldThrowOnError) throw t;
-			if (Dt(t)) return {
+			if (Ot(t)) return {
 				data: null,
 				error: t
 			};
@@ -2968,16 +2968,16 @@ var { get: Vt, post: O, put: Ht, head: Ut, remove: Wt } = Bt("storage"), k = Bt(
 	cacheControl: "3600",
 	contentType: "text/plain;charset=UTF-8",
 	upsert: !1
-}, Zt = class extends Gt {
+}, Zt = class extends k {
 	constructor(e, t = {}, n, r) {
 		super(e, t, r, "storage"), this.bucketId = n;
 	}
 	async uploadOrUpdate(e, t, n, r) {
 		var i = this;
 		return i.handleOperation(async () => {
-			let a, o = D(D({}, Xt), r), s = D(D({}, i.headers), e === "POST" && { "x-upsert": String(o.upsert) }), c = o.metadata;
-			if (typeof Blob < "u" && n instanceof Blob ? (a = new FormData(), a.append("cacheControl", o.cacheControl), c && a.append("metadata", i.encodeMetadata(c)), a.append("", n)) : typeof FormData < "u" && n instanceof FormData ? (a = n, a.has("cacheControl") || a.append("cacheControl", o.cacheControl), c && !a.has("metadata") && a.append("metadata", i.encodeMetadata(c))) : (a = n, s["cache-control"] = `max-age=${o.cacheControl}`, s["content-type"] = o.contentType, c && (s["x-metadata"] = i.toBase64(i.encodeMetadata(c))), (typeof ReadableStream < "u" && a instanceof ReadableStream || a && typeof a == "object" && "pipe" in a && typeof a.pipe == "function") && !o.duplex && (o.duplex = "half")), r?.headers) for (let [e, t] of Object.entries(r.headers)) s = At(s, e, t);
-			let l = i._removeEmptyFolders(t), u = i._getFinalPath(l), d = await (e == "PUT" ? Ht : O)(i.fetch, `${i.url}/object/${u}`, a, D({ headers: s }, o?.duplex ? { duplex: o.duplex } : {}));
+			let a, o = E(E({}, Xt), r), s = E(E({}, i.headers), e === "POST" && { "x-upsert": String(o.upsert) }), c = o.metadata;
+			if (typeof Blob < "u" && n instanceof Blob ? (a = new FormData(), a.append("cacheControl", o.cacheControl), c && a.append("metadata", i.encodeMetadata(c)), a.append("", n)) : typeof FormData < "u" && n instanceof FormData ? (a = n, a.has("cacheControl") || a.append("cacheControl", o.cacheControl), c && !a.has("metadata") && a.append("metadata", i.encodeMetadata(c))) : (a = n, s["cache-control"] = `max-age=${o.cacheControl}`, s["content-type"] = o.contentType, c && (s["x-metadata"] = i.toBase64(i.encodeMetadata(c))), (typeof ReadableStream < "u" && a instanceof ReadableStream || a && typeof a == "object" && "pipe" in a && typeof a.pipe == "function") && !o.duplex && (o.duplex = "half")), r?.headers) for (let [e, t] of Object.entries(r.headers)) s = jt(s, e, t);
+			let l = i._removeEmptyFolders(t), u = i._getFinalPath(l), d = await (e == "PUT" ? Ut : D)(i.fetch, `${i.url}/object/${u}`, a, E({ headers: s }, o?.duplex ? { duplex: o.duplex } : {}));
 			return {
 				path: l,
 				id: d.Id,
@@ -2992,21 +2992,21 @@ var { get: Vt, post: O, put: Ht, head: Ut, remove: Wt } = Bt("storage"), k = Bt(
 		var i = this;
 		let a = i._removeEmptyFolders(e), o = i._getFinalPath(a), s = new URL(i.url + `/object/upload/sign/${o}`);
 		return s.searchParams.set("token", t), i.handleOperation(async () => {
-			let e, t = D(D({}, Xt), r), o = D(D({}, i.headers), { "x-upsert": String(t.upsert) }), c = t.metadata;
-			if (typeof Blob < "u" && n instanceof Blob ? (e = new FormData(), e.append("cacheControl", t.cacheControl), c && e.append("metadata", i.encodeMetadata(c)), e.append("", n)) : typeof FormData < "u" && n instanceof FormData ? (e = n, e.has("cacheControl") || e.append("cacheControl", t.cacheControl), c && !e.has("metadata") && e.append("metadata", i.encodeMetadata(c))) : (e = n, o["cache-control"] = `max-age=${t.cacheControl}`, o["content-type"] = t.contentType, c && (o["x-metadata"] = i.toBase64(i.encodeMetadata(c))), (typeof ReadableStream < "u" && e instanceof ReadableStream || e && typeof e == "object" && "pipe" in e && typeof e.pipe == "function") && !t.duplex && (t.duplex = "half")), r?.headers) for (let [e, t] of Object.entries(r.headers)) o = At(o, e, t);
+			let e, t = E(E({}, Xt), r), o = E(E({}, i.headers), { "x-upsert": String(t.upsert) }), c = t.metadata;
+			if (typeof Blob < "u" && n instanceof Blob ? (e = new FormData(), e.append("cacheControl", t.cacheControl), c && e.append("metadata", i.encodeMetadata(c)), e.append("", n)) : typeof FormData < "u" && n instanceof FormData ? (e = n, e.has("cacheControl") || e.append("cacheControl", t.cacheControl), c && !e.has("metadata") && e.append("metadata", i.encodeMetadata(c))) : (e = n, o["cache-control"] = `max-age=${t.cacheControl}`, o["content-type"] = t.contentType, c && (o["x-metadata"] = i.toBase64(i.encodeMetadata(c))), (typeof ReadableStream < "u" && e instanceof ReadableStream || e && typeof e == "object" && "pipe" in e && typeof e.pipe == "function") && !t.duplex && (t.duplex = "half")), r?.headers) for (let [e, t] of Object.entries(r.headers)) o = jt(o, e, t);
 			return {
 				path: a,
-				fullPath: (await Ht(i.fetch, s.toString(), e, D({ headers: o }, t?.duplex ? { duplex: t.duplex } : {}))).Key
+				fullPath: (await Ut(i.fetch, s.toString(), e, E({ headers: o }, t?.duplex ? { duplex: t.duplex } : {}))).Key
 			};
 		});
 	}
 	async createSignedUploadUrl(e, t) {
 		var n = this;
 		return n.handleOperation(async () => {
-			let r = n._getFinalPath(e), i = D({}, n.headers);
+			let r = n._getFinalPath(e), i = E({}, n.headers);
 			t?.upsert && (i["x-upsert"] = "true");
-			let a = await O(n.fetch, `${n.url}/object/upload/sign/${r}`, {}, { headers: i }), o = new URL(n.url + a.url), s = o.searchParams.get("token");
-			if (!s) throw new Et("No token returned by API");
+			let a = await D(n.fetch, `${n.url}/object/upload/sign/${r}`, {}, { headers: i }), o = new URL(n.url + a.url), s = o.searchParams.get("token");
+			if (!s) throw new Dt("No token returned by API");
 			return {
 				signedUrl: o.toString(),
 				path: e,
@@ -3019,7 +3019,7 @@ var { get: Vt, post: O, put: Ht, head: Ut, remove: Wt } = Bt("storage"), k = Bt(
 	}
 	async move(e, t, n) {
 		var r = this;
-		return r.handleOperation(async () => await O(r.fetch, `${r.url}/object/move`, {
+		return r.handleOperation(async () => await D(r.fetch, `${r.url}/object/move`, {
 			bucketId: r.bucketId,
 			sourceKey: e,
 			destinationKey: t,
@@ -3028,7 +3028,7 @@ var { get: Vt, post: O, put: Ht, head: Ut, remove: Wt } = Bt("storage"), k = Bt(
 	}
 	async copy(e, t, n) {
 		var r = this;
-		return r.handleOperation(async () => ({ path: (await O(r.fetch, `${r.url}/object/copy`, {
+		return r.handleOperation(async () => ({ path: (await D(r.fetch, `${r.url}/object/copy`, {
 			bucketId: r.bucketId,
 			sourceKey: e,
 			destinationKey: t,
@@ -3038,7 +3038,7 @@ var { get: Vt, post: O, put: Ht, head: Ut, remove: Wt } = Bt("storage"), k = Bt(
 	async createSignedUrl(e, t, n) {
 		var r = this;
 		return r.handleOperation(async () => {
-			let i = r._getFinalPath(e), a = typeof n?.transform == "object" && n.transform !== null && Object.keys(n.transform).length > 0, o = await O(r.fetch, `${r.url}/object/sign/${i}`, D({ expiresIn: t }, a ? { transform: n.transform } : {}), { headers: r.headers }), s = new URLSearchParams();
+			let i = r._getFinalPath(e), a = typeof n?.transform == "object" && n.transform !== null && Object.keys(n.transform).length > 0, o = await D(r.fetch, `${r.url}/object/sign/${i}`, E({ expiresIn: t }, a ? { transform: n.transform } : {}), { headers: r.headers }), s = new URLSearchParams();
 			n?.download && s.set("download", n.download === !0 ? "" : n.download), n?.cacheNonce != null && s.set("cacheNonce", String(n.cacheNonce));
 			let c = s.toString();
 			return { signedUrl: encodeURI(`${r.url}${o.signedURL}${c ? `&${c}` : ""}`) };
@@ -3047,20 +3047,20 @@ var { get: Vt, post: O, put: Ht, head: Ut, remove: Wt } = Bt("storage"), k = Bt(
 	async createSignedUrls(e, t, n) {
 		var r = this;
 		return r.handleOperation(async () => {
-			let i = await O(r.fetch, `${r.url}/object/sign/${r.bucketId}`, {
+			let i = await D(r.fetch, `${r.url}/object/sign/${r.bucketId}`, {
 				expiresIn: t,
 				paths: e
 			}, { headers: r.headers }), a = new URLSearchParams();
 			n?.download && a.set("download", n.download === !0 ? "" : n.download), n?.cacheNonce != null && a.set("cacheNonce", String(n.cacheNonce));
 			let o = a.toString();
-			return i.map((e) => D(D({}, e), {}, { signedUrl: e.signedURL ? encodeURI(`${r.url}${e.signedURL}${o ? `&${o}` : ""}`) : null }));
+			return i.map((e) => E(E({}, e), {}, { signedUrl: e.signedURL ? encodeURI(`${r.url}${e.signedURL}${o ? `&${o}` : ""}`) : null }));
 		});
 	}
 	download(e, t, n) {
 		let r = typeof t?.transform == "object" && t.transform !== null && Object.keys(t.transform).length > 0 ? "render/image/authenticated" : "object", i = new URLSearchParams();
 		t?.transform && this.applyTransformOptsToQuery(i, t.transform), t?.cacheNonce != null && i.set("cacheNonce", String(t.cacheNonce));
 		let a = i.toString(), o = this._getFinalPath(e);
-		return new Jt(() => Vt(this.fetch, `${this.url}/${r}/${o}${a ? `?${a}` : ""}`, {
+		return new Jt(() => Ht(this.fetch, `${this.url}/${r}/${o}${a ? `?${a}` : ""}`, {
 			headers: this.headers,
 			noResolveJson: !0
 		}, n), this.shouldThrowOnError);
@@ -3068,20 +3068,20 @@ var { get: Vt, post: O, put: Ht, head: Ut, remove: Wt } = Bt("storage"), k = Bt(
 	async info(e) {
 		var t = this;
 		let n = t._getFinalPath(e);
-		return t.handleOperation(async () => Pt(await Vt(t.fetch, `${t.url}/object/info/${n}`, { headers: t.headers })));
+		return t.handleOperation(async () => Ft(await Ht(t.fetch, `${t.url}/object/info/${n}`, { headers: t.headers })));
 	}
 	async exists(e) {
 		var t = this;
 		let n = t._getFinalPath(e);
 		try {
-			return await Ut(t.fetch, `${t.url}/object/${n}`, { headers: t.headers }), {
+			return await Wt(t.fetch, `${t.url}/object/${n}`, { headers: t.headers }), {
 				data: !0,
 				error: null
 			};
 		} catch (e) {
 			if (t.shouldThrowOnError) throw e;
-			if (Dt(e)) {
-				let t = e instanceof Ot ? e.status : e instanceof kt ? e.originalError?.status : void 0;
+			if (Ot(e)) {
+				let t = e instanceof kt ? e.status : e instanceof At ? e.originalError?.status : void 0;
 				if (t !== void 0 && [400, 404].includes(t)) return {
 					data: !1,
 					error: e
@@ -3098,20 +3098,20 @@ var { get: Vt, post: O, put: Ht, head: Ut, remove: Wt } = Bt("storage"), k = Bt(
 	}
 	async remove(e) {
 		var t = this;
-		return t.handleOperation(async () => await Wt(t.fetch, `${t.url}/object/${t.bucketId}`, { prefixes: e }, { headers: t.headers }));
+		return t.handleOperation(async () => await Gt(t.fetch, `${t.url}/object/${t.bucketId}`, { prefixes: e }, { headers: t.headers }));
 	}
 	async list(e, t, n) {
 		var r = this;
 		return r.handleOperation(async () => {
-			let i = D(D(D({}, Yt), t), {}, { prefix: e || "" });
-			return await O(r.fetch, `${r.url}/object/list/${r.bucketId}`, i, { headers: r.headers }, n);
+			let i = E(E(E({}, Yt), t), {}, { prefix: e || "" });
+			return await D(r.fetch, `${r.url}/object/list/${r.bucketId}`, i, { headers: r.headers }, n);
 		});
 	}
 	async listV2(e, t) {
 		var n = this;
 		return n.handleOperation(async () => {
-			let r = D({}, e);
-			return await O(n.fetch, `${n.url}/object/list-v2/${n.bucketId}`, r, { headers: n.headers }, t);
+			let r = E({}, e);
+			return await D(n.fetch, `${n.url}/object/list-v2/${n.bucketId}`, r, { headers: n.headers }, t);
 		});
 	}
 	encodeMetadata(e) {
@@ -3129,27 +3129,27 @@ var { get: Vt, post: O, put: Ht, head: Ut, remove: Wt } = Bt("storage"), k = Bt(
 	applyTransformOptsToQuery(e, t) {
 		return t.width && e.set("width", t.width.toString()), t.height && e.set("height", t.height.toString()), t.resize && e.set("resize", t.resize), t.format && e.set("format", t.format), t.quality && e.set("quality", t.quality.toString()), e;
 	}
-}, Qt = { "X-Client-Info": "storage-js/2.105.4" }, $t = class extends Gt {
+}, Qt = { "X-Client-Info": "storage-js/2.105.4" }, $t = class extends k {
 	constructor(e, t = {}, n, r) {
 		let i = new URL(e);
 		r?.useNewHostname && /supabase\.(co|in|red)$/.test(i.hostname) && !i.hostname.includes("storage.supabase.") && (i.hostname = i.hostname.replace("supabase.", "storage.supabase."));
-		let a = i.href.replace(/\/$/, ""), o = D(D({}, Qt), t);
+		let a = i.href.replace(/\/$/, ""), o = E(E({}, Qt), t);
 		super(a, o, n, "storage");
 	}
 	async listBuckets(e) {
 		var t = this;
 		return t.handleOperation(async () => {
 			let n = t.listBucketOptionsToQueryString(e);
-			return await Vt(t.fetch, `${t.url}/bucket${n}`, { headers: t.headers });
+			return await Ht(t.fetch, `${t.url}/bucket${n}`, { headers: t.headers });
 		});
 	}
 	async getBucket(e) {
 		var t = this;
-		return t.handleOperation(async () => await Vt(t.fetch, `${t.url}/bucket/${e}`, { headers: t.headers }));
+		return t.handleOperation(async () => await Ht(t.fetch, `${t.url}/bucket/${e}`, { headers: t.headers }));
 	}
 	async createBucket(e, t = { public: !1 }) {
 		var n = this;
-		return n.handleOperation(async () => await O(n.fetch, `${n.url}/bucket`, {
+		return n.handleOperation(async () => await D(n.fetch, `${n.url}/bucket`, {
 			id: e,
 			name: e,
 			type: t.type,
@@ -3160,7 +3160,7 @@ var { get: Vt, post: O, put: Ht, head: Ut, remove: Wt } = Bt("storage"), k = Bt(
 	}
 	async updateBucket(e, t) {
 		var n = this;
-		return n.handleOperation(async () => await Ht(n.fetch, `${n.url}/bucket/${e}`, {
+		return n.handleOperation(async () => await Ut(n.fetch, `${n.url}/bucket/${e}`, {
 			id: e,
 			name: e,
 			public: t.public,
@@ -3170,24 +3170,24 @@ var { get: Vt, post: O, put: Ht, head: Ut, remove: Wt } = Bt("storage"), k = Bt(
 	}
 	async emptyBucket(e) {
 		var t = this;
-		return t.handleOperation(async () => await O(t.fetch, `${t.url}/bucket/${e}/empty`, {}, { headers: t.headers }));
+		return t.handleOperation(async () => await D(t.fetch, `${t.url}/bucket/${e}/empty`, {}, { headers: t.headers }));
 	}
 	async deleteBucket(e) {
 		var t = this;
-		return t.handleOperation(async () => await Wt(t.fetch, `${t.url}/bucket/${e}`, {}, { headers: t.headers }));
+		return t.handleOperation(async () => await Gt(t.fetch, `${t.url}/bucket/${e}`, {}, { headers: t.headers }));
 	}
 	listBucketOptionsToQueryString(e) {
 		let t = {};
 		return e && ("limit" in e && (t.limit = String(e.limit)), "offset" in e && (t.offset = String(e.offset)), e.search && (t.search = e.search), e.sortColumn && (t.sortColumn = e.sortColumn), e.sortOrder && (t.sortOrder = e.sortOrder)), Object.keys(t).length > 0 ? "?" + new URLSearchParams(t).toString() : "";
 	}
-}, en = class extends Gt {
+}, en = class extends k {
 	constructor(e, t = {}, n) {
-		let r = e.replace(/\/$/, ""), i = D(D({}, Qt), t);
+		let r = e.replace(/\/$/, ""), i = E(E({}, Qt), t);
 		super(r, i, n, "storage");
 	}
 	async createBucket(e) {
 		var t = this;
-		return t.handleOperation(async () => await O(t.fetch, `${t.url}/bucket`, { name: e }, { headers: t.headers }));
+		return t.handleOperation(async () => await D(t.fetch, `${t.url}/bucket`, { name: e }, { headers: t.headers }));
 	}
 	async listBuckets(e) {
 		var t = this;
@@ -3195,17 +3195,17 @@ var { get: Vt, post: O, put: Ht, head: Ut, remove: Wt } = Bt("storage"), k = Bt(
 			let n = new URLSearchParams();
 			e?.limit !== void 0 && n.set("limit", e.limit.toString()), e?.offset !== void 0 && n.set("offset", e.offset.toString()), e?.sortColumn && n.set("sortColumn", e.sortColumn), e?.sortOrder && n.set("sortOrder", e.sortOrder), e?.search && n.set("search", e.search);
 			let r = n.toString(), i = r ? `${t.url}/bucket?${r}` : `${t.url}/bucket`;
-			return await Vt(t.fetch, i, { headers: t.headers });
+			return await Ht(t.fetch, i, { headers: t.headers });
 		});
 	}
 	async deleteBucket(e) {
 		var t = this;
-		return t.handleOperation(async () => await Wt(t.fetch, `${t.url}/bucket/${e}`, {}, { headers: t.headers }));
+		return t.handleOperation(async () => await Gt(t.fetch, `${t.url}/bucket/${e}`, {}, { headers: t.headers }));
 	}
 	from(e) {
 		var t = this;
-		if (!Ft(e)) throw new Et("Invalid bucket name: File, folder, and bucket names must follow AWS object key naming guidelines and should avoid the use of any other characters.");
-		let n = new bt({
+		if (!It(e)) throw new Dt("Invalid bucket name: File, folder, and bucket names must follow AWS object key naming guidelines and should avoid the use of any other characters.");
+		let n = new xt({
 			baseUrl: this.url,
 			catalogName: e,
 			auth: {
@@ -3232,46 +3232,46 @@ var { get: Vt, post: O, put: Ht, head: Ut, remove: Wt } = Bt("storage"), k = Bt(
 			} : n;
 		} });
 	}
-}, tn = class extends Gt {
+}, tn = class extends k {
 	constructor(e, t = {}, n) {
-		let r = e.replace(/\/$/, ""), i = D(D({}, Qt), {}, { "Content-Type": "application/json" }, t);
+		let r = e.replace(/\/$/, ""), i = E(E({}, Qt), {}, { "Content-Type": "application/json" }, t);
 		super(r, i, n, "vectors");
 	}
 	async createIndex(e) {
 		var t = this;
-		return t.handleOperation(async () => await k.post(t.fetch, `${t.url}/CreateIndex`, e, { headers: t.headers }) || {});
+		return t.handleOperation(async () => await O.post(t.fetch, `${t.url}/CreateIndex`, e, { headers: t.headers }) || {});
 	}
 	async getIndex(e, t) {
 		var n = this;
-		return n.handleOperation(async () => await k.post(n.fetch, `${n.url}/GetIndex`, {
+		return n.handleOperation(async () => await O.post(n.fetch, `${n.url}/GetIndex`, {
 			vectorBucketName: e,
 			indexName: t
 		}, { headers: n.headers }));
 	}
 	async listIndexes(e) {
 		var t = this;
-		return t.handleOperation(async () => await k.post(t.fetch, `${t.url}/ListIndexes`, e, { headers: t.headers }));
+		return t.handleOperation(async () => await O.post(t.fetch, `${t.url}/ListIndexes`, e, { headers: t.headers }));
 	}
 	async deleteIndex(e, t) {
 		var n = this;
-		return n.handleOperation(async () => await k.post(n.fetch, `${n.url}/DeleteIndex`, {
+		return n.handleOperation(async () => await O.post(n.fetch, `${n.url}/DeleteIndex`, {
 			vectorBucketName: e,
 			indexName: t
 		}, { headers: n.headers }) || {});
 	}
-}, nn = class extends Gt {
+}, nn = class extends k {
 	constructor(e, t = {}, n) {
-		let r = e.replace(/\/$/, ""), i = D(D({}, Qt), {}, { "Content-Type": "application/json" }, t);
+		let r = e.replace(/\/$/, ""), i = E(E({}, Qt), {}, { "Content-Type": "application/json" }, t);
 		super(r, i, n, "vectors");
 	}
 	async putVectors(e) {
 		var t = this;
 		if (e.vectors.length < 1 || e.vectors.length > 500) throw Error("Vector batch size must be between 1 and 500 items");
-		return t.handleOperation(async () => await k.post(t.fetch, `${t.url}/PutVectors`, e, { headers: t.headers }) || {});
+		return t.handleOperation(async () => await O.post(t.fetch, `${t.url}/PutVectors`, e, { headers: t.headers }) || {});
 	}
 	async getVectors(e) {
 		var t = this;
-		return t.handleOperation(async () => await k.post(t.fetch, `${t.url}/GetVectors`, e, { headers: t.headers }));
+		return t.handleOperation(async () => await O.post(t.fetch, `${t.url}/GetVectors`, e, { headers: t.headers }));
 	}
 	async listVectors(e) {
 		var t = this;
@@ -3279,37 +3279,37 @@ var { get: Vt, post: O, put: Ht, head: Ut, remove: Wt } = Bt("storage"), k = Bt(
 			if (e.segmentCount < 1 || e.segmentCount > 16) throw Error("segmentCount must be between 1 and 16");
 			if (e.segmentIndex !== void 0 && (e.segmentIndex < 0 || e.segmentIndex >= e.segmentCount)) throw Error(`segmentIndex must be between 0 and ${e.segmentCount - 1}`);
 		}
-		return t.handleOperation(async () => await k.post(t.fetch, `${t.url}/ListVectors`, e, { headers: t.headers }));
+		return t.handleOperation(async () => await O.post(t.fetch, `${t.url}/ListVectors`, e, { headers: t.headers }));
 	}
 	async queryVectors(e) {
 		var t = this;
-		return t.handleOperation(async () => await k.post(t.fetch, `${t.url}/QueryVectors`, e, { headers: t.headers }));
+		return t.handleOperation(async () => await O.post(t.fetch, `${t.url}/QueryVectors`, e, { headers: t.headers }));
 	}
 	async deleteVectors(e) {
 		var t = this;
 		if (e.keys.length < 1 || e.keys.length > 500) throw Error("Keys batch size must be between 1 and 500 items");
-		return t.handleOperation(async () => await k.post(t.fetch, `${t.url}/DeleteVectors`, e, { headers: t.headers }) || {});
+		return t.handleOperation(async () => await O.post(t.fetch, `${t.url}/DeleteVectors`, e, { headers: t.headers }) || {});
 	}
-}, rn = class extends Gt {
+}, rn = class extends k {
 	constructor(e, t = {}, n) {
-		let r = e.replace(/\/$/, ""), i = D(D({}, Qt), {}, { "Content-Type": "application/json" }, t);
+		let r = e.replace(/\/$/, ""), i = E(E({}, Qt), {}, { "Content-Type": "application/json" }, t);
 		super(r, i, n, "vectors");
 	}
 	async createBucket(e) {
 		var t = this;
-		return t.handleOperation(async () => await k.post(t.fetch, `${t.url}/CreateVectorBucket`, { vectorBucketName: e }, { headers: t.headers }) || {});
+		return t.handleOperation(async () => await O.post(t.fetch, `${t.url}/CreateVectorBucket`, { vectorBucketName: e }, { headers: t.headers }) || {});
 	}
 	async getBucket(e) {
 		var t = this;
-		return t.handleOperation(async () => await k.post(t.fetch, `${t.url}/GetVectorBucket`, { vectorBucketName: e }, { headers: t.headers }));
+		return t.handleOperation(async () => await O.post(t.fetch, `${t.url}/GetVectorBucket`, { vectorBucketName: e }, { headers: t.headers }));
 	}
 	async listBuckets(e = {}) {
 		var t = this;
-		return t.handleOperation(async () => await k.post(t.fetch, `${t.url}/ListVectorBuckets`, e, { headers: t.headers }));
+		return t.handleOperation(async () => await O.post(t.fetch, `${t.url}/ListVectorBuckets`, e, { headers: t.headers }));
 	}
 	async deleteBucket(e) {
 		var t = this;
-		return t.handleOperation(async () => await k.post(t.fetch, `${t.url}/DeleteVectorBucket`, { vectorBucketName: e }, { headers: t.headers }) || {});
+		return t.handleOperation(async () => await O.post(t.fetch, `${t.url}/DeleteVectorBucket`, { vectorBucketName: e }, { headers: t.headers }) || {});
 	}
 }, an = class extends rn {
 	constructor(e, t = {}) {
@@ -3340,11 +3340,11 @@ var { get: Vt, post: O, put: Ht, head: Ut, remove: Wt } = Bt("storage"), k = Bt(
 	}
 	async createIndex(e) {
 		var t = () => super.createIndex, n = this;
-		return t().call(n, D(D({}, e), {}, { vectorBucketName: n.vectorBucketName }));
+		return t().call(n, E(E({}, e), {}, { vectorBucketName: n.vectorBucketName }));
 	}
 	async listIndexes(e = {}) {
 		var t = () => super.listIndexes, n = this;
-		return t().call(n, D(D({}, e), {}, { vectorBucketName: n.vectorBucketName }));
+		return t().call(n, E(E({}, e), {}, { vectorBucketName: n.vectorBucketName }));
 	}
 	async getIndex(e) {
 		var t = () => super.getIndex, n = this;
@@ -3363,35 +3363,35 @@ var { get: Vt, post: O, put: Ht, head: Ut, remove: Wt } = Bt("storage"), k = Bt(
 	}
 	async putVectors(e) {
 		var t = () => super.putVectors, n = this;
-		return t().call(n, D(D({}, e), {}, {
+		return t().call(n, E(E({}, e), {}, {
 			vectorBucketName: n.vectorBucketName,
 			indexName: n.indexName
 		}));
 	}
 	async getVectors(e) {
 		var t = () => super.getVectors, n = this;
-		return t().call(n, D(D({}, e), {}, {
+		return t().call(n, E(E({}, e), {}, {
 			vectorBucketName: n.vectorBucketName,
 			indexName: n.indexName
 		}));
 	}
 	async listVectors(e = {}) {
 		var t = () => super.listVectors, n = this;
-		return t().call(n, D(D({}, e), {}, {
+		return t().call(n, E(E({}, e), {}, {
 			vectorBucketName: n.vectorBucketName,
 			indexName: n.indexName
 		}));
 	}
 	async queryVectors(e) {
 		var t = () => super.queryVectors, n = this;
-		return t().call(n, D(D({}, e), {}, {
+		return t().call(n, E(E({}, e), {}, {
 			vectorBucketName: n.vectorBucketName,
 			indexName: n.indexName
 		}));
 	}
 	async deleteVectors(e) {
 		var t = () => super.deleteVectors, n = this;
-		return t().call(n, D(D({}, e), {}, {
+		return t().call(n, E(E({}, e), {}, {
 			vectorBucketName: n.vectorBucketName,
 			indexName: n.indexName
 		}));
@@ -3721,27 +3721,27 @@ async function er(e) {
 	let t = await $n(e);
 	return btoa(t).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 }
-async function H(e, t, n = !1) {
+async function tr(e, t, n = !1) {
 	let r = Qn(), i = r;
 	n && (i += "/recovery"), await z(e, `${t}-code-verifier`, i);
 	let a = await er(r);
 	return [a, r === a ? "plain" : "s256"];
 }
-var tr = /^2[0-9]{3}-(0[1-9]|1[0-2])-(0[1-9]|1[0-9]|2[0-9]|3[0-1])$/i;
-function nr(e) {
+var nr = /^2[0-9]{3}-(0[1-9]|1[0-2])-(0[1-9]|1[0-9]|2[0-9]|3[0-1])$/i;
+function rr(e) {
 	let t = e.headers.get(hn);
-	if (!t || !t.match(tr)) return null;
+	if (!t || !t.match(nr)) return null;
 	try {
 		return /* @__PURE__ */ new Date(`${t}T00:00:00.0Z`);
 	} catch {
 		return null;
 	}
 }
-function rr(e) {
+function ir(e) {
 	if (!e) throw Error("Missing exp claim");
 	if (e <= Math.floor(Date.now() / 1e3)) throw Error("JWT has expired");
 }
-function ir(e) {
+function ar(e) {
 	switch (e) {
 		case "RS256": return {
 			name: "RSASSA-PKCS1-v1_5",
@@ -3755,14 +3755,14 @@ function ir(e) {
 		default: throw Error("Invalid alg claim");
 	}
 }
-var ar = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
-function U(e) {
-	if (!ar.test(e)) throw Error("@supabase/auth-js: Expected parameter to be UUID but is not");
+var or = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
+function H(e) {
+	if (!or.test(e)) throw Error("@supabase/auth-js: Expected parameter to be UUID but is not");
 }
-function W(e) {
+function U(e) {
 	if (!e.passkey) throw Error("@supabase/auth-js: the passkey API is experimental and disabled by default. Enable it by passing `auth: { experimental: { passkey: true } }` to createClient (or to the GoTrueClient constructor).");
 }
-function or() {
+function sr() {
 	return new Proxy({}, {
 		get: (e, t) => {
 			if (t === "__isUserNotAvailableProxy") return !0;
@@ -3780,7 +3780,7 @@ function or() {
 		}
 	});
 }
-function sr(e, t) {
+function cr(e, t) {
 	return new Proxy(e, { get: (e, n, r) => {
 		if (n === "__isInsecureUserWarningProxy") return !0;
 		if (typeof n == "symbol") {
@@ -3790,12 +3790,12 @@ function sr(e, t) {
 		return !t.value && typeof n == "string" && (console.warn("Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server."), t.value = !0), Reflect.get(e, n, r);
 	} });
 }
-function cr(e) {
+function lr(e) {
 	return JSON.parse(JSON.stringify(e));
 }
 //#endregion
 //#region node_modules/@supabase/auth-js/dist/module/lib/fetch.js
-var G = (e) => {
+var W = (e) => {
 	if (typeof e == "object" && e) {
 		let t = e;
 		if (typeof t.msg == "string") return t.msg;
@@ -3804,7 +3804,7 @@ var G = (e) => {
 		if (typeof t.error == "string") return t.error;
 	}
 	return JSON.stringify(e);
-}, lr = [
+}, ur = [
 	502,
 	503,
 	504,
@@ -3815,35 +3815,35 @@ var G = (e) => {
 	524,
 	530
 ];
-async function ur(e) {
-	if (!Kn(e)) throw new Dn(G(e), 0);
-	if (lr.includes(e.status)) throw new Dn(G(e), e.status);
+async function dr(e) {
+	if (!Kn(e)) throw new Dn(W(e), 0);
+	if (ur.includes(e.status)) throw new Dn(W(e), e.status);
 	let t;
 	try {
 		t = await e.json();
 	} catch (e) {
-		throw new j(G(e), e);
+		throw new j(W(e), e);
 	}
-	let n, r = nr(e);
+	let n, r = rr(e);
 	if (r && r.getTime() >= gn["2024-01-01"].timestamp && typeof t == "object" && t && typeof t.code == "string" ? n = t.code : typeof t == "object" && t && typeof t.error_code == "string" && (n = t.error_code), !n) {
-		if (typeof t == "object" && t && typeof t.weak_password == "object" && t.weak_password && Array.isArray(t.weak_password.reasons) && t.weak_password.reasons.length && t.weak_password.reasons.reduce((e, t) => e && typeof t == "string", !0)) throw new kn(G(t), e.status, t.weak_password.reasons);
-	} else if (n === "weak_password") throw new kn(G(t), e.status, t.weak_password?.reasons || []);
+		if (typeof t == "object" && t && typeof t.weak_password == "object" && t.weak_password && Array.isArray(t.weak_password.reasons) && t.weak_password.reasons.length && t.weak_password.reasons.reduce((e, t) => e && typeof t == "string", !0)) throw new kn(W(t), e.status, t.weak_password.reasons);
+	} else if (n === "weak_password") throw new kn(W(t), e.status, t.weak_password?.reasons || []);
 	else if (n === "session_not_found") throw new N();
-	throw new yn(G(t), e.status || 500, n);
+	throw new yn(W(t), e.status || 500, n);
 }
-var dr = (e, t, n, r) => {
+var fr = (e, t, n, r) => {
 	let i = {
 		method: e,
 		headers: t?.headers || {}
 	};
 	return e === "GET" ? i : (i.headers = Object.assign({ "Content-Type": "application/json;charset=UTF-8" }, t?.headers), i.body = JSON.stringify(r), Object.assign(Object.assign({}, i), n));
 };
-async function K(e, t, n, r) {
+async function G(e, t, n, r) {
 	let i = Object.assign({}, r?.headers);
 	i["X-Supabase-Api-Version"] || (i[hn] = gn["2024-01-01"].name), r?.jwt && (i.Authorization = `Bearer ${r.jwt}`);
 	let a = r?.query ?? {};
 	r?.redirectTo && (a.redirect_to = r.redirectTo);
-	let o = await fr(e, t, n + (Object.keys(a).length ? "?" + new URLSearchParams(a).toString() : ""), {
+	let o = await pr(e, t, n + (Object.keys(a).length ? "?" + new URLSearchParams(a).toString() : ""), {
 		headers: i,
 		noResolveJson: r?.noResolveJson
 	}, {}, r?.body);
@@ -3852,23 +3852,23 @@ async function K(e, t, n, r) {
 		error: null
 	};
 }
-async function fr(e, t, n, r, i, a) {
-	let o = dr(t, r, i, a), s;
+async function pr(e, t, n, r, i, a) {
+	let o = fr(t, r, i, a), s;
 	try {
 		s = await e(n, Object.assign({}, o));
 	} catch (e) {
-		throw console.error(e), new Dn(G(e), 0);
+		throw console.error(e), new Dn(W(e), 0);
 	}
-	if (s.ok || await ur(s), r?.noResolveJson) return s;
+	if (s.ok || await dr(s), r?.noResolveJson) return s;
 	try {
 		return await s.json();
 	} catch (e) {
-		await ur(e);
+		await dr(e);
 	}
 }
-function q(e) {
+function K(e) {
 	let t = null;
-	_r(e) && (t = Object.assign({}, e), e.expires_at || (t.expires_at = Vn(e.expires_in)));
+	vr(e) && (t = Object.assign({}, e), e.expires_at || (t.expires_at = Vn(e.expires_in)));
 	let n = e.user ?? e;
 	return {
 		data: {
@@ -3878,23 +3878,23 @@ function q(e) {
 		error: null
 	};
 }
-function pr(e) {
-	let t = q(e);
+function mr(e) {
+	let t = K(e);
 	return !t.error && e.weak_password && typeof e.weak_password == "object" && Array.isArray(e.weak_password.reasons) && e.weak_password.reasons.length && e.weak_password.message && typeof e.weak_password.message == "string" && e.weak_password.reasons.reduce((e, t) => e && typeof t == "string", !0) && (t.data.weak_password = e.weak_password), t;
 }
-function J(e) {
+function q(e) {
 	return {
 		data: { user: e.user ?? e },
 		error: null
 	};
 }
-function mr(e) {
+function hr(e) {
 	return {
 		data: e,
 		error: null
 	};
 }
-function hr(t) {
+function gr(t) {
 	let { action_link: n, email_otp: r, hashed_token: i, redirect_to: a, verification_type: o } = t, s = e(t, [
 		"action_link",
 		"email_otp",
@@ -3916,19 +3916,19 @@ function hr(t) {
 		error: null
 	};
 }
-function gr(e) {
+function _r(e) {
 	return e;
 }
-function _r(e) {
+function vr(e) {
 	return !!e.access_token && !!e.refresh_token && !!e.expires_in;
 }
 //#endregion
 //#region node_modules/@supabase/auth-js/dist/module/lib/types.js
-var vr = [
+var yr = [
 	"global",
 	"local",
 	"others"
-], yr = class {
+], br = class {
 	constructor({ url: e = "", headers: t = {}, fetch: n, experimental: r }) {
 		this.url = e, this.headers = t, this.fetch = Gn(n), this.experimental = r ?? {}, this.mfa = {
 			listFactors: this._listFactors.bind(this),
@@ -3951,10 +3951,10 @@ var vr = [
 			deletePasskey: this._adminDeletePasskey.bind(this)
 		};
 	}
-	async signOut(e, t = vr[0]) {
-		if (vr.indexOf(t) < 0) throw Error(`@supabase/auth-js: Parameter scope must be one of ${vr.join(", ")}`);
+	async signOut(e, t = yr[0]) {
+		if (yr.indexOf(t) < 0) throw Error(`@supabase/auth-js: Parameter scope must be one of ${yr.join(", ")}`);
 		try {
-			return await K(this.fetch, "POST", `${this.url}/logout?scope=${t}`, {
+			return await G(this.fetch, "POST", `${this.url}/logout?scope=${t}`, {
 				headers: this.headers,
 				jwt: e,
 				noResolveJson: !0
@@ -3972,14 +3972,14 @@ var vr = [
 	}
 	async inviteUserByEmail(e, t = {}) {
 		try {
-			return await K(this.fetch, "POST", `${this.url}/invite`, {
+			return await G(this.fetch, "POST", `${this.url}/invite`, {
 				body: {
 					email: e,
 					data: t.data
 				},
 				headers: this.headers,
 				redirectTo: t.redirectTo,
-				xform: J
+				xform: q
 			});
 		} catch (e) {
 			if (A(e)) return {
@@ -3992,10 +3992,10 @@ var vr = [
 	async generateLink(t) {
 		try {
 			let { options: n } = t, r = e(t, ["options"]), i = Object.assign(Object.assign({}, r), n);
-			return "newEmail" in r && (i.new_email = r?.newEmail, delete i.newEmail), await K(this.fetch, "POST", `${this.url}/admin/generate_link`, {
+			return "newEmail" in r && (i.new_email = r?.newEmail, delete i.newEmail), await G(this.fetch, "POST", `${this.url}/admin/generate_link`, {
 				body: i,
 				headers: this.headers,
-				xform: hr,
+				xform: gr,
 				redirectTo: n?.redirectTo
 			});
 		} catch (e) {
@@ -4011,10 +4011,10 @@ var vr = [
 	}
 	async createUser(e) {
 		try {
-			return await K(this.fetch, "POST", `${this.url}/admin/users`, {
+			return await G(this.fetch, "POST", `${this.url}/admin/users`, {
 				body: e,
 				headers: this.headers,
-				xform: J
+				xform: q
 			});
 		} catch (e) {
 			if (A(e)) return {
@@ -4030,14 +4030,14 @@ var vr = [
 				nextPage: null,
 				lastPage: 0,
 				total: 0
-			}, n = await K(this.fetch, "GET", `${this.url}/admin/users`, {
+			}, n = await G(this.fetch, "GET", `${this.url}/admin/users`, {
 				headers: this.headers,
 				noResolveJson: !0,
 				query: {
 					page: (e?.page)?.toString() ?? "",
 					per_page: (e?.perPage)?.toString() ?? ""
 				},
-				xform: gr
+				xform: _r
 			});
 			if (n.error) throw n.error;
 			let r = await n.json(), i = n.headers.get("x-total-count") ?? 0, a = n.headers.get("link")?.split(",") ?? [];
@@ -4057,11 +4057,11 @@ var vr = [
 		}
 	}
 	async getUserById(e) {
-		U(e);
+		H(e);
 		try {
-			return await K(this.fetch, "GET", `${this.url}/admin/users/${e}`, {
+			return await G(this.fetch, "GET", `${this.url}/admin/users/${e}`, {
 				headers: this.headers,
-				xform: J
+				xform: q
 			});
 		} catch (e) {
 			if (A(e)) return {
@@ -4072,12 +4072,12 @@ var vr = [
 		}
 	}
 	async updateUserById(e, t) {
-		U(e);
+		H(e);
 		try {
-			return await K(this.fetch, "PUT", `${this.url}/admin/users/${e}`, {
+			return await G(this.fetch, "PUT", `${this.url}/admin/users/${e}`, {
 				body: t,
 				headers: this.headers,
-				xform: J
+				xform: q
 			});
 		} catch (e) {
 			if (A(e)) return {
@@ -4088,12 +4088,12 @@ var vr = [
 		}
 	}
 	async deleteUser(e, t = !1) {
-		U(e);
+		H(e);
 		try {
-			return await K(this.fetch, "DELETE", `${this.url}/admin/users/${e}`, {
+			return await G(this.fetch, "DELETE", `${this.url}/admin/users/${e}`, {
 				headers: this.headers,
 				body: { should_soft_delete: t },
-				xform: J
+				xform: q
 			});
 		} catch (e) {
 			if (A(e)) return {
@@ -4104,9 +4104,9 @@ var vr = [
 		}
 	}
 	async _listFactors(e) {
-		U(e.userId);
+		H(e.userId);
 		try {
-			let { data: t, error: n } = await K(this.fetch, "GET", `${this.url}/admin/users/${e.userId}/factors`, {
+			let { data: t, error: n } = await G(this.fetch, "GET", `${this.url}/admin/users/${e.userId}/factors`, {
 				headers: this.headers,
 				xform: (e) => ({
 					data: { factors: e },
@@ -4126,10 +4126,10 @@ var vr = [
 		}
 	}
 	async _deleteFactor(e) {
-		U(e.userId), U(e.id);
+		H(e.userId), H(e.id);
 		try {
 			return {
-				data: await K(this.fetch, "DELETE", `${this.url}/admin/users/${e.userId}/factors/${e.id}`, { headers: this.headers }),
+				data: await G(this.fetch, "DELETE", `${this.url}/admin/users/${e.userId}/factors/${e.id}`, { headers: this.headers }),
 				error: null
 			};
 		} catch (e) {
@@ -4146,14 +4146,14 @@ var vr = [
 				nextPage: null,
 				lastPage: 0,
 				total: 0
-			}, n = await K(this.fetch, "GET", `${this.url}/admin/oauth/clients`, {
+			}, n = await G(this.fetch, "GET", `${this.url}/admin/oauth/clients`, {
 				headers: this.headers,
 				noResolveJson: !0,
 				query: {
 					page: (e?.page)?.toString() ?? "",
 					per_page: (e?.perPage)?.toString() ?? ""
 				},
-				xform: gr
+				xform: _r
 			});
 			if (n.error) throw n.error;
 			let r = await n.json(), i = n.headers.get("x-total-count") ?? 0, a = n.headers.get("link")?.split(",") ?? [];
@@ -4174,7 +4174,7 @@ var vr = [
 	}
 	async _createOAuthClient(e) {
 		try {
-			return await K(this.fetch, "POST", `${this.url}/admin/oauth/clients`, {
+			return await G(this.fetch, "POST", `${this.url}/admin/oauth/clients`, {
 				body: e,
 				headers: this.headers,
 				xform: (e) => ({
@@ -4192,7 +4192,7 @@ var vr = [
 	}
 	async _getOAuthClient(e) {
 		try {
-			return await K(this.fetch, "GET", `${this.url}/admin/oauth/clients/${e}`, {
+			return await G(this.fetch, "GET", `${this.url}/admin/oauth/clients/${e}`, {
 				headers: this.headers,
 				xform: (e) => ({
 					data: e,
@@ -4209,7 +4209,7 @@ var vr = [
 	}
 	async _updateOAuthClient(e, t) {
 		try {
-			return await K(this.fetch, "PUT", `${this.url}/admin/oauth/clients/${e}`, {
+			return await G(this.fetch, "PUT", `${this.url}/admin/oauth/clients/${e}`, {
 				body: t,
 				headers: this.headers,
 				xform: (e) => ({
@@ -4227,7 +4227,7 @@ var vr = [
 	}
 	async _deleteOAuthClient(e) {
 		try {
-			return await K(this.fetch, "DELETE", `${this.url}/admin/oauth/clients/${e}`, {
+			return await G(this.fetch, "DELETE", `${this.url}/admin/oauth/clients/${e}`, {
 				headers: this.headers,
 				noResolveJson: !0
 			}), {
@@ -4244,7 +4244,7 @@ var vr = [
 	}
 	async _regenerateOAuthClientSecret(e) {
 		try {
-			return await K(this.fetch, "POST", `${this.url}/admin/oauth/clients/${e}/regenerate_secret`, {
+			return await G(this.fetch, "POST", `${this.url}/admin/oauth/clients/${e}/regenerate_secret`, {
 				headers: this.headers,
 				xform: (e) => ({
 					data: e,
@@ -4262,7 +4262,7 @@ var vr = [
 	async _listCustomProviders(e) {
 		try {
 			let t = {};
-			return e?.type && (t.type = e.type), await K(this.fetch, "GET", `${this.url}/admin/custom-providers`, {
+			return e?.type && (t.type = e.type), await G(this.fetch, "GET", `${this.url}/admin/custom-providers`, {
 				headers: this.headers,
 				query: t,
 				xform: (e) => ({
@@ -4280,7 +4280,7 @@ var vr = [
 	}
 	async _createCustomProvider(e) {
 		try {
-			return await K(this.fetch, "POST", `${this.url}/admin/custom-providers`, {
+			return await G(this.fetch, "POST", `${this.url}/admin/custom-providers`, {
 				body: e,
 				headers: this.headers,
 				xform: (e) => ({
@@ -4298,7 +4298,7 @@ var vr = [
 	}
 	async _getCustomProvider(e) {
 		try {
-			return await K(this.fetch, "GET", `${this.url}/admin/custom-providers/${e}`, {
+			return await G(this.fetch, "GET", `${this.url}/admin/custom-providers/${e}`, {
 				headers: this.headers,
 				xform: (e) => ({
 					data: e,
@@ -4315,7 +4315,7 @@ var vr = [
 	}
 	async _updateCustomProvider(e, t) {
 		try {
-			return await K(this.fetch, "PUT", `${this.url}/admin/custom-providers/${e}`, {
+			return await G(this.fetch, "PUT", `${this.url}/admin/custom-providers/${e}`, {
 				body: t,
 				headers: this.headers,
 				xform: (e) => ({
@@ -4333,7 +4333,7 @@ var vr = [
 	}
 	async _deleteCustomProvider(e) {
 		try {
-			return await K(this.fetch, "DELETE", `${this.url}/admin/custom-providers/${e}`, {
+			return await G(this.fetch, "DELETE", `${this.url}/admin/custom-providers/${e}`, {
 				headers: this.headers,
 				noResolveJson: !0
 			}), {
@@ -4349,9 +4349,9 @@ var vr = [
 		}
 	}
 	async _adminListPasskeys(e) {
-		W(this.experimental), U(e.userId);
+		U(this.experimental), H(e.userId);
 		try {
-			return await K(this.fetch, "GET", `${this.url}/admin/users/${e.userId}/passkeys`, {
+			return await G(this.fetch, "GET", `${this.url}/admin/users/${e.userId}/passkeys`, {
 				headers: this.headers,
 				xform: (e) => ({
 					data: e,
@@ -4367,9 +4367,9 @@ var vr = [
 		}
 	}
 	async _adminDeletePasskey(e) {
-		W(this.experimental), U(e.userId), U(e.passkeyId);
+		U(this.experimental), H(e.userId), H(e.passkeyId);
 		try {
-			return await K(this.fetch, "DELETE", `${this.url}/admin/users/${e.userId}/passkeys/${e.passkeyId}`, {
+			return await G(this.fetch, "DELETE", `${this.url}/admin/users/${e.userId}/passkeys/${e.passkeyId}`, {
 				headers: this.headers,
 				noResolveJson: !0
 			}), {
@@ -4387,7 +4387,7 @@ var vr = [
 };
 //#endregion
 //#region node_modules/@supabase/auth-js/dist/module/lib/local-storage.js
-function br(e = {}) {
+function xr(e = {}) {
 	return {
 		getItem: (t) => e[t] || null,
 		setItem: (t, n) => {
@@ -4400,16 +4400,16 @@ function br(e = {}) {
 }
 //#endregion
 //#region node_modules/@supabase/auth-js/dist/module/lib/locks.js
-var Y = { debug: !!(globalThis && Un() && globalThis.localStorage && globalThis.localStorage.getItem("supabase.gotrue-js.locks.debug") === "true") }, xr = class extends Error {
+var J = { debug: !!(globalThis && Un() && globalThis.localStorage && globalThis.localStorage.getItem("supabase.gotrue-js.locks.debug") === "true") }, Sr = class extends Error {
 	constructor(e) {
 		super(e), this.isAcquireTimeout = !0;
 	}
-}, Sr = class extends xr {};
-async function Cr(e, t, n) {
-	Y.debug && console.log("@supabase/gotrue-js: navigatorLock: acquire lock", e, t);
+}, Cr = class extends Sr {};
+async function wr(e, t, n) {
+	J.debug && console.log("@supabase/gotrue-js: navigatorLock: acquire lock", e, t);
 	let r = new globalThis.AbortController(), i;
 	t > 0 && (i = setTimeout(() => {
-		r.abort(), Y.debug && console.log("@supabase/gotrue-js: navigatorLock acquire timed out", e);
+		r.abort(), J.debug && console.log("@supabase/gotrue-js: navigatorLock acquire timed out", e);
 	}, t)), await Promise.resolve();
 	try {
 		return await globalThis.navigator.locks.request(e, t === 0 ? {
@@ -4420,15 +4420,15 @@ async function Cr(e, t, n) {
 			signal: r.signal
 		}, async (r) => {
 			if (r) {
-				clearTimeout(i), Y.debug && console.log("@supabase/gotrue-js: navigatorLock: acquired", e, r.name);
+				clearTimeout(i), J.debug && console.log("@supabase/gotrue-js: navigatorLock: acquired", e, r.name);
 				try {
 					return await n();
 				} finally {
-					Y.debug && console.log("@supabase/gotrue-js: navigatorLock: released", e, r.name);
+					J.debug && console.log("@supabase/gotrue-js: navigatorLock: released", e, r.name);
 				}
-			} else if (t === 0) throw Y.debug && console.log("@supabase/gotrue-js: navigatorLock: not immediately available", e), new Sr(`Acquiring an exclusive Navigator LockManager lock "${e}" immediately failed`);
+			} else if (t === 0) throw J.debug && console.log("@supabase/gotrue-js: navigatorLock: not immediately available", e), new Cr(`Acquiring an exclusive Navigator LockManager lock "${e}" immediately failed`);
 			else {
-				if (Y.debug) try {
+				if (J.debug) try {
 					let e = await globalThis.navigator.locks.query();
 					console.log("@supabase/gotrue-js: Navigator LockManager state", JSON.stringify(e, null, "  "));
 				} catch (e) {
@@ -4439,27 +4439,27 @@ async function Cr(e, t, n) {
 		});
 	} catch (a) {
 		if (t > 0 && clearTimeout(i), typeof a == "object" && a && "name" in a && a.name === "AbortError" && t > 0) {
-			if (r.signal.aborted) return Y.debug && console.log("@supabase/gotrue-js: navigatorLock: acquire timeout, recovering by stealing lock", e), console.warn(`@supabase/gotrue-js: Lock "${e}" was not released within ${t}ms. This may indicate an orphaned lock from a component unmount (e.g., React Strict Mode). Forcefully acquiring the lock to recover.`), await Promise.resolve().then(() => globalThis.navigator.locks.request(e, {
+			if (r.signal.aborted) return J.debug && console.log("@supabase/gotrue-js: navigatorLock: acquire timeout, recovering by stealing lock", e), console.warn(`@supabase/gotrue-js: Lock "${e}" was not released within ${t}ms. This may indicate an orphaned lock from a component unmount (e.g., React Strict Mode). Forcefully acquiring the lock to recover.`), await Promise.resolve().then(() => globalThis.navigator.locks.request(e, {
 				mode: "exclusive",
 				steal: !0
 			}, async (t) => {
 				if (t) {
-					Y.debug && console.log("@supabase/gotrue-js: navigatorLock: recovered (stolen)", e, t.name);
+					J.debug && console.log("@supabase/gotrue-js: navigatorLock: recovered (stolen)", e, t.name);
 					try {
 						return await n();
 					} finally {
-						Y.debug && console.log("@supabase/gotrue-js: navigatorLock: released (stolen)", e, t.name);
+						J.debug && console.log("@supabase/gotrue-js: navigatorLock: released (stolen)", e, t.name);
 					}
 				} else return console.warn("@supabase/gotrue-js: Navigator LockManager returned null lock even with steal: true"), await n();
 			}));
-			throw Y.debug && console.log("@supabase/gotrue-js: navigatorLock: lock was stolen by another request", e), new Sr(`Lock "${e}" was released because another request stole it`);
+			throw J.debug && console.log("@supabase/gotrue-js: navigatorLock: lock was stolen by another request", e), new Cr(`Lock "${e}" was released because another request stole it`);
 		}
 		throw a;
 	}
 }
 //#endregion
 //#region node_modules/@supabase/auth-js/dist/module/lib/polyfills.js
-function wr() {
+function Tr() {
 	if (typeof globalThis != "object") try {
 		Object.defineProperty(Object.prototype, "__magic__", {
 			get: function() {
@@ -4473,18 +4473,18 @@ function wr() {
 }
 //#endregion
 //#region node_modules/@supabase/auth-js/dist/module/lib/web3/ethereum.js
-function Tr(e) {
+function Er(e) {
 	if (!/^0x[a-fA-F0-9]{40}$/.test(e)) throw Error(`@supabase/auth-js: Address "${e}" is invalid.`);
 	return e.toLowerCase();
 }
-function Er(e) {
+function Dr(e) {
 	return parseInt(e, 16);
 }
-function Dr(e) {
+function Or(e) {
 	let t = new TextEncoder().encode(e);
 	return "0x" + Array.from(t, (e) => e.toString(16).padStart(2, "0")).join("");
 }
-function Or(e) {
+function kr(e) {
 	let { chainId: t, domain: n, expirationTime: r, issuedAt: i = /* @__PURE__ */ new Date(), nonce: a, notBefore: o, requestId: s, resources: c, scheme: l, uri: u, version: d } = e;
 	if (!Number.isInteger(t)) throw Error(`@supabase/auth-js: Invalid SIWE message field "chainId". Chain ID must be a EIP-155 chain ID. Provided value: ${t}`);
 	if (!n) throw Error("@supabase/auth-js: Invalid SIWE message field \"domain\". Domain must be provided.");
@@ -4492,7 +4492,7 @@ function Or(e) {
 	if (!u) throw Error("@supabase/auth-js: Invalid SIWE message field \"uri\". URI must be provided.");
 	if (d !== "1") throw Error(`@supabase/auth-js: Invalid SIWE message field "version". Version must be '1'. Provided value: ${d}`);
 	if (e.statement?.includes("\n")) throw Error(`@supabase/auth-js: Invalid SIWE message field "statement". Statement must not include '\\n'. Provided value: ${e.statement}`);
-	let f = Tr(e.address), p = `${l ? `${l}://${n}` : n} wants you to sign in with your Ethereum account:\n${f}\n\n${e.statement ? `${e.statement}\n` : ""}`, m = `URI: ${u}\nVersion: ${d}\nChain ID: ${t}${a ? `\nNonce: ${a}` : ""}\nIssued At: ${i.toISOString()}`;
+	let f = Er(e.address), p = `${l ? `${l}://${n}` : n} wants you to sign in with your Ethereum account:\n${f}\n\n${e.statement ? `${e.statement}\n` : ""}`, m = `URI: ${u}\nVersion: ${d}\nChain ID: ${t}${a ? `\nNonce: ${a}` : ""}\nIssued At: ${i.toISOString()}`;
 	if (r && (m += `\nExpiration Time: ${r.toISOString()}`), o && (m += `\nNot Before: ${o.toISOString()}`), s && (m += `\nRequest ID: ${s}`), c) {
 		let e = "\nResources:";
 		for (let t of c) {
@@ -4505,7 +4505,7 @@ function Or(e) {
 }
 //#endregion
 //#region node_modules/@supabase/auth-js/dist/module/lib/webauthn.errors.js
-var X = class extends Error {
+var Y = class extends Error {
 	constructor({ message: e, code: t, cause: n, name: r }) {
 		super(e, { cause: n }), this.__isWebAuthnError = !0, this.name = r ?? (n instanceof Error ? n.name : void 0) ?? "Unknown Error", this.code = t;
 	}
@@ -4516,7 +4516,7 @@ var X = class extends Error {
 			code: this.code
 		};
 	}
-}, kr = class extends X {
+}, Ar = class extends Y {
 	constructor(e, t) {
 		super({
 			code: "ERROR_PASSTHROUGH_SEE_CAUSE_PROPERTY",
@@ -4525,117 +4525,117 @@ var X = class extends Error {
 		}), this.name = "WebAuthnUnknownError", this.originalError = t;
 	}
 };
-function Ar({ error: e, options: t }) {
+function jr({ error: e, options: t }) {
 	let { publicKey: n } = t;
 	if (!n) throw Error("options was missing required publicKey property");
 	if (e.name === "AbortError") {
-		if (t.signal instanceof AbortSignal) return new X({
+		if (t.signal instanceof AbortSignal) return new Y({
 			message: "Registration ceremony was sent an abort signal",
 			code: "ERROR_CEREMONY_ABORTED",
 			cause: e
 		});
 	} else if (e.name === "ConstraintError") {
-		if (n.authenticatorSelection?.requireResidentKey === !0) return new X({
+		if (n.authenticatorSelection?.requireResidentKey === !0) return new Y({
 			message: "Discoverable credentials were required but no available authenticator supported it",
 			code: "ERROR_AUTHENTICATOR_MISSING_DISCOVERABLE_CREDENTIAL_SUPPORT",
 			cause: e
 		});
-		if (t.mediation === "conditional" && n.authenticatorSelection?.userVerification === "required") return new X({
+		if (t.mediation === "conditional" && n.authenticatorSelection?.userVerification === "required") return new Y({
 			message: "User verification was required during automatic registration but it could not be performed",
 			code: "ERROR_AUTO_REGISTER_USER_VERIFICATION_FAILURE",
 			cause: e
 		});
-		if (n.authenticatorSelection?.userVerification === "required") return new X({
+		if (n.authenticatorSelection?.userVerification === "required") return new Y({
 			message: "User verification was required but no available authenticator supported it",
 			code: "ERROR_AUTHENTICATOR_MISSING_USER_VERIFICATION_SUPPORT",
 			cause: e
 		});
-	} else if (e.name === "InvalidStateError") return new X({
+	} else if (e.name === "InvalidStateError") return new Y({
 		message: "The authenticator was previously registered",
 		code: "ERROR_AUTHENTICATOR_PREVIOUSLY_REGISTERED",
 		cause: e
 	});
-	else if (e.name === "NotAllowedError") return new X({
+	else if (e.name === "NotAllowedError") return new Y({
 		message: e.message,
 		code: "ERROR_PASSTHROUGH_SEE_CAUSE_PROPERTY",
 		cause: e
 	});
-	else if (e.name === "NotSupportedError") return n.pubKeyCredParams.filter((e) => e.type === "public-key").length === 0 ? new X({
+	else if (e.name === "NotSupportedError") return n.pubKeyCredParams.filter((e) => e.type === "public-key").length === 0 ? new Y({
 		message: "No entry in pubKeyCredParams was of type \"public-key\"",
 		code: "ERROR_MALFORMED_PUBKEYCREDPARAMS",
 		cause: e
-	}) : new X({
+	}) : new Y({
 		message: "No available authenticator supported any of the specified pubKeyCredParams algorithms",
 		code: "ERROR_AUTHENTICATOR_NO_SUPPORTED_PUBKEYCREDPARAMS_ALG",
 		cause: e
 	});
 	else if (e.name === "SecurityError") {
 		let t = window.location.hostname;
-		if (!Lr(t)) return new X({
+		if (!Rr(t)) return new Y({
 			message: `${window.location.hostname} is an invalid domain`,
 			code: "ERROR_INVALID_DOMAIN",
 			cause: e
 		});
-		if (n.rp.id !== t) return new X({
+		if (n.rp.id !== t) return new Y({
 			message: `The RP ID "${n.rp.id}" is invalid for this domain`,
 			code: "ERROR_INVALID_RP_ID",
 			cause: e
 		});
 	} else if (e.name === "TypeError") {
-		if (n.user.id.byteLength < 1 || n.user.id.byteLength > 64) return new X({
+		if (n.user.id.byteLength < 1 || n.user.id.byteLength > 64) return new Y({
 			message: "User ID was not between 1 and 64 characters",
 			code: "ERROR_INVALID_USER_ID_LENGTH",
 			cause: e
 		});
-	} else if (e.name === "UnknownError") return new X({
+	} else if (e.name === "UnknownError") return new Y({
 		message: "The authenticator was unable to process the specified options, or could not create a new credential",
 		code: "ERROR_AUTHENTICATOR_GENERAL_ERROR",
 		cause: e
 	});
-	return new X({
+	return new Y({
 		message: "a Non-Webauthn related error has occurred",
 		code: "ERROR_PASSTHROUGH_SEE_CAUSE_PROPERTY",
 		cause: e
 	});
 }
-function jr({ error: e, options: t }) {
+function Mr({ error: e, options: t }) {
 	let { publicKey: n } = t;
 	if (!n) throw Error("options was missing required publicKey property");
 	if (e.name === "AbortError") {
-		if (t.signal instanceof AbortSignal) return new X({
+		if (t.signal instanceof AbortSignal) return new Y({
 			message: "Authentication ceremony was sent an abort signal",
 			code: "ERROR_CEREMONY_ABORTED",
 			cause: e
 		});
-	} else if (e.name === "NotAllowedError") return new X({
+	} else if (e.name === "NotAllowedError") return new Y({
 		message: e.message,
 		code: "ERROR_PASSTHROUGH_SEE_CAUSE_PROPERTY",
 		cause: e
 	});
 	else if (e.name === "SecurityError") {
 		let t = window.location.hostname;
-		if (!Lr(t)) return new X({
+		if (!Rr(t)) return new Y({
 			message: `${window.location.hostname} is an invalid domain`,
 			code: "ERROR_INVALID_DOMAIN",
 			cause: e
 		});
-		if (n.rpId !== t) return new X({
+		if (n.rpId !== t) return new Y({
 			message: `The RP ID "${n.rpId}" is invalid for this domain`,
 			code: "ERROR_INVALID_RP_ID",
 			cause: e
 		});
-	} else if (e.name === "UnknownError") return new X({
+	} else if (e.name === "UnknownError") return new Y({
 		message: "The authenticator was unable to process the specified options, or could not create a new assertion signature",
 		code: "ERROR_AUTHENTICATOR_GENERAL_ERROR",
 		cause: e
 	});
-	return new X({
+	return new Y({
 		message: "a Non-Webauthn related error has occurred",
 		code: "ERROR_PASSTHROUGH_SEE_CAUSE_PROPERTY",
 		cause: e
 	});
 }
-var Mr = new class {
+var Nr = new class {
 	createNewAbortSignal() {
 		if (this.controller) {
 			let e = /* @__PURE__ */ Error("Cancelling existing WebAuthn API call for new one");
@@ -4651,7 +4651,7 @@ var Mr = new class {
 		}
 	}
 }();
-function Nr(t) {
+function Pr(t) {
 	if (!t) throw Error("Credential creation options are required");
 	if (typeof PublicKeyCredential < "u" && "parseCreationOptionsFromJSON" in PublicKeyCredential && typeof PublicKeyCredential.parseCreationOptionsFromJSON == "function") return PublicKeyCredential.parseCreationOptionsFromJSON(t);
 	let { challenge: n, user: r, excludeCredentials: i } = t, a = e(t, [
@@ -4675,7 +4675,7 @@ function Nr(t) {
 	}
 	return c;
 }
-function Pr(t) {
+function Fr(t) {
 	if (!t) throw Error("Credential request options are required");
 	if (typeof PublicKeyCredential < "u" && "parseRequestOptionsFromJSON" in PublicKeyCredential && typeof PublicKeyCredential.parseRequestOptionsFromJSON == "function") return PublicKeyCredential.parseRequestOptionsFromJSON(t);
 	let { challenge: n, allowCredentials: r } = t, i = e(t, ["challenge", "allowCredentials"]), a = F(n).buffer, o = Object.assign(Object.assign({}, i), { challenge: a });
@@ -4692,7 +4692,7 @@ function Pr(t) {
 	}
 	return o;
 }
-function Fr(e) {
+function Ir(e) {
 	if ("toJSON" in e && typeof e.toJSON == "function") return e.toJSON();
 	let t = e;
 	return {
@@ -4707,7 +4707,7 @@ function Fr(e) {
 		authenticatorAttachment: t.authenticatorAttachment ?? void 0
 	};
 }
-function Ir(e) {
+function Lr(e) {
 	if ("toJSON" in e && typeof e.toJSON == "function") return e.toJSON();
 	let t = e, n = e.getClientExtensionResults(), r = e.response;
 	return {
@@ -4724,13 +4724,13 @@ function Ir(e) {
 		authenticatorAttachment: t.authenticatorAttachment ?? void 0
 	};
 }
-function Lr(e) {
+function Rr(e) {
 	return e === "localhost" || /^([a-z0-9]+(-[a-z0-9]+)*\.)+[a-z]{2,}$/i.test(e);
 }
-function Rr() {
+function zr() {
 	return !!(L() && "PublicKeyCredential" in window && window.PublicKeyCredential && "credentials" in navigator && typeof (navigator == null ? void 0 : navigator.credentials)?.create == "function" && typeof (navigator == null ? void 0 : navigator.credentials)?.get == "function");
 }
-async function zr(e) {
+async function Br(e) {
 	try {
 		let t = await navigator.credentials.create(e);
 		return t ? t instanceof PublicKeyCredential ? {
@@ -4738,33 +4738,10 @@ async function zr(e) {
 			error: null
 		} : {
 			data: null,
-			error: new kr("Browser returned unexpected credential type", t)
+			error: new Ar("Browser returned unexpected credential type", t)
 		} : {
 			data: null,
-			error: new kr("Empty credential response", t)
-		};
-	} catch (t) {
-		return {
-			data: null,
-			error: Ar({
-				error: t,
-				options: e
-			})
-		};
-	}
-}
-async function Br(e) {
-	try {
-		let t = await navigator.credentials.get(e);
-		return t ? t instanceof PublicKeyCredential ? {
-			data: t,
-			error: null
-		} : {
-			data: null,
-			error: new kr("Browser returned unexpected credential type", t)
-		} : {
-			data: null,
-			error: new kr("Empty credential response", t)
+			error: new Ar("Empty credential response", t)
 		};
 	} catch (t) {
 		return {
@@ -4776,7 +4753,30 @@ async function Br(e) {
 		};
 	}
 }
-var Vr = {
+async function Vr(e) {
+	try {
+		let t = await navigator.credentials.get(e);
+		return t ? t instanceof PublicKeyCredential ? {
+			data: t,
+			error: null
+		} : {
+			data: null,
+			error: new Ar("Browser returned unexpected credential type", t)
+		} : {
+			data: null,
+			error: new Ar("Empty credential response", t)
+		};
+	} catch (t) {
+		return {
+			data: null,
+			error: Mr({
+				error: t,
+				options: e
+			})
+		};
+	}
+}
+var Hr = {
 	hints: ["security-key"],
 	authenticatorSelection: {
 		authenticatorAttachment: "cross-platform",
@@ -4785,12 +4785,12 @@ var Vr = {
 		residentKey: "discouraged"
 	},
 	attestation: "direct"
-}, Hr = {
+}, Ur = {
 	userVerification: "preferred",
 	hints: ["security-key"],
 	attestation: "direct"
 };
-function Ur(...e) {
+function Wr(...e) {
 	let t = (e) => typeof e == "object" && !!e && !Array.isArray(e), n = (e) => e instanceof ArrayBuffer || ArrayBuffer.isView(e), r = {};
 	for (let i of e) if (i) for (let e in i) {
 		let a = i[e];
@@ -4798,18 +4798,18 @@ function Ur(...e) {
 		else if (n(a)) r[e] = a;
 		else if (t(a)) {
 			let n = r[e];
-			t(n) ? r[e] = Ur(n, a) : r[e] = Ur(a);
+			t(n) ? r[e] = Wr(n, a) : r[e] = Wr(a);
 		} else r[e] = a;
 	}
 	return r;
 }
-function Wr(e, t) {
-	return Ur(Vr, e, t || {});
-}
 function Gr(e, t) {
-	return Ur(Hr, e, t || {});
+	return Wr(Hr, e, t || {});
 }
-var Kr = class {
+function Kr(e, t) {
+	return Wr(Ur, e, t || {});
+}
+var qr = class {
 	constructor(e) {
 		this.client = e, this.enroll = this._enroll.bind(this), this.challenge = this._challenge.bind(this), this.verify = this._verify.bind(this), this.authenticate = this._authenticate.bind(this), this.register = this._register.bind(this);
 	}
@@ -4826,7 +4826,7 @@ var Kr = class {
 				data: null,
 				error: o
 			};
-			let s = r ?? Mr.createNewAbortSignal();
+			let s = r ?? Nr.createNewAbortSignal();
 			if (a.webauthn.type === "create") {
 				let { user: e } = a.webauthn.credential_options.publicKey;
 				if (!e.name) {
@@ -4841,8 +4841,8 @@ var Kr = class {
 			}
 			switch (a.webauthn.type) {
 				case "create": {
-					let { data: t, error: n } = await zr({
-						publicKey: Wr(a.webauthn.credential_options.publicKey, i?.create),
+					let { data: t, error: n } = await Br({
+						publicKey: Gr(a.webauthn.credential_options.publicKey, i?.create),
 						signal: s
 					});
 					return t ? {
@@ -4861,7 +4861,7 @@ var Kr = class {
 					};
 				}
 				case "request": {
-					let t = Gr(a.webauthn.credential_options.publicKey, i?.request), { data: n, error: r } = await Br(Object.assign(Object.assign({}, a.webauthn.credential_options), {
+					let t = Kr(a.webauthn.credential_options.publicKey, i?.request), { data: n, error: r } = await Vr(Object.assign(Object.assign({}, a.webauthn.credential_options), {
 						publicKey: t,
 						signal: s
 					}));
@@ -4904,7 +4904,7 @@ var Kr = class {
 			error: new vn("rpId is required for WebAuthn authentication")
 		};
 		try {
-			if (!Rr()) return {
+			if (!zr()) return {
 				data: null,
 				error: new j("Browser does not support WebAuthn", null)
 			};
@@ -4947,7 +4947,7 @@ var Kr = class {
 			error: new vn("rpId is required for WebAuthn registration")
 		};
 		try {
-			if (!Rr()) return {
+			if (!zr()) return {
 				data: null,
 				error: new j("Browser does not support WebAuthn", null)
 			};
@@ -4991,8 +4991,8 @@ var Kr = class {
 };
 //#endregion
 //#region node_modules/@supabase/auth-js/dist/module/GoTrueClient.js
-wr();
-var qr = {
+Tr();
+var Jr = {
 	url: fn,
 	storageKey: pn,
 	autoRefreshToken: !0,
@@ -5007,36 +5007,36 @@ var qr = {
 	skipAutoInitialize: !1,
 	experimental: {}
 };
-async function Jr(e, t, n) {
+async function Yr(e, t, n) {
 	return await n();
 }
-var Yr = {}, Xr = class e {
+var X = {}, Xr = class e {
 	get jwks() {
-		return Yr[this.storageKey]?.jwks ?? { keys: [] };
+		return X[this.storageKey]?.jwks ?? { keys: [] };
 	}
 	set jwks(e) {
-		Yr[this.storageKey] = Object.assign(Object.assign({}, Yr[this.storageKey]), { jwks: e });
+		X[this.storageKey] = Object.assign(Object.assign({}, X[this.storageKey]), { jwks: e });
 	}
 	get jwks_cached_at() {
-		return Yr[this.storageKey]?.cachedAt ?? -(2 ** 53 - 1);
+		return X[this.storageKey]?.cachedAt ?? -(2 ** 53 - 1);
 	}
 	set jwks_cached_at(e) {
-		Yr[this.storageKey] = Object.assign(Object.assign({}, Yr[this.storageKey]), { cachedAt: e });
+		X[this.storageKey] = Object.assign(Object.assign({}, X[this.storageKey]), { cachedAt: e });
 	}
 	constructor(t) {
 		var n;
 		this.userStorage = null, this.memoryStorage = null, this.stateChangeEmitters = /* @__PURE__ */ new Map(), this.autoRefreshTicker = null, this.autoRefreshTickTimeout = null, this.visibilityChangedCallback = null, this.refreshingDeferred = null, this.initializePromise = null, this.detectSessionInUrl = !0, this.hasCustomAuthorizationHeader = !1, this.suppressGetSessionWarning = !1, this.lockAcquired = !1, this.pendingInLock = [], this.broadcastChannel = null, this.logger = console.log;
-		let r = Object.assign(Object.assign({}, qr), t);
+		let r = Object.assign(Object.assign({}, Jr), t);
 		if (this.storageKey = r.storageKey, this.instanceID = e.nextInstanceID[this.storageKey] ?? 0, e.nextInstanceID[this.storageKey] = this.instanceID + 1, this.logDebugMessages = !!r.debug, typeof r.debug == "function" && (this.logger = r.debug), this.instanceID > 0 && L()) {
 			let e = `${this._logPrefix()} Multiple GoTrueClient instances detected in the same browser context. It is not an error, but this should be avoided as it may produce undefined behavior when used concurrently under the same storage key.`;
 			console.warn(e), this.logDebugMessages && console.trace(e);
 		}
-		if (this.persistSession = r.persistSession, this.autoRefreshToken = r.autoRefreshToken, this.experimental = r.experimental ?? {}, this.admin = new yr({
+		if (this.persistSession = r.persistSession, this.autoRefreshToken = r.autoRefreshToken, this.experimental = r.experimental ?? {}, this.admin = new br({
 			url: r.url,
 			headers: r.headers,
 			fetch: r.fetch,
 			experimental: this.experimental
-		}), this.url = r.url, this.headers = r.headers, this.fetch = Gn(r.fetch), this.lock = r.lock || Jr, this.detectSessionInUrl = r.detectSessionInUrl, this.flowType = r.flowType, this.hasCustomAuthorizationHeader = r.hasCustomAuthorizationHeader, this.throwOnError = r.throwOnError, this.lockAcquireTimeout = r.lockAcquireTimeout, r.lock ? this.lock = r.lock : this.persistSession && L() && (globalThis == null ? void 0 : globalThis.navigator)?.locks ? this.lock = Cr : this.lock = Jr, this.jwks || (this.jwks = { keys: [] }, this.jwks_cached_at = -(2 ** 53 - 1)), this.mfa = {
+		}), this.url = r.url, this.headers = r.headers, this.fetch = Gn(r.fetch), this.lock = r.lock || Yr, this.detectSessionInUrl = r.detectSessionInUrl, this.flowType = r.flowType, this.hasCustomAuthorizationHeader = r.hasCustomAuthorizationHeader, this.throwOnError = r.throwOnError, this.lockAcquireTimeout = r.lockAcquireTimeout, r.lock ? this.lock = r.lock : this.persistSession && L() && (globalThis == null ? void 0 : globalThis.navigator)?.locks ? this.lock = wr : this.lock = Yr, this.jwks || (this.jwks = { keys: [] }, this.jwks_cached_at = -(2 ** 53 - 1)), this.mfa = {
 			verify: this._verify.bind(this),
 			enroll: this._enroll.bind(this),
 			unenroll: this._unenroll.bind(this),
@@ -5044,7 +5044,7 @@ var Yr = {}, Xr = class e {
 			listFactors: this._listFactors.bind(this),
 			challengeAndVerify: this._challengeAndVerify.bind(this),
 			getAuthenticatorAssuranceLevel: this._getAuthenticatorAssuranceLevel.bind(this),
-			webauthn: new Kr(this)
+			webauthn: new qr(this)
 		}, this.oauth = {
 			getAuthorizationDetails: this._getAuthorizationDetails.bind(this),
 			approveAuthorization: this._approveAuthorization.bind(this),
@@ -5059,7 +5059,7 @@ var Yr = {}, Xr = class e {
 			list: this._listPasskeys.bind(this),
 			update: this._updatePasskey.bind(this),
 			delete: this._deletePasskey.bind(this)
-		}, this.persistSession ? (r.storage ? this.storage = r.storage : Un() ? this.storage = globalThis.localStorage : (this.memoryStorage = {}, this.storage = br(this.memoryStorage)), r.userStorage && (this.userStorage = r.userStorage)) : (this.memoryStorage = {}, this.storage = br(this.memoryStorage)), L() && globalThis.BroadcastChannel && this.persistSession && this.storageKey) {
+		}, this.persistSession ? (r.storage ? this.storage = r.storage : Un() ? this.storage = globalThis.localStorage : (this.memoryStorage = {}, this.storage = xr(this.memoryStorage)), r.userStorage && (this.userStorage = r.userStorage)) : (this.memoryStorage = {}, this.storage = xr(this.memoryStorage)), L() && globalThis.BroadcastChannel && this.persistSession && this.storageKey) {
 			try {
 				this.broadcastChannel = new globalThis.BroadcastChannel(this.storageKey);
 			} catch (e) {
@@ -5120,13 +5120,13 @@ var Yr = {}, Xr = class e {
 	}
 	async signInAnonymously(e) {
 		try {
-			let { data: t, error: n } = await K(this.fetch, "POST", `${this.url}/signup`, {
+			let { data: t, error: n } = await G(this.fetch, "POST", `${this.url}/signup`, {
 				headers: this.headers,
 				body: {
 					data: e?.options?.data ?? {},
 					gotrue_meta_security: { captcha_token: e?.options?.captchaToken }
 				},
-				xform: q
+				xform: K
 			});
 			if (n || !t) return this._returnResult({
 				data: {
@@ -5159,7 +5159,7 @@ var Yr = {}, Xr = class e {
 			let t;
 			if ("email" in e) {
 				let { email: n, password: r, options: i } = e, a = null, o = null;
-				this.flowType === "pkce" && ([a, o] = await H(this.storage, this.storageKey)), t = await K(this.fetch, "POST", `${this.url}/signup`, {
+				this.flowType === "pkce" && ([a, o] = await tr(this.storage, this.storageKey)), t = await G(this.fetch, "POST", `${this.url}/signup`, {
 					headers: this.headers,
 					redirectTo: i?.emailRedirectTo,
 					body: {
@@ -5170,11 +5170,11 @@ var Yr = {}, Xr = class e {
 						code_challenge: a,
 						code_challenge_method: o
 					},
-					xform: q
+					xform: K
 				});
 			} else if ("phone" in e) {
 				let { phone: n, password: r, options: i } = e;
-				t = await K(this.fetch, "POST", `${this.url}/signup`, {
+				t = await G(this.fetch, "POST", `${this.url}/signup`, {
 					headers: this.headers,
 					body: {
 						phone: n,
@@ -5183,7 +5183,7 @@ var Yr = {}, Xr = class e {
 						channel: i?.channel ?? "sms",
 						gotrue_meta_security: { captcha_token: i?.captchaToken }
 					},
-					xform: q
+					xform: K
 				});
 			} else throw new Sn("You must provide either an email or phone number and a password");
 			let { data: n, error: r } = t;
@@ -5218,25 +5218,25 @@ var Yr = {}, Xr = class e {
 			let t;
 			if ("email" in e) {
 				let { email: n, password: r, options: i } = e;
-				t = await K(this.fetch, "POST", `${this.url}/token?grant_type=password`, {
+				t = await G(this.fetch, "POST", `${this.url}/token?grant_type=password`, {
 					headers: this.headers,
 					body: {
 						email: n,
 						password: r,
 						gotrue_meta_security: { captcha_token: i?.captchaToken }
 					},
-					xform: pr
+					xform: mr
 				});
 			} else if ("phone" in e) {
 				let { phone: n, password: r, options: i } = e;
-				t = await K(this.fetch, "POST", `${this.url}/token?grant_type=password`, {
+				t = await G(this.fetch, "POST", `${this.url}/token?grant_type=password`, {
 					headers: this.headers,
 					body: {
 						phone: n,
 						password: r,
 						gotrue_meta_security: { captcha_token: i?.captchaToken }
 					},
-					xform: pr
+					xform: mr
 				});
 			} else throw new Sn("You must provide either an email or phone number and a password");
 			let { data: n, error: r } = t;
@@ -5312,8 +5312,8 @@ var Yr = {}, Xr = class e {
 				throw Error("@supabase/auth-js: Wallet method eth_requestAccounts is missing or invalid");
 			});
 			if (!l || l.length === 0) throw Error("@supabase/auth-js: No accounts available. Please ensure the wallet is connected.");
-			let u = Tr(l[0]), d = o?.signInWithEthereum?.chainId;
-			d ||= Er(await s.request({ method: "eth_chainId" })), t = Or({
+			let u = Er(l[0]), d = o?.signInWithEthereum?.chainId;
+			d ||= Dr(await s.request({ method: "eth_chainId" })), t = kr({
 				domain: c.host,
 				address: u,
 				statement: a,
@@ -5328,18 +5328,18 @@ var Yr = {}, Xr = class e {
 				resources: o?.signInWithEthereum?.resources
 			}), n = await s.request({
 				method: "personal_sign",
-				params: [Dr(t), u]
+				params: [Or(t), u]
 			});
 		}
 		try {
-			let { data: r, error: i } = await K(this.fetch, "POST", `${this.url}/token?grant_type=web3`, {
+			let { data: r, error: i } = await G(this.fetch, "POST", `${this.url}/token?grant_type=web3`, {
 				headers: this.headers,
 				body: Object.assign({
 					chain: "ethereum",
 					message: t,
 					signature: n
 				}, e.options?.captchaToken ? { gotrue_meta_security: { captcha_token: e.options?.captchaToken } } : null),
-				xform: q
+				xform: K
 			});
 			if (i) throw i;
 			if (!r || !r.session || !r.user) {
@@ -5419,14 +5419,14 @@ var Yr = {}, Xr = class e {
 			}
 		}
 		try {
-			let { data: r, error: i } = await K(this.fetch, "POST", `${this.url}/token?grant_type=web3`, {
+			let { data: r, error: i } = await G(this.fetch, "POST", `${this.url}/token?grant_type=web3`, {
 				headers: this.headers,
 				body: Object.assign({
 					chain: "solana",
 					message: t,
 					signature: I(n)
 				}, e.options?.captchaToken ? { gotrue_meta_security: { captcha_token: e.options?.captchaToken } } : null),
-				xform: q
+				xform: K
 			});
 			if (i) throw i;
 			if (!r || !r.session || !r.user) {
@@ -5458,13 +5458,13 @@ var Yr = {}, Xr = class e {
 		let [t, n] = (await B(this.storage, `${this.storageKey}-code-verifier`) ?? "").split("/");
 		try {
 			if (!t && this.flowType === "pkce") throw new En();
-			let { data: r, error: i } = await K(this.fetch, "POST", `${this.url}/token?grant_type=pkce`, {
+			let { data: r, error: i } = await G(this.fetch, "POST", `${this.url}/token?grant_type=pkce`, {
 				headers: this.headers,
 				body: {
 					auth_code: e,
 					code_verifier: t
 				},
-				xform: q
+				xform: K
 			});
 			if (await V(this.storage, `${this.storageKey}-code-verifier`), i) throw i;
 			if (!r || !r.session || !r.user) {
@@ -5496,7 +5496,7 @@ var Yr = {}, Xr = class e {
 	}
 	async signInWithIdToken(e) {
 		try {
-			let { options: t, provider: n, token: r, access_token: i, nonce: a } = e, { data: o, error: s } = await K(this.fetch, "POST", `${this.url}/token?grant_type=id_token`, {
+			let { options: t, provider: n, token: r, access_token: i, nonce: a } = e, { data: o, error: s } = await G(this.fetch, "POST", `${this.url}/token?grant_type=id_token`, {
 				headers: this.headers,
 				body: {
 					provider: n,
@@ -5505,7 +5505,7 @@ var Yr = {}, Xr = class e {
 					nonce: a,
 					gotrue_meta_security: { captcha_token: t?.captchaToken }
 				},
-				xform: q
+				xform: K
 			});
 			if (s) return this._returnResult({
 				data: {
@@ -5543,8 +5543,8 @@ var Yr = {}, Xr = class e {
 		try {
 			if ("email" in e) {
 				let { email: t, options: n } = e, r = null, i = null;
-				this.flowType === "pkce" && ([r, i] = await H(this.storage, this.storageKey));
-				let { error: a } = await K(this.fetch, "POST", `${this.url}/otp`, {
+				this.flowType === "pkce" && ([r, i] = await tr(this.storage, this.storageKey));
+				let { error: a } = await G(this.fetch, "POST", `${this.url}/otp`, {
 					headers: this.headers,
 					body: {
 						email: t,
@@ -5565,7 +5565,7 @@ var Yr = {}, Xr = class e {
 				});
 			}
 			if ("phone" in e) {
-				let { phone: t, options: n } = e, { data: r, error: i } = await K(this.fetch, "POST", `${this.url}/otp`, {
+				let { phone: t, options: n } = e, { data: r, error: i } = await G(this.fetch, "POST", `${this.url}/otp`, {
 					headers: this.headers,
 					body: {
 						phone: t,
@@ -5600,11 +5600,11 @@ var Yr = {}, Xr = class e {
 		try {
 			let t, n;
 			"options" in e && (t = e.options?.redirectTo, n = e.options?.captchaToken);
-			let { data: r, error: i } = await K(this.fetch, "POST", `${this.url}/verify`, {
+			let { data: r, error: i } = await G(this.fetch, "POST", `${this.url}/verify`, {
 				headers: this.headers,
 				body: Object.assign(Object.assign({}, e), { gotrue_meta_security: { captcha_token: n } }),
 				redirectTo: t,
-				xform: q
+				xform: K
 			});
 			if (i) throw i;
 			if (!r) throw /* @__PURE__ */ Error("An error occurred on token verification.");
@@ -5630,15 +5630,15 @@ var Yr = {}, Xr = class e {
 	async signInWithSSO(e) {
 		try {
 			let t = null, n = null;
-			this.flowType === "pkce" && ([t, n] = await H(this.storage, this.storageKey));
-			let r = await K(this.fetch, "POST", `${this.url}/sso`, {
+			this.flowType === "pkce" && ([t, n] = await tr(this.storage, this.storageKey));
+			let r = await G(this.fetch, "POST", `${this.url}/sso`, {
 				body: Object.assign(Object.assign(Object.assign(Object.assign(Object.assign({}, "providerId" in e ? { provider_id: e.providerId } : null), "domain" in e ? { domain: e.domain } : null), { redirect_to: e.options?.redirectTo ?? void 0 }), e?.options?.captchaToken ? { gotrue_meta_security: { captcha_token: e.options.captchaToken } } : null), {
 					skip_http_redirect: !0,
 					code_challenge: t,
 					code_challenge_method: n
 				}),
 				headers: this.headers,
-				xform: mr
+				xform: hr
 			});
 			return r.data?.url && L() && !e.options?.skipBrowserRedirect && window.location.assign(r.data.url), this._returnResult(r);
 		} catch (e) {
@@ -5658,7 +5658,7 @@ var Yr = {}, Xr = class e {
 				let { data: { session: t }, error: n } = e;
 				if (n) throw n;
 				if (!t) throw new N();
-				let { error: r } = await K(this.fetch, "GET", `${this.url}/reauthenticate`, {
+				let { error: r } = await G(this.fetch, "GET", `${this.url}/reauthenticate`, {
 					headers: this.headers,
 					jwt: t.access_token
 				});
@@ -5685,7 +5685,7 @@ var Yr = {}, Xr = class e {
 		try {
 			let t = `${this.url}/resend`;
 			if ("email" in e) {
-				let { email: n, type: r, options: i } = e, { error: a } = await K(this.fetch, "POST", t, {
+				let { email: n, type: r, options: i } = e, { error: a } = await G(this.fetch, "POST", t, {
 					headers: this.headers,
 					body: {
 						email: n,
@@ -5702,7 +5702,7 @@ var Yr = {}, Xr = class e {
 					error: a
 				});
 			} else if ("phone" in e) {
-				let { phone: n, type: r, options: i } = e, { data: a, error: o } = await K(this.fetch, "POST", t, {
+				let { phone: n, type: r, options: i } = e, { data: a, error: o } = await G(this.fetch, "POST", t, {
 					headers: this.headers,
 					body: {
 						phone: n,
@@ -5787,11 +5787,11 @@ var Yr = {}, Xr = class e {
 			if (this._debug("#__loadSession()", `session has${n ? "" : " not"} expired`, "expires_at", e.expires_at), !n) {
 				if (this.userStorage) {
 					let t = await B(this.userStorage, this.storageKey + "-user");
-					t?.user ? e.user = t.user : e.user = or();
+					t?.user ? e.user = t.user : e.user = sr();
 				}
 				if (this.storage.isServer && e.user && !e.user.__isUserNotAvailableProxy) {
 					let t = { value: this.suppressGetSessionWarning };
-					e.user = sr(e.user, t), t.value && (this.suppressGetSessionWarning = !0);
+					e.user = cr(e.user, t), t.value && (this.suppressGetSessionWarning = !0);
 				}
 				return {
 					data: { session: e },
@@ -5818,20 +5818,20 @@ var Yr = {}, Xr = class e {
 	}
 	async _getUser(e) {
 		try {
-			return e ? await K(this.fetch, "GET", `${this.url}/user`, {
+			return e ? await G(this.fetch, "GET", `${this.url}/user`, {
 				headers: this.headers,
 				jwt: e,
-				xform: J
+				xform: q
 			}) : await this._useSession(async (e) => {
 				let { data: t, error: n } = e;
 				if (n) throw n;
 				return !t.session?.access_token && !this.hasCustomAuthorizationHeader ? {
 					data: { user: null },
 					error: new N()
-				} : await K(this.fetch, "GET", `${this.url}/user`, {
+				} : await G(this.fetch, "GET", `${this.url}/user`, {
 					headers: this.headers,
 					jwt: t.session?.access_token ?? void 0,
-					xform: J
+					xform: q
 				});
 			});
 		} catch (e) {
@@ -5852,8 +5852,8 @@ var Yr = {}, Xr = class e {
 				if (i) throw i;
 				if (!r.session) throw new N();
 				let a = r.session, o = null, s = null;
-				this.flowType === "pkce" && e.email != null && ([o, s] = await H(this.storage, this.storageKey));
-				let { data: c, error: l } = await K(this.fetch, "PUT", `${this.url}/user`, {
+				this.flowType === "pkce" && e.email != null && ([o, s] = await tr(this.storage, this.storageKey));
+				let { data: c, error: l } = await G(this.fetch, "PUT", `${this.url}/user`, {
 					headers: this.headers,
 					redirectTo: t?.emailRedirectTo,
 					body: Object.assign(Object.assign({}, e), {
@@ -5861,7 +5861,7 @@ var Yr = {}, Xr = class e {
 						code_challenge_method: s
 					}),
 					jwt: a.access_token,
-					xform: J
+					xform: q
 				});
 				if (l) throw l;
 				return a.user = c.user, await this._saveSession(a), await this._notifyAllSubscribers("USER_UPDATED", a), this._returnResult({
@@ -6097,9 +6097,9 @@ var Yr = {}, Xr = class e {
 	}
 	async resetPasswordForEmail(e, t = {}) {
 		let n = null, r = null;
-		this.flowType === "pkce" && ([n, r] = await H(this.storage, this.storageKey, !0));
+		this.flowType === "pkce" && ([n, r] = await tr(this.storage, this.storageKey, !0));
 		try {
-			return await K(this.fetch, "POST", `${this.url}/recover`, {
+			return await G(this.fetch, "POST", `${this.url}/recover`, {
 				body: {
 					email: e,
 					code_challenge: n,
@@ -6147,7 +6147,7 @@ var Yr = {}, Xr = class e {
 					queryParams: e.options?.queryParams,
 					skipBrowserRedirect: !0
 				});
-				return await K(this.fetch, "GET", i, {
+				return await G(this.fetch, "GET", i, {
 					headers: this.headers,
 					jwt: n.session?.access_token ?? void 0
 				});
@@ -6176,7 +6176,7 @@ var Yr = {}, Xr = class e {
 			try {
 				let { error: n, data: { session: r } } = t;
 				if (n) throw n;
-				let { options: i, provider: a, token: o, access_token: s, nonce: c } = e, { data: l, error: u } = await K(this.fetch, "POST", `${this.url}/token?grant_type=id_token`, {
+				let { options: i, provider: a, token: o, access_token: s, nonce: c } = e, { data: l, error: u } = await G(this.fetch, "POST", `${this.url}/token?grant_type=id_token`, {
 					headers: this.headers,
 					jwt: r?.access_token ?? void 0,
 					body: {
@@ -6187,7 +6187,7 @@ var Yr = {}, Xr = class e {
 						link_identity: !0,
 						gotrue_meta_security: { captcha_token: i?.captchaToken }
 					},
-					xform: q
+					xform: K
 				});
 				return u ? this._returnResult({
 					data: {
@@ -6222,7 +6222,7 @@ var Yr = {}, Xr = class e {
 			return await this._useSession(async (t) => {
 				let { data: n, error: r } = t;
 				if (r) throw r;
-				return await K(this.fetch, "DELETE", `${this.url}/user/identities/${e.identity_id}`, {
+				return await G(this.fetch, "DELETE", `${this.url}/user/identities/${e.identity_id}`, {
 					headers: this.headers,
 					jwt: n.session?.access_token ?? void 0
 				});
@@ -6240,10 +6240,10 @@ var Yr = {}, Xr = class e {
 		this._debug(t, "begin");
 		try {
 			let n = Date.now();
-			return await Xn(async (n) => (n > 0 && await Yn(200 * 2 ** (n - 1)), this._debug(t, "refreshing attempt", n), await K(this.fetch, "POST", `${this.url}/token?grant_type=refresh_token`, {
+			return await Xn(async (n) => (n > 0 && await Yn(200 * 2 ** (n - 1)), this._debug(t, "refreshing attempt", n), await G(this.fetch, "POST", `${this.url}/token?grant_type=refresh_token`, {
 				body: { refresh_token: e },
 				headers: this.headers,
-				xform: q
+				xform: K
 			})), (e, t) => {
 				let r = 200 * 2 ** e;
 				return t && On(t) && Date.now() + r - n < 3e4;
@@ -6285,10 +6285,10 @@ var Yr = {}, Xr = class e {
 			let t = await B(this.storage, this.storageKey);
 			if (t && this.userStorage) {
 				let e = await B(this.userStorage, this.storageKey + "-user");
-				!this.storage.isServer && Object.is(this.storage, this.userStorage) && !e && (e = { user: t.user }, await z(this.userStorage, this.storageKey + "-user", e)), t.user = e?.user ?? or();
+				!this.storage.isServer && Object.is(this.storage, this.userStorage) && !e && (e = { user: t.user }, await z(this.userStorage, this.storageKey + "-user", e)), t.user = e?.user ?? sr();
 			} else if (t && !t.user && !t.user) {
 				let e = await B(this.storage, this.storageKey + "-user");
-				e && e?.user ? (t.user = e.user, await V(this.storage, this.storageKey + "-user"), await z(this.storage, this.storageKey, t)) : t.user = or();
+				e && e?.user ? (t.user = e.user, await V(this.storage, this.storageKey + "-user"), await z(this.storage, this.storageKey, t)) : t.user = sr();
 			}
 			if (this._debug(e, "session from storage", t), !this._isValidSession(t)) {
 				this._debug(e, "session is not valid"), t !== null && await this._removeSession();
@@ -6374,10 +6374,10 @@ var Yr = {}, Xr = class e {
 			!n && t.user && await z(this.userStorage, this.storageKey + "-user", { user: t.user });
 			let e = Object.assign({}, t);
 			delete e.user;
-			let r = cr(e);
+			let r = lr(e);
 			await z(this.storage, this.storageKey, r);
 		} else {
-			let e = cr(t);
+			let e = lr(t);
 			await z(this.storage, this.storageKey, e);
 		}
 	}
@@ -6440,7 +6440,7 @@ var Yr = {}, Xr = class e {
 				}
 			});
 		} catch (e) {
-			if (e instanceof xr) this._debug("auto refresh token tick lock not available");
+			if (e instanceof Sr) this._debug("auto refresh token tick lock not available");
 			else throw e;
 		}
 	}
@@ -6471,7 +6471,7 @@ var Yr = {}, Xr = class e {
 	async _getUrlForProvider(e, t, n) {
 		let r = [`provider=${encodeURIComponent(t)}`];
 		if (n?.redirectTo && r.push(`redirect_to=${encodeURIComponent(n.redirectTo)}`), n?.scopes && r.push(`scopes=${encodeURIComponent(n.scopes)}`), this.flowType === "pkce") {
-			let [e, t] = await H(this.storage, this.storageKey), n = new URLSearchParams({
+			let [e, t] = await tr(this.storage, this.storageKey), n = new URLSearchParams({
 				code_challenge: `${encodeURIComponent(e)}`,
 				code_challenge_method: `${encodeURIComponent(t)}`
 			});
@@ -6490,7 +6490,7 @@ var Yr = {}, Xr = class e {
 				return r ? this._returnResult({
 					data: null,
 					error: r
-				}) : await K(this.fetch, "DELETE", `${this.url}/factors/${e.factorId}`, {
+				}) : await G(this.fetch, "DELETE", `${this.url}/factors/${e.factorId}`, {
 					headers: this.headers,
 					jwt: n?.session?.access_token
 				});
@@ -6514,7 +6514,7 @@ var Yr = {}, Xr = class e {
 				let i = Object.assign({
 					friendly_name: e.friendlyName,
 					factor_type: e.factorType
-				}, e.factorType === "phone" ? { phone: e.phone } : e.factorType === "totp" ? { issuer: e.issuer } : {}), { data: a, error: o } = await K(this.fetch, "POST", `${this.url}/factors`, {
+				}, e.factorType === "phone" ? { phone: e.phone } : e.factorType === "totp" ? { issuer: e.issuer } : {}), { data: a, error: o } = await G(this.fetch, "POST", `${this.url}/factors`, {
 					body: i,
 					headers: this.headers,
 					jwt: n?.session?.access_token
@@ -6544,7 +6544,7 @@ var Yr = {}, Xr = class e {
 						data: null,
 						error: r
 					});
-					let i = Object.assign({ challenge_id: e.challengeId }, "webauthn" in e ? { webauthn: Object.assign(Object.assign({}, e.webauthn), { credential_response: e.webauthn.type === "create" ? Fr(e.webauthn.credential_response) : Ir(e.webauthn.credential_response) }) } : { code: e.code }), { data: a, error: o } = await K(this.fetch, "POST", `${this.url}/factors/${e.factorId}/verify`, {
+					let i = Object.assign({ challenge_id: e.challengeId }, "webauthn" in e ? { webauthn: Object.assign(Object.assign({}, e.webauthn), { credential_response: e.webauthn.type === "create" ? Ir(e.webauthn.credential_response) : Lr(e.webauthn.credential_response) }) } : { code: e.code }), { data: a, error: o } = await G(this.fetch, "POST", `${this.url}/factors/${e.factorId}/verify`, {
 						body: i,
 						headers: this.headers,
 						jwt: n?.session?.access_token
@@ -6575,7 +6575,7 @@ var Yr = {}, Xr = class e {
 						data: null,
 						error: r
 					});
-					let i = await K(this.fetch, "POST", `${this.url}/factors/${e.factorId}/challenge`, {
+					let i = await G(this.fetch, "POST", `${this.url}/factors/${e.factorId}/challenge`, {
 						body: e,
 						headers: this.headers,
 						jwt: n?.session?.access_token
@@ -6588,11 +6588,11 @@ var Yr = {}, Xr = class e {
 					};
 					switch (a.webauthn.type) {
 						case "create": return {
-							data: Object.assign(Object.assign({}, a), { webauthn: Object.assign(Object.assign({}, a.webauthn), { credential_options: Object.assign(Object.assign({}, a.webauthn.credential_options), { publicKey: Nr(a.webauthn.credential_options.publicKey) }) }) }),
+							data: Object.assign(Object.assign({}, a), { webauthn: Object.assign(Object.assign({}, a.webauthn), { credential_options: Object.assign(Object.assign({}, a.webauthn.credential_options), { publicKey: Pr(a.webauthn.credential_options.publicKey) }) }) }),
 							error: null
 						};
 						case "request": return {
-							data: Object.assign(Object.assign({}, a), { webauthn: Object.assign(Object.assign({}, a.webauthn), { credential_options: Object.assign(Object.assign({}, a.webauthn.credential_options), { publicKey: Pr(a.webauthn.credential_options.publicKey) }) }) }),
+							data: Object.assign(Object.assign({}, a), { webauthn: Object.assign(Object.assign({}, a.webauthn), { credential_options: Object.assign(Object.assign({}, a.webauthn.credential_options), { publicKey: Fr(a.webauthn.credential_options.publicKey) }) }) }),
 							error: null
 						};
 					}
@@ -6695,7 +6695,7 @@ var Yr = {}, Xr = class e {
 				return r ? this._returnResult({
 					data: null,
 					error: r
-				}) : n ? await K(this.fetch, "GET", `${this.url}/oauth/authorizations/${e}`, {
+				}) : n ? await G(this.fetch, "GET", `${this.url}/oauth/authorizations/${e}`, {
 					headers: this.headers,
 					jwt: n.access_token,
 					xform: (e) => ({
@@ -6727,7 +6727,7 @@ var Yr = {}, Xr = class e {
 					data: null,
 					error: new N()
 				});
-				let a = await K(this.fetch, "POST", `${this.url}/oauth/authorizations/${e}/consent`, {
+				let a = await G(this.fetch, "POST", `${this.url}/oauth/authorizations/${e}/consent`, {
 					headers: this.headers,
 					jwt: r.access_token,
 					body: { action: "approve" },
@@ -6758,7 +6758,7 @@ var Yr = {}, Xr = class e {
 					data: null,
 					error: new N()
 				});
-				let a = await K(this.fetch, "POST", `${this.url}/oauth/authorizations/${e}/consent`, {
+				let a = await G(this.fetch, "POST", `${this.url}/oauth/authorizations/${e}/consent`, {
 					headers: this.headers,
 					jwt: r.access_token,
 					body: { action: "deny" },
@@ -6784,7 +6784,7 @@ var Yr = {}, Xr = class e {
 				return n ? this._returnResult({
 					data: null,
 					error: n
-				}) : t ? await K(this.fetch, "GET", `${this.url}/user/oauth/grants`, {
+				}) : t ? await G(this.fetch, "GET", `${this.url}/user/oauth/grants`, {
 					headers: this.headers,
 					jwt: t.access_token,
 					xform: (e) => ({
@@ -6811,7 +6811,7 @@ var Yr = {}, Xr = class e {
 				return r ? this._returnResult({
 					data: null,
 					error: r
-				}) : n ? (await K(this.fetch, "DELETE", `${this.url}/user/oauth/grants`, {
+				}) : n ? (await G(this.fetch, "DELETE", `${this.url}/user/oauth/grants`, {
 					headers: this.headers,
 					jwt: n.access_token,
 					query: { client_id: e.clientId },
@@ -6837,7 +6837,7 @@ var Yr = {}, Xr = class e {
 		if (n) return n;
 		let r = Date.now();
 		if (n = this.jwks.keys.find((t) => t.kid === e), n && this.jwks_cached_at + 6e5 > r) return n;
-		let { data: i, error: a } = await K(this.fetch, "GET", `${this.url}/.well-known/jwks.json`, { headers: this.headers });
+		let { data: i, error: a } = await G(this.fetch, "GET", `${this.url}/.well-known/jwks.json`, { headers: this.headers });
 		if (a) throw a;
 		return !i.keys || i.keys.length === 0 || (this.jwks = i, this.jwks_cached_at = r, n = i.keys.find((t) => t.kid === e), !n) ? null : n;
 	}
@@ -6853,7 +6853,7 @@ var Yr = {}, Xr = class e {
 				n = e.session.access_token;
 			}
 			let { header: r, payload: i, signature: a, raw: { header: o, payload: s } } = Jn(n);
-			t?.allowExpired || rr(i.exp);
+			t?.allowExpired || ir(i.exp);
 			let c = !r.alg || r.alg.startsWith("HS") || !r.kid || !("crypto" in globalThis && "subtle" in globalThis.crypto) ? null : await this.fetchJwk(r.kid, t?.keys ? { keys: t.keys } : t?.jwks);
 			if (!c) {
 				let { error: e } = await this.getUser(n);
@@ -6867,7 +6867,7 @@ var Yr = {}, Xr = class e {
 					error: null
 				};
 			}
-			let l = ir(r.alg), u = await crypto.subtle.importKey("jwk", c, l, !0, ["verify"]);
+			let l = ar(r.alg), u = await crypto.subtle.importKey("jwk", c, l, !0, ["verify"]);
 			if (!await crypto.subtle.verify(l, u, a, Bn(`${o}.${s}`))) throw new An("Invalid JWT signature");
 			return {
 				data: {
@@ -6886,9 +6886,9 @@ var Yr = {}, Xr = class e {
 		}
 	}
 	async signInWithPasskey(e) {
-		W(this.experimental);
+		U(this.experimental);
 		try {
-			if (!Rr()) return this._returnResult({
+			if (!zr()) return this._returnResult({
 				data: null,
 				error: new j("Browser does not support WebAuthn", null)
 			});
@@ -6897,15 +6897,15 @@ var Yr = {}, Xr = class e {
 				data: null,
 				error: n
 			});
-			let { data: r, error: i } = await Br({
-				publicKey: Pr(t.options),
-				signal: e?.options?.signal ?? Mr.createNewAbortSignal()
+			let { data: r, error: i } = await Vr({
+				publicKey: Fr(t.options),
+				signal: e?.options?.signal ?? Nr.createNewAbortSignal()
 			});
 			if (i || !r) return this._returnResult({
 				data: null,
 				error: i ?? new j("WebAuthn ceremony failed", null)
 			});
-			let a = Ir(r);
+			let a = Lr(r);
 			return this._verifyPasskeyAuthentication({
 				challengeId: t.challenge_id,
 				credential: a
@@ -6919,9 +6919,9 @@ var Yr = {}, Xr = class e {
 		}
 	}
 	async registerPasskey(e) {
-		W(this.experimental);
+		U(this.experimental);
 		try {
-			if (!Rr()) return this._returnResult({
+			if (!zr()) return this._returnResult({
 				data: null,
 				error: new j("Browser does not support WebAuthn", null)
 			});
@@ -6930,15 +6930,15 @@ var Yr = {}, Xr = class e {
 				data: null,
 				error: n
 			});
-			let { data: r, error: i } = await zr({
-				publicKey: Nr(t.options),
-				signal: e?.options?.signal ?? Mr.createNewAbortSignal()
+			let { data: r, error: i } = await Br({
+				publicKey: Pr(t.options),
+				signal: e?.options?.signal ?? Nr.createNewAbortSignal()
 			});
 			if (i || !r) return this._returnResult({
 				data: null,
 				error: i ?? new j("WebAuthn ceremony failed", null)
 			});
-			let a = Fr(r);
+			let a = Ir(r);
 			return this._verifyPasskeyRegistration({
 				challengeId: t.challenge_id,
 				credential: a
@@ -6952,7 +6952,7 @@ var Yr = {}, Xr = class e {
 		}
 	}
 	async _startPasskeyRegistration() {
-		W(this.experimental);
+		U(this.experimental);
 		try {
 			return await this._useSession(async (e) => {
 				let { data: { session: t }, error: n } = e;
@@ -6964,7 +6964,7 @@ var Yr = {}, Xr = class e {
 					data: null,
 					error: new N()
 				});
-				let { data: r, error: i } = await K(this.fetch, "POST", `${this.url}/passkeys/registration/options`, {
+				let { data: r, error: i } = await G(this.fetch, "POST", `${this.url}/passkeys/registration/options`, {
 					headers: this.headers,
 					jwt: t.access_token,
 					body: {}
@@ -6986,7 +6986,7 @@ var Yr = {}, Xr = class e {
 		}
 	}
 	async _verifyPasskeyRegistration(e) {
-		W(this.experimental);
+		U(this.experimental);
 		try {
 			return await this._useSession(async (t) => {
 				let { data: { session: n }, error: r } = t;
@@ -6998,7 +6998,7 @@ var Yr = {}, Xr = class e {
 					data: null,
 					error: new N()
 				});
-				let { data: i, error: a } = await K(this.fetch, "POST", `${this.url}/passkeys/registration/verify`, {
+				let { data: i, error: a } = await G(this.fetch, "POST", `${this.url}/passkeys/registration/verify`, {
 					headers: this.headers,
 					jwt: n.access_token,
 					body: {
@@ -7023,9 +7023,9 @@ var Yr = {}, Xr = class e {
 		}
 	}
 	async _startPasskeyAuthentication(e) {
-		W(this.experimental);
+		U(this.experimental);
 		try {
-			let { data: t, error: n } = await K(this.fetch, "POST", `${this.url}/passkeys/authentication/options`, {
+			let { data: t, error: n } = await G(this.fetch, "POST", `${this.url}/passkeys/authentication/options`, {
 				headers: this.headers,
 				body: { gotrue_meta_security: { captcha_token: e?.options?.captchaToken } }
 			});
@@ -7045,15 +7045,15 @@ var Yr = {}, Xr = class e {
 		}
 	}
 	async _verifyPasskeyAuthentication(e) {
-		W(this.experimental);
+		U(this.experimental);
 		try {
-			let { data: t, error: n } = await K(this.fetch, "POST", `${this.url}/passkeys/authentication/verify`, {
+			let { data: t, error: n } = await G(this.fetch, "POST", `${this.url}/passkeys/authentication/verify`, {
 				headers: this.headers,
 				body: {
 					challenge_id: e.challengeId,
 					credential: e.credential
 				},
-				xform: q
+				xform: K
 			});
 			return n ? this._returnResult({
 				data: null,
@@ -7071,7 +7071,7 @@ var Yr = {}, Xr = class e {
 		}
 	}
 	async _listPasskeys() {
-		W(this.experimental);
+		U(this.experimental);
 		try {
 			return await this._useSession(async (e) => {
 				let { data: { session: t }, error: n } = e;
@@ -7083,7 +7083,7 @@ var Yr = {}, Xr = class e {
 					data: null,
 					error: new N()
 				});
-				let { data: r, error: i } = await K(this.fetch, "GET", `${this.url}/passkeys`, {
+				let { data: r, error: i } = await G(this.fetch, "GET", `${this.url}/passkeys`, {
 					headers: this.headers,
 					jwt: t.access_token,
 					xform: (e) => ({
@@ -7108,7 +7108,7 @@ var Yr = {}, Xr = class e {
 		}
 	}
 	async _updatePasskey(e) {
-		W(this.experimental);
+		U(this.experimental);
 		try {
 			return await this._useSession(async (t) => {
 				let { data: { session: n }, error: r } = t;
@@ -7120,7 +7120,7 @@ var Yr = {}, Xr = class e {
 					data: null,
 					error: new N()
 				});
-				let { data: i, error: a } = await K(this.fetch, "PATCH", `${this.url}/passkeys/${e.passkeyId}`, {
+				let { data: i, error: a } = await G(this.fetch, "PATCH", `${this.url}/passkeys/${e.passkeyId}`, {
 					headers: this.headers,
 					jwt: n.access_token,
 					body: { friendly_name: e.friendlyName }
@@ -7142,7 +7142,7 @@ var Yr = {}, Xr = class e {
 		}
 	}
 	async _deletePasskey(e) {
-		W(this.experimental);
+		U(this.experimental);
 		try {
 			return await this._useSession(async (t) => {
 				let { data: { session: n }, error: r } = t;
@@ -7154,7 +7154,7 @@ var Yr = {}, Xr = class e {
 					data: null,
 					error: new N()
 				});
-				let { error: i } = await K(this.fetch, "DELETE", `${this.url}/passkeys/${e.passkeyId}`, {
+				let { error: i } = await G(this.fetch, "DELETE", `${this.url}/passkeys/${e.passkeyId}`, {
 					headers: this.headers,
 					jwt: n.access_token,
 					noResolveJson: !0
@@ -7404,8 +7404,12 @@ window.StocklioAuth = {
 	signInWithGoogle: wi,
 	signInWithEmail: Di,
 	signOut: ki,
-	loadPortfolioState: Ai,
-	savePortfolioState: ji
+	getAccessToken: Ai,
+	loadPortfolioState: Mi,
+	savePortfolioState: Ni,
+	loadNotificationSettings: Pi,
+	saveNotificationSettings: Fi,
+	loadNotificationDeliveryLogs: Ii
 }, window.dispatchEvent(new CustomEvent("stocklio:auth", { detail: Ci() }));
 function Ci() {
 	return {
@@ -7451,18 +7455,32 @@ function Oi(e) {
 	return !t || t.includes("%") || t.includes("YOUR_") ? "" : t.replace(/\/$/, "");
 }
 async function ki() {
-	if (!Q) return;
-	let { error: e } = await Q.auth.signOut({ scope: "local" });
-	if (e) throw e;
-	$ = null, window.dispatchEvent(new CustomEvent("stocklio:auth", { detail: Ci() }));
+	Q && ($ = null, ji(), window.dispatchEvent(new CustomEvent("stocklio:auth", { detail: Ci() })), Q.auth.signOut({ scope: "local" }).catch((e) => {
+		console.warn("Stocklio sign-out cleanup failed", e);
+	}));
 }
-async function Ai() {
+function Ai() {
+	return $?.access_token || "";
+}
+function ji() {
+	let e = [];
+	for (let t of [window.localStorage, window.sessionStorage]) try {
+		for (let n = 0; n < t.length; n += 1) {
+			let r = t.key(n);
+			r && (r.startsWith("sb-") || r.includes("supabase.auth.token")) && e.push([t, r]);
+		}
+	} catch {}
+	for (let [t, n] of e) try {
+		t.removeItem(n);
+	} catch {}
+}
+async function Mi() {
 	if (!Q || !$?.user) return null;
 	let { data: e, error: t } = await Q.from("portfolio_states").select("state").eq("user_id", $.user.id).maybeSingle();
 	if (t) throw t;
 	return e?.state || null;
 }
-async function ji(e) {
+async function Ni(e) {
 	if (!Q || !$?.user) return { skipped: !0 };
 	let { error: t } = await Q.from("portfolio_states").upsert({
 		user_id: $.user.id,
@@ -7470,5 +7488,30 @@ async function ji(e) {
 	});
 	if (t) throw t;
 	return { ok: !0 };
+}
+async function Pi() {
+	if (!Q || !$?.user) return null;
+	let { data: e, error: t } = await Q.from("notification_settings").select("*").eq("user_id", $.user.id).maybeSingle();
+	if (t) throw t;
+	return e || null;
+}
+async function Fi(e) {
+	if (!Q || !$?.user) return { skipped: !0 };
+	let { error: t } = await Q.from("notification_settings").upsert({
+		user_id: $.user.id,
+		provider: "telegram",
+		telegram_chat_id: e.telegram_chat_id || null,
+		telegram_enabled: !!e.telegram_enabled,
+		daily_digest_enabled: !!e.daily_digest_enabled,
+		large_move_threshold_krw: Number(e.large_move_threshold_krw || 0)
+	});
+	if (t) throw t;
+	return { ok: !0 };
+}
+async function Ii(e = 10) {
+	if (!Q || !$?.user) return [];
+	let { data: t, error: n } = await Q.from("notification_delivery_logs").select("id, provider, message_type, status, message_preview, error_message, sent_at, created_at").eq("user_id", $.user.id).order("created_at", { ascending: !1 }).limit(e);
+	if (n) throw n;
+	return t || [];
 }
 //#endregion

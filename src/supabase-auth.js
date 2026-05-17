@@ -39,8 +39,12 @@ window.StocklioAuth = {
   signInWithGoogle,
   signInWithEmail,
   signOut,
+  getAccessToken,
   loadPortfolioState,
   savePortfolioState,
+  loadNotificationSettings,
+  saveNotificationSettings,
+  loadNotificationDeliveryLogs,
 };
 
 window.dispatchEvent(new CustomEvent("stocklio:auth", { detail: getAuthState() }));
@@ -115,12 +119,40 @@ async function signOut() {
   if (!client) {
     return;
   }
-  const { error } = await client.auth.signOut({ scope: "local" });
-  if (error) {
-    throw error;
-  }
   session = null;
+  clearStoredSession();
   window.dispatchEvent(new CustomEvent("stocklio:auth", { detail: getAuthState() }));
+
+  client.auth.signOut({ scope: "local" }).catch((error) => {
+    console.warn("Stocklio sign-out cleanup failed", error);
+  });
+}
+
+function getAccessToken() {
+  return session?.access_token || "";
+}
+
+function clearStoredSession() {
+  const storageKeys = [];
+  for (const storage of [window.localStorage, window.sessionStorage]) {
+    try {
+      for (let index = 0; index < storage.length; index += 1) {
+        const key = storage.key(index);
+        if (key && (key.startsWith("sb-") || key.includes("supabase.auth.token"))) {
+          storageKeys.push([storage, key]);
+        }
+      }
+    } catch {
+      // Some embedded browsers can deny storage access during auth redirects.
+    }
+  }
+  for (const [storage, key] of storageKeys) {
+    try {
+      storage.removeItem(key);
+    } catch {
+      // Best-effort cleanup; the in-memory session has already been cleared.
+    }
+  }
 }
 
 async function loadPortfolioState() {
@@ -150,4 +182,53 @@ async function savePortfolioState(state) {
     throw error;
   }
   return { ok: true };
+}
+
+async function loadNotificationSettings() {
+  if (!client || !session?.user) {
+    return null;
+  }
+  const { data, error } = await client
+    .from("notification_settings")
+    .select("*")
+    .eq("user_id", session.user.id)
+    .maybeSingle();
+  if (error) {
+    throw error;
+  }
+  return data || null;
+}
+
+async function saveNotificationSettings(settings) {
+  if (!client || !session?.user) {
+    return { skipped: true };
+  }
+  const { error } = await client.from("notification_settings").upsert({
+    user_id: session.user.id,
+    provider: "telegram",
+    telegram_chat_id: settings.telegram_chat_id || null,
+    telegram_enabled: Boolean(settings.telegram_enabled),
+    daily_digest_enabled: Boolean(settings.daily_digest_enabled),
+    large_move_threshold_krw: Number(settings.large_move_threshold_krw || 0),
+  });
+  if (error) {
+    throw error;
+  }
+  return { ok: true };
+}
+
+async function loadNotificationDeliveryLogs(limit = 10) {
+  if (!client || !session?.user) {
+    return [];
+  }
+  const { data, error } = await client
+    .from("notification_delivery_logs")
+    .select("id, provider, message_type, status, message_preview, error_message, sent_at, created_at")
+    .eq("user_id", session.user.id)
+    .order("created_at", { ascending: false })
+    .limit(limit);
+  if (error) {
+    throw error;
+  }
+  return data || [];
 }

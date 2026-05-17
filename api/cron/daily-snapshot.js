@@ -3,9 +3,15 @@ import {
   buildPortfolioSnapshot,
   validateStateShape,
 } from "../../src/domain/portfolio-core.js";
+import {
+  buildDailyDigest,
+  shouldSendDailyDigest,
+} from "../../src/domain/notification-core.js";
 
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || "";
 const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
+const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || "";
+const SITE_URL = (process.env.VITE_PUBLIC_SITE_URL || "https://stocklio-web.vercel.app").replace(/\/$/, "");
 const CRON_SECRET = process.env.CRON_SECRET || "";
 const MAX_PORTFOLIOS_PER_RUN = Number(process.env.AUTOMATION_BATCH_SIZE || 50);
 const PRICE_FETCH_CONCURRENCY = Number(process.env.AUTOMATION_PRICE_CONCURRENCY || 5);
@@ -126,9 +132,11 @@ async function processPortfolio(portfolio, date, runId) {
   const { state: refreshed, failures } = await refreshPrices(state, runId, portfolio.user_id);
   const snapshot = buildPortfolioSnapshot(refreshed, date, idFor("snapshot"));
   const accountSnapshots = buildAccountSnapshots(refreshed, date, idFor("account-snapshot"));
+  const previousSnapshot = getPreviousSnapshot(refreshed.portfolioSnapshots, date);
   const nextState = upsertSnapshots(refreshed, date, snapshot, accountSnapshots, failures);
 
   await updatePortfolioState(portfolio.user_id, nextState);
+  await sendDailyDigestIfNeeded(portfolio.user_id, nextState, snapshot, previousSnapshot, date);
   return { failures, snapshot };
 }
 
@@ -202,12 +210,15 @@ async function refreshPrices(state, runId, userId) {
       holdings: (state.holdings || []).map((holding) => {
         const quote = quoteMap.get(holding.ticker);
         return quote
-          ? {
-              ...holding,
-              price: quote.price,
-              priceSource: quote.source,
-              priceAsOf: quote.asOf,
-            }
+            ? {
+                ...holding,
+                price: quote.price,
+                previousClose: quote.previousClose,
+                priceChange: quote.priceChange,
+                priceChangePercent: quote.priceChangePercent,
+                priceSource: quote.source,
+                priceAsOf: quote.asOf,
+              }
           : holding;
       }),
     },
@@ -269,6 +280,121 @@ async function updatePortfolioState(userId, state) {
       prefer: "return=minimal",
     },
   });
+}
+
+async function sendDailyDigestIfNeeded(userId, state, snapshot, previousSnapshot, date) {
+  const settings = await getNotificationSettings(userId);
+  const digest = buildDailyDigest({
+    state,
+    snapshot,
+    previousSnapshot,
+    date,
+    siteUrl: SITE_URL,
+  });
+  if (!settings) {
+    return;
+  }
+  if (!TELEGRAM_BOT_TOKEN) {
+    await recordNotificationLog({
+      user_id: userId,
+      provider: "telegram",
+      message_type: "daily_digest",
+      snapshot_date: date,
+      status: "error",
+      error_message: "TELEGRAM_BOT_TOKEN is not configured",
+    });
+    return;
+  }
+  if (!settings.telegram_chat_id) {
+    await recordNotificationLog({
+      user_id: userId,
+      provider: "telegram",
+      message_type: "daily_digest",
+      snapshot_date: date,
+      status: "skipped",
+      error_message: "telegram_chat_id is empty",
+    });
+    return;
+  }
+  if (!shouldSendDailyDigest(settings, digest)) {
+    await recordNotificationLog({
+      user_id: userId,
+      provider: "telegram",
+      message_type: "daily_digest",
+      snapshot_date: date,
+      status: "skipped",
+      message_preview: digest.text.slice(0, 500),
+    });
+    return;
+  }
+
+  try {
+    await sendTelegramMessage(settings.telegram_chat_id, digest.text);
+    await recordNotificationLog({
+      user_id: userId,
+      provider: "telegram",
+      message_type: "daily_digest",
+      snapshot_date: date,
+      status: "success",
+      message_preview: digest.text.slice(0, 500),
+      sent_at: new Date().toISOString(),
+    });
+  } catch (error) {
+    await recordNotificationLog({
+      user_id: userId,
+      provider: "telegram",
+      message_type: "daily_digest",
+      snapshot_date: date,
+      status: "error",
+      message_preview: digest.text.slice(0, 500),
+      error_message: error.message,
+    });
+  }
+}
+
+async function getNotificationSettings(userId) {
+  const rows = await supabaseFetch("/rest/v1/notification_settings", {
+    searchParams: {
+      select: "*",
+      user_id: `eq.${userId}`,
+      limit: "1",
+    },
+  });
+  return Array.isArray(rows) ? rows[0] : null;
+}
+
+async function recordNotificationLog(log) {
+  await supabaseFetch("/rest/v1/notification_delivery_logs", {
+    method: "POST",
+    body: JSON.stringify(log),
+    headers: {
+      "content-type": "application/json",
+      prefer: "return=minimal",
+    },
+  });
+}
+
+async function sendTelegramMessage(chatId, text) {
+  const result = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({
+      chat_id: chatId,
+      text,
+      disable_web_page_preview: true,
+    }),
+  });
+  if (!result.ok) {
+    const errorText = await result.text();
+    throw new Error(`Telegram ${result.status}: ${errorText.slice(0, 200)}`);
+  }
+}
+
+function getPreviousSnapshot(snapshots = [], date) {
+  return [...snapshots]
+    .filter((snapshot) => snapshot.date < date)
+    .sort((a, b) => a.date.localeCompare(b.date))
+    .at(-1) || null;
 }
 
 async function recordAutomationRun(run) {
@@ -335,9 +461,13 @@ async function getYahooQuote(ticker) {
   if (!Number.isFinite(price) || price <= 0) {
     throw new Error(`${ticker} 가격 응답이 없습니다`);
   }
+  const previousClose = Number(meta?.previousClose ?? meta?.chartPreviousClose ?? price);
   const timestamp = Number(meta?.regularMarketTime);
   return {
     price,
+    previousClose,
+    priceChange: price - previousClose,
+    priceChangePercent: previousClose ? (price - previousClose) / previousClose : 0,
     source: "Yahoo Finance",
     asOf: timestamp ? new Date(timestamp * 1000).toISOString() : new Date().toISOString(),
   };
@@ -350,10 +480,14 @@ async function getYahooFxRate() {
   if (!Number.isFinite(rate) || rate <= 0) {
     throw new Error("USD/KRW 환율 응답이 없습니다");
   }
+  const previousClose = Number(meta?.previousClose ?? meta?.chartPreviousClose ?? rate);
   const timestamp = Number(meta?.regularMarketTime);
   return {
     pair: "USD/KRW",
     rate,
+    previousClose,
+    change: rate - previousClose,
+    changePercent: previousClose ? (rate - previousClose) / previousClose : 0,
     source: "Yahoo Finance",
     asOf: timestamp ? new Date(timestamp * 1000).toISOString() : new Date().toISOString(),
   };

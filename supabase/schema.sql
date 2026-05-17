@@ -29,6 +29,7 @@ create policy "Users can update own portfolio state"
 create or replace function public.set_updated_at()
 returns trigger
 language plpgsql
+set search_path = public
 as $$
 begin
   new.updated_at = now();
@@ -83,3 +84,62 @@ create policy "Users can read own price logs"
   on public.price_logs
   for select
   using (auth.uid() = portfolio_user_id);
+
+create table if not exists public.notification_settings (
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  provider text not null default 'telegram' check (provider in ('telegram')),
+  telegram_chat_id text,
+  telegram_enabled boolean not null default false,
+  daily_digest_enabled boolean not null default true,
+  large_move_threshold_krw numeric not null default 0,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+alter table public.notification_settings enable row level security;
+
+drop policy if exists "Users can read own notification settings" on public.notification_settings;
+create policy "Users can read own notification settings"
+  on public.notification_settings
+  for select
+  using (auth.uid() = user_id);
+
+drop policy if exists "Users can insert own notification settings" on public.notification_settings;
+create policy "Users can insert own notification settings"
+  on public.notification_settings
+  for insert
+  with check (auth.uid() = user_id);
+
+drop policy if exists "Users can update own notification settings" on public.notification_settings;
+create policy "Users can update own notification settings"
+  on public.notification_settings
+  for update
+  using (auth.uid() = user_id)
+  with check (auth.uid() = user_id);
+
+drop trigger if exists notification_settings_set_updated_at on public.notification_settings;
+create trigger notification_settings_set_updated_at
+  before update on public.notification_settings
+  for each row
+  execute function public.set_updated_at();
+
+create table if not exists public.notification_delivery_logs (
+  id bigint generated always as identity primary key,
+  user_id uuid references auth.users(id) on delete cascade,
+  provider text not null default 'telegram',
+  message_type text not null default 'daily_digest',
+  snapshot_date date,
+  status text not null check (status in ('success', 'error', 'skipped')),
+  message_preview text,
+  error_message text,
+  sent_at timestamptz,
+  created_at timestamptz not null default now()
+);
+
+alter table public.notification_delivery_logs enable row level security;
+
+drop policy if exists "Users can read own notification logs" on public.notification_delivery_logs;
+create policy "Users can read own notification logs"
+  on public.notification_delivery_logs
+  for select
+  using (auth.uid() = user_id);

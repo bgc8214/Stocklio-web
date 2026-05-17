@@ -9,6 +9,7 @@ import {
   normalizeDashboardLayout,
   validateStateShape,
 } from "../src/domain/portfolio-core.js";
+import { buildDailyDigest, shouldSendDailyDigest } from "../src/domain/notification-core.js";
 import { formatAccountType, normalizeAccountType } from "../src/app/account-types.js";
 import {
   accountKeyFor,
@@ -274,6 +275,47 @@ test("daily move selectors split price and fx effects when previous fx is availa
   assert.equal(move.priceEffectKrw, 69_500);
   assert.equal(move.fxEffectKrw, 10_500);
   assert.equal(move.valueKrw, 80_000);
+});
+
+test("daily digest summarizes portfolio change and top movers", () => {
+  const snapshot = { date: "2026-05-14", totalValueKrw: 2_800_000, netInflowKrw: 100_000 };
+  const previousSnapshot = { date: "2026-05-13", totalValueKrw: 2_600_000 };
+  const state = {
+    ...sample,
+    fxRate: { rate: 1400, previousClose: 1390 },
+    holdings: [
+      {
+        id: "h1",
+        name: "Microsoft",
+        ticker: "MSFT",
+        quantity: 10,
+        currency: "USD",
+        price: 105,
+        priceChange: 5,
+        priceChangePercent: 0.05,
+      },
+      {
+        id: "h2",
+        name: "삼성전자",
+        ticker: "005930.KS",
+        quantity: 3,
+        currency: "KRW",
+        price: 70000,
+        priceChange: -1000,
+        priceChangePercent: -0.01,
+      },
+    ],
+  };
+
+  const digest = buildDailyDigest({ state, snapshot, previousSnapshot, date: "2026-05-14", siteUrl: "https://stocklio-web.vercel.app" });
+
+  assert.equal(digest.metrics.dayChangeKrw, 200_000);
+  assert.equal(digest.metrics.investmentChangeKrw, 100_000);
+  assert.equal(digest.topMovers[0].ticker, "MSFT");
+  assert.match(digest.text, /총자산/);
+  assert.match(digest.text, /변동 원인 상위/);
+  assert.equal(shouldSendDailyDigest({ telegram_enabled: true, daily_digest_enabled: true, large_move_threshold_krw: 300_000 }, digest), false);
+  assert.equal(shouldSendDailyDigest({ telegram_enabled: true, daily_digest_enabled: true, large_move_threshold_krw: 100_000 }, digest), true);
 });
 
 function idFactory() {

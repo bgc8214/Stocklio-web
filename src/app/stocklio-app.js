@@ -76,6 +76,13 @@ let numbersPerformanceChart = null;
 let priceRefreshPromise = null;
 let snapshotSavePromise = null;
 let toastTimer = null;
+let notificationSettings = {
+  telegram_chat_id: "",
+  telegram_enabled: false,
+  daily_digest_enabled: true,
+  large_move_threshold_krw: 0,
+};
+let notificationLogs = [];
 let authState = {
   configured: false,
   signedIn: false,
@@ -105,6 +112,28 @@ els.saveSnapshotButton.addEventListener("click", () => {
   saveTodaySnapshot({ reason: "manual" }).catch((error) => {
     setStatus("오늘 성과 기록 실패", error.message);
     showOperationToast("오늘 성과 기록 실패", error.message, "error");
+  });
+});
+
+els.notificationForm?.addEventListener("submit", (event) => {
+  event.preventDefault();
+  saveNotificationSettings().catch((error) => {
+    setStatus("알림 설정 저장 실패", error.message);
+    showOperationToast("알림 설정 저장 실패", error.message, "error");
+  });
+});
+
+els.testNotificationButton?.addEventListener("click", () => {
+  sendTestNotification().catch((error) => {
+    setStatus("테스트 알림 실패", error.message);
+    showOperationToast("테스트 알림 실패", error.message, "error");
+  });
+});
+
+els.findTelegramChatButton?.addEventListener("click", () => {
+  findTelegramChatId().catch((error) => {
+    setStatus("chat id 찾기 실패", error.message);
+    showOperationToast("chat id 찾기 실패", error.message, "error");
   });
 });
 
@@ -158,7 +187,8 @@ els.logoutButton.addEventListener("click", () => {
   setStatus("로그아웃 중", "세션을 정리하고 있습니다");
   window.StocklioAuth?.signOut?.()
     .then(() => {
-      setStatus("로그아웃 완료", "현재 기기에 저장됩니다");
+      els.logoutButton.disabled = false;
+      setStatus("로그아웃 완료", "다시 로그인할 수 있습니다");
     })
     .catch((error) => {
       els.logoutButton.disabled = false;
@@ -169,7 +199,7 @@ els.logoutButton.addEventListener("click", () => {
 window.addEventListener("stocklio:auth", (event) => {
   authState = event.detail;
   renderAuth();
-  loadState().then((nextState) => {
+  Promise.all([loadState(), loadNotificationState()]).then(([nextState]) => {
     state = nextState;
     render();
     setStatus(authState.signedIn ? "포트폴리오 불러옴" : "브라우저 저장", authState.user?.email || "현재 기기에 저장됩니다");
@@ -554,6 +584,136 @@ function loadState() {
     });
 }
 
+async function loadNotificationState() {
+  if (!window.StocklioAuth?.isConfigured?.() || !window.StocklioAuth.getState().signedIn) {
+    notificationSettings = {
+      telegram_chat_id: "",
+      telegram_enabled: false,
+      daily_digest_enabled: true,
+      large_move_threshold_krw: 0,
+    };
+    notificationLogs = [];
+    return;
+  }
+  try {
+    const [settings, logs] = await Promise.all([
+      window.StocklioAuth.loadNotificationSettings?.(),
+      window.StocklioAuth.loadNotificationDeliveryLogs?.(10),
+    ]);
+    notificationSettings = {
+      telegram_chat_id: settings?.telegram_chat_id || "",
+      telegram_enabled: Boolean(settings?.telegram_enabled),
+      daily_digest_enabled: settings?.daily_digest_enabled !== false,
+      large_move_threshold_krw: Number(settings?.large_move_threshold_krw || 0),
+    };
+    notificationLogs = Array.isArray(logs) ? logs : [];
+  } catch (error) {
+    notificationLogs = [];
+    setStatus("알림 설정 불러오기 실패", error.message);
+  }
+}
+
+async function saveNotificationSettings() {
+  if (!authState.signedIn) {
+    throw new Error("로그인 후 알림을 설정할 수 있습니다");
+  }
+  const nextSettings = {
+    telegram_chat_id: els.telegramChatId.value.trim(),
+    telegram_enabled: els.telegramEnabled.checked,
+    daily_digest_enabled: els.dailyDigestEnabled.checked,
+    large_move_threshold_krw: Number(els.largeMoveThreshold.value || 0),
+  };
+  els.saveNotificationButton.disabled = true;
+  try {
+    await window.StocklioAuth.saveNotificationSettings(nextSettings);
+    notificationSettings = nextSettings;
+    setStatus("알림 설정 저장됨", notificationSettings.telegram_enabled ? "매일 스냅샷 후 텔레그램으로 발송합니다" : "알림이 꺼져 있습니다");
+    showOperationToast("알림 설정 저장", "텔레그램 알림 설정을 저장했습니다", "success");
+    await loadNotificationState();
+    renderNotifications();
+  } finally {
+    els.saveNotificationButton.disabled = false;
+  }
+}
+
+async function sendTestNotification() {
+  if (!authState.signedIn) {
+    throw new Error("로그인 후 테스트할 수 있습니다");
+  }
+  const chatId = els.telegramChatId.value.trim();
+  if (!chatId) {
+    throw new Error("Telegram chat id를 입력하세요");
+  }
+  els.testNotificationButton.disabled = true;
+  setStatus("테스트 알림 전송 중", "텔레그램으로 메시지를 보내고 있습니다");
+  try {
+    const token = window.StocklioAuth.getAccessToken?.();
+    const result = await fetch("/api/notifications/test", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ chatId }),
+    });
+    const payload = await result.json().catch(() => ({}));
+    if (!result.ok) {
+      throw new Error(formatNotificationError(payload.error || `HTTP ${result.status}`));
+    }
+    setStatus("테스트 알림 전송 완료", "텔레그램에서 메시지를 확인하세요");
+    showOperationToast("테스트 알림 전송", "텔레그램으로 테스트 메시지를 보냈습니다", "success");
+    await loadNotificationState();
+    renderNotifications();
+  } finally {
+    els.testNotificationButton.disabled = false;
+  }
+}
+
+async function findTelegramChatId() {
+  if (!authState.signedIn) {
+    throw new Error("로그인 후 chat id를 찾을 수 있습니다");
+  }
+  els.findTelegramChatButton.disabled = true;
+  setStatus("chat id 찾는 중", "@stocklio_alarm_bot에 /start를 보낸 대화를 확인합니다");
+  try {
+    const token = window.StocklioAuth.getAccessToken?.();
+    const result = await fetch("/api/notifications/telegram-updates", {
+      headers: {
+        authorization: `Bearer ${token}`,
+      },
+    });
+    const payload = await result.json().catch(() => ({}));
+    if (!result.ok) {
+      throw new Error(formatNotificationError(payload.error || `HTTP ${result.status}`));
+    }
+    const chat = payload.chats?.[0];
+    if (!chat) {
+      throw new Error("@stocklio_alarm_bot에 /start를 먼저 보내고 다시 눌러주세요");
+    }
+    els.telegramChatId.value = chat.id;
+    setStatus("chat id 입력 완료", `${chat.name || "텔레그램 대화"} · ${chat.id}`);
+    showOperationToast("chat id 찾기 완료", "텔레그램 chat id를 입력했습니다. 설정 저장 또는 테스트 메시지를 눌러주세요", "success");
+  } finally {
+    els.findTelegramChatButton.disabled = false;
+  }
+}
+
+function formatNotificationError(error) {
+  if (error === "missing_telegram_bot_token") {
+    return "서버에 TELEGRAM_BOT_TOKEN 환경변수가 아직 없습니다";
+  }
+  if (error === "telegram_chat_id_required") {
+    return "Telegram chat id를 입력하세요";
+  }
+  if (String(error).startsWith("telegram_send_failed_")) {
+    return "텔레그램 전송에 실패했습니다. chat id와 봇 대화 시작 여부를 확인하세요";
+  }
+  if (String(error).startsWith("telegram_updates_failed_")) {
+    return "텔레그램 대화 목록을 불러오지 못했습니다";
+  }
+  return error || "알 수 없는 오류";
+}
+
 function normalizeState(input) {
   const fallback = structuredClone(sampleState);
   if (!input || typeof input !== "object") {
@@ -590,7 +750,7 @@ async function initialize() {
   try {
     configureRuntimeSurface();
     authState = await waitForAuthState();
-    state = await loadState();
+    [state] = await Promise.all([loadState(), loadNotificationState()]);
     render();
     renderAuth();
     setStatus(authState.signedIn ? "Supabase 데이터 불러옴" : "데이터 불러옴", authState.user?.email || state.automation?.lastResult || "저장소와 연결됨");
@@ -678,6 +838,7 @@ function render() {
   renderCashBalances();
   renderAutomation();
   renderPriceLogs();
+  renderNotifications();
   renderReconciliation();
   renderDashboardLayout();
   renderEmptyPortfolioNotice();
@@ -708,6 +869,7 @@ function renderAuth() {
     els.naverLoginButton.hidden = true;
     els.googleLoginButton.hidden = true;
     els.emailLoginButton.hidden = true;
+    els.logoutButton.disabled = false;
     els.logoutButton.hidden = false;
     renderSyncStatus();
     return;
@@ -766,7 +928,7 @@ async function sendEmailLoginLink() {
 
 function isEmbeddedBrowser() {
   const userAgent = navigator.userAgent || "";
-  return /NAVER|KAKAOTALK|KAKAOSTORY|Instagram|FBAN|FBAV|Line\\//i.test(userAgent);
+  return /NAVER|KAKAOTALK|KAKAOSTORY|Instagram|FBAN|FBAV|Line\//i.test(userAgent);
 }
 
 function setSyncState(status, message) {
@@ -2210,6 +2372,50 @@ function renderPriceLogs() {
         </tr>`)
         .join("")
     : `<tr><td colspan="5">가격 업데이트 로그가 없습니다</td></tr>`;
+}
+
+function renderNotifications() {
+  if (!els.notificationForm) {
+    return;
+  }
+  const signedIn = Boolean(authState.signedIn);
+  els.telegramChatId.value = notificationSettings.telegram_chat_id || "";
+  els.largeMoveThreshold.value = Number(notificationSettings.large_move_threshold_krw || 0) || "";
+  els.telegramEnabled.checked = Boolean(notificationSettings.telegram_enabled);
+  els.dailyDigestEnabled.checked = notificationSettings.daily_digest_enabled !== false;
+  els.notificationForm.querySelectorAll("input, button").forEach((control) => {
+    control.disabled = !signedIn;
+  });
+  els.notificationStatus.textContent = signedIn
+    ? notificationSettings.telegram_enabled
+      ? "매일 스냅샷 후 발송"
+      : "알림 꺼짐"
+    : "로그인 후 설정 가능";
+  const latest = notificationLogs[0];
+  els.notificationLogSummary.textContent = latest
+    ? `${latest.status === "success" ? "성공" : latest.status === "skipped" ? "건너뜀" : "실패"} · ${formatAsOf(latest.sent_at || latest.created_at)}`
+    : "발송 기록이 없습니다";
+  els.notificationLogsBody.innerHTML = notificationLogs.length
+    ? notificationLogs
+        .slice(0, 8)
+        .map((log) => `<tr>
+          <td>${formatAsOf(log.sent_at || log.created_at)}</td>
+          <td>${log.message_type === "test" ? "테스트" : "일일 요약"}</td>
+          <td class="${log.status === "success" ? "positive" : log.status === "error" ? "negative" : ""}">${formatNotificationStatus(log.status)}</td>
+          <td>${escapeHtml(log.error_message || log.message_preview || "")}</td>
+        </tr>`)
+        .join("")
+    : `<tr><td colspan="4">발송 기록이 없습니다</td></tr>`;
+}
+
+function formatNotificationStatus(status) {
+  if (status === "success") {
+    return "성공";
+  }
+  if (status === "skipped") {
+    return "건너뜀";
+  }
+  return "실패";
 }
 
 function renderReconciliation() {
