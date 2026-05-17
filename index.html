@@ -482,64 +482,19 @@
         </div>
       </section>
 
-      <section class="detail-grid" data-view="automation" hidden>
-        <div class="panel">
+      <section class="detail-grid automation-view" data-view="automation" hidden>
+        <div class="panel automation-panel notification-panel">
           <div class="section-heading">
-            <h2>자동화 상태</h2>
-            <span>가격과 스냅샷</span>
-          </div>
-          <div class="automation-list">
-            <div>
-              <strong>현재</strong>
-              <span id="automationCurrent">포트폴리오 저장소와 스냅샷 상태를 확인</span>
-            </div>
-            <div>
-              <strong>자동 실행</strong>
-              <span id="automationSchedule">매일 07:00 Asia/Seoul</span>
-            </div>
-            <div>
-              <strong>마지막 결과</strong>
-              <span id="automationResult">아직 자동 실행 없음</span>
-            </div>
-          </div>
-          <div class="automation-actions">
-            <div>
-              <button id="refreshButton" class="secondary" type="button">가격 다시 가져오기</button>
-              <span>보유 종목 현재가와 USD/KRW를 다시 조회합니다</span>
-            </div>
-            <div>
-              <button id="saveSnapshotButton" class="secondary" type="button">오늘 스냅샷 다시 계산</button>
-              <span>현재 총자산을 오늘 성과 기록으로 추가하거나 덮어씁니다</span>
-            </div>
-          </div>
-          <div class="table-wrap compact">
-            <table>
-              <thead>
-                <tr>
-                  <th>시각</th>
-                  <th>대상</th>
-                  <th>상태</th>
-                  <th>가격/환율</th>
-                  <th>메시지</th>
-                </tr>
-              </thead>
-              <tbody id="priceLogsBody"></tbody>
-            </table>
-          </div>
-        </div>
-
-        <div class="panel">
-          <div class="section-heading">
-            <h2>텔레그램 알림</h2>
+            <h2>알림</h2>
             <span id="notificationStatus">로그인 후 설정 가능</span>
           </div>
           <form id="notificationForm" class="notification-form">
             <label>
-              <span>Telegram chat id</span>
+              <span>텔레그램 대화</span>
               <input id="telegramChatId" type="text" inputmode="numeric" placeholder="예: 123456789">
             </label>
             <label>
-              <span>큰 변동 기준 KRW</span>
+              <span>알림 기준</span>
               <input id="largeMoveThreshold" type="number" min="0" step="10000" placeholder="0이면 매일 발송">
             </label>
             <label class="toggle-row">
@@ -551,14 +506,14 @@
               <span>매일 스냅샷 요약 받기</span>
             </label>
             <div class="form-actions inline-actions">
-              <button id="saveNotificationButton" type="submit">알림 설정 저장</button>
+              <button id="saveNotificationButton" type="submit">저장</button>
               <button id="findTelegramChatButton" class="ghost" type="button">chat id 찾기</button>
               <button id="testNotificationButton" class="secondary" type="button">테스트 메시지</button>
             </div>
           </form>
-          <div class="automation-list">
+          <div class="automation-summary">
             <div>
-              <strong>받는 내용</strong>
+              <strong>요약 내용</strong>
               <span>총자산, 전일 대비, 투자손익 추정, 입출금 영향, 변동 원인 상위 종목</span>
             </div>
             <div>
@@ -566,25 +521,47 @@
               <span id="notificationLogSummary">발송 기록이 없습니다</span>
             </div>
           </div>
-          <div class="table-wrap compact">
-            <table>
-              <thead>
-                <tr>
-                  <th>시각</th>
-                  <th>유형</th>
-                  <th>상태</th>
-                  <th>메시지</th>
-                </tr>
-              </thead>
-              <tbody id="notificationLogsBody"></tbody>
-            </table>
-          </div>
         </div>
 
-        <div class="panel">
+        <div class="panel automation-panel">
           <div class="section-heading">
-            <h2>가져오기와 백업</h2>
-            <span>검증과 복원</span>
+            <h2>자동 기록</h2>
+            <span>가격과 성과 기록</span>
+          </div>
+          <div class="automation-summary status-summary">
+            <div>
+              <strong>현재</strong>
+              <span id="automationCurrent">포트폴리오 저장소와 스냅샷 상태를 확인</span>
+            </div>
+            <div>
+              <strong>실행</strong>
+              <span id="automationSchedule">매일 07:00 Asia/Seoul</span>
+            </div>
+            <div>
+              <strong>마지막 결과</strong>
+              <span id="automationResult">아직 자동 실행 없음</span>
+            </div>
+          </div>
+          <details class="advanced-section">
+            <summary>수동 작업</summary>
+            <div class="automation-actions">
+              <div>
+                <button id="refreshButton" class="secondary" type="button">가격 다시 가져오기</button>
+                <span>현재가와 USD/KRW를 다시 조회합니다</span>
+              </div>
+              <div>
+                <button id="saveSnapshotButton" class="secondary" type="button">오늘 성과 다시 계산</button>
+                <span>오늘 성과 기록을 다시 계산합니다</span>
+              </div>
+            </div>
+          </details>
+        </div>
+
+        <details class="panel advanced-section automation-advanced-panel">
+          <summary>기록과 백업</summary>
+          <div class="section-heading">
+            <h2>기록과 백업</h2>
+            <span>문제 해결과 데이터 관리</span>
           </div>
           <div class="backup-actions">
             <button id="exportBackupButton" type="button">JSON 백업</button>
@@ -600,6 +577,10 @@
             <button id="loadImportSummaryButton" class="secondary" type="button" data-local-only>최근 import 검증</button>
           </div>
           <div class="automation-list">
+            <div>
+              <strong>알림 발송 기록</strong>
+              <span>최근 발송 상세는 아래 기록에서 확인할 수 있습니다</span>
+            </div>
             <div>
               <strong>Numbers import</strong>
               <span id="importSummary">검증 리포트를 불러오면 마이그레이션 요약을 표시합니다</span>
@@ -617,7 +598,36 @@
             <button id="emptyPortfolioButton" class="ghost small-button" type="button">포트폴리오 초기화</button>
             <button id="resetButton" class="ghost small-button" type="button" data-local-only>샘플 데이터 불러오기</button>
           </div>
-        </div>
+          <div class="log-grids">
+            <div class="table-wrap compact">
+              <table>
+                <thead>
+                  <tr>
+                    <th>시각</th>
+                    <th>대상</th>
+                    <th>상태</th>
+                    <th>가격/환율</th>
+                    <th>메시지</th>
+                  </tr>
+                </thead>
+                <tbody id="priceLogsBody"></tbody>
+              </table>
+            </div>
+            <div class="table-wrap compact">
+              <table>
+                <thead>
+                  <tr>
+                    <th>시각</th>
+                    <th>유형</th>
+                    <th>상태</th>
+                    <th>메시지</th>
+                  </tr>
+                </thead>
+                <tbody id="notificationLogsBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </details>
       </section>
     </main>
     </div>
