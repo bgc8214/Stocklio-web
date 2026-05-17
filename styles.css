@@ -1036,10 +1036,52 @@ main {
   justify-content: flex-end;
 }
 
+.automation-view {
+  grid-template-columns: minmax(0, 1.2fr) minmax(320px, 0.8fr);
+}
+
+.automation-view .automation-advanced-panel {
+  grid-column: 1 / -1;
+}
+
+.automation-panel {
+  align-content: start;
+}
+
+.automation-summary {
+  display: grid;
+  gap: 10px;
+}
+
+.automation-summary div {
+  background: var(--surface-soft);
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  padding: 12px;
+}
+
+.automation-summary strong {
+  font-size: 13px;
+}
+
+.automation-summary span {
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.status-summary {
+  grid-template-columns: 1fr;
+}
+
 .notification-form {
   display: grid;
   gap: 12px;
-  grid-template-columns: minmax(180px, 1.4fr) minmax(160px, 1fr) repeat(2, minmax(150px, auto));
+  grid-template-columns: repeat(2, minmax(180px, 1fr));
   margin-bottom: 14px;
 }
 
@@ -1078,6 +1120,44 @@ main {
   gap: 10px;
   grid-column: 1 / -1;
   grid-template-columns: repeat(3, minmax(140px, 1fr));
+}
+
+.advanced-section {
+  margin-top: 14px;
+}
+
+.advanced-section > summary {
+  align-items: center;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  color: var(--ink);
+  cursor: pointer;
+  display: flex;
+  font-weight: 800;
+  justify-content: space-between;
+  min-height: 42px;
+  padding: 0 12px;
+}
+
+.advanced-section > summary::after {
+  color: var(--muted);
+  content: "펼치기";
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.advanced-section[open] > summary::after {
+  content: "접기";
+}
+
+.automation-advanced-panel > summary {
+  margin: -8px 0 16px;
+}
+
+.log-grids {
+  display: grid;
+  gap: 14px;
+  margin-top: 14px;
 }
 
 .swatch {

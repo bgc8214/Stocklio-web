@@ -197,6 +197,9 @@ async function verifyBrowser() {
     assert.equal(performance.bodyOverflow, false);
 
     await page.evaluate(() => document.querySelector("[data-view-tab=\"automation\"]").click());
+    await page.locator("[data-view=\"automation\"] .advanced-section").first().evaluate((element) => {
+      element.open = true;
+    });
     await page.click("#saveSnapshotButton");
     await page.waitForSelector("#operationToast:not([hidden])", { timeout: 10_000 });
     const automationActions = await page.evaluate(() => ({
