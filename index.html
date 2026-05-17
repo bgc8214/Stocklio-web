@@ -49,9 +49,7 @@
           <div class="auth-panel">
             <span id="authStatus"></span>
             <span id="syncStatus" class="sync-status" hidden></span>
-            <button id="naverLoginButton" class="ghost small-button naver-login-button" type="button">네이버 로그인</button>
-            <button id="googleLoginButton" class="ghost small-button" type="button">Google 로그인</button>
-            <button id="emailLoginButton" class="ghost small-button" type="button">이메일 로그인</button>
+            <button id="openLoginButton" class="small-button" type="button">로그인</button>
             <button id="logoutButton" class="ghost small-button" type="button" hidden>로그아웃</button>
           </div>
         </div>
@@ -61,6 +59,33 @@
         <strong id="operationToastTitle">처리 중</strong>
         <span id="operationToastDetail">작업 상태를 확인하고 있습니다</span>
       </div>
+
+      <dialog id="loginDialog" class="login-dialog" aria-labelledby="loginDialogTitle">
+        <div class="login-card">
+          <div class="login-dialog-heading">
+            <div>
+              <strong id="loginDialogTitle">Stocklio 로그인</strong>
+              <span>포트폴리오를 클라우드에 저장하고 자동 알림을 받을 수 있습니다.</span>
+            </div>
+            <button id="loginDialogCloseButton" class="ghost small-button" type="button" aria-label="로그인 창 닫기">닫기</button>
+          </div>
+          <div class="login-options" aria-label="로그인 방식">
+            <button id="naverLoginButton" class="login-provider-button login-provider-naver" type="button">
+              <span aria-hidden="true">N</span>
+              <strong>네이버로 로그인</strong>
+            </button>
+            <button id="googleLoginButton" class="login-provider-button login-provider-google" type="button">
+              <span aria-hidden="true">G</span>
+              <strong>Google로 로그인</strong>
+            </button>
+            <button id="emailLoginButton" class="login-provider-button login-provider-email" type="button">
+              <span aria-hidden="true">@</span>
+              <strong>이메일로 로그인</strong>
+            </button>
+          </div>
+          <p class="login-dialog-note">네이버 앱 안에서는 네이버 로그인이나 이메일 로그인을 권장합니다.</p>
+        </div>
+      </dialog>
 
       <dialog id="emailLoginDialog" class="email-login-dialog" aria-labelledby="emailLoginTitle">
         <form id="emailLoginForm" method="dialog">

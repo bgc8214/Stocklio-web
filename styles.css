@@ -256,18 +256,139 @@ h2 {
   font-weight: 700;
 }
 
+.login-dialog,
 .email-login-dialog {
   border: 1px solid var(--line);
   border-radius: 10px;
   box-shadow: var(--shadow);
   color: var(--ink);
-  max-width: min(420px, calc(100vw - 32px));
   padding: 0;
+}
+
+.login-dialog {
+  max-width: min(480px, calc(100vw - 32px));
+  width: 480px;
+}
+
+.email-login-dialog {
+  max-width: min(420px, calc(100vw - 32px));
   width: 420px;
 }
 
+.login-dialog::backdrop,
 .email-login-dialog::backdrop {
   background: rgba(17, 31, 25, 0.35);
+}
+
+.login-card {
+  display: grid;
+  gap: 20px;
+  padding: 26px;
+}
+
+.login-dialog-heading {
+  align-items: start;
+  display: flex;
+  gap: 14px;
+  justify-content: space-between;
+}
+
+.login-dialog-heading > div {
+  display: grid;
+  gap: 5px;
+}
+
+.login-dialog-heading strong {
+  font-size: 26px;
+  letter-spacing: 0;
+}
+
+.login-dialog-heading span,
+.login-dialog-note {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.45;
+  margin: 0;
+}
+
+.login-options {
+  display: grid;
+  gap: 10px;
+}
+
+.login-provider-button {
+  align-items: center;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  display: grid;
+  gap: 14px;
+  grid-template-columns: 44px 1fr;
+  justify-content: start;
+  min-height: 60px;
+  padding: 0 18px;
+  text-align: left;
+  width: 100%;
+}
+
+.login-provider-button span {
+  align-items: center;
+  border-radius: 7px;
+  display: inline-flex;
+  font-size: 22px;
+  font-weight: 900;
+  height: 34px;
+  justify-content: center;
+  width: 34px;
+}
+
+.login-provider-button strong {
+  font-size: 18px;
+  letter-spacing: 0;
+}
+
+.login-provider-naver {
+  background: #03c75a;
+  border-color: #03c75a;
+  color: white;
+}
+
+.login-provider-naver:hover {
+  background: #02b350;
+}
+
+.login-provider-naver span {
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.login-provider-google {
+  background: white;
+  color: var(--ink);
+}
+
+.login-provider-google:hover,
+.login-provider-email:hover {
+  background: var(--surface-soft);
+}
+
+.login-provider-google span {
+  background: #fff;
+  border: 1px solid var(--line);
+  color: #4285f4;
+}
+
+.login-provider-email {
+  background: #213b5b;
+  border-color: #213b5b;
+  color: white;
+}
+
+.login-provider-email:hover {
+  background: #182f4b;
+}
+
+.login-provider-email span {
+  background: rgba(255, 255, 255, 0.16);
 }
 
 .email-login-dialog form {
@@ -307,17 +428,6 @@ h2 {
   min-height: 36px;
   padding: 0 13px;
   width: fit-content;
-}
-
-.naver-login-button {
-  background: #03c75a;
-  border-color: #03c75a;
-  color: white;
-}
-
-.naver-login-button:hover {
-  background: #02b350;
-  border-color: #02b350;
 }
 
 main {
@@ -2035,6 +2145,29 @@ td:nth-child(4) {
 
   .auth-panel button {
     width: fit-content;
+  }
+
+  .login-card {
+    padding: 20px;
+  }
+
+  .login-dialog-heading {
+    align-items: stretch;
+    display: grid;
+  }
+
+  .login-dialog-heading button {
+    justify-self: end;
+  }
+
+  .login-provider-button {
+    grid-template-columns: 40px 1fr;
+    min-height: 56px;
+    padding: 0 14px;
+  }
+
+  .login-provider-button strong {
+    font-size: 16px;
   }
 
   .toolbar-actions {
