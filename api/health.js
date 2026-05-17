@@ -64,6 +64,6 @@ export default async function handler(_request, response) {
     supabaseStatus,
     automationStatus,
     lastAutomationRun,
-    api: ["yahoo/chart", "health", "cron/daily-snapshot"],
+    api: ["yahoo/chart", "health", "cron/daily-snapshot", "naver/userinfo"],
   });
 }
