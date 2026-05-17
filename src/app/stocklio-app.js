@@ -154,7 +154,16 @@ els.emailLoginForm.addEventListener("submit", (event) => {
 });
 
 els.logoutButton.addEventListener("click", () => {
-  window.StocklioAuth?.signOut?.().catch((error) => setStatus("로그아웃 실패", error.message));
+  els.logoutButton.disabled = true;
+  setStatus("로그아웃 중", "세션을 정리하고 있습니다");
+  window.StocklioAuth?.signOut?.()
+    .then(() => {
+      setStatus("로그아웃 완료", "현재 기기에 저장됩니다");
+    })
+    .catch((error) => {
+      els.logoutButton.disabled = false;
+      setStatus("로그아웃 실패", error.message);
+    });
 });
 
 window.addEventListener("stocklio:auth", (event) => {
@@ -708,6 +717,7 @@ function renderAuth() {
   els.naverLoginButton.disabled = false;
   els.googleLoginButton.disabled = false;
   els.emailLoginButton.disabled = false;
+  els.logoutButton.disabled = false;
   els.naverLoginButton.hidden = false;
   els.googleLoginButton.hidden = false;
   els.emailLoginButton.hidden = false;

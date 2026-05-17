@@ -115,10 +115,12 @@ async function signOut() {
   if (!client) {
     return;
   }
-  const { error } = await client.auth.signOut();
+  const { error } = await client.auth.signOut({ scope: "local" });
   if (error) {
     throw error;
   }
+  session = null;
+  window.dispatchEvent(new CustomEvent("stocklio:auth", { detail: getAuthState() }));
 }
 
 async function loadPortfolioState() {

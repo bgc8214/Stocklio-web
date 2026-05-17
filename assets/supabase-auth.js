@@ -7452,8 +7452,9 @@ function Oi(e) {
 }
 async function ki() {
 	if (!Q) return;
-	let { error: e } = await Q.auth.signOut();
+	let { error: e } = await Q.auth.signOut({ scope: "local" });
 	if (e) throw e;
+	$ = null, window.dispatchEvent(new CustomEvent("stocklio:auth", { detail: Ci() }));
 }
 async function Ai() {
 	if (!Q || !$?.user) return null;
