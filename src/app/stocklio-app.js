@@ -115,6 +115,20 @@ els.saveSnapshotButton.addEventListener("click", () => {
   });
 });
 
+els.openLoginButton?.addEventListener("click", () => {
+  openLoginDialog();
+});
+
+els.loginDialogCloseButton?.addEventListener("click", () => {
+  closeLoginDialog();
+});
+
+els.loginDialog?.addEventListener("click", (event) => {
+  if (event.target === els.loginDialog) {
+    closeLoginDialog();
+  }
+});
+
 els.notificationForm?.addEventListener("submit", (event) => {
   event.preventDefault();
   saveNotificationSettings().catch((error) => {
@@ -151,11 +165,13 @@ els.emptyPortfolioButton.addEventListener("click", () => {
 
 els.googleLoginButton.addEventListener("click", () => {
   if (isEmbeddedBrowser()) {
+    closeLoginDialog();
     openEmailLoginDialog();
     setStatus("Google 로그인 제한", "네이버 앱에서는 네이버 로그인 또는 이메일 로그인을 사용하세요");
     showOperationToast("Google 로그인 제한", "현재 브라우저에서는 Google 정책상 로그인이 차단될 수 있어 이메일 로그인을 열었습니다", "warning");
     return;
   }
+  closeLoginDialog();
   window.StocklioAuth?.signInWithGoogle?.().catch((error) => {
     setStatus("로그인 실패", error.message);
     showOperationToast("Google 로그인 실패", error.message, "error");
@@ -163,6 +179,7 @@ els.googleLoginButton.addEventListener("click", () => {
 });
 
 els.naverLoginButton.addEventListener("click", () => {
+  closeLoginDialog();
   window.StocklioAuth?.signInWithNaver?.().catch((error) => {
     setStatus("네이버 로그인 실패", error.message);
     showOperationToast("네이버 로그인 실패", "Supabase Custom OAuth Provider 설정을 확인하세요", "error");
@@ -170,6 +187,7 @@ els.naverLoginButton.addEventListener("click", () => {
 });
 
 els.emailLoginButton.addEventListener("click", () => {
+  closeLoginDialog();
   openEmailLoginDialog();
 });
 
@@ -855,35 +873,54 @@ function renderAuth() {
   if (!configured) {
     els.authStatus.textContent = "";
     setSyncState("idle", "");
+    els.openLoginButton.disabled = true;
+    els.openLoginButton.hidden = false;
     els.naverLoginButton.disabled = true;
     els.googleLoginButton.disabled = true;
     els.emailLoginButton.disabled = true;
-    els.naverLoginButton.hidden = false;
-    els.googleLoginButton.hidden = false;
-    els.emailLoginButton.hidden = false;
     els.logoutButton.hidden = true;
     return;
   }
   if (authState.signedIn) {
     els.authStatus.textContent = authState.user?.name || authState.user?.email || "";
-    els.naverLoginButton.hidden = true;
-    els.googleLoginButton.hidden = true;
-    els.emailLoginButton.hidden = true;
+    els.openLoginButton.hidden = true;
     els.logoutButton.disabled = false;
     els.logoutButton.hidden = false;
+    closeLoginDialog();
     renderSyncStatus();
     return;
   }
-  els.authStatus.textContent = isEmbeddedBrowser() ? "인앱 브라우저는 네이버/이메일 권장" : "";
+  els.authStatus.textContent = "";
   setSyncState("idle", "");
+  els.openLoginButton.disabled = false;
+  els.openLoginButton.hidden = false;
   els.naverLoginButton.disabled = false;
   els.googleLoginButton.disabled = false;
   els.emailLoginButton.disabled = false;
   els.logoutButton.disabled = false;
-  els.naverLoginButton.hidden = false;
-  els.googleLoginButton.hidden = false;
-  els.emailLoginButton.hidden = false;
   els.logoutButton.hidden = true;
+}
+
+function openLoginDialog() {
+  if (!els.loginDialog) {
+    return;
+  }
+  if (typeof els.loginDialog.showModal === "function") {
+    els.loginDialog.showModal();
+  } else {
+    els.loginDialog.hidden = false;
+  }
+}
+
+function closeLoginDialog() {
+  if (!els.loginDialog) {
+    return;
+  }
+  if (els.loginDialog.open) {
+    els.loginDialog.close();
+  } else {
+    els.loginDialog.hidden = true;
+  }
 }
 
 function openEmailLoginDialog() {
