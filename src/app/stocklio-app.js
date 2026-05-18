@@ -48,6 +48,7 @@ import {
   getHoldingDailyMove as selectHoldingDailyMove,
 } from "./daily-move-selectors.js";
 import { fetchJson, getQuote, getUsdKrw } from "./services/market-data-service.js";
+import { getUsMarketContextForSeoulDate } from "../domain/market-calendar.js";
 import {
   buildAccountSnapshots as createAccountSnapshots,
   buildPortfolioSnapshot as createPortfolioSnapshot,
@@ -115,6 +116,20 @@ els.saveSnapshotButton.addEventListener("click", () => {
   });
 });
 
+els.dashboardRefreshButton?.addEventListener("click", () => {
+  refreshPrices({ reason: "manual" }).catch((error) => {
+    setStatus("가격 업데이트 실패", error.message);
+    showOperationToast("가격 업데이트 실패", error.message, "error");
+  });
+});
+
+els.dashboardSnapshotButton?.addEventListener("click", () => {
+  saveTodaySnapshot({ reason: "manual" }).catch((error) => {
+    setStatus("오늘 성과 기록 실패", error.message);
+    showOperationToast("오늘 성과 기록 실패", error.message, "error");
+  });
+});
+
 els.openLoginButton?.addEventListener("click", () => {
   openLoginDialog();
 });
@@ -161,6 +176,14 @@ els.emptyPortfolioButton.addEventListener("click", () => {
   saveState();
   render();
   setStatus("빈 포트폴리오로 전환했습니다", "보유 종목, 계좌, 예수금을 새로 입력하세요");
+});
+
+els.addAccountButton?.addEventListener("click", () => {
+  editingAccountId = null;
+  els.accountForm.reset();
+  els.accountForm.hidden = false;
+  updateEditControls();
+  els.accountForm.querySelector("input")?.focus();
 });
 
 els.googleLoginButton.addEventListener("click", () => {
@@ -407,6 +430,7 @@ els.accountForm.addEventListener("submit", (event) => {
   }
   editingAccountId = null;
   event.currentTarget.reset();
+  event.currentTarget.hidden = true;
   updateEditControls();
   saveState();
   render();
@@ -855,6 +879,7 @@ function render() {
   renderCashFlows();
   renderCashBalances();
   renderAutomation();
+  renderDashboardStatus();
   renderPriceLogs();
   renderNotifications();
   renderReconciliation();
@@ -871,14 +896,14 @@ function renderAuth() {
   const configured = window.StocklioAuth?.isConfigured?.() || false;
   authState = window.StocklioAuth?.getState?.() || authState;
   if (!configured) {
-    els.authStatus.textContent = "";
+    els.authStatus.textContent = "브라우저 저장";
     setSyncState("idle", "");
-    els.openLoginButton.disabled = true;
-    els.openLoginButton.hidden = false;
+    els.openLoginButton.hidden = true;
     els.naverLoginButton.disabled = true;
     els.googleLoginButton.disabled = true;
     els.emailLoginButton.disabled = true;
     els.logoutButton.hidden = true;
+    renderDashboardStatus();
     return;
   }
   if (authState.signedIn) {
@@ -888,6 +913,7 @@ function renderAuth() {
     els.logoutButton.hidden = false;
     closeLoginDialog();
     renderSyncStatus();
+    renderDashboardStatus();
     return;
   }
   els.authStatus.textContent = "";
@@ -899,6 +925,7 @@ function renderAuth() {
   els.emailLoginButton.disabled = false;
   els.logoutButton.disabled = false;
   els.logoutButton.hidden = true;
+  renderDashboardStatus();
 }
 
 function openLoginDialog() {
@@ -1046,7 +1073,9 @@ function setView(view) {
     button.classList.toggle("active", button.dataset.viewTab === view);
   });
   els.viewSections.forEach((section) => {
-    section.hidden = section.dataset.view !== view;
+    const isActive = section.dataset.view === view;
+    section.hidden = !isActive;
+    section.inert = !isActive;
   });
   renderEmptyPortfolioNotice();
 }
@@ -1575,9 +1604,22 @@ function renderNumbersPerformanceChart(rows) {
 }
 
 function renderBreakdown() {
+  const marketContext = getCurrentMarketContext();
   const movers = getDailyMoveRows().slice(0, 5);
   const refreshImpact = getRecentPriceRefreshImpact();
   if (!movers.length) {
+    if (marketContext.isMarketClosed) {
+      const fallback = renderBreakdownFallback();
+      els.breakdownList.innerHTML = `
+        <div class="daily-move-empty">
+          <strong>미국장 ${escapeHtml(marketContext.closedReason || "휴장")}에는 새 종목별 변동을 표시하지 않습니다</strong>
+          <span>${escapeHtml(marketContext.label)}입니다. 총자산 변화가 있다면 입출금 또는 환율/현금 변화일 수 있습니다.</span>
+        </div>
+        <div class="breakdown-subtitle">구성 참고</div>
+        ${fallback}
+      `;
+      return;
+    }
     if (refreshImpact?.rows?.length) {
       els.breakdownList.innerHTML = renderPriceRefreshImpact(refreshImpact);
       return;
@@ -2309,6 +2351,7 @@ function startEditAccount(id) {
     return;
   }
   editingAccountId = id;
+  els.accountForm.hidden = false;
   els.accountForm.elements.investor.value = account.investor || "";
   els.accountForm.elements.account.value = account.account || "";
   els.accountForm.elements.provider.value = account.provider || "";
@@ -2366,6 +2409,7 @@ function cancelEdit(kind) {
   if (kind === "account") {
     editingAccountId = null;
     els.accountForm.reset();
+    els.accountForm.hidden = true;
   }
   updateEditControls();
   renderAccountSelectors();
@@ -2373,7 +2417,8 @@ function cancelEdit(kind) {
 
 function updateEditControls() {
   els.accountSubmit.textContent = editingAccountId ? "수정 저장" : "계좌 저장";
-  els.accountCancel.hidden = !editingAccountId;
+  els.accountCancel.hidden = els.accountForm.hidden;
+  els.addAccountButton.hidden = !els.accountForm.hidden;
   els.holdingSubmit.textContent = "추가";
   els.holdingCancel.hidden = Boolean(els.holdingFormPanel?.hidden);
   if (els.holdingFormTitle) {
@@ -2394,6 +2439,36 @@ function renderAutomation() {
   els.automationResult.textContent = automation.lastRunAt
     ? `${automation.lastResult || "자동화 실행 완료"} · ${formatAsOf(automation.lastRunAt)}`
     : automation.lastResult || "아직 자동 실행 없음";
+}
+
+function renderDashboardStatus() {
+  const marketContext = getCurrentMarketContext();
+  const latestHoldingPrice = [...state.holdings]
+    .filter((holding) => holding.priceAsOf)
+    .sort((a, b) => String(b.priceAsOf).localeCompare(String(a.priceAsOf)))[0];
+  const priceAsOf = latestHoldingPrice?.priceAsOf || state.fxRate?.asOf;
+  const todaySnapshot = (state.portfolioSnapshots || []).find((snapshot) => snapshot.date === todayKey());
+  const latestSnapshot = [...(state.portfolioSnapshots || [])].sort((a, b) => b.date.localeCompare(a.date))[0];
+  const storageLabel = authState.signedIn ? "클라우드 저장" : isStaticDeployment() ? "브라우저 저장" : "로컬 저장";
+
+  if (els.dashboardPriceStatus) {
+    els.dashboardPriceStatus.textContent = marketContext.isMarketClosed ? marketContext.label : priceAsOf ? formatAsOf(priceAsOf) : "가격 갱신 필요";
+    els.dashboardPriceDetail.textContent = `${state.holdings.length}개 종목 · USD/KRW ${formatNumber(state.fxRate?.rate || 0, 2)}${marketContext.isMarketClosed ? " · 새 미국장 거래 없음" : ""}`;
+  }
+  if (els.dashboardSnapshotStatus) {
+    els.dashboardSnapshotStatus.textContent = marketContext.isMarketClosed
+      ? todaySnapshot ? "휴장일 기록됨" : "휴장일 기록 전"
+      : todaySnapshot ? "오늘 기록됨" : "오늘 기록 전";
+    els.dashboardSnapshotDetail.textContent = latestSnapshot
+      ? `최근 스냅샷 ${latestSnapshot.date}`
+      : "스냅샷을 저장하면 성과 추이가 쌓입니다";
+  }
+  if (els.dashboardStorageStatus) {
+    els.dashboardStorageStatus.textContent = storageLabel;
+    els.dashboardStorageDetail.textContent = authState.signedIn
+      ? authState.user?.email || "계정에 동기화됩니다"
+      : "로그인하면 기기 밖에서도 이어서 볼 수 있습니다";
+  }
 }
 
 function renderPriceLogs() {
@@ -2423,6 +2498,10 @@ function renderNotifications() {
   els.notificationForm.querySelectorAll("input, button").forEach((control) => {
     control.disabled = !signedIn;
   });
+  if (els.notificationLockedNotice) {
+    els.notificationLockedNotice.hidden = signedIn;
+  }
+  els.notificationForm.hidden = !signedIn;
   els.notificationStatus.textContent = signedIn
     ? notificationSettings.telegram_enabled
       ? "매일 스냅샷 후 발송"
@@ -2637,6 +2716,7 @@ async function refreshPricesNow({ reason }) {
           previousClose: quote.price - quote.priceChange,
           priceSource: quote.source,
           priceAsOf: quote.asOf,
+          priceDate: quote.priceDate,
         }
       : holding;
   });
@@ -2750,11 +2830,15 @@ function getAllocationItems() {
 }
 
 function getDailyMoveRows() {
-  return selectDailyMoveRows({ holdings: state.holdings, fxRate: state.fxRate });
+  return selectDailyMoveRows({ holdings: state.holdings, fxRate: state.fxRate, marketContext: getCurrentMarketContext() });
 }
 
 function getHoldingDailyMove(holding) {
-  return selectHoldingDailyMove(holding, state.fxRate);
+  return selectHoldingDailyMove(holding, state.fxRate, getCurrentMarketContext());
+}
+
+function getCurrentMarketContext() {
+  return getUsMarketContextForSeoulDate(todayKey());
 }
 
 function groupByAccount(holdings) {
@@ -2997,7 +3081,7 @@ function formatFlowType(type) {
 
 function getTotals(holdings) {
   return calculateTotals({
-    holdings,
+    holdings: holdings || state.holdings,
     cashBalances: state.cashBalances,
     fxRate: state.fxRate.rate,
   });
@@ -3041,9 +3125,17 @@ function setActionState(kind, isRunning) {
     els.refreshButton.disabled = isRunning;
     els.refreshButton.textContent = isRunning ? "가격 갱신 중..." : "가격 다시 가져오기";
   }
+  if (kind === "price" && els.dashboardRefreshButton) {
+    els.dashboardRefreshButton.disabled = isRunning;
+    els.dashboardRefreshButton.textContent = isRunning ? "갱신 중..." : "가격 갱신";
+  }
   if (kind === "snapshot" && els.saveSnapshotButton) {
     els.saveSnapshotButton.disabled = isRunning;
     els.saveSnapshotButton.textContent = isRunning ? "성과 기록 중..." : "오늘 스냅샷 다시 계산";
+  }
+  if (kind === "snapshot" && els.dashboardSnapshotButton) {
+    els.dashboardSnapshotButton.disabled = isRunning;
+    els.dashboardSnapshotButton.textContent = isRunning ? "저장 중..." : "스냅샷 저장";
   }
 }
 

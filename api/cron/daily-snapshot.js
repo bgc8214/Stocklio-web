@@ -7,6 +7,10 @@ import {
   buildDailyDigest,
   shouldSendDailyDigest,
 } from "../../src/domain/notification-core.js";
+import {
+  getPriceDateInUsMarket,
+  getUsMarketContextForSeoulDate,
+} from "../../src/domain/market-calendar.js";
 
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || "";
 const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
@@ -129,14 +133,17 @@ async function processPortfolio(portfolio, date, runId) {
     throw new Error(`invalid portfolio state: ${issues.join("; ")}`);
   }
 
-  const { state: refreshed, failures } = await refreshPrices(state, runId, portfolio.user_id);
+  const marketContext = getUsMarketContextForSeoulDate(date);
+  const { state: refreshed, failures } = await refreshPrices(state, runId, portfolio.user_id, marketContext);
   const snapshot = buildPortfolioSnapshot(refreshed, date, idFor("snapshot"));
+  snapshot.marketContext = marketContext;
+  snapshot.priceDate = marketContext.latestTradingDate;
   const accountSnapshots = buildAccountSnapshots(refreshed, date, idFor("account-snapshot"));
   const previousSnapshot = getPreviousSnapshot(refreshed.portfolioSnapshots, date);
-  const nextState = upsertSnapshots(refreshed, date, snapshot, accountSnapshots, failures);
+  const nextState = upsertSnapshots(refreshed, date, snapshot, accountSnapshots, failures, marketContext);
 
   await updatePortfolioState(portfolio.user_id, nextState);
-  await sendDailyDigestIfNeeded(portfolio.user_id, nextState, snapshot, previousSnapshot, date);
+  await sendDailyDigestIfNeeded(portfolio.user_id, nextState, snapshot, previousSnapshot, date, marketContext);
   return { failures, snapshot };
 }
 
@@ -166,27 +173,39 @@ function normalizeAutomationState(input) {
   };
 }
 
-async function refreshPrices(state, runId, userId) {
+async function refreshPrices(state, runId, userId, marketContext) {
   const quoteMap = new Map();
   const failures = [];
   const logs = [...(state.priceUpdateLogs || [])];
   const tickers = unique((state.holdings || []).filter((holding) => holding.autoPrice !== false).map((holding) => holding.ticker));
 
-  await runWithConcurrency(tickers, PRICE_FETCH_CONCURRENCY, async (ticker) => {
-    try {
-      const quote = await getYahooQuote(ticker);
-      quoteMap.set(ticker, quote);
-      const log = createPriceLog({ symbol: ticker, status: "success", price: quote.price, source: quote.source });
-      logs.push(log);
-      await recordPriceLog(userId, runId, log);
-    } catch (error) {
-      const failure = { symbol: ticker, message: error.message };
-      failures.push(failure);
-      const log = createPriceLog({ symbol: ticker, status: "error", message: error.message });
-      logs.push(log);
-      await recordPriceLog(userId, runId, log).catch(() => {});
-    }
-  });
+  if (marketContext?.isMarketClosed) {
+    const log = createPriceLog({
+      symbol: "US_MARKET",
+      status: "success",
+      message: `${marketContext.closedReason || "휴장"} · ${marketContext.latestTradingDate} 종가 유지`,
+      marketStatus: "closed",
+      quoteAsOf: marketContext.latestTradingDate,
+    });
+    logs.push(log);
+    await recordPriceLog(userId, runId, log).catch(() => {});
+  } else {
+    await runWithConcurrency(tickers, PRICE_FETCH_CONCURRENCY, async (ticker) => {
+      try {
+        const quote = await getYahooQuote(ticker);
+        quoteMap.set(ticker, quote);
+        const log = createPriceLog({ symbol: ticker, status: "success", price: quote.price, source: quote.source, marketStatus: "open", quoteAsOf: quote.asOf });
+        logs.push(log);
+        await recordPriceLog(userId, runId, log);
+      } catch (error) {
+        const failure = { symbol: ticker, message: error.message };
+        failures.push(failure);
+        const log = createPriceLog({ symbol: ticker, status: "error", message: error.message, marketStatus: "unknown" });
+        logs.push(log);
+        await recordPriceLog(userId, runId, log).catch(() => {});
+      }
+    });
+  }
 
   let fxRate = state.fxRate;
   try {
@@ -218,6 +237,7 @@ async function refreshPrices(state, runId, userId) {
                 priceChangePercent: quote.priceChangePercent,
                 priceSource: quote.source,
                 priceAsOf: quote.asOf,
+                priceDate: quote.priceDate,
               }
           : holding;
       }),
@@ -225,7 +245,7 @@ async function refreshPrices(state, runId, userId) {
   };
 }
 
-function upsertSnapshots(state, date, snapshot, accountSnapshots, failures) {
+function upsertSnapshots(state, date, snapshot, accountSnapshots, failures, marketContext) {
   const existingIndex = state.portfolioSnapshots.findIndex((item) => item.date === date);
   const nextPortfolioSnapshots = [...state.portfolioSnapshots];
   if (existingIndex >= 0) {
@@ -248,9 +268,11 @@ function upsertSnapshots(state, date, snapshot, accountSnapshots, failures) {
     automation: {
       ...(state.automation || {}),
       lastRunAt: new Date().toISOString(),
-      lastResult: failures.length
-        ? `자동 기록 완료 · 일부 가격 실패 ${failures.length}건`
-        : "자동 기록 완료",
+      lastResult: marketContext?.isMarketClosed
+        ? `자동 기록 완료 · ${marketContext.closedReason || "휴장"} · ${marketContext.latestTradingDate} 종가 기준`
+        : failures.length
+          ? `자동 기록 완료 · 일부 가격 실패 ${failures.length}건`
+          : "자동 기록 완료",
       lastSnapshotDate: date,
       lastFailureCount: failures.length,
       snapshotTime: state.automation?.snapshotTime || "07:00",
@@ -282,7 +304,7 @@ async function updatePortfolioState(userId, state) {
   });
 }
 
-async function sendDailyDigestIfNeeded(userId, state, snapshot, previousSnapshot, date) {
+async function sendDailyDigestIfNeeded(userId, state, snapshot, previousSnapshot, date, marketContext) {
   const settings = await getNotificationSettings(userId);
   const digest = buildDailyDigest({
     state,
@@ -290,6 +312,7 @@ async function sendDailyDigestIfNeeded(userId, state, snapshot, previousSnapshot
     previousSnapshot,
     date,
     siteUrl: SITE_URL,
+    marketContext,
   });
   if (!settings) {
     return;
@@ -470,6 +493,7 @@ async function getYahooQuote(ticker) {
     priceChangePercent: previousClose ? (price - previousClose) / previousClose : 0,
     source: "Yahoo Finance",
     asOf: timestamp ? new Date(timestamp * 1000).toISOString() : new Date().toISOString(),
+    priceDate: timestamp ? getPriceDateInUsMarket(new Date(timestamp * 1000).toISOString()) : "",
   };
 }
 
@@ -490,6 +514,7 @@ async function getYahooFxRate() {
     changePercent: previousClose ? (rate - previousClose) / previousClose : 0,
     source: "Yahoo Finance",
     asOf: timestamp ? new Date(timestamp * 1000).toISOString() : new Date().toISOString(),
+    priceDate: timestamp ? getPriceDateInUsMarket(new Date(timestamp * 1000).toISOString()) : "",
   };
 }
 

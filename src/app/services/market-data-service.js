@@ -1,4 +1,5 @@
 import { CACHE_PREFIX, FX_CACHE_TTL_MS, QUOTE_CACHE_TTL_MS } from "../constants.js";
+import { getPriceDateInUsMarket } from "../../domain/market-calendar.js";
 
 export async function getQuote(ticker, options = {}) {
   return cached(`quote:${ticker}`, QUOTE_CACHE_TTL_MS, async () => {
@@ -16,6 +17,7 @@ export async function getQuote(ticker, options = {}) {
       priceChangePercent: previousClose ? (price - previousClose) / previousClose : 0,
       source: "Yahoo Finance",
       asOf: timestamp ? new Date(timestamp * 1000).toISOString() : new Date().toISOString(),
+      priceDate: timestamp ? getPriceDateInUsMarket(new Date(timestamp * 1000).toISOString()) : "",
     };
   }, { ...options, validate: isQuotePayload });
 }
@@ -38,6 +40,7 @@ export async function getUsdKrw(options = {}) {
       changePercent: previousClose ? (rate - previousClose) / previousClose : 0,
       source: "Yahoo Finance",
       asOf: timestamp ? new Date(timestamp * 1000).toISOString() : new Date().toISOString(),
+      priceDate: timestamp ? getPriceDateInUsMarket(new Date(timestamp * 1000).toISOString()) : "",
     };
   }, { ...options, validate: isFxPayload });
 }

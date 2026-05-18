@@ -547,6 +547,10 @@ main {
   width: 26px;
 }
 
+.view-tabs button::after {
+  content: "";
+}
+
 @media (min-width: 981px) {
   .view-tabs button:hover,
   .view-tabs button:focus-visible {
@@ -602,6 +606,50 @@ main {
   min-height: 34px;
 }
 
+.dashboard-status-strip {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin-bottom: 18px;
+}
+
+.status-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+  padding: 13px 14px;
+}
+
+.status-card span,
+.status-card small {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.status-card strong {
+  font-size: 17px;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.status-actions {
+  align-items: center;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.status-actions button {
+  min-width: 0;
+  width: 100%;
+}
+
 .layout-summary {
   align-items: baseline;
   color: var(--muted);
@@ -645,6 +693,12 @@ main {
 .empty-portfolio span {
   color: var(--muted);
   font-size: 14px;
+}
+
+.panel-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 12px;
 }
 
 .dashboard-board {
@@ -927,6 +981,66 @@ main {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.performance-detail-panel {
+  align-content: start;
+}
+
+.performance-detail-panel > summary {
+  align-items: center;
+  cursor: pointer;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+  list-style: none;
+  margin: 0 0 14px;
+}
+
+.performance-detail-panel > summary::-webkit-details-marker {
+  display: none;
+}
+
+.performance-detail-panel > summary::after {
+  color: var(--muted);
+  content: "펼치기";
+  font-size: 12px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.performance-detail-panel[open] > summary::after {
+  content: "접기";
+}
+
+.performance-detail-panel > summary h2 {
+  margin: 0;
+}
+
+.performance-detail-panel > summary span {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.locked-notice {
+  background: var(--surface-soft);
+  border: 1px dashed var(--line);
+  border-radius: 8px;
+  display: grid;
+  gap: 5px;
+  margin-bottom: 14px;
+  padding: 14px;
+}
+
+.locked-notice strong {
+  font-size: 15px;
+}
+
+.locked-notice span {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.45;
 }
 
 .donut-wrap {
@@ -1590,6 +1704,10 @@ main {
   margin-bottom: 18px;
 }
 
+.holdings-table-wrap {
+  scrollbar-gutter: stable;
+}
+
 .filters {
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   margin-bottom: 14px;
@@ -1619,6 +1737,10 @@ table {
 
 .compact table {
   min-width: 640px;
+}
+
+.holdings-table {
+  min-width: 1100px;
 }
 
 th,
@@ -1847,6 +1969,19 @@ td:nth-child(4) {
   color: var(--red);
 }
 
+.holdings-table th:last-child,
+.holdings-table td:last-child {
+  background: var(--surface);
+  box-shadow: -12px 0 18px rgba(246, 247, 243, 0.78);
+  position: sticky;
+  right: 0;
+  z-index: 3;
+}
+
+.holdings-table th:last-child {
+  z-index: 4;
+}
+
 .account-card-row {
   align-items: center;
   grid-template-columns: minmax(220px, 1fr) minmax(0, 2fr) auto;
@@ -1994,6 +2129,7 @@ td:nth-child(4) {
 
   .toolbar,
   .summary-grid,
+  .dashboard-status-strip,
   .dashboard,
   .dashboard-layout-toolbar,
   .detail-grid,
@@ -2063,9 +2199,18 @@ td:nth-child(4) {
     font-size: 0;
     gap: 2px;
     justify-content: center;
-    min-height: 46px;
+    min-height: 50px;
     min-width: 0;
     padding: 0 4px;
+  }
+
+  .view-tabs button {
+    color: var(--muted);
+  }
+
+  .view-tabs button.active {
+    background: rgba(47, 105, 255, 0.1);
+    color: #2f69ff;
   }
 
   .view-tabs button::before {
@@ -2073,6 +2218,18 @@ td:nth-child(4) {
     height: 22px;
     margin-right: 0;
     width: 22px;
+  }
+
+  .view-tabs button::after {
+    content: attr(data-mobile-label);
+    display: block;
+    font-size: 10px;
+    font-weight: 800;
+    line-height: 1.1;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .dashboard-board {
@@ -2196,6 +2353,12 @@ td:nth-child(4) {
   .holdings-table th,
   .holdings-table td {
     display: block;
+  }
+
+  .holdings-table th:last-child,
+  .holdings-table td:last-child {
+    box-shadow: none;
+    position: static;
   }
 
   .holdings-table thead {

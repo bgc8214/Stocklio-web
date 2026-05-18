@@ -1,6 +1,6 @@
 import { getTotals } from "./portfolio-core.js";
 
-export function buildDailyDigest({ state, snapshot, previousSnapshot, date, siteUrl = "" }) {
+export function buildDailyDigest({ state, snapshot, previousSnapshot, date, siteUrl = "", marketContext = null }) {
   const totals = getTotals({
     holdings: state.holdings || [],
     cashBalances: state.cashBalances || [],
@@ -11,16 +11,22 @@ export function buildDailyDigest({ state, snapshot, previousSnapshot, date, site
     : 0;
   const netInflowKrw = Number(snapshot.netInflowKrw || 0);
   const investmentChangeKrw = dayChangeKrw - netInflowKrw;
-  const topMovers = getTopMovers(state, 3);
+  const shouldExplainMovers = !marketContext?.isMarketClosed;
+  const topMovers = shouldExplainMovers ? getTopMovers(state, 3) : [];
+  const titlePrefix = marketContext?.isMarketClosed ? "휴장일 기준 요약" : "마감 요약";
   const lines = [
-    `Stocklio ${date} 일일 요약`,
+    `Stocklio ${date} ${titlePrefix}`,
     "",
     `총자산: ${formatKrw(snapshot.totalValueKrw)}`,
-    `전일 대비: ${formatSignedKrw(dayChangeKrw)}`,
+    `${marketContext?.isMarketClosed ? "스냅샷 전일 대비" : "전일 대비"}: ${formatSignedKrw(dayChangeKrw)}`,
     `투자손익 추정: ${formatSignedKrw(investmentChangeKrw)}`,
     `입출금 영향: ${formatSignedKrw(netInflowKrw)}`,
     `주식: ${formatKrw(totals.stockValueKrw)} · 예수금: ${formatKrw(totals.cashKrw)}`,
   ];
+
+  if (marketContext?.label) {
+    lines.push(`가격 기준: ${marketContext.label}`);
+  }
 
   if (topMovers.length) {
     lines.push("", "변동 원인 상위");
@@ -31,6 +37,8 @@ export function buildDailyDigest({ state, snapshot, previousSnapshot, date, site
       ].filter(Boolean);
       lines.push(`- ${mover.name}: ${details.join(" · ")}`);
     }
+  } else if (marketContext?.isMarketClosed) {
+    lines.push("", `변동 원인: 미국장 ${marketContext.closedReason || "휴장"}으로 새 종목별 변동을 표시하지 않습니다`);
   } else {
     lines.push("", "변동 원인: 가격 변동 데이터가 아직 없습니다");
   }
@@ -40,7 +48,7 @@ export function buildDailyDigest({ state, snapshot, previousSnapshot, date, site
   }
 
   return {
-    title: `${date} Stocklio 일일 요약`,
+    title: `${date} Stocklio ${titlePrefix}`,
     text: lines.join("\n"),
     metrics: {
       totalValueKrw: Number(snapshot.totalValueKrw || 0),
@@ -49,6 +57,7 @@ export function buildDailyDigest({ state, snapshot, previousSnapshot, date, site
       investmentChangeKrw,
       cashKrw: totals.cashKrw,
       stockValueKrw: totals.stockValueKrw,
+      marketClosed: Boolean(marketContext?.isMarketClosed),
     },
     topMovers,
   };

@@ -10,6 +10,7 @@ import {
   validateStateShape,
 } from "../src/domain/portfolio-core.js";
 import { buildDailyDigest, shouldSendDailyDigest } from "../src/domain/notification-core.js";
+import { getUsMarketContextForSeoulDate, isUsMarketTradingDay } from "../src/domain/market-calendar.js";
 import { formatAccountType, normalizeAccountType } from "../src/app/account-types.js";
 import {
   accountKeyFor,
@@ -316,6 +317,54 @@ test("daily digest summarizes portfolio change and top movers", () => {
   assert.match(digest.text, /변동 원인 상위/);
   assert.equal(shouldSendDailyDigest({ telegram_enabled: true, daily_digest_enabled: true, large_move_threshold_krw: 300_000 }, digest), false);
   assert.equal(shouldSendDailyDigest({ telegram_enabled: true, daily_digest_enabled: true, large_move_threshold_krw: 100_000 }, digest), true);
+});
+
+test("market calendar marks Seoul Sunday and Monday morning as US market closed context", () => {
+  const sunday = getUsMarketContextForSeoulDate("2026-05-17");
+  const mondayMorning = getUsMarketContextForSeoulDate("2026-05-18");
+  const tuesdayMorning = getUsMarketContextForSeoulDate("2026-05-19");
+
+  assert.equal(sunday.isMarketClosed, true);
+  assert.equal(sunday.latestTradingDate, "2026-05-15");
+  assert.equal(mondayMorning.isMarketClosed, true);
+  assert.equal(mondayMorning.latestTradingDate, "2026-05-15");
+  assert.equal(tuesdayMorning.isMarketClosed, false);
+  assert.equal(tuesdayMorning.latestTradingDate, "2026-05-18");
+  assert.equal(isUsMarketTradingDay("2026-05-25"), false);
+});
+
+test("daily digest suppresses stale top movers on US market closed days", () => {
+  const snapshot = { date: "2026-05-17", totalValueKrw: 2_800_000, netInflowKrw: 0 };
+  const previousSnapshot = { date: "2026-05-16", totalValueKrw: 2_800_000 };
+  const state = {
+    ...sample,
+    fxRate: { rate: 1400, previousClose: 1390 },
+    holdings: [
+      {
+        id: "h1",
+        name: "TQQQ",
+        ticker: "TQQQ",
+        quantity: 10,
+        currency: "USD",
+        price: 105,
+        priceChange: -5,
+        priceChangePercent: -0.0457,
+      },
+    ],
+  };
+
+  const digest = buildDailyDigest({
+    state,
+    snapshot,
+    previousSnapshot,
+    date: "2026-05-17",
+    marketContext: getUsMarketContextForSeoulDate("2026-05-17"),
+  });
+
+  assert.equal(digest.topMovers.length, 0);
+  assert.equal(digest.metrics.marketClosed, true);
+  assert.match(digest.text, /휴장일 기준 요약/);
+  assert.match(digest.text, /새 종목별 변동을 표시하지 않습니다/);
 });
 
 function idFactory() {
