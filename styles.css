@@ -1112,6 +1112,28 @@ main {
   justify-content: flex-end;
 }
 
+.allocation-panel .section-heading,
+[data-dashboard-card="allocation"] .section-heading {
+  align-items: stretch;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.allocation-panel .compact-segmented,
+[data-dashboard-card="allocation"] .compact-segmented {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  width: 100%;
+}
+
+.allocation-panel .segmented-control button,
+[data-dashboard-card="allocation"] .segmented-control button {
+  font-size: 13px;
+  min-width: 0;
+  padding: 0 8px;
+  white-space: nowrap;
+}
+
 .legend,
 .breakdown-list,
 .detail-list,
@@ -2513,6 +2535,11 @@ td:nth-child(4) {
 
   .compact-segmented button {
     flex: 1 1 42%;
+  }
+
+  .allocation-panel .compact-segmented,
+  [data-dashboard-card="allocation"] .compact-segmented {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   .holdings-table-wrap {
