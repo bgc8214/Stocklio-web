@@ -90,12 +90,20 @@ let authState = {
   user: null,
 };
 let activeView = "dashboard";
+let activeAllocationView = "strategy";
 let syncState = {
   status: "idle",
   message: "",
 };
 
 const DEFAULT_STRATEGIES = ["QQQ", "S&P500", "국내주식", "SCHD", "기타"];
+const allocationViewLabels = {
+  strategy: "전략",
+  holding: "종목",
+  account: "계좌",
+  investor: "투자자",
+  accountType: "계좌 유형",
+};
 
 const els = getDomElements();
 
@@ -129,6 +137,13 @@ els.dashboardSnapshotButton?.addEventListener("click", () => {
   saveTodaySnapshot({ reason: "manual" }).catch((error) => {
     setStatus("오늘 성과 기록 실패", error.message);
     showOperationToast("오늘 성과 기록 실패", error.message, "error");
+  });
+});
+
+els.allocationDimensionButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    activeAllocationView = button.dataset.allocationView || "strategy";
+    renderAllocation();
   });
 });
 
@@ -897,6 +912,7 @@ function render() {
   renderAccountDetail();
   renderSnapshots();
   renderMonthlySummary();
+  renderAllocationOverview();
   renderHoldings();
   renderCashFlows();
   renderCashBalances();
@@ -1378,40 +1394,70 @@ function renderSummary() {
 }
 
 function renderAllocation() {
-  const grouped = getAllocationItems();
-  renderDonut(grouped);
-  const total = grouped.reduce((sum, item) => sum + item.value, 0);
-  els.allocationLegend.innerHTML = grouped
+  els.allocationDimensionButtons.forEach((button) => {
+    button.classList.toggle("is-active", button.dataset.allocationView === activeAllocationView);
+  });
+  const grouped = getAllocationItems(activeAllocationView);
+  renderDonut(els.allocationDonut, grouped, allocationViewLabels[activeAllocationView] || "구성");
+  renderAllocationLegend(els.allocationLegend, grouped);
+}
+
+function renderAllocationOverview() {
+  renderAllocationPair(els.strategyAllocationDonut, els.strategyAllocationLegend, getAllocationItems("strategy"), "전략");
+  renderAllocationPair(els.holdingAllocationDonut, els.holdingAllocationLegend, getAllocationItems("holding"), "종목");
+  renderAllocationPair(els.accountAllocationDonut, els.accountAllocationLegend, getAllocationItems("account"), "계좌");
+  renderAllocationPair(els.accountTypeAllocationDonut, els.accountTypeAllocationLegend, getAllocationItems("accountType"), "유형");
+}
+
+function renderAllocationPair(svg, legend, items, centerLabel) {
+  if (!svg || !legend) {
+    return;
+  }
+  renderDonut(svg, items, centerLabel, { radius: 60, strokeWidth: 22, center: 90 });
+  renderAllocationLegend(legend, items, { compact: true });
+}
+
+function renderAllocationLegend(target, items, options = {}) {
+  if (!target) {
+    return;
+  }
+  const total = items.reduce((sum, item) => sum + item.value, 0);
+  target.innerHTML = items
     .map((item, index) => {
       const pct = total ? item.value / total : 0;
       return `<div class="legend-row">
         <span class="swatch" style="background:${palette[index % palette.length]}"></span>
-        <span>${escapeHtml(item.label)}</span>
-        <strong>${formatPercent(pct)}</strong>
+        <span title="${escapeHtml(item.label)}">${escapeHtml(item.label)}</span>
+        <strong>${formatPercent(pct)}${options.compact ? "" : `<small>${formatKrw(item.value)}</small>`}</strong>
       </div>`;
     })
-    .join("");
+    .join("") || `<div class="empty-state">표시할 자산이 없습니다</div>`;
 }
 
-function renderDonut(items) {
+function renderDonut(target, items, centerLabel, options = {}) {
+  if (!target) {
+    return;
+  }
   const total = items.reduce((sum, item) => sum + item.value, 0);
-  const radius = 78;
+  const radius = options.radius || 78;
+  const strokeWidth = options.strokeWidth || 28;
+  const center = options.center || 110;
   const circumference = 2 * Math.PI * radius;
   let offset = 0;
   const rings = items
     .map((item, index) => {
       const ratio = total ? item.value / total : 0;
       const dash = ratio * circumference;
-      const ring = `<circle cx="110" cy="110" r="${radius}" fill="none" stroke="${palette[index % palette.length]}" stroke-width="28" stroke-dasharray="${dash} ${circumference - dash}" stroke-dashoffset="${-offset}" transform="rotate(-90 110 110)" />`;
+      const ring = `<circle cx="${center}" cy="${center}" r="${radius}" fill="none" stroke="${palette[index % palette.length]}" stroke-width="${strokeWidth}" stroke-dasharray="${dash} ${circumference - dash}" stroke-dashoffset="${-offset}" transform="rotate(-90 ${center} ${center})" />`;
       offset += dash;
       return ring;
     })
     .join("");
-  els.allocationDonut.innerHTML = `
-    <circle cx="110" cy="110" r="${radius}" fill="none" stroke="#e6ebe5" stroke-width="28"></circle>
+  target.innerHTML = `
+    <circle cx="${center}" cy="${center}" r="${radius}" fill="none" stroke="#e6ebe5" stroke-width="${strokeWidth}"></circle>
     ${rings}
-    <text x="110" y="106" text-anchor="middle" font-size="19" font-weight="800" fill="#17211b">${items.length}</text>
-    <text x="110" y="130" text-anchor="middle" font-size="12" fill="#66736b">전략</text>
+    <text x="${center}" y="${center - 4}" text-anchor="middle" font-size="${center === 90 ? 17 : 19}" font-weight="800" fill="#17211b">${items.length}</text>
+    <text x="${center}" y="${center + 18}" text-anchor="middle" font-size="12" fill="#66736b">${escapeHtml(centerLabel)}</text>
   `;
 }
 
@@ -2843,13 +2889,53 @@ function groupByValue(holdings, key) {
     .sort((a, b) => b.value - a.value);
 }
 
-function getAllocationItems() {
-  const grouped = groupByValue(state.holdings, "strategy");
-  const cashKrw = getCashTotalKrw();
-  if (cashKrw > 0) {
-    grouped.push({ label: "예수금", value: cashKrw });
+function groupHoldingsByResolver(resolver) {
+  const map = new Map();
+  for (const holding of state.holdings || []) {
+    const label = resolver(holding) || "미분류";
+    map.set(label, (map.get(label) || 0) + getHoldingValues(holding).valueKrw);
   }
-  return grouped.sort((a, b) => b.value - a.value);
+  return [...map.entries()].map(([label, value]) => ({ label, value })).sort((a, b) => b.value - a.value);
+}
+
+function addCashToAllocation(items, resolver) {
+  const map = new Map(items.map((item) => [item.label, item.value]));
+  for (const cash of state.cashBalances || []) {
+    const label = resolver(cash) || "예수금";
+    map.set(label, (map.get(label) || 0) + getCashValueKrw(cash));
+  }
+  return [...map.entries()].map(([label, value]) => ({ label, value })).sort((a, b) => b.value - a.value);
+}
+
+function aggregateAllocationItems(items, limit = 5) {
+  const sorted = [...items].filter((item) => item.value > 0).sort((a, b) => b.value - a.value);
+  if (sorted.length <= limit) {
+    return sorted;
+  }
+  const head = sorted.slice(0, limit);
+  const rest = sorted.slice(limit).reduce((sum, item) => sum + item.value, 0);
+  return rest > 0 ? [...head, { label: "기타", value: rest }] : head;
+}
+
+function accountTypeForItem(item) {
+  const account = getKnownAccounts().find((known) => known.investor === item.investor && known.account === item.account);
+  return formatAccountType(normalizeAccountType(item.accountType || account?.accountType));
+}
+
+function getAllocationItems(dimension = "strategy") {
+  if (dimension === "holding") {
+    return aggregateAllocationItems(addCashToAllocation(groupHoldingsByResolver((holding) => holding.name || holding.ticker), () => "예수금"));
+  }
+  if (dimension === "account") {
+    return aggregateAllocationItems(addCashToAllocation(groupHoldingsByResolver((holding) => `${holding.investor} · ${holding.account}`), (cash) => `${cash.investor} · ${cash.account}`));
+  }
+  if (dimension === "investor") {
+    return aggregateAllocationItems(addCashToAllocation(groupHoldingsByResolver((holding) => holding.investor), (cash) => cash.investor));
+  }
+  if (dimension === "accountType") {
+    return aggregateAllocationItems(addCashToAllocation(groupHoldingsByResolver(accountTypeForItem), accountTypeForItem));
+  }
+  return aggregateAllocationItems(addCashToAllocation(groupHoldingsByResolver((holding) => normalizeStrategy(holding.strategy)), () => "예수금"));
 }
 
 function getDailyMoveRows() {

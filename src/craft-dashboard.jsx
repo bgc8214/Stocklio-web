@@ -30,6 +30,13 @@ const accountTypeLabels = {
   direct_investment: "직접투자 계좌",
   pension: "연금 계좌",
 };
+const allocationViewLabels = {
+  strategy: "전략",
+  holding: "종목",
+  account: "계좌",
+  investor: "투자자",
+  accountType: "계좌 유형",
+};
 
 function CraftDashboardApp() {
   const [state, setState] = useState(null);
@@ -281,13 +288,20 @@ function Metric({ label, value, hint, tone }) {
 }
 
 function AllocationPanel({ state }) {
-  const items = getAllocationItems(state);
+  const [view, setView] = useState("strategy");
+  const items = getAllocationItems(state, view);
   const total = items.reduce((sum, item) => sum + item.value, 0);
   return (
     <>
       <div className="section-heading">
         <h2>자산 비중</h2>
-        <span>전략별</span>
+        <div className="segmented-control compact-segmented" role="group" aria-label="자산 비중 기준">
+          {Object.entries(allocationViewLabels).map(([key, label]) => (
+            <button className={view === key ? "is-active" : ""} type="button" key={key} onClick={() => setView(key)}>
+              {label}
+            </button>
+          ))}
+        </div>
       </div>
       <div className="donut-wrap">
         <svg viewBox="0 0 220 220" role="img" aria-label="자산 비중 차트">
@@ -297,7 +311,7 @@ function AllocationPanel({ state }) {
             {items.length}
           </text>
           <text x="110" y="130" textAnchor="middle" fontSize="12" fill="#66736b">
-            전략
+            {allocationViewLabels[view]}
           </text>
         </svg>
         <div className="legend">
@@ -305,7 +319,7 @@ function AllocationPanel({ state }) {
             <div className="legend-row" key={item.label}>
               <span className="swatch" style={{ background: palette[index % palette.length] }} />
               <span>{item.label}</span>
-              <strong>{formatPercent(total ? item.value / total : 0)}</strong>
+              <strong>{formatPercent(total ? item.value / total : 0)}<small>{formatKrw(item.value)}</small></strong>
             </div>
           ))}
         </div>
@@ -654,13 +668,51 @@ function getCashTotalKrw(state) {
   return (state.cashBalances || []).reduce((sum, cash) => sum + Number(cash.amount || 0) * (cash.currency === "USD" ? fx : 1), 0);
 }
 
-function getAllocationItems(state) {
-  const grouped = groupByValue(state.holdings || [], state, "strategy");
-  const cash = getCashTotalKrw(state);
-  if (cash > 0) {
-    grouped.push({ label: "예수금", value: cash });
+function getAllocationItems(state, dimension = "strategy") {
+  if (dimension === "holding") {
+    return aggregateAllocationItems(addCashToAllocation(groupByResolver(state, (holding) => holding.name || holding.ticker), state, () => "예수금"));
   }
-  return grouped.sort((a, b) => b.value - a.value);
+  if (dimension === "account") {
+    return aggregateAllocationItems(addCashToAllocation(groupByResolver(state, (holding) => `${holding.investor} · ${holding.account}`), state, (cash) => `${cash.investor} · ${cash.account}`));
+  }
+  if (dimension === "investor") {
+    return aggregateAllocationItems(addCashToAllocation(groupByResolver(state, (holding) => holding.investor), state, (cash) => cash.investor));
+  }
+  if (dimension === "accountType") {
+    return aggregateAllocationItems(addCashToAllocation(groupByResolver(state, (holding) => formatAccountType(holding.accountType)), state, () => "직접투자 계좌"));
+  }
+  return aggregateAllocationItems(addCashToAllocation(groupByResolver(state, (holding) => holding.strategy || "기타"), state, () => "예수금"));
+}
+
+function groupByResolver(state, resolver) {
+  const fx = Number(state.fxRate?.rate || 1);
+  const map = new Map();
+  for (const holding of state.holdings || []) {
+    const label = resolver(holding) || "미분류";
+    map.set(label, (map.get(label) || 0) + getHoldingValues(holding, fx).valueKrw);
+  }
+  return [...map.entries()].map(([label, value]) => ({ label, value })).sort((a, b) => b.value - a.value);
+}
+
+function addCashToAllocation(items, state, resolver) {
+  const fx = Number(state.fxRate?.rate || 1);
+  const map = new Map(items.map((item) => [item.label, item.value]));
+  for (const cash of state.cashBalances || []) {
+    const label = resolver(cash) || "예수금";
+    const value = Number(cash.amount || 0) * (cash.currency === "USD" ? fx : 1);
+    map.set(label, (map.get(label) || 0) + value);
+  }
+  return [...map.entries()].map(([label, value]) => ({ label, value })).sort((a, b) => b.value - a.value);
+}
+
+function aggregateAllocationItems(items, limit = 5) {
+  const sorted = [...items].filter((item) => item.value > 0).sort((a, b) => b.value - a.value);
+  if (sorted.length <= limit) {
+    return sorted;
+  }
+  const head = sorted.slice(0, limit);
+  const rest = sorted.slice(limit).reduce((sum, item) => sum + item.value, 0);
+  return rest > 0 ? [...head, { label: "기타", value: rest }] : head;
 }
 
 function groupByValue(holdings, state, key) {

@@ -174,7 +174,12 @@
         <div class="panel allocation-panel dashboard-card" data-dashboard-card="allocation">
           <div class="section-heading">
             <h2>자산 비중</h2>
-            <span>전략별</span>
+            <div class="segmented-control compact-segmented" role="group" aria-label="자산 비중 기준">
+              <button class="is-active" type="button" data-allocation-view="strategy">전략</button>
+              <button type="button" data-allocation-view="holding">종목</button>
+              <button type="button" data-allocation-view="account">계좌</button>
+              <button type="button" data-allocation-view="investor">투자자</button>
+            </div>
           </div>
           <div class="donut-wrap">
             <svg id="allocationDonut" viewBox="0 0 220 220" role="img" aria-label="자산 비중 차트"></svg>
@@ -429,6 +434,55 @@
               </thead>
               <tbody id="monthlySummaryBody"></tbody>
             </table>
+          </div>
+        </details>
+
+        <details class="panel performance-detail-panel" open>
+          <summary>
+            <h2>자산 구성 분석</h2>
+            <span>현재 평가금액 기준</span>
+          </summary>
+          <div class="allocation-overview-grid">
+            <article>
+              <div class="mini-chart-heading">
+                <strong>전략별</strong>
+                <span>투자 의도</span>
+              </div>
+              <div class="mini-donut-wrap">
+                <svg id="strategyAllocationDonut" viewBox="0 0 180 180" role="img" aria-label="전략별 자산 비중"></svg>
+                <div id="strategyAllocationLegend" class="legend compact-legend"></div>
+              </div>
+            </article>
+            <article>
+              <div class="mini-chart-heading">
+                <strong>종목별</strong>
+                <span>상위 보유</span>
+              </div>
+              <div class="mini-donut-wrap">
+                <svg id="holdingAllocationDonut" viewBox="0 0 180 180" role="img" aria-label="종목별 자산 비중"></svg>
+                <div id="holdingAllocationLegend" class="legend compact-legend"></div>
+              </div>
+            </article>
+            <article>
+              <div class="mini-chart-heading">
+                <strong>계좌별</strong>
+                <span>운용 위치</span>
+              </div>
+              <div class="mini-donut-wrap">
+                <svg id="accountAllocationDonut" viewBox="0 0 180 180" role="img" aria-label="계좌별 자산 비중"></svg>
+                <div id="accountAllocationLegend" class="legend compact-legend"></div>
+              </div>
+            </article>
+            <article>
+              <div class="mini-chart-heading">
+                <strong>계좌 유형</strong>
+                <span>직접투자/연금</span>
+              </div>
+              <div class="mini-donut-wrap">
+                <svg id="accountTypeAllocationDonut" viewBox="0 0 180 180" role="img" aria-label="계좌 유형별 자산 비중"></svg>
+                <div id="accountTypeAllocationLegend" class="legend compact-legend"></div>
+              </div>
+            </article>
           </div>
         </details>
 
