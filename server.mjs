@@ -564,8 +564,8 @@ function createSeedState() {
     },
     holdings: [
       createHolding("투자자 A", "연금 계좌", "pension", "QQQ", "QQQ", "Invesco QQQ Trust", 18, 408.25, 430.15),
-      createHolding("투자자 A", "일반 계좌", "brokerage", "성장주", "MSFT", "Microsoft", 12, 375.4, 414.92),
-      createHolding("투자자 B", "일반 계좌", "brokerage", "성장주", "NVDA", "NVIDIA", 20, 104.5, 128.4),
+      createHolding("투자자 A", "일반 계좌", "brokerage", "기타", "MSFT", "Microsoft", 12, 375.4, 414.92),
+      createHolding("투자자 B", "일반 계좌", "brokerage", "기타", "NVDA", "NVIDIA", 20, 104.5, 128.4),
       createHolding("투자자 B", "코어 계좌", "brokerage", "S&P500", "VOO", "Vanguard S&P 500 ETF", 10, 465.2, 510.75),
       createHolding("투자자 A", "전술 계좌", "brokerage", "S&P500", "SSO", "ProShares Ultra S&P500", 35, 58.4, 64.1),
     ],
