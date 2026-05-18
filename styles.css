@@ -2355,8 +2355,21 @@ td:nth-child(4) {
   }
 
   .dashboard-layout-toolbar {
-    align-items: stretch;
-    flex-direction: column;
+    display: none;
+  }
+
+  .dashboard-status-strip {
+    display: none;
+  }
+
+  .dashboard-card.is-layout-editing {
+    border-color: var(--line);
+    box-shadow: var(--shadow);
+  }
+
+  .layout-controls,
+  .layout-resize-handle {
+    display: none !important;
   }
 
   .toolbar {
