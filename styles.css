@@ -970,6 +970,7 @@ main {
 }
 
 .detail-grid {
+  align-items: start;
   grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.4fr);
   margin-bottom: 18px;
 }
@@ -1031,6 +1032,7 @@ main {
 
 .performance-detail-panel {
   align-content: start;
+  align-self: start;
 }
 
 .performance-detail-panel > summary {
@@ -1041,6 +1043,10 @@ main {
   justify-content: space-between;
   list-style: none;
   margin: 0 0 14px;
+}
+
+.performance-detail-panel:not([open]) > summary {
+  margin-bottom: 0;
 }
 
 .performance-detail-panel > summary::-webkit-details-marker {
