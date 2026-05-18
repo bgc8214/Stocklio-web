@@ -1,4 +1,5 @@
 import { buildDailyDigest } from "../../src/domain/notification-core.js";
+import { getUsMarketContextForSeoulDate } from "../../src/domain/market-calendar.js";
 
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || "";
 const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
@@ -46,6 +47,7 @@ export default async function handler(request, response) {
       previousSnapshot: snapshots.at(-2),
       date: snapshot.date || seoulDateKey(),
       siteUrl: SITE_URL,
+      marketContext: getUsMarketContextForSeoulDate(snapshot.date || seoulDateKey()),
     });
     const text = `${digest.text}\n\n테스트 메시지입니다.`;
 

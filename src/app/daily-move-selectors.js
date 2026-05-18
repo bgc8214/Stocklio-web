@@ -1,4 +1,7 @@
-export function getDailyMoveRows({ holdings = [], fxRate = 1 } = {}) {
+export function getDailyMoveRows({ holdings = [], fxRate = 1, marketContext = null } = {}) {
+  if (marketContext?.isMarketClosed) {
+    return [];
+  }
   const rows = holdings
     .map((holding) => {
       const move = getHoldingDailyMove(holding, fxRate);
@@ -24,7 +27,10 @@ export function getDailyMoveRows({ holdings = [], fxRate = 1 } = {}) {
   }));
 }
 
-export function getHoldingDailyMove(holding, fxRate = 1) {
+export function getHoldingDailyMove(holding, fxRate = 1, marketContext = null) {
+  if (marketContext?.isMarketClosed) {
+    return { hasData: false, valueKrw: 0, priceEffectKrw: 0, fxEffectKrw: 0, changePercent: 0 };
+  }
   const priceChange = Number(holding.priceChange);
   const changePercent = Number(holding.priceChangePercent || 0);
   if (!Number.isFinite(priceChange)) {

@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { Editor, Frame, Element, useNode } from "@craftjs/core";
+import { dateKeyInTimeZone, getUsMarketContextForSeoulDate } from "./domain/market-calendar.js";
 
 const DEFAULT_LAYOUT = [
   { id: "total-value", widthPct: 25, span: 3, minHeight: 128, visible: true },
@@ -366,7 +367,8 @@ function PerformancePanel({ state }) {
 }
 
 function BreakdownPanel({ state }) {
-  const movers = getDailyMoveRows(state).slice(0, 5);
+  const marketContext = getCurrentMarketContext();
+  const movers = getDailyMoveRows(state, marketContext).slice(0, 5);
   const refreshImpact = getRecentPriceRefreshImpact(state);
   const accountTypeRows = (state.holdings || []).map((holding) => ({ ...holding, accountType: formatAccountType(holding.accountType) }));
   const fallbackRows = [...groupByValue(state.holdings || [], state, "investor"), ...groupByValue(accountTypeRows, state, "accountType")];
@@ -402,7 +404,22 @@ function BreakdownPanel({ state }) {
           </>
         ) : (
           <>
-            {refreshImpact?.rows?.length ? (
+            {marketContext.isMarketClosed ? (
+              <>
+                <div className="daily-move-empty">
+                  <strong>미국장 {marketContext.closedReason || "휴장"}에는 새 종목별 변동을 표시하지 않습니다</strong>
+                  <span>{marketContext.label}입니다. 총자산 변화가 있다면 입출금 또는 환율/현금 변화일 수 있습니다.</span>
+                </div>
+                <div className="breakdown-subtitle">구성 참고</div>
+                {fallbackRows.map((item, index) => (
+                  <div className="breakdown-row" key={`${item.label}-${index}`}>
+                    <span className="swatch" style={{ background: palette[index % palette.length] }} />
+                    <span>{item.label}</span>
+                    <strong>{formatKrw(item.value)}</strong>
+                  </div>
+                ))}
+              </>
+            ) : refreshImpact?.rows?.length ? (
               <PriceRefreshImpact impact={refreshImpact} />
             ) : (
               <>
@@ -427,7 +444,10 @@ function BreakdownPanel({ state }) {
   );
 }
 
-function getDailyMoveRows(state) {
+function getDailyMoveRows(state, marketContext = null) {
+  if (marketContext?.isMarketClosed) {
+    return [];
+  }
   const rows = (state.holdings || [])
     .map((holding) => {
       const move = getHoldingDailyMove(state, holding);
@@ -469,6 +489,10 @@ function getHoldingDailyMove(state, holding) {
     fxEffectKrw,
     changePercent,
   };
+}
+
+function getCurrentMarketContext() {
+  return getUsMarketContextForSeoulDate(dateKeyInTimeZone(new Date(), "Asia/Seoul"));
 }
 
 function PriceRefreshImpact({ impact, compact = false }) {
