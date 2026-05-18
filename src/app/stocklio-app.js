@@ -95,6 +95,8 @@ let syncState = {
   message: "",
 };
 
+const DEFAULT_STRATEGIES = ["QQQ", "S&P500", "국내주식", "SCHD", "기타"];
+
 const els = getDomElements();
 
 els.viewTabs.forEach((button) => {
@@ -451,7 +453,7 @@ els.holdingForm.addEventListener("submit", (event) => {
     investor: account.investor,
     account: account.account,
     accountType: normalizeAccountType(String(form.get("accountType"))),
-    strategy: String(form.get("strategy")),
+    strategy: normalizeStrategy(form.get("strategy")),
     ticker: ticker || name,
     name,
     quantity: Number(form.get("quantity")),
@@ -772,6 +774,7 @@ function normalizeState(input) {
     holdings: (Array.isArray(input.holdings) ? input.holdings : fallback.holdings).map((holding) => ({
       ...holding,
       accountType: normalizeAccountType(holding.accountType),
+      strategy: normalizeStrategy(holding.strategy),
     })),
     cashFlows: Array.isArray(input.cashFlows) ? input.cashFlows : fallback.cashFlows,
     cashBalances: Array.isArray(input.cashBalances) ? input.cashBalances : fallback.cashBalances,
@@ -824,6 +827,25 @@ function makeId() {
     return globalThis.crypto.randomUUID();
   }
   return `holding-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+}
+
+function normalizeStrategy(value) {
+  const label = String(value || "").trim();
+  if (!label) {
+    return "기타";
+  }
+  if (["Growth", "성장주", "Core", "코어"].includes(label)) {
+    return "기타";
+  }
+  if (label.toLowerCase() === "schd") {
+    return "SCHD";
+  }
+  return DEFAULT_STRATEGIES.includes(label) ? label : label;
+}
+
+function strategyBuckets(values = []) {
+  const extras = unique(values.map((value) => normalizeStrategy(value)).filter((value) => !DEFAULT_STRATEGIES.includes(value)));
+  return [...DEFAULT_STRATEGIES, ...extras];
 }
 
 function clamp(value, min, max) {
@@ -1290,7 +1312,7 @@ function clearDashboardDragState() {
 
 function renderFilters() {
   fillSelect(els.investorFilter, "모든 투자자", unique(state.holdings.map((h) => h.investor)));
-  fillSelect(els.strategyFilter, "모든 전략", unique(state.holdings.map((h) => h.strategy)));
+  fillSelect(els.strategyFilter, "모든 전략", strategyBuckets(state.holdings.map((h) => h.strategy)));
   fillSelect(els.accountTypeFilter, "모든 계좌 유형", unique(state.holdings.map((h) => normalizeAccountType(h.accountType))), accountTypeLabels);
 }
 
@@ -2045,9 +2067,10 @@ function cashFlowTypeOptions(value) {
 }
 
 function strategyOptions(value) {
-  const strategies = unique(["QQQ", "S&P500", "국내주식", "Core", "Growth", ...state.holdings.map((holding) => holding.strategy)]);
+  const selected = normalizeStrategy(value);
+  const strategies = strategyBuckets([...state.holdings.map((holding) => holding.strategy), selected]);
   return strategies
-    .map((strategy) => `<option value="${escapeHtml(strategy)}" ${strategy === value ? "selected" : ""}>${escapeHtml(strategy)}</option>`)
+    .map((strategy) => `<option value="${escapeHtml(strategy)}" ${strategy === selected ? "selected" : ""}>${escapeHtml(strategy)}</option>`)
     .join("");
 }
 
@@ -2121,7 +2144,7 @@ function saveInlineHoldingEdit(id) {
           investor: account.investor,
           account: account.account,
           accountType: normalizeAccountType(field("accountType")),
-          strategy: field("strategy"),
+          strategy: normalizeStrategy(field("strategy")),
           ticker: ticker || name,
           name,
           quantity,

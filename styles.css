@@ -602,52 +602,75 @@ main {
   align-items: center;
   display: flex;
   justify-content: space-between;
-  margin-bottom: 14px;
+  margin-bottom: 8px;
   min-height: 34px;
 }
 
 .dashboard-status-strip {
-  display: grid;
-  gap: 12px;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  margin-bottom: 18px;
+  align-items: center;
+  color: var(--muted);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  margin: -2px 0 16px;
+  min-width: 0;
 }
 
 .status-card {
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  display: grid;
-  gap: 5px;
+  align-items: baseline;
+  background: transparent;
+  border: 0;
+  border-right: 1px solid var(--line);
+  border-radius: 0;
+  display: inline-flex;
+  gap: 6px;
   min-width: 0;
-  padding: 13px 14px;
+  padding: 0 14px 0 0;
 }
 
 .status-card span,
 .status-card small {
   color: var(--muted);
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 800;
   line-height: 1.35;
 }
 
 .status-card strong {
-  font-size: 17px;
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 900;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
+.status-card small {
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.status-card:nth-child(3) small {
+  display: none;
+}
+
 .status-actions {
   align-items: center;
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  border-right: 0;
+  display: inline-flex;
+  gap: 6px;
+  margin-left: auto;
+  padding-right: 0;
 }
 
 .status-actions button {
+  min-height: 32px;
   min-width: 0;
-  width: 100%;
+  padding: 0 10px;
+  width: auto;
 }
 
 .layout-summary {
@@ -974,6 +997,17 @@ main {
   align-items: baseline;
   margin-bottom: 16px;
   min-width: 0;
+}
+
+.section-heading > div {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.section-heading .section-action {
+  flex: 0 0 auto;
+  min-width: 132px;
 }
 
 .section-heading h2 {
@@ -2338,6 +2372,30 @@ td:nth-child(4) {
     width: 100%;
   }
 
+  .dashboard-status-strip {
+    gap: 7px 10px;
+    margin-bottom: 14px;
+  }
+
+  .status-card {
+    border-right: 0;
+    flex: 1 1 100%;
+    padding-right: 0;
+  }
+
+  .status-card small {
+    display: none;
+  }
+
+  .status-actions {
+    flex: 1 1 100%;
+    margin-left: 0;
+  }
+
+  .status-actions button {
+    flex: 1 1 0;
+  }
+
   .holdings-table-wrap {
     overflow: visible;
   }
@@ -2420,6 +2478,10 @@ td:nth-child(4) {
   .section-heading {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .section-heading .section-action {
+    width: 100%;
   }
 
   .dashboard-layout-toolbar {

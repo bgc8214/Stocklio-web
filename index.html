@@ -111,28 +111,6 @@
         </div>
       </section>
 
-      <section class="dashboard-status-strip" data-view="dashboard" aria-label="대시보드 상태">
-        <div class="status-card">
-          <span>가격 기준</span>
-          <strong id="dashboardPriceStatus">확인 중</strong>
-          <small id="dashboardPriceDetail">현재가와 환율 기준 시각</small>
-        </div>
-        <div class="status-card">
-          <span>성과 기록</span>
-          <strong id="dashboardSnapshotStatus">확인 중</strong>
-          <small id="dashboardSnapshotDetail">오늘 스냅샷 상태</small>
-        </div>
-        <div class="status-card">
-          <span>저장 상태</span>
-          <strong id="dashboardStorageStatus">브라우저 저장</strong>
-          <small id="dashboardStorageDetail">로그인하면 클라우드에 저장됩니다</small>
-        </div>
-        <div class="status-card status-actions">
-          <button id="dashboardRefreshButton" class="ghost small-button" type="button">가격 갱신</button>
-          <button id="dashboardSnapshotButton" class="ghost small-button" type="button">스냅샷 저장</button>
-        </div>
-      </section>
-
       <section class="dashboard-layout-toolbar" data-view="dashboard" aria-label="대시보드 레이아웃 설정">
         <div class="layout-summary">
           <span>대시보드</span>
@@ -141,6 +119,28 @@
         <div class="toolbar-actions">
           <button id="layoutEditButton" class="ghost small-button" type="button">편집</button>
           <button id="layoutResetButton" class="ghost small-button" type="button" hidden>기본값 복원</button>
+        </div>
+      </section>
+
+      <section class="dashboard-status-strip" data-view="dashboard" aria-label="대시보드 상태">
+        <div class="status-card">
+          <span>가격</span>
+          <strong id="dashboardPriceStatus">확인 중</strong>
+          <small id="dashboardPriceDetail">현재가와 환율 기준 시각</small>
+        </div>
+        <div class="status-card">
+          <span>기록</span>
+          <strong id="dashboardSnapshotStatus">확인 중</strong>
+          <small id="dashboardSnapshotDetail">오늘 스냅샷 상태</small>
+        </div>
+        <div class="status-card">
+          <span>저장</span>
+          <strong id="dashboardStorageStatus">브라우저 저장</strong>
+          <small id="dashboardStorageDetail">로그인하면 클라우드에 저장됩니다</small>
+        </div>
+        <div class="status-card status-actions">
+          <button id="dashboardRefreshButton" class="ghost small-button" type="button">가격 갱신</button>
+          <button id="dashboardSnapshotButton" class="ghost small-button" type="button">스냅샷 저장</button>
         </div>
       </section>
 
@@ -269,8 +269,11 @@
 
       <section class="panel holdings-panel" data-view="holdings" hidden>
         <div class="section-heading">
-          <h2>보유 종목</h2>
-          <span>이 브라우저에서 수정 가능</span>
+          <div>
+            <h2>보유 종목</h2>
+            <span>필터와 별도로 새 종목을 등록합니다</span>
+          </div>
+          <button id="addHoldingButton" class="secondary small-button section-action" type="button">종목 추가</button>
         </div>
         <div class="filters" aria-label="보유 종목 필터">
           <select id="investorFilter" aria-label="투자자 필터"></select>
@@ -293,7 +296,6 @@
             <option value="name-asc">종목명 가나다순</option>
             <option value="name-desc">종목명 역순</option>
           </select>
-          <button id="addHoldingButton" class="secondary small-button" type="button">종목 추가</button>
         </div>
         <div id="holdingFormPanel" class="inline-create-panel" hidden>
           <div class="section-heading compact-heading">
@@ -310,8 +312,8 @@
               <option value="QQQ">QQQ</option>
               <option value="S&P500">S&P500</option>
               <option value="국내주식">국내주식</option>
-              <option value="Core">코어</option>
-              <option value="Growth">성장주</option>
+              <option value="SCHD">SCHD</option>
+              <option value="기타">기타</option>
             </select>
             <input name="ticker" placeholder="티커">
             <input name="quantity" type="number" step="0.0001" min="0" placeholder="수량" required>
