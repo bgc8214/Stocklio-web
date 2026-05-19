@@ -2066,6 +2066,71 @@ td:nth-child(4) {
   width: 100%;
 }
 
+.ticker-search-field {
+  min-width: 0;
+  position: relative;
+}
+
+.ticker-suggestions {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+  left: 0;
+  max-height: 320px;
+  overflow: auto;
+  padding: 6px;
+  position: absolute;
+  right: 0;
+  top: calc(100% + 6px);
+  z-index: 40;
+}
+
+.ticker-suggestion-button {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  border-radius: 6px;
+  color: var(--ink);
+  cursor: pointer;
+  display: grid;
+  gap: 2px 12px;
+  grid-template-columns: minmax(70px, max-content) minmax(0, 1fr);
+  min-height: 54px;
+  padding: 8px 10px;
+  text-align: left;
+}
+
+.ticker-suggestion-button:hover,
+.ticker-suggestion-button:focus-visible {
+  background: var(--surface-soft);
+  outline: 0;
+}
+
+.ticker-suggestion-button strong {
+  font-size: 0.96rem;
+  grid-row: span 2;
+  white-space: nowrap;
+}
+
+.ticker-suggestion-button span,
+.ticker-suggestion-button small {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ticker-suggestion-button small,
+.ticker-suggestion-empty {
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+.ticker-suggestion-empty {
+  padding: 12px 10px;
+}
+
 .cash-balance-form {
   align-items: end;
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));

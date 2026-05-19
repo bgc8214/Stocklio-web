@@ -94,6 +94,7 @@ export function getDomElements() {
   holdingFormSubtitle: document.querySelector("#holdingFormSubtitle"),
   holdingsBody: document.querySelector("#holdingsBody"),
   holdingForm: document.querySelector("#holdingForm"),
+  holdingTickerSuggestions: document.querySelector("#holdingTickerSuggestions"),
   holdingSubmit: document.querySelector("#holdingSubmit"),
   holdingCancel: document.querySelector("#holdingCancel"),
   cashFlowForm: document.querySelector("#cashFlowForm"),

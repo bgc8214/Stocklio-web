@@ -45,6 +45,17 @@ export async function getUsdKrw(options = {}) {
   }, { ...options, validate: isFxPayload });
 }
 
+export async function searchSymbols(query) {
+  const trimmedQuery = String(query || "").trim();
+  if (trimmedQuery.length < 2) {
+    return [];
+  }
+  const url = new URL("/api/yahoo/search", window.location.origin);
+  url.searchParams.set("q", trimmedQuery);
+  const data = await fetchJson(url);
+  return Array.isArray(data?.results) ? data.results.filter(isSearchResult) : [];
+}
+
 export async function fetchJson(url, options) {
   const response = await fetch(url, options);
   if (!response.ok) {
@@ -101,4 +112,8 @@ function isFxPayload(payload) {
       Number.isFinite(Number(payload.change)) &&
       Number.isFinite(Number(payload.changePercent)),
   );
+}
+
+function isSearchResult(result) {
+  return Boolean(result?.symbol && result?.name);
 }

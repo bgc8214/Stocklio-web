@@ -92,6 +92,11 @@ createServer(async (request, response) => {
       return;
     }
 
+    if (url.pathname === "/api/yahoo/search") {
+      await proxyYahooSearch(url, response);
+      return;
+    }
+
     await serveStatic(url.pathname, response);
   } catch (error) {
     sendJson(response, 500, { error: error.message || "Internal server error" });
@@ -131,6 +136,52 @@ async function proxyYahooChart(url, response) {
     "cache-control": symbol === "KRW=X" ? "public, max-age=3600" : "public, max-age=300",
   });
   response.end(body);
+}
+
+async function proxyYahooSearch(url, response) {
+  const query = String(url.searchParams.get("q") || "").trim();
+  if (query.length < 2 || query.length > 50) {
+    sendJson(response, 400, { error: "search query must be 2-50 characters" });
+    return;
+  }
+
+  const yahooUrl = new URL("https://query1.finance.yahoo.com/v1/finance/search");
+  yahooUrl.searchParams.set("q", query);
+  yahooUrl.searchParams.set("quotesCount", "12");
+  yahooUrl.searchParams.set("newsCount", "0");
+  yahooUrl.searchParams.set("enableFuzzyQuery", "true");
+  yahooUrl.searchParams.set("quotesQueryId", "tss_match_phrase_query");
+
+  const yahooResponse = await fetch(yahooUrl, {
+    headers: {
+      accept: "application/json",
+      "user-agent": "stock-portfolio-lab/0.1",
+    },
+  });
+
+  const body = await yahooResponse.json();
+  sendJson(response, yahooResponse.status, normalizeYahooSearch(body, query), {
+    "cache-control": "public, max-age=3600, stale-while-revalidate=86400",
+  });
+}
+
+function normalizeYahooSearch(data, query) {
+  const preferKoreanExchange = /[ㄱ-ㅎㅏ-ㅣ가-힣]/.test(query) || /^[0-9]{4,6}$/.test(query);
+  const results = (data?.quotes || [])
+    .filter((quote) => quote?.symbol && quote.quoteType !== "CURRENCY")
+    .sort((a, b) => {
+      const aKorean = /\.(KS|KQ)$/i.test(a.symbol || "") ? 1 : 0;
+      const bKorean = /\.(KS|KQ)$/i.test(b.symbol || "") ? 1 : 0;
+      return preferKoreanExchange ? bKorean - aKorean : 0;
+    })
+    .slice(0, 10)
+    .map((quote) => ({
+      symbol: String(quote.symbol || "").toUpperCase(),
+      name: quote.shortname || quote.longname || quote.name || quote.symbol,
+      exchange: quote.exchDisp || quote.exchange || "",
+      type: quote.typeDisp || quote.quoteType || "",
+    }));
+  return { results };
 }
 
 function initializeDb() {
@@ -548,8 +599,8 @@ async function commitImportPreview(response) {
   });
 }
 
-function sendJson(response, statusCode, payload) {
-  response.writeHead(statusCode, { "content-type": "application/json; charset=utf-8" });
+function sendJson(response, statusCode, payload, headers = {}) {
+  response.writeHead(statusCode, { "content-type": "application/json; charset=utf-8", ...headers });
   response.end(JSON.stringify(payload));
 }
 
