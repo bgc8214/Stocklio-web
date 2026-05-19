@@ -47,7 +47,7 @@ import {
   getDailyMoveRows as selectDailyMoveRows,
   getHoldingDailyMove as selectHoldingDailyMove,
 } from "./daily-move-selectors.js";
-import { fetchJson, getQuote, getUsdKrw } from "./services/market-data-service.js";
+import { fetchJson, getQuote, getUsdKrw, searchSymbols } from "./services/market-data-service.js";
 import { getUsMarketContextForSeoulDate } from "../domain/market-calendar.js";
 import {
   buildAccountSnapshots as createAccountSnapshots,
@@ -77,6 +77,8 @@ let numbersPerformanceChart = null;
 let priceRefreshPromise = null;
 let snapshotSavePromise = null;
 let toastTimer = null;
+let tickerSearchTimer = null;
+let tickerSearchSeq = 0;
 let notificationSettings = {
   telegram_chat_id: "",
   telegram_enabled: false,
@@ -386,9 +388,29 @@ document.querySelectorAll("[data-holding-sort-key]").forEach((button) => {
 
 els.holdingSearch.addEventListener("input", renderHoldings);
 
+els.holdingForm.elements.ticker.addEventListener("input", () => {
+  els.holdingForm.elements.name.value = "";
+  queueTickerSearch();
+});
+els.holdingForm.elements.ticker.addEventListener("focus", queueTickerSearch);
+els.holdingTickerSuggestions.addEventListener("mousedown", (event) => {
+  const button = event.target.closest("[data-symbol]");
+  if (!button) {
+    return;
+  }
+  event.preventDefault();
+  selectTickerSuggestion(button.dataset.symbol, button.dataset.name);
+});
+document.addEventListener("click", (event) => {
+  if (!event.target.closest(".ticker-search-field")) {
+    hideTickerSuggestions();
+  }
+});
+
 els.addHoldingButton.addEventListener("click", () => {
   editingHoldingId = null;
   els.holdingForm.reset();
+  hideTickerSuggestions();
   els.holdingFormPanel.hidden = false;
   updateEditControls();
   renderAccountSelectors();
@@ -459,7 +481,8 @@ els.holdingForm.addEventListener("submit", (event) => {
   const form = new FormData(event.currentTarget);
   const account = parseAccountKey(form.get("accountKey"));
   const ticker = String(form.get("ticker")).trim().toUpperCase();
-  const name = ticker || String(form.get("strategy"));
+  const selectedName = String(form.get("name") || "").trim();
+  const name = selectedName || ticker || String(form.get("strategy"));
   const existingHolding = editingHoldingId ? state.holdings.find((holding) => holding.id === editingHoldingId) : null;
   const averageCost = Number(form.get("averageCost"));
   const currency = existingHolding?.currency || (/^[0-9]{6}\.KS$/.test(ticker) ? "KRW" : "USD");
@@ -486,6 +509,7 @@ els.holdingForm.addEventListener("submit", (event) => {
   }
   editingHoldingId = null;
   event.currentTarget.reset();
+  hideTickerSuggestions();
   els.holdingFormPanel.hidden = true;
   updateEditControls();
   saveState();
@@ -2498,6 +2522,72 @@ function updateEditControls() {
   els.cashFlowCancel.hidden = !editingCashFlowId;
   els.cashBalanceSubmit.textContent = editingCashBalanceId ? "수정 저장" : "저장";
   els.cashBalanceCancel.hidden = !editingCashBalanceId;
+}
+
+function queueTickerSearch() {
+  const query = String(els.holdingForm.elements.ticker.value || "").trim();
+  window.clearTimeout(tickerSearchTimer);
+  if (query.length < 2) {
+    hideTickerSuggestions();
+    return;
+  }
+  tickerSearchTimer = window.setTimeout(() => loadTickerSuggestions(query), 220);
+}
+
+async function loadTickerSuggestions(query) {
+  const searchId = ++tickerSearchSeq;
+  renderTickerSuggestions([], "검색 중...");
+  try {
+    const results = await searchSymbols(query);
+    if (searchId !== tickerSearchSeq) {
+      return;
+    }
+    renderTickerSuggestions(results, results.length ? "" : "검색 결과가 없습니다");
+  } catch {
+    if (searchId === tickerSearchSeq) {
+      renderTickerSuggestions([], "검색을 잠시 사용할 수 없습니다");
+    }
+  }
+}
+
+function renderTickerSuggestions(results, emptyMessage = "") {
+  if (!els.holdingTickerSuggestions) {
+    return;
+  }
+  if (!results.length) {
+    els.holdingTickerSuggestions.innerHTML = emptyMessage
+      ? `<div class="ticker-suggestion-empty">${escapeHtml(emptyMessage)}</div>`
+      : "";
+    els.holdingTickerSuggestions.hidden = !emptyMessage;
+    return;
+  }
+  els.holdingTickerSuggestions.innerHTML = results.map((result) => {
+    const meta = [result.type, result.exchange].filter(Boolean).join(" · ");
+    return `
+      <button class="ticker-suggestion-button" type="button" role="option" data-symbol="${escapeHtml(result.symbol)}" data-name="${escapeHtml(result.name)}">
+        <strong>${escapeHtml(result.symbol)}</strong>
+        <span>${escapeHtml(result.name)}</span>
+        <small>${escapeHtml(meta || "Yahoo Finance")}</small>
+      </button>
+    `;
+  }).join("");
+  els.holdingTickerSuggestions.hidden = false;
+}
+
+function selectTickerSuggestion(symbol, name) {
+  els.holdingForm.elements.ticker.value = symbol || "";
+  els.holdingForm.elements.name.value = name || symbol || "";
+  hideTickerSuggestions();
+  els.holdingForm.elements.quantity.focus();
+}
+
+function hideTickerSuggestions() {
+  window.clearTimeout(tickerSearchTimer);
+  tickerSearchSeq += 1;
+  if (els.holdingTickerSuggestions) {
+    els.holdingTickerSuggestions.hidden = true;
+    els.holdingTickerSuggestions.innerHTML = "";
+  }
 }
 
 function renderAutomation() {
