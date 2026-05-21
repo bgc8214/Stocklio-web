@@ -12,6 +12,7 @@ export function buildDailyDigest({ state, snapshot, previousSnapshot, date, site
   const netInflowKrw = Number(snapshot.netInflowKrw || 0);
   const investmentChangeKrw = dayChangeKrw - netInflowKrw;
   const shouldExplainMovers = !marketContext?.isMarketClosed;
+  const moveBreakdown = shouldExplainMovers ? getMoveBreakdown(state) : createEmptyMoveBreakdown();
   const topMovers = shouldExplainMovers ? getTopMovers(state, 3) : [];
   const titlePrefix = marketContext?.isMarketClosed ? "휴장일 기준 요약" : "마감 요약";
   const lines = [
@@ -24,6 +25,14 @@ export function buildDailyDigest({ state, snapshot, previousSnapshot, date, site
     `주식: ${formatKrw(totals.stockValueKrw)} · 예수금: ${formatKrw(totals.cashKrw)}`,
   ];
 
+  if (shouldExplainMovers && moveBreakdown.hasData) {
+    lines.push(`변동 분해: 가격 ${formatSignedKrw(moveBreakdown.priceEffectKrw)} · 환율 ${formatSignedKrw(moveBreakdown.fxEffectKrw)}`);
+    const insight = getFxInsight({ investmentChangeKrw, priceEffectKrw: moveBreakdown.priceEffectKrw, fxEffectKrw: moveBreakdown.fxEffectKrw });
+    if (insight) {
+      lines.push(`해석: ${insight}`);
+    }
+  }
+
   if (marketContext?.label) {
     lines.push(`가격 기준: ${marketContext.label}`);
   }
@@ -34,6 +43,7 @@ export function buildDailyDigest({ state, snapshot, previousSnapshot, date, site
       const details = [
         formatSignedKrw(mover.valueKrw),
         Number.isFinite(mover.changePercent) ? formatPercent(mover.changePercent) : "",
+        formatMoverBreakdown(mover),
       ].filter(Boolean);
       lines.push(`- ${mover.name}: ${details.join(" · ")}`);
     }
@@ -58,6 +68,9 @@ export function buildDailyDigest({ state, snapshot, previousSnapshot, date, site
       cashKrw: totals.cashKrw,
       stockValueKrw: totals.stockValueKrw,
       marketClosed: Boolean(marketContext?.isMarketClosed),
+      priceEffectKrw: moveBreakdown.priceEffectKrw,
+      fxEffectKrw: moveBreakdown.fxEffectKrw,
+      cashFxEffectKrw: moveBreakdown.cashFxEffectKrw,
     },
     topMovers,
   };
@@ -75,6 +88,33 @@ export function shouldSendDailyDigest(settings, digest) {
 }
 
 export function getTopMovers(state, limit = 3) {
+  return getHoldingMoveRows(state)
+    .filter((item) => item.valueKrw !== 0)
+    .sort((a, b) => Math.abs(b.valueKrw) - Math.abs(a.valueKrw))
+    .slice(0, limit);
+}
+
+export function getMoveBreakdown(state) {
+  const holdingRows = getHoldingMoveRows(state);
+  const fxRate = Number(state.fxRate?.rate || state.fxRate || 1);
+  const previousFx = Number(state.fxRate?.previousClose || state.fxRate?.rate || fxRate);
+  const cashFxEffectKrw = (state.cashBalances || []).reduce((sum, cash) => {
+    return cash.currency === "USD" ? sum + Number(cash.amount || 0) * (fxRate - previousFx) : sum;
+  }, 0);
+  const priceEffectKrw = holdingRows.reduce((sum, item) => sum + item.priceEffectKrw, 0);
+  const holdingFxEffectKrw = holdingRows.reduce((sum, item) => sum + item.fxEffectKrw, 0);
+  const fxEffectKrw = holdingFxEffectKrw + cashFxEffectKrw;
+  return {
+    hasData: holdingRows.length > 0 || cashFxEffectKrw !== 0,
+    priceEffectKrw,
+    holdingFxEffectKrw,
+    cashFxEffectKrw,
+    fxEffectKrw,
+    totalExplainedKrw: priceEffectKrw + fxEffectKrw,
+  };
+}
+
+function getHoldingMoveRows(state) {
   const fxRate = Number(state.fxRate?.rate || state.fxRate || 1);
   const previousFx = Number(state.fxRate?.previousClose || state.fxRate?.rate || fxRate);
   return (state.holdings || [])
@@ -98,9 +138,42 @@ export function getTopMovers(state, limit = 3) {
         changePercent: Number(holding.priceChangePercent || 0),
       };
     })
-    .filter((item) => item && item.valueKrw !== 0)
-    .sort((a, b) => Math.abs(b.valueKrw) - Math.abs(a.valueKrw))
-    .slice(0, limit);
+    .filter(Boolean);
+}
+
+function createEmptyMoveBreakdown() {
+  return {
+    hasData: false,
+    priceEffectKrw: 0,
+    holdingFxEffectKrw: 0,
+    cashFxEffectKrw: 0,
+    fxEffectKrw: 0,
+    totalExplainedKrw: 0,
+  };
+}
+
+function getFxInsight({ investmentChangeKrw, priceEffectKrw, fxEffectKrw }) {
+  const absPrice = Math.abs(priceEffectKrw);
+  const absFx = Math.abs(fxEffectKrw);
+  if (absFx < 1000 || absFx < absPrice * 0.25) {
+    return "";
+  }
+  if (priceEffectKrw < 0 && fxEffectKrw > 0 && investmentChangeKrw >= 0) {
+    return "주가는 하락했지만 USD/KRW 상승이 총자산을 끌어올렸습니다.";
+  }
+  if (priceEffectKrw > 0 && fxEffectKrw < 0 && investmentChangeKrw <= 0) {
+    return "주가는 상승했지만 USD/KRW 하락이 총자산을 눌렀습니다.";
+  }
+  return fxEffectKrw > 0
+    ? "USD/KRW 상승 영향이 총자산 변동에 크게 반영됐습니다."
+    : "USD/KRW 하락 영향이 총자산 변동에 크게 반영됐습니다.";
+}
+
+function formatMoverBreakdown(mover) {
+  if (Math.abs(mover.fxEffectKrw) < 1000) {
+    return "";
+  }
+  return `가격 ${formatSignedKrw(mover.priceEffectKrw)}, 환율 ${formatSignedKrw(mover.fxEffectKrw)}`;
 }
 
 export function formatKrw(value) {
