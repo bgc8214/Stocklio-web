@@ -283,6 +283,7 @@ test("daily digest summarizes portfolio change and top movers", () => {
   const previousSnapshot = { date: "2026-05-13", totalValueKrw: 2_600_000 };
   const state = {
     ...sample,
+    cashBalances: [],
     fxRate: { rate: 1400, previousClose: 1390 },
     holdings: [
       {
@@ -312,11 +313,53 @@ test("daily digest summarizes portfolio change and top movers", () => {
 
   assert.equal(digest.metrics.dayChangeKrw, 200_000);
   assert.equal(digest.metrics.investmentChangeKrw, 100_000);
+  assert.equal(digest.metrics.priceEffectKrw, 66_500);
+  assert.equal(digest.metrics.fxEffectKrw, 10_500);
   assert.equal(digest.topMovers[0].ticker, "MSFT");
   assert.match(digest.text, /총자산/);
+  assert.match(digest.text, /변동 분해: 가격 \+₩66,500 · 환율 \+₩10,500/);
   assert.match(digest.text, /변동 원인 상위/);
   assert.equal(shouldSendDailyDigest({ telegram_enabled: true, daily_digest_enabled: true, large_move_threshold_krw: 300_000 }, digest), false);
   assert.equal(shouldSendDailyDigest({ telegram_enabled: true, daily_digest_enabled: true, large_move_threshold_krw: 100_000 }, digest), true);
+});
+
+test("daily digest explains when fx offsets stock price losses", () => {
+  const snapshot = { date: "2026-05-20", totalValueKrw: 1_122_237_022, netInflowKrw: 0 };
+  const previousSnapshot = { date: "2026-05-19", totalValueKrw: 1_121_398_489 };
+  const state = {
+    ...sample,
+    cashBalances: [{ id: "cash-usd", account: "토스", investor: "규철", currency: "USD", amount: 1000 }],
+    fxRate: { rate: 1500, previousClose: 1480 },
+    holdings: [
+      {
+        id: "h1",
+        name: "TQQQ",
+        ticker: "TQQQ",
+        quantity: 100,
+        currency: "USD",
+        price: 100,
+        priceChange: -1,
+        priceChangePercent: -0.01,
+      },
+      {
+        id: "h2",
+        name: "현대차",
+        ticker: "005380.KS",
+        quantity: 10,
+        currency: "KRW",
+        price: 250000,
+        priceChange: -5000,
+        priceChangePercent: -0.02,
+      },
+    ],
+  };
+
+  const digest = buildDailyDigest({ state, snapshot, previousSnapshot, date: "2026-05-20" });
+
+  assert.equal(digest.metrics.priceEffectKrw, -198_000);
+  assert.equal(digest.metrics.fxEffectKrw, 220_000);
+  assert.match(digest.text, /해석: 주가는 하락했지만 USD\/KRW 상승이 총자산을 끌어올렸습니다/);
+  assert.match(digest.text, /TQQQ: \+₩52,000 · -1.00% · 가격 -₩148,000, 환율 \+₩200,000/);
 });
 
 test("market calendar marks Seoul Sunday and Monday morning as US market closed context", () => {
