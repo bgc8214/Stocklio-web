@@ -2742,3 +2742,389 @@ td:nth-child(4) {
     text-align: left;
   }
 }
+
+/* Final Stocklio home redesign overrides. Keep this block last. */
+:root {
+  --bg: #f7f8f6;
+  --surface: #ffffff;
+  --surface-soft: #f1f5f1;
+  --line: #dde4dd;
+  --accent: #237a5c;
+  --accent-dark: #175944;
+  --radius: 12px;
+  --header-height: 72px;
+  --rail-width: 248px;
+  --shadow: 0 18px 44px rgba(23, 33, 27, 0.07);
+}
+
+html,
+body {
+  background: var(--bg);
+}
+
+body {
+  text-rendering: geometricPrecision;
+  -webkit-font-smoothing: antialiased;
+}
+
+button,
+input,
+select {
+  border-radius: 8px;
+}
+
+button.ghost,
+button.secondary,
+.small-button {
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink);
+}
+
+button.ghost:hover,
+button.secondary:hover,
+.small-button:hover {
+  border-color: rgba(35, 122, 92, 0.35);
+  background: var(--surface-soft);
+  color: var(--ink);
+}
+
+.app-shell {
+  grid-template-columns: var(--rail-width) minmax(0, 1fr);
+}
+
+.sidebar {
+  background: var(--surface);
+}
+
+.sidebar-inner {
+  display: grid;
+  grid-template-rows: var(--header-height) 1fr auto;
+}
+
+.sidebar-brand {
+  min-height: var(--header-height);
+  padding: 0 20px;
+}
+
+.brand-lockup h1 {
+  font-size: 24px;
+}
+
+.sidebar-foot {
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  display: grid;
+  gap: 3px;
+  padding: 16px 20px 20px;
+}
+
+.sidebar-foot span {
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.sidebar-foot strong {
+  color: var(--ink);
+  font-size: 13px;
+}
+
+.view-tabs {
+  gap: 6px;
+  padding: 18px 12px;
+}
+
+.view-tabs button {
+  border-radius: 8px;
+  color: #66746d;
+  font-size: 15px;
+  font-weight: 760;
+  min-height: 44px;
+  padding: 0 12px;
+}
+
+.view-tabs button::before {
+  background: #f2f5f2;
+  border-radius: 7px;
+  font-size: 16px;
+  height: 26px;
+  margin-right: 12px;
+  width: 26px;
+}
+
+.view-tabs button.active,
+.view-tabs button:hover,
+.view-tabs button:focus-visible {
+  background: #edf2ff;
+  color: #2f67f6;
+}
+
+.content {
+  margin: 0 auto;
+  max-width: 1500px;
+  padding: 0 clamp(16px, 2.6vw, 32px) 42px;
+}
+
+.toolbar {
+  background: rgba(247, 248, 246, 0.9);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--line);
+  margin: 0 calc(clamp(16px, 2.6vw, 32px) * -1) 24px;
+  min-height: var(--header-height);
+  padding: 0 clamp(16px, 2.6vw, 32px);
+}
+
+.page-heading strong {
+  font-size: clamp(24px, 2vw, 32px);
+}
+
+.dashboard-status-strip {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+  margin: 0 0 18px;
+}
+
+.dashboard-board.craft-dashboard-board {
+  gap: 12px;
+}
+
+.status-card {
+  border-right: 0;
+  display: inline-flex;
+  padding: 0;
+}
+
+.status-card span {
+  display: none;
+}
+
+.status-card strong,
+.status-card small {
+  font-size: 13px;
+}
+
+.status-card small {
+  display: inline;
+  max-width: none;
+}
+
+.status-card:not(.status-actions)::after {
+  color: var(--line);
+  content: "·";
+  font-weight: 900;
+  margin: 0 10px;
+}
+
+.dashboard-layout-toolbar {
+  margin: 0 0 14px;
+}
+
+.layout-summary span {
+  display: none;
+}
+
+.layout-summary strong {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.craft-dashboard-board .dashboard-card:not(.is-layout-editing)[data-dashboard-card="total-value"],
+.craft-dashboard-board .dashboard-card:not(.is-layout-editing)[data-dashboard-card="total-cost"],
+.craft-dashboard-board .dashboard-card:not(.is-layout-editing)[data-dashboard-card="total-gain"],
+.craft-dashboard-board .dashboard-card:not(.is-layout-editing)[data-dashboard-card="cash-total"] {
+  flex-basis: calc(25% - 9px);
+}
+
+.craft-dashboard-board .dashboard-card:not(.is-layout-editing)[data-dashboard-card="fx-rate"] {
+  display: none;
+}
+
+.craft-dashboard-board .dashboard-card:not(.is-layout-editing)[data-dashboard-card="allocation"],
+.craft-dashboard-board .dashboard-card:not(.is-layout-editing)[data-dashboard-card="breakdown"] {
+  flex-basis: calc(50% - 6px);
+}
+
+.craft-dashboard-board .dashboard-card:not(.is-layout-editing)[data-dashboard-card="allocation"] {
+  order: 10;
+}
+
+.craft-dashboard-board .dashboard-card:not(.is-layout-editing)[data-dashboard-card="breakdown"] {
+  order: 11;
+}
+
+.craft-dashboard-board .dashboard-card:not(.is-layout-editing)[data-dashboard-card="performance-flow"] {
+  flex-basis: 100%;
+  order: 12;
+}
+
+.dashboard-card.metric,
+.dashboard-card.panel,
+.metric,
+.panel {
+  border-radius: var(--radius);
+  box-shadow: none;
+}
+
+.dashboard-card.metric {
+  min-height: 144px;
+  padding: 18px;
+}
+
+.metric strong {
+  font-size: clamp(22px, 1.55vw, 28px);
+  font-weight: 780;
+  overflow: visible;
+  overflow-wrap: anywhere;
+  text-overflow: clip;
+  white-space: nowrap;
+}
+
+.section-heading h2 {
+  font-size: 20px;
+}
+
+.segmented-control {
+  background: #f3f5f3;
+  border-radius: 10px;
+  padding: 4px;
+}
+
+.segmented-control button.is-active {
+  background: var(--surface);
+  box-shadow: 0 0 0 1px var(--line);
+  color: var(--ink);
+}
+
+.donut-wrap {
+  grid-template-columns: minmax(190px, 260px) minmax(0, 1fr);
+  gap: 24px;
+}
+
+.daily-move-summary {
+  background: #f2f7f3;
+  border-radius: 10px;
+  padding: 14px;
+}
+
+.dashboard-line-chart {
+  min-height: 300px;
+  overflow-x: auto;
+  padding-top: 6px;
+}
+
+.dashboard-line-chart svg {
+  display: block;
+  min-width: 760px;
+  width: 100%;
+}
+
+.dashboard-chart-grid {
+  stroke: var(--line);
+  stroke-width: 1.5;
+}
+
+.dashboard-chart-axis,
+.dashboard-chart-date {
+  fill: var(--muted);
+  font-size: 15px;
+  font-weight: 760;
+}
+
+.dashboard-chart-area {
+  fill: url("#dashboardAreaGradient");
+}
+
+.dashboard-chart-line {
+  fill: none;
+  stroke: var(--accent);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 7;
+}
+
+.dashboard-chart-point {
+  fill: var(--surface);
+  stroke: var(--accent);
+  stroke-width: 5;
+}
+
+.dashboard-chart-latest {
+  fill: var(--accent-dark);
+  font-size: 19px;
+  font-weight: 860;
+}
+
+.performance-stats {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.filters {
+  align-items: center;
+  grid-template-columns: repeat(3, minmax(150px, 1fr)) minmax(220px, 1.2fr) minmax(170px, 0.8fr);
+}
+
+.inline-create-panel {
+  background: #eef4ef;
+  border-radius: var(--radius);
+  padding: 18px;
+}
+
+@media (max-width: 1180px) {
+  .craft-dashboard-board .dashboard-card:not(.is-layout-editing)[data-dashboard-card="total-value"],
+  .craft-dashboard-board .dashboard-card:not(.is-layout-editing)[data-dashboard-card="total-cost"],
+  .craft-dashboard-board .dashboard-card:not(.is-layout-editing)[data-dashboard-card="total-gain"],
+  .craft-dashboard-board .dashboard-card:not(.is-layout-editing)[data-dashboard-card="cash-total"],
+  .craft-dashboard-board .dashboard-card:not(.is-layout-editing)[data-dashboard-card="fx-rate"] {
+    flex-basis: calc(50% - 6px);
+  }
+}
+
+@media (max-width: 980px) {
+  .sidebar-foot {
+    display: none;
+  }
+
+  .sidebar-brand {
+    border-bottom: 0;
+    min-height: 64px;
+    padding: 14px 20px 8px;
+  }
+
+  .brand-lockup h1 {
+    font-size: 32px;
+  }
+
+  .toolbar {
+    border-top: 1px solid var(--line);
+    margin-bottom: 18px;
+    min-height: 64px;
+    padding-bottom: 10px;
+    padding-top: 10px;
+    position: static;
+  }
+
+  .dashboard-layout-toolbar,
+  .dashboard-status-strip {
+    display: none;
+  }
+
+  .auth-panel span,
+  .sync-status {
+    display: none;
+  }
+
+  .craft-dashboard-board .dashboard-card:not(.is-layout-editing),
+  .craft-dashboard-board .dashboard-card:not(.is-layout-editing)[data-dashboard-card="allocation"],
+  .craft-dashboard-board .dashboard-card:not(.is-layout-editing)[data-dashboard-card="breakdown"],
+  .craft-dashboard-board .dashboard-card:not(.is-layout-editing)[data-dashboard-card="performance-flow"] {
+    flex-basis: auto;
+    width: 100%;
+  }
+
+  .performance-stats,
+  .donut-wrap,
+  .filters {
+    grid-template-columns: 1fr;
+  }
+}
