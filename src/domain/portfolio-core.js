@@ -7,7 +7,7 @@ export const DEFAULT_DASHBOARD_LAYOUT = [
   { id: "cash-total", widthPct: 25, span: 3, minHeight: 128, visible: true },
   { id: "fx-rate", widthPct: 25, span: 3, minHeight: 128, visible: true },
   { id: "allocation", widthPct: 50, span: 6, minHeight: 320, visible: true },
-  { id: "performance-flow", widthPct: 50, span: 6, minHeight: 320, visible: true },
+  { id: "performance-flow", widthPct: 100, span: 12, minHeight: 360, visible: true },
   { id: "breakdown", widthPct: 50, span: 6, minHeight: 320, visible: true },
 ];
 

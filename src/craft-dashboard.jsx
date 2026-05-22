@@ -10,7 +10,7 @@ const DEFAULT_LAYOUT = [
   { id: "cash-total", widthPct: 25, span: 3, minHeight: 128, visible: true },
   { id: "fx-rate", widthPct: 25, span: 3, minHeight: 128, visible: true },
   { id: "allocation", widthPct: 50, span: 6, minHeight: 320, visible: true },
-  { id: "performance-flow", widthPct: 50, span: 6, minHeight: 320, visible: true },
+  { id: "performance-flow", widthPct: 100, span: 12, minHeight: 360, visible: true },
   { id: "breakdown", widthPct: 50, span: 6, minHeight: 320, visible: true },
 ];
 
@@ -329,7 +329,7 @@ function AllocationPanel({ state }) {
 }
 
 function PerformancePanel({ state }) {
-  const points = [...(state.portfolioSnapshots || [])].slice(-8);
+  const points = [...(state.portfolioSnapshots || [])].slice(-20);
   if (!points.length) {
     return <div className="empty-state">저장된 성과 스냅샷이 없습니다</div>;
   }
@@ -338,9 +338,27 @@ function PerformancePanel({ state }) {
   const previous = points[points.length - 2];
   const dailyChange = previous ? latest.totalValueKrw - previous.totalValueKrw : 0;
   const periodChange = latest.totalValueKrw - first.totalValueKrw;
+  const maxDrawdown = getMaxDrawdown(points);
   const max = Math.max(...points.map((point) => point.totalValueKrw));
   const min = Math.min(...points.map((point) => point.totalValueKrw));
   const span = Math.max(1, max - min);
+  const chartWidth = 1000;
+  const chartHeight = 280;
+  const padding = { left: 72, right: 28, top: 28, bottom: 48 };
+  const plotWidth = chartWidth - padding.left - padding.right;
+  const plotHeight = chartHeight - padding.top - padding.bottom;
+  const coordinates = points.map((point, index) => {
+    const x = padding.left + (points.length === 1 ? plotWidth : (plotWidth * index) / (points.length - 1));
+    const y = padding.top + plotHeight - ((Number(point.totalValueKrw || 0) - min) / span) * plotHeight;
+    return { x, y, point };
+  });
+  const linePath = coordinates.map((item, index) => `${index === 0 ? "M" : "L"}${item.x.toFixed(1)} ${item.y.toFixed(1)}`).join(" ");
+  const areaPath = `${linePath} L${coordinates[coordinates.length - 1].x.toFixed(1)} ${chartHeight - padding.bottom} L${coordinates[0].x.toFixed(1)} ${chartHeight - padding.bottom} Z`;
+  const gridLines = [0, 0.33, 0.66, 1].map((ratio) => {
+    const y = padding.top + plotHeight * ratio;
+    const value = max - span * ratio;
+    return { y, value };
+  });
   return (
     <>
       <div className="section-heading">
@@ -360,24 +378,59 @@ function PerformancePanel({ state }) {
           <span>표시기간 증감</span>
           <strong className={periodChange >= 0 ? "positive" : "negative"}>{formatKrw(periodChange)}</strong>
         </div>
+        <div>
+          <span>최대 낙폭</span>
+          <strong className="negative">{formatKrw(maxDrawdown)}</strong>
+        </div>
       </div>
-      <div className="bar-chart" aria-label="성과 차트">
-        {points.map((point, index) => {
-          const previousPoint = points[index - 1];
-          const change = previousPoint ? point.totalValueKrw - previousPoint.totalValueKrw : 0;
-          const height = Math.max(42, Math.round(((point.totalValueKrw - min) / span) * 120) + 52);
-          return (
-            <div className="bar" key={point.id || point.date}>
-              <div className="bar-value">{formatCompactKrw(point.totalValueKrw)}</div>
-              <div className="bar-fill" style={{ height }} title={formatKrw(point.totalValueKrw)} />
-              <span>{formatShortDate(point.date)}</span>
-              <small className={change >= 0 ? "positive" : "negative"}>{previousPoint ? formatCompactKrw(change) : "-"}</small>
-            </div>
-          );
-        })}
+      <div className="dashboard-line-chart" aria-label="성과 차트">
+        <svg viewBox={`0 0 ${chartWidth} ${chartHeight}`} role="img" aria-label="총자산 추이 차트">
+          <defs>
+            <linearGradient id="dashboardAreaGradient" x1="0" x2="0" y1="0" y2="1">
+              <stop offset="0%" stopColor="rgba(31, 122, 91, 0.24)" />
+              <stop offset="100%" stopColor="rgba(31, 122, 91, 0.05)" />
+            </linearGradient>
+          </defs>
+          {gridLines.map((line) => (
+            <g key={line.y}>
+              <line className="dashboard-chart-grid" x1={padding.left} x2={chartWidth - padding.right} y1={line.y} y2={line.y} />
+              <text className="dashboard-chart-axis" x={padding.left - 14} y={line.y + 5} textAnchor="end">
+                {formatCompactKrw(line.value)}
+              </text>
+            </g>
+          ))}
+          <path className="dashboard-chart-area" d={areaPath} />
+          <path className="dashboard-chart-line" d={linePath} />
+          {coordinates.map(({ x, y, point }) => (
+            <circle key={point.id || point.date} className="dashboard-chart-point" cx={x} cy={y} r="7">
+              <title>{`${formatShortDate(point.date)} · ${formatKrw(point.totalValueKrw)}`}</title>
+            </circle>
+          ))}
+          {[coordinates[0], coordinates[Math.floor(coordinates.length / 2)], coordinates[coordinates.length - 1]]
+            .filter(Boolean)
+            .map(({ x, point }, index) => (
+              <text key={`${point.date}-${index}`} className="dashboard-chart-date" x={x} y={chartHeight - 14} textAnchor={index === 0 ? "start" : index === 2 ? "end" : "middle"}>
+                {formatShortDate(point.date)}
+              </text>
+            ))}
+          <text className="dashboard-chart-latest" x={coordinates[coordinates.length - 1].x - 6} y={coordinates[coordinates.length - 1].y - 18} textAnchor="end">
+            {formatCompactKrw(latest.totalValueKrw)}
+          </text>
+        </svg>
       </div>
     </>
   );
+}
+
+function getMaxDrawdown(points) {
+  let peak = Number(points[0]?.totalValueKrw || 0);
+  let drawdown = 0;
+  for (const point of points) {
+    const value = Number(point.totalValueKrw || 0);
+    peak = Math.max(peak, value);
+    drawdown = Math.min(drawdown, value - peak);
+  }
+  return drawdown;
 }
 
 function BreakdownPanel({ state }) {
