@@ -41,11 +41,15 @@ const allocationViewLabels = {
 function CraftDashboardApp() {
   const [state, setState] = useState(null);
   const [editing, setEditing] = useState(false);
+  const [stateRevision, setStateRevision] = useState(0);
 
   useEffect(() => {
     setState(window.StocklioApp?.getState?.() || null);
 
-    const handleState = (event) => setState(event.detail);
+    const handleState = (event) => {
+      setState(event.detail);
+      setStateRevision((value) => value + 1);
+    };
     window.addEventListener("stocklio:state", handleState);
     return () => window.removeEventListener("stocklio:state", handleState);
   }, []);
@@ -57,6 +61,7 @@ function CraftDashboardApp() {
     (nextLayout) => {
       const normalized = normalizeLayout(nextLayout);
       setState((current) => (current ? { ...current, dashboardLayout: normalized } : current));
+      setStateRevision((value) => value + 1);
       window.StocklioApp?.setDashboardLayout?.(normalized);
     },
     [setState],
@@ -91,7 +96,7 @@ function CraftDashboardApp() {
 
   return (
     <Editor enabled={editing} resolver={{ CraftCard, CraftCanvas }}>
-      <Frame key={`${layoutKey(layout)}:${editing}`}>
+      <Frame key={`${layoutKey(layout)}:${editing}:${stateRevision}`}>
         <Element is={CraftCanvas} canvas>
           {layout.map((item) =>
             item.visible === false && !editing ? null : (

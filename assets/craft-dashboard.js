@@ -11924,33 +11924,35 @@ var La = /* @__PURE__ */ o(((e) => {
 	accountType: "계좌 유형"
 };
 function Ua() {
-	let [e, t] = (0, _.useState)(null), [n, r] = (0, _.useState)(!1);
+	let [e, t] = (0, _.useState)(null), [n, r] = (0, _.useState)(!1), [i, a] = (0, _.useState)(0);
 	(0, _.useEffect)(() => {
 		t(window.StocklioApp?.getState?.() || null);
-		let e = (e) => t(e.detail);
+		let e = (e) => {
+			t(e.detail), a((e) => e + 1);
+		};
 		return window.addEventListener("stocklio:state", e), () => window.removeEventListener("stocklio:state", e);
 	}, []);
-	let i = (0, _.useMemo)(() => co(e?.dashboardLayout), [e?.dashboardLayout]), a = i.filter((e) => e.visible !== !1).length, o = (0, _.useCallback)((e) => {
+	let o = (0, _.useMemo)(() => co(e?.dashboardLayout), [e?.dashboardLayout]), s = o.filter((e) => e.visible !== !1).length, c = (0, _.useCallback)((e) => {
 		let n = co(e);
 		t((e) => e && {
 			...e,
 			dashboardLayout: n
-		}), window.StocklioApp?.setDashboardLayout?.(n);
+		}), a((e) => e + 1), window.StocklioApp?.setDashboardLayout?.(n);
 	}, [t]);
 	return (0, _.useEffect)(() => {
-		let e = document.querySelector("#layoutEditButton"), t = document.querySelector("#layoutResetButton"), s = document.querySelector("#layoutStatus");
-		if (!e || !t || !s) return;
-		let c = () => r((e) => !e), l = () => {
-			r(!1), o(Ra);
+		let e = document.querySelector("#layoutEditButton"), t = document.querySelector("#layoutResetButton"), i = document.querySelector("#layoutStatus");
+		if (!e || !t || !i) return;
+		let a = () => r((e) => !e), l = () => {
+			r(!1), c(Ra);
 		};
-		return e.textContent = n ? "완료" : "편집", t.hidden = !n, s.textContent = n ? `${a}/${i.length} 카드` : "", e.addEventListener("click", c), t.addEventListener("click", l), () => {
-			e.removeEventListener("click", c), t.removeEventListener("click", l);
+		return e.textContent = n ? "완료" : "편집", t.hidden = !n, i.textContent = n ? `${s}/${o.length} 카드` : "", e.addEventListener("click", a), t.addEventListener("click", l), () => {
+			e.removeEventListener("click", a), t.removeEventListener("click", l);
 		};
 	}, [
 		n,
-		i.length,
-		o,
-		a
+		o.length,
+		c,
+		s
 	]), e ? /* @__PURE__ */ (0, V.jsx)(Sa, {
 		enabled: n,
 		resolver: {
@@ -11960,16 +11962,16 @@ function Ua() {
 		children: /* @__PURE__ */ (0, V.jsx)(Ki, { children: /* @__PURE__ */ (0, V.jsx)(Hi, {
 			is: Wa,
 			canvas: !0,
-			children: i.map((t) => t.visible === !1 && !n ? null : /* @__PURE__ */ (0, V.jsx)(Hi, {
+			children: o.map((t) => t.visible === !1 && !n ? null : /* @__PURE__ */ (0, V.jsx)(Hi, {
 				is: Ga,
 				canvas: !1,
 				item: t,
 				appState: e,
 				editing: n,
-				layout: i,
-				saveLayout: o
+				layout: o,
+				saveLayout: c
 			}, t.id))
-		}) }, `${U(i)}:${n}`)
+		}) }, `${U(o)}:${n}:${i}`)
 	}) : /* @__PURE__ */ (0, V.jsx)("div", {
 		className: "empty-state",
 		children: "대시보드를 불러오는 중입니다"
