@@ -9,6 +9,15 @@ import {
   normalizeDashboardLayout,
   validateStateShape,
 } from "../src/domain/portfolio-core.js";
+import {
+  calcMaxDrawdown,
+  findNextTradingDate,
+  normalizePriceRows,
+  simulateDCA,
+  simulateLumpSum,
+  simulateLumpSumVsDCA,
+  simulateMultiSymbol,
+} from "../src/domain/simulator-core.js";
 import { buildDailyDigest, shouldSendDailyDigest } from "../src/domain/notification-core.js";
 import { getUsMarketContextForSeoulDate, isUsMarketTradingDay } from "../src/domain/market-calendar.js";
 import { formatAccountType, normalizeAccountType } from "../src/app/account-types.js";
@@ -414,3 +423,182 @@ function idFactory() {
   let id = 0;
   return () => `test-id-${++id}`;
 }
+
+// ─── simulator-core 테스트 ────────────────────────────────────────
+
+const PRICE_ROWS = [
+  { date: "2020-01-31", adjClose: 100 },
+  { date: "2020-02-28", adjClose: 80 },
+  { date: "2020-03-31", adjClose: 120 },
+  { date: "2020-04-30", adjClose: 150 },
+  { date: "2020-05-29", adjClose: 200 },
+];
+
+test("simulateLumpSum: 수량과 최종 평가금액 계산", () => {
+  const result = simulateLumpSum({
+    priceRows: PRICE_ROWS,
+    investAmount: 1_000_000,
+    start: "2020-01-01",
+    end: "2020-12-31",
+  });
+  assert.equal(result.ok, true);
+  assert.equal(result.totalPrincipal, 1_000_000);
+  // 매수 수량: 1_000_000 / 100 = 10,000주
+  // 최종가 200 → finalValue = 2_000_000
+  assert.equal(result.finalValue, 2_000_000);
+  assert.ok(Math.abs(result.returnRate - 1.0) < 0.0001, "수익률 100%");
+  assert.equal(result.points[0].principal, 1_000_000);
+  assert.equal(result.actualStart, "2020-01-31");
+});
+
+test("simulateLumpSum: 데이터 부족 시 error 반환", () => {
+  const result = simulateLumpSum({
+    priceRows: [{ date: "2020-01-31", adjClose: 100 }],
+    investAmount: 1_000_000,
+    start: "2020-01-01",
+    end: "2020-12-31",
+  });
+  assert.equal(result.ok, false);
+  assert.ok(result.error);
+});
+
+test("simulateLumpSum: 상장일이 start보다 늦으면 actualStart 보정", () => {
+  const result = simulateLumpSum({
+    priceRows: PRICE_ROWS,
+    investAmount: 500_000,
+    start: "2019-01-01",
+    end: "2020-12-31",
+  });
+  assert.equal(result.actualStart, "2020-01-31");
+});
+
+test("simulateLumpSum: adjClose 없으면 close fallback 사용 + hasFallback 표시", () => {
+  const rows = [
+    { date: "2020-01-31", close: 100 },
+    { date: "2020-02-28", close: 200 },
+  ];
+  const result = simulateLumpSum({
+    priceRows: rows,
+    investAmount: 1_000_000,
+    start: "2020-01-01",
+    end: "2020-12-31",
+  });
+  assert.equal(result.ok, true);
+  assert.equal(result.hasFallback, true);
+  assert.equal(result.finalValue, 2_000_000);
+});
+
+test("simulateDCA: 매월 적립 후 누적 원금과 평가금액 계산", () => {
+  const result = simulateDCA({
+    priceRows: PRICE_ROWS,
+    monthlyAmount: 100_000,
+    start: "2020-01-01",
+    end: "2020-12-31",
+    frequency: "monthly",
+  });
+  assert.equal(result.ok, true);
+  // 5개 월봉 → 5회 매수 → 총 원금 500_000
+  assert.ok(Math.abs(result.totalPrincipal - 500_000) < 1, "총 원금 500,000");
+  // 마지막 포인트의 원금이 총 원금과 같아야 함
+  const lastPoint = result.points[result.points.length - 1];
+  assert.ok(Math.abs(lastPoint.principal - result.totalPrincipal) < 1);
+});
+
+test("simulateDCA: 원금선은 매수 전까지 0이고 매수 후 증가", () => {
+  const result = simulateDCA({
+    priceRows: PRICE_ROWS,
+    monthlyAmount: 100_000,
+    start: "2020-01-01",
+    end: "2020-12-31",
+    frequency: "monthly",
+  });
+  assert.equal(result.ok, true);
+  // 첫 포인트에서는 원금이 0보다 커야 함 (첫 매수)
+  assert.ok(result.points[0].principal > 0);
+  // 원금은 단조 증가
+  for (let i = 1; i < result.points.length; i++) {
+    assert.ok(result.points[i].principal >= result.points[i - 1].principal);
+  }
+});
+
+test("calcMaxDrawdown: 피크 대비 최대 하락 계산", () => {
+  // 100 → 80 → 120 → 150 → 200
+  // 피크 100에서 80으로 떨어짐 → MDD = 0.2 (20%)
+  const values = [100, 80, 120, 150, 200];
+  const mdd = calcMaxDrawdown(values);
+  assert.ok(Math.abs(mdd - 0.2) < 0.0001, "MDD 20%");
+});
+
+test("calcMaxDrawdown: 단조 증가 시 MDD = 0", () => {
+  assert.equal(calcMaxDrawdown([100, 200, 300]), 0);
+});
+
+test("calcMaxDrawdown: simulateLumpSum 결과에 포함됨", () => {
+  const result = simulateLumpSum({
+    priceRows: PRICE_ROWS,
+    investAmount: 1_000_000,
+    start: "2020-01-01",
+    end: "2020-12-31",
+  });
+  // 100 → 80 : 20% MDD
+  assert.ok(Math.abs(result.maxDrawdown - 0.2) < 0.0001);
+});
+
+test("findNextTradingDate: 정확한 날짜 반환", () => {
+  const dates = ["2020-01-02", "2020-01-03", "2020-01-06"];
+  assert.equal(findNextTradingDate(dates, "2020-01-01"), "2020-01-02");
+  assert.equal(findNextTradingDate(dates, "2020-01-03"), "2020-01-03");
+  assert.equal(findNextTradingDate(dates, "2020-01-05"), "2020-01-06");
+  assert.equal(findNextTradingDate(dates, "2020-01-07"), null);
+});
+
+test("normalizePriceRows: start~end 범위 필터 및 정렬", () => {
+  const rows = [
+    { date: "2019-12-31", adjClose: 50 },
+    { date: "2020-02-28", adjClose: 80 },
+    { date: "2020-01-31", adjClose: 100 },
+    { date: "2020-03-31", adjClose: 120 },
+    { date: "2021-01-01", adjClose: 200 },
+  ];
+  const { rows: normalized } = normalizePriceRows(rows, "2020-01-01", "2020-12-31");
+  assert.equal(normalized.length, 3);
+  assert.equal(normalized[0].date, "2020-01-31");
+  assert.equal(normalized[2].date, "2020-03-31");
+});
+
+test("simulateLumpSumVsDCA: 총 투자금 동일성", () => {
+  const { lumpSum, dca } = simulateLumpSumVsDCA({
+    priceRows: PRICE_ROWS,
+    totalAmount: 500_000,
+    start: "2020-01-01",
+    end: "2020-12-31",
+    frequency: "monthly",
+  });
+  assert.equal(lumpSum.ok, true);
+  assert.equal(dca.ok, true);
+  assert.equal(lumpSum.totalPrincipal, 500_000);
+  assert.ok(Math.abs(dca.totalPrincipal - 500_000) < 1, "DCA 총 원금이 500,000에 근접");
+});
+
+test("simulateMultiSymbol: 종목별 결과 반환", () => {
+  const rows2 = [
+    { date: "2020-01-31", adjClose: 50 },
+    { date: "2020-02-28", adjClose: 40 },
+    { date: "2020-03-31", adjClose: 60 },
+    { date: "2020-04-30", adjClose: 75 },
+    { date: "2020-05-29", adjClose: 100 },
+  ];
+  const results = simulateMultiSymbol({
+    items: [
+      { symbol: "QQQ", priceRows: PRICE_ROWS, investAmount: 1_000_000 },
+      { symbol: "VOO", priceRows: rows2, investAmount: 1_000_000 },
+    ],
+    start: "2020-01-01",
+    end: "2020-12-31",
+  });
+  assert.equal(results.length, 2);
+  assert.equal(results[0].symbol, "QQQ");
+  assert.equal(results[1].symbol, "VOO");
+  assert.equal(results[0].result.finalValue, 2_000_000);
+  assert.equal(results[1].result.finalValue, 2_000_000);
+});

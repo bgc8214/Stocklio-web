@@ -29,6 +29,7 @@ export const viewCopy = {
   performance: { title: "성과", subtitle: "누적 수익과 일별 증감" },
   cashflows: { title: "현금흐름", subtitle: "입출금 기록과 조정값" },
   automation: { title: "자동화/데이터", subtitle: "가격 갱신, 백업, 동기화" },
+  simulator: { title: "시뮬레이터", subtitle: "만약 이 방식으로 투자했다면" },
 };
 
 export const dashboardSizeToSpan = {

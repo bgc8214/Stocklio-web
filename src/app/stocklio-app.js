@@ -49,6 +49,7 @@ import {
 } from "./daily-move-selectors.js";
 import { fetchJson, getQuote, getUsdKrw, searchSymbols } from "./services/market-data-service.js";
 import { getUsMarketContextForSeoulDate } from "../domain/market-calendar.js";
+import { initSimulatorView } from "./simulator-view.js";
 import {
   buildAccountSnapshots as createAccountSnapshots,
   buildPortfolioSnapshot as createPortfolioSnapshot,
@@ -62,6 +63,7 @@ import {
 
 let holdingHeaderSort = { key: "value", dir: "desc" };
 let cashFlowHeaderSort = { key: "date", dir: "desc" };
+const HOLDINGS_PAGE_SIZE = 10;
 
 const sampleState = createSampleState(makeId);
 
@@ -70,6 +72,8 @@ let editingHoldingId = null;
 let editingCashFlowId = null;
 let editingCashBalanceId = null;
 let editingAccountId = null;
+let holdingPage = 1;
+let holdingScope = "all";
 let isLayoutEditing = false;
 let draggedDashboardCardId = null;
 let resizingDashboardCard = null;
@@ -368,6 +372,7 @@ els.dashboardBoard.addEventListener("dragend", () => {
 
 for (const filter of [els.investorFilter, els.strategyFilter, els.accountTypeFilter, els.holdingSort]) {
   filter.addEventListener("change", () => {
+    holdingPage = 1;
     if (filter === els.holdingSort) {
       holdingHeaderSort = parseSortValue(els.holdingSort.value, DEFAULT_HOLDING_SORT);
       renderSortHeaders();
@@ -380,13 +385,29 @@ document.querySelectorAll("[data-holding-sort-key]").forEach((button) => {
   button.addEventListener("click", () => {
     const nextSort = cycleSortValue(els.holdingSort.value, button.dataset.holdingSortKey, DEFAULT_HOLDING_SORT);
     els.holdingSort.value = nextSort;
+    holdingPage = 1;
     holdingHeaderSort = parseSortValue(nextSort, DEFAULT_HOLDING_SORT);
     renderSortHeaders();
     renderHoldings();
   });
 });
 
-els.holdingSearch.addEventListener("input", renderHoldings);
+els.holdingSearch.addEventListener("input", () => {
+  holdingPage = 1;
+  renderHoldings();
+});
+
+for (const [button, scope] of [
+  [els.holdingScopeAll, "all"],
+  [els.holdingScopeGain, "gain"],
+  [els.holdingScopeLoss, "loss"],
+]) {
+  button?.addEventListener("click", () => {
+    holdingScope = scope;
+    holdingPage = 1;
+    renderHoldings();
+  });
+}
 
 els.holdingForm.elements.ticker.addEventListener("input", () => {
   els.holdingForm.elements.name.value = "";
@@ -409,16 +430,16 @@ document.addEventListener("click", (event) => {
 
 els.addHoldingButton.addEventListener("click", () => {
   editingHoldingId = null;
-  els.holdingForm.reset();
-  hideTickerSuggestions();
-  els.holdingFormPanel.hidden = false;
+  openHoldingDrawer();
   updateEditControls();
   renderAccountSelectors();
-  renderHoldings();
   setView("holdings");
-  els.holdingFormPanel.scrollIntoView({ block: "center", behavior: "smooth" });
-  els.holdingForm.elements.accountKey.focus();
 });
+
+els.holdingDrawerClose?.addEventListener("click", () => closeHoldingDrawer());
+els.holdingDrawerBackdrop?.addEventListener("click", () => closeHoldingDrawer());
+els.holdingCancel.addEventListener("click", () => closeHoldingDrawer());
+els.holdingsExportButton?.addEventListener("click", exportVisibleHoldings);
 
 els.performanceRange.addEventListener("change", () => {
   renderPerformance();
@@ -442,7 +463,28 @@ document.querySelectorAll("[data-flow-sort-key]").forEach((button) => {
   });
 });
 
-els.accountDetailSelect.addEventListener("change", renderAccountDetail);
+els.accountDetailSelect.addEventListener("change", () => {
+  syncCashFormToSelectedAccount();
+  renderAccounts();
+  renderAccountDetail();
+  renderCashBalances();
+});
+for (const accountFilter of [els.accountInvestorFilter, els.accountCurrencyFilter, els.accountSearch]) {
+  accountFilter?.addEventListener(accountFilter === els.accountSearch ? "input" : "change", renderAccounts);
+}
+els.cashBalanceForm.elements.accountKey.addEventListener("change", () => {
+  els.accountDetailSelect.value = els.cashBalanceForm.elements.accountKey.value;
+  renderAccounts();
+  renderAccountDetail();
+  renderCashBalances();
+});
+els.cashBalanceForm.elements.currency.addEventListener("change", renderCashSelectedPreview);
+els.cashBalanceForm.elements.amount.addEventListener("input", renderCashSelectedPreview);
+els.accountReconcileButton?.addEventListener("click", () => {
+  renderReconciliation();
+  setView("automation");
+  els.reconcileSummary?.scrollIntoView({ block: "center", behavior: "smooth" });
+});
 
 els.accountForm.addEventListener("submit", (event) => {
   event.preventDefault();
@@ -510,7 +552,7 @@ els.holdingForm.addEventListener("submit", (event) => {
   editingHoldingId = null;
   event.currentTarget.reset();
   hideTickerSuggestions();
-  els.holdingFormPanel.hidden = true;
+  closeHoldingDrawer({ reset: false });
   updateEditControls();
   saveState();
   render();
@@ -1116,6 +1158,8 @@ function publishState() {
   window.dispatchEvent(new CustomEvent("stocklio:state", { detail: structuredClone(state) }));
 }
 
+let simulatorInitialized = false;
+
 function setView(view) {
   if (activeView === "holdings" && view !== "holdings") {
     editingHoldingId = null;
@@ -1139,6 +1183,10 @@ function setView(view) {
     section.hidden = !isActive;
     section.inert = !isActive;
   });
+  if (view === "simulator" && !simulatorInitialized) {
+    simulatorInitialized = true;
+    initSimulatorView();
+  }
   renderEmptyPortfolioNotice();
 }
 
@@ -1395,7 +1443,8 @@ function renderAccountSelectors() {
   }
   const previousDetail = els.accountDetailSelect.value;
   els.accountDetailSelect.innerHTML = `<option value="">전체 계좌</option>${options}`;
-  els.accountDetailSelect.value = accounts.some((account) => account.key === previousDetail) ? previousDetail : "";
+  els.accountDetailSelect.value = accounts.some((account) => account.key === previousDetail) ? previousDetail : accounts[0]?.key || "";
+  fillSelect(els.accountInvestorFilter, "모든 투자자", unique(accounts.map((account) => account.investor)));
 }
 
 function accountOption(account) {
@@ -1767,33 +1816,55 @@ function renderPriceRefreshImpact(impact, { compact = false } = {}) {
 }
 
 function renderAccounts() {
-  const accounts = getKnownAccounts();
+  const accounts = getFilteredAccounts();
+  renderAccountOverview();
   const accountStats = getAccountStats();
+  if (els.accountListCount) {
+    els.accountListCount.textContent = `${accounts.length}개 계좌`;
+  }
   els.accountList.innerHTML = accounts.length
     ? accounts
         .map((account) => {
           const inUse = isAccountInUse(account);
           const stats = accountStats.get(account.key) || { stockValueKrw: 0, cashKrw: 0, flowsKrw: 0, holdingCount: 0 };
           const deleteLabel = inUse ? "사용 중인 계좌라 삭제할 수 없습니다" : "계좌 삭제";
-          return `<div class="detail-row account-card-row">
+          const isSelected = els.accountDetailSelect.value === account.key;
+          return `<div class="account-list-row ${isSelected ? "is-selected" : ""}" role="button" tabindex="0" data-select-account="${escapeHtml(account.key)}">
             <div>
               <strong>${escapeHtml(account.account)}</strong>
               <small>${escapeHtml(account.investor)} · ${escapeHtml(account.provider || "기관 미지정")} · ${formatAccountType(account.accountType)} · ${escapeHtml(account.baseCurrency || "KRW")}</small>
             </div>
             <div class="account-card-metrics">
-              <span><small>총자산</small><strong>${formatKrw(stats.stockValueKrw + stats.cashKrw)}</strong></span>
-              <span><small>주식</small><strong>${formatKrw(stats.stockValueKrw)}</strong></span>
-              <span><small>예수금</small><strong>${formatKrw(stats.cashKrw)}</strong></span>
+              <span><small>총자산</small><strong>${formatCompactKrw(stats.stockValueKrw + stats.cashKrw)}</strong></span>
+              <span><small>주식</small><strong>${formatCompactKrw(stats.stockValueKrw)}</strong></span>
+              <span><small>예수금</small><strong>${formatCompactKrw(stats.cashKrw)}</strong></span>
               <span><small>종목</small><strong>${formatNumber(stats.holdingCount)}</strong></span>
             </div>
-            ${rowActionMenu(`계좌 ${account.account} 작업`, [
+            <div class="account-row-menu" onclick="event.stopPropagation()">${rowActionMenu(`계좌 ${account.account} 작업`, [
               `<button type="button" data-edit-account="${account.id}">수정</button>`,
               `<button class="row-menu-danger" type="button" data-delete-account="${account.id}" ${inUse ? "disabled" : ""} title="${deleteLabel}">삭제</button>`,
-            ])}
+            ])}</div>
           </div>`;
         })
         .join("")
     : `<div class="empty-state">등록된 계좌가 없습니다</div>`;
+
+  document.querySelectorAll("[data-select-account]").forEach((button) => {
+    const select = () => {
+      els.accountDetailSelect.value = button.dataset.selectAccount;
+      syncCashFormToSelectedAccount();
+      renderAccounts();
+      renderAccountDetail();
+      renderCashBalances();
+    };
+    button.addEventListener("click", select);
+    button.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        select();
+      }
+    });
+  });
 
   document.querySelectorAll("[data-edit-account]").forEach((button) => {
     button.addEventListener("click", () => startEditAccount(button.dataset.editAccount));
@@ -1808,6 +1879,40 @@ function renderAccounts() {
       render();
     });
   });
+}
+
+function getFilteredAccounts() {
+  const query = (els.accountSearch?.value || "").trim().toLowerCase();
+  const investor = els.accountInvestorFilter?.value || "";
+  const currency = els.accountCurrencyFilter?.value || "";
+  return getKnownAccounts().filter((account) => {
+    const haystack = [account.account, account.investor, account.provider, formatAccountType(account.accountType), account.baseCurrency].join(" ").toLowerCase();
+    return (!investor || account.investor === investor) && (!currency || account.baseCurrency === currency) && (!query || haystack.includes(query));
+  });
+}
+
+function renderAccountOverview() {
+  const stats = getAccountStats();
+  const accounts = getKnownAccounts();
+  const totalStock = [...stats.values()].reduce((sum, item) => sum + item.stockValueKrw, 0);
+  const totalCash = [...stats.values()].reduce((sum, item) => sum + item.cashKrw, 0);
+  if (els.accountOverviewTotal) {
+    els.accountOverviewTotal.textContent = formatKrw(totalStock + totalCash);
+  }
+  if (els.accountOverviewStocks) {
+    els.accountOverviewStocks.textContent = formatKrw(totalStock);
+  }
+  if (els.accountOverviewCash) {
+    els.accountOverviewCash.textContent = formatKrw(totalCash);
+  }
+  if (els.accountOverviewCount) {
+    els.accountOverviewCount.textContent = String(accounts.length);
+  }
+  if (els.accountOverviewCountDetail) {
+    const krw = accounts.filter((account) => account.baseCurrency === "KRW").length;
+    const usd = accounts.filter((account) => account.baseCurrency === "USD").length;
+    els.accountOverviewCountDetail.textContent = `KRW ${krw}개 · USD ${usd}개 포함`;
+  }
 }
 
 function rowActionMenu(label, actions) {
@@ -1861,13 +1966,58 @@ function renderAccountSummary() {
 function renderAccountDetail() {
   const selected = els.accountDetailSelect.value;
   if (!selected) {
+    if (els.accountDetailSubtitle) {
+      els.accountDetailSubtitle.textContent = "계좌를 선택해 상세를 확인합니다";
+    }
+    if (els.accountDetailType) {
+      els.accountDetailType.textContent = "-";
+    }
+    if (els.accountSummary) {
+      els.accountSummary.innerHTML = "";
+    }
+    if (els.accountComposition) {
+      els.accountComposition.innerHTML = `<div class="empty-state">계좌를 선택하면 구성이 표시됩니다</div>`;
+    }
     els.accountDetail.innerHTML = `<div class="empty-state">계좌를 선택하면 보유 종목, 예수금, 현금흐름을 한 번에 볼 수 있습니다</div>`;
+    renderCashSelectedPreview();
     return;
   }
   const account = parseAccountKey(selected);
+  const accountInfo = getKnownAccounts().find((item) => item.key === selected);
   const holdings = state.holdings.filter((holding) => holding.investor === account.investor && holding.account === account.account);
   const cashBalances = (state.cashBalances || []).filter((cash) => cash.investor === account.investor && cash.account === account.account);
   const flows = (state.cashFlows || []).filter((flow) => flow.investor === account.investor && flow.account === account.account).slice(-6).reverse();
+  const stockValueKrw = holdings.reduce((sum, holding) => sum + getHoldingValues(holding).valueKrw, 0);
+  const cashKrw = cashBalances.reduce((sum, cash) => sum + getCashValueKrw(cash), 0);
+  const totalKrw = stockValueKrw + cashKrw;
+  const stockRatio = totalKrw ? stockValueKrw / totalKrw : 0;
+  const cashRatio = totalKrw ? cashKrw / totalKrw : 0;
+  if (els.accountDetailSubtitle) {
+    els.accountDetailSubtitle.textContent = `${account.account} · ${account.investor} · ${accountInfo?.provider || "기관 미지정"}`;
+  }
+  if (els.accountDetailType) {
+    els.accountDetailType.textContent = formatAccountType(accountInfo?.accountType);
+  }
+  if (els.accountCompositionCurrency) {
+    els.accountCompositionCurrency.textContent = accountInfo?.baseCurrency || "KRW";
+  }
+  if (els.accountSummary) {
+    els.accountSummary.innerHTML = `
+      <div><span>총자산<small>주식과 예수금 합계</small></span><strong>${formatKrw(totalKrw)}</strong></div>
+      <div><span>주식 평가금액<small>${holdings.length}개 포지션</small></span><strong>${formatKrw(stockValueKrw)}</strong></div>
+      <div><span>예수금<small>${cashBalances.length}개 잔액</small></span><strong>${formatKrw(cashKrw)}</strong></div>
+      <div><span>보유 종목<small>현재 추적 중인 포지션</small></span><strong>${holdings.length}개</strong></div>
+    `;
+  }
+  if (els.accountComposition) {
+    els.accountComposition.innerHTML = `
+      <div class="composition-row"><span>주식</span><strong>${formatPercent(stockRatio)}</strong></div>
+      <div class="composition-bar"><span style="width:${Math.max(0, stockRatio * 100)}%"></span></div>
+      <div class="composition-row"><span>예수금</span><strong>${formatPercent(cashRatio)}</strong></div>
+      <div class="composition-bar muted"><span style="width:${Math.max(0, cashRatio * 100)}%"></span></div>
+      <div class="composition-note">${cashBalances.length ? "예수금 기록 있음" : "예수금 기록 없음"}<span>${cashBalances.length ? "" : "필요할 때 오른쪽 입력 폼에서 추가합니다."}</span></div>
+    `;
+  }
   const holdingRows = holdings.map((holding) => {
     const values = getHoldingValues(holding);
     return `<li><span>${escapeHtml(holding.name || holding.ticker)}<small>${escapeHtml(holding.ticker)}</small></span><strong>${formatKrw(values.valueKrw)}</strong></li>`;
@@ -1888,6 +2038,38 @@ function renderAccountDetail() {
       <ul>${flowRows || "<li>현금흐름 없음</li>"}</ul>
     </div>
   `;
+  renderCashSelectedPreview();
+}
+
+function syncCashFormToSelectedAccount() {
+  const selected = els.accountDetailSelect.value;
+  if (selected && [...els.cashBalanceForm.elements.accountKey.options].some((option) => option.value === selected)) {
+    els.cashBalanceForm.elements.accountKey.value = selected;
+  }
+  renderCashSelectedPreview();
+}
+
+function renderCashSelectedPreview() {
+  if (!els.cashSelectedPreview) {
+    return;
+  }
+  const selected = els.cashBalanceForm.elements.accountKey.value;
+  const account = selected ? parseAccountKey(selected) : null;
+  const amount = Number(els.cashBalanceForm.elements.amount.value || 0);
+  const currency = els.cashBalanceForm.elements.currency.value || "KRW";
+  const rate = currency === "USD" ? Number(state.fxRate?.rate || 1) : 1;
+  const accountStats = getAccountStats();
+  const stats = selected ? accountStats.get(selected) : null;
+  const existingCashRows = selected
+    ? (state.cashBalances || []).filter((cash) => cash.investor === account.investor && cash.account === account.account && cash.currency === currency)
+    : [];
+  const existingSameCurrencyKrw = existingCashRows.reduce((sum, cash) => sum + getCashValueKrw(cash), 0);
+  const nextCashKrw = Math.max(0, amount * rate);
+  const baseTotal = stats ? stats.stockValueKrw + stats.cashKrw - existingSameCurrencyKrw : 0;
+  const previewTotal = selected ? baseTotal + nextCashKrw : 0;
+  els.cashSelectedPreview.innerHTML = selected
+    ? `<span>저장 후 선택 계좌 총자산</span><strong>${formatKrw(previewTotal)}</strong><small>${account.account} · ${currency} 예수금 ${formatMoney(amount, currency)}</small>`
+    : `<span>저장 후 선택 계좌 총자산</span><strong>-</strong><small>계좌를 선택하면 미리 계산합니다</small>`;
 }
 
 function renderSnapshots() {
@@ -2009,12 +2191,15 @@ function priceRefreshImpactInsight(impact) {
 
 function renderHoldings() {
   const rows = filteredHoldings();
-  els.holdingsBody.innerHTML = rows.length
-    ? rows
+  renderHoldingsSummary(rows);
+  const totalPages = Math.max(1, Math.ceil(rows.length / HOLDINGS_PAGE_SIZE));
+  holdingPage = Math.min(Math.max(1, holdingPage), totalPages);
+  const pageRows = rows.slice((holdingPage - 1) * HOLDINGS_PAGE_SIZE, holdingPage * HOLDINGS_PAGE_SIZE);
+  renderHoldingScopeControls();
+  renderHoldingPagination(rows.length, totalPages);
+  els.holdingsBody.innerHTML = pageRows.length
+    ? pageRows
     .map((holding) => {
-      if (editingHoldingId === holding.id) {
-        return renderHoldingEditRow(holding);
-      }
       const values = getHoldingValues(holding);
       const value = values.valueNative;
       const cost = values.costNative;
@@ -2069,6 +2254,145 @@ function renderHoldings() {
       render();
     });
   });
+}
+
+function renderHoldingScopeControls() {
+  for (const [button, scope] of [
+    [els.holdingScopeAll, "all"],
+    [els.holdingScopeGain, "gain"],
+    [els.holdingScopeLoss, "loss"],
+  ]) {
+    button?.classList.toggle("is-active", holdingScope === scope);
+  }
+}
+
+function renderHoldingPagination(totalRows, totalPages) {
+  if (els.holdingsPageInfo) {
+    const start = totalRows ? (holdingPage - 1) * HOLDINGS_PAGE_SIZE + 1 : 0;
+    const end = Math.min(totalRows, holdingPage * HOLDINGS_PAGE_SIZE);
+    els.holdingsPageInfo.textContent = totalRows > HOLDINGS_PAGE_SIZE ? `${start}-${end} / ${totalRows}개` : `${totalRows}개 표시`;
+  }
+  if (!els.holdingPagination) {
+    return;
+  }
+  if (totalRows <= HOLDINGS_PAGE_SIZE) {
+    els.holdingPagination.innerHTML = "";
+    return;
+  }
+  const pageButtons = Array.from({ length: totalPages }, (_, index) => {
+    const page = index + 1;
+    return `<button class="ghost small-button ${page === holdingPage ? "is-active" : ""}" type="button" data-holding-page="${page}" aria-label="${page}페이지">${page}</button>`;
+  }).join("");
+  els.holdingPagination.innerHTML = `
+    <span>${formatNumber(totalRows, 0)}개 중 ${formatNumber((holdingPage - 1) * HOLDINGS_PAGE_SIZE + 1, 0)}-${formatNumber(Math.min(totalRows, holdingPage * HOLDINGS_PAGE_SIZE), 0)}개</span>
+    <div>
+      <button class="ghost small-button" type="button" data-holding-page-prev ${holdingPage <= 1 ? "disabled" : ""}>이전</button>
+      ${pageButtons}
+      <button class="ghost small-button" type="button" data-holding-page-next ${holdingPage >= totalPages ? "disabled" : ""}>다음</button>
+    </div>
+  `;
+  els.holdingPagination.querySelector("[data-holding-page-prev]")?.addEventListener("click", () => {
+    holdingPage = Math.max(1, holdingPage - 1);
+    renderHoldings();
+  });
+  els.holdingPagination.querySelector("[data-holding-page-next]")?.addEventListener("click", () => {
+    holdingPage = Math.min(totalPages, holdingPage + 1);
+    renderHoldings();
+  });
+  els.holdingPagination.querySelectorAll("[data-holding-page]").forEach((button) => {
+    button.addEventListener("click", () => {
+      holdingPage = Number(button.dataset.holdingPage || 1);
+      renderHoldings();
+    });
+  });
+}
+
+function renderHoldingsSummary(rows) {
+  const allCount = state.holdings.length;
+  const visibleCount = rows.length;
+  const latestPriceTime = state.holdings
+    .map((holding) => new Date(holding.priceAsOf || 0).getTime())
+    .filter(Number.isFinite)
+    .sort((a, b) => b - a)[0];
+  const source = state.holdings.find((holding) => new Date(holding.priceAsOf || 0).getTime() === latestPriceTime)?.priceSource || "가격 데이터";
+  const values = rows.map((holding) => ({ holding, values: getHoldingValues(holding), dailyMove: getHoldingDailyMove(holding) }));
+  const totalValue = values.reduce((sum, row) => sum + row.values.valueKrw, 0);
+  const totalCost = values.reduce((sum, row) => sum + row.values.costKrw, 0);
+  const totalGain = values.reduce((sum, row) => sum + row.values.gainKrw, 0);
+  const totalDayMove = values.reduce((sum, row) => sum + (row.dailyMove.hasData ? row.dailyMove.valueKrw : 0), 0);
+  const returnRate = totalCost ? totalGain / totalCost : 0;
+  const sortedByValue = [...values].sort((a, b) => b.values.valueKrw - a.values.valueKrw);
+  const topRows = sortedByValue.slice(0, 3);
+  const topValue = topRows.reduce((sum, row) => sum + row.values.valueKrw, 0);
+  const concentration = totalValue ? topValue / totalValue : 0;
+  const topNames = topRows.map((row) => row.holding.name || row.holding.ticker).join(" · ") || "-";
+
+  if (els.holdingsMeta) {
+    els.holdingsMeta.textContent = `${visibleCount}/${allCount}개 종목`;
+  }
+  if (els.holdingsPriceMeta) {
+    els.holdingsPriceMeta.textContent = latestPriceTime ? `마지막 가격 갱신 ${formatAsOf(new Date(latestPriceTime).toISOString())} · ${source}` : "가격 기준 없음";
+  }
+  if (els.holdingsSummaryValue) {
+    els.holdingsSummaryValue.textContent = formatCompactKrw(totalValue);
+  }
+  if (els.holdingsSummaryGain) {
+    els.holdingsSummaryGain.textContent = `${totalGain >= 0 ? "+" : ""}${formatCompactKrw(totalGain)}`;
+    els.holdingsSummaryGain.className = totalGain >= 0 ? "positive" : "negative";
+  }
+  if (els.holdingsSummaryReturn) {
+    els.holdingsSummaryReturn.textContent = formatPercent(returnRate);
+  }
+  if (els.holdingsSummaryDayMove) {
+    els.holdingsSummaryDayMove.textContent = `${totalDayMove >= 0 ? "+" : ""}${formatCompactKrw(totalDayMove)}`;
+    els.holdingsSummaryDayMove.className = totalDayMove >= 0 ? "positive" : "negative";
+  }
+  if (els.holdingsSummaryDayNote) {
+    const leadingMove = values
+      .filter((row) => row.dailyMove.hasData)
+      .sort((a, b) => Math.abs(b.dailyMove.valueKrw) - Math.abs(a.dailyMove.valueKrw))[0];
+    els.holdingsSummaryDayNote.textContent = leadingMove ? `${leadingMove.holding.ticker} 영향 최대` : "가격 갱신 기준";
+  }
+  if (els.holdingsSummaryConcentration) {
+    els.holdingsSummaryConcentration.textContent = formatPercent(concentration);
+  }
+  if (els.holdingsSummaryTopNames) {
+    els.holdingsSummaryTopNames.textContent = topNames;
+  }
+}
+
+function exportVisibleHoldings() {
+  const rows = filteredHoldings();
+  const header = ["투자자", "계좌", "전략", "종목명", "티커", "수량", "현재가", "평단가", "평가금액", "손익", "수익률", "통화"];
+  const csvRows = rows.map((holding) => {
+    const values = getHoldingValues(holding);
+    const returnRate = values.costNative ? values.gainNative / values.costNative : 0;
+    return [
+      holding.investor,
+      holding.account,
+      holding.strategy,
+      holding.name || holding.ticker,
+      holding.ticker,
+      holding.quantity,
+      holding.price,
+      holding.averageCost,
+      values.valueNative,
+      values.gainNative,
+      returnRate,
+      holding.currency,
+    ];
+  });
+  const csv = [header, ...csvRows]
+    .map((row) => row.map((cell) => `"${String(cell ?? "").replaceAll("\"", "\"\"")}"`).join(","))
+    .join("\n");
+  const blob = new Blob([`\uFEFF${csv}`], { type: "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `stocklio-holdings-${todayKey()}.csv`;
+  link.click();
+  URL.revokeObjectURL(url);
+  showOperationToast("보유 종목 내보내기 완료", `${rows.length}개 종목 CSV`, "success");
 }
 
 function renderHoldingEditRow(holding) {
@@ -2232,15 +2556,16 @@ function saveInlineHoldingEdit(id) {
 
 function renderCashBalances() {
   renderUnclassifiedCashAllocation();
+  renderCashSelectedPreview();
   const rows = [...(state.cashBalances || [])].sort((a, b) => `${a.investor}${a.account}`.localeCompare(`${b.investor}${b.account}`));
   els.cashBalanceList.innerHTML = rows.length
     ? rows
-        .map((cash) => editingCashBalanceId === cash.id ? renderCashBalanceEditRow(cash) : `<div class="detail-row">
+        .map((cash) => editingCashBalanceId === cash.id ? renderCashBalanceEditRow(cash) : `<div class="cash-balance-row">
           <span>
             <strong>${escapeHtml(cash.account)}</strong>
-            <small>${escapeHtml(cash.investor)} · ${escapeHtml(cash.currency)} · ${escapeHtml(cash.source || "직접 입력")}</small>
+            <small>${escapeHtml(cash.investor)} · ${escapeHtml(cash.source || "직접 입력")}</small>
           </span>
-          <span>${formatMoney(cash.amount, cash.currency)}</span>
+          <strong>${formatMoney(cash.amount, cash.currency)}</strong>
           ${rowActionMenu(`${cash.account} 예수금 작업`, [
             `<button type="button" data-edit-cash="${cash.id}">수정</button>`,
             `<button class="row-menu-danger" type="button" data-delete-cash="${cash.id}">삭제</button>`,
@@ -2429,13 +2754,52 @@ function startEditHolding(id) {
     return;
   }
   editingHoldingId = id;
-  els.holdingFormPanel.hidden = true;
+  openHoldingDrawer(holding);
   updateEditControls();
-  renderHoldings();
   setView("holdings");
-  const row = document.querySelector(`[data-save-holding="${CSS.escape(id)}"]`)?.closest("tr");
-  row?.scrollIntoView({ block: "center", behavior: "smooth" });
-  row?.querySelector("[data-inline-holding-field='quantity']")?.focus();
+  els.holdingForm.elements.quantity.focus();
+}
+
+function openHoldingDrawer(holding = null) {
+  hideTickerSuggestions();
+  els.holdingForm.reset();
+  renderAccountSelectors();
+  if (holding) {
+    els.holdingForm.elements.accountKey.value = accountKeyFor(holding);
+    els.holdingForm.elements.accountType.value = normalizeAccountType(holding.accountType);
+    els.holdingForm.elements.strategy.value = normalizeStrategy(holding.strategy);
+    els.holdingForm.elements.name.value = holding.name || "";
+    els.holdingForm.elements.ticker.value = holding.ticker || "";
+    els.holdingForm.elements.quantity.value = holding.quantity ?? "";
+    els.holdingForm.elements.averageCost.value = holding.averageCost ?? "";
+  }
+  els.holdingFormPanel.hidden = false;
+  els.holdingDrawerBackdrop.hidden = false;
+  document.body.classList.add("drawer-open");
+  window.setTimeout(() => {
+    els.holdingFormPanel.classList.add("is-open");
+    els.holdingDrawerBackdrop.classList.add("is-open");
+  }, 0);
+  updateEditControls();
+  const firstField = els.holdingForm.elements.accountKey;
+  window.setTimeout(() => firstField?.focus(), 80);
+}
+
+function closeHoldingDrawer({ reset = true } = {}) {
+  hideTickerSuggestions();
+  els.holdingFormPanel.classList.remove("is-open");
+  els.holdingDrawerBackdrop.classList.remove("is-open");
+  document.body.classList.remove("drawer-open");
+  window.setTimeout(() => {
+    els.holdingFormPanel.hidden = true;
+    els.holdingDrawerBackdrop.hidden = true;
+  }, 180);
+  if (reset) {
+    editingHoldingId = null;
+    els.holdingForm.reset();
+    updateEditControls();
+    renderHoldings();
+  }
 }
 
 function startEditAccount(id) {
@@ -2483,10 +2847,7 @@ function startEditCashBalance(id) {
 
 function cancelEdit(kind) {
   if (kind === "holding") {
-    editingHoldingId = null;
-    els.holdingForm.reset();
-    els.holdingFormPanel.hidden = true;
-    renderHoldings();
+    closeHoldingDrawer();
   }
   if (kind === "cashFlow") {
     editingCashFlowId = null;
@@ -2512,11 +2873,11 @@ function updateEditControls() {
   els.accountSubmit.textContent = editingAccountId ? "수정 저장" : "계좌 저장";
   els.accountCancel.hidden = els.accountForm.hidden;
   els.addAccountButton.hidden = !els.accountForm.hidden;
-  els.holdingSubmit.textContent = "추가";
+  els.holdingSubmit.textContent = editingHoldingId ? "수정 저장" : "목록에 추가";
   els.holdingCancel.hidden = Boolean(els.holdingFormPanel?.hidden);
   if (els.holdingFormTitle) {
-    els.holdingFormTitle.textContent = "보유 종목 추가";
-    els.holdingFormSubtitle.textContent = "계좌와 전략을 선택해 새 종목을 등록합니다";
+    els.holdingFormTitle.textContent = editingHoldingId ? "종목 수정" : "종목 추가";
+    els.holdingFormSubtitle.textContent = editingHoldingId ? "보유 포지션의 계좌, 전략, 수량, 평단가를 수정합니다." : "현재 보유 종목 목록에 새 포지션을 추가합니다.";
   }
   els.cashFlowSubmit.textContent = editingCashFlowId ? "수정 저장" : "기록";
   els.cashFlowCancel.hidden = !editingCashFlowId;
@@ -2704,10 +3065,12 @@ function filteredHoldings() {
   const query = (els.holdingSearch?.value || "").trim().toLowerCase();
   const rows = state.holdings.filter((holding) => {
     const haystack = [holding.name, holding.ticker, holding.account, holding.investor, holding.strategy].join(" ").toLowerCase();
+    const values = getHoldingValues(holding);
     return (
       (!els.investorFilter.value || holding.investor === els.investorFilter.value) &&
       (!els.strategyFilter.value || holding.strategy === els.strategyFilter.value) &&
       (!els.accountTypeFilter.value || normalizeAccountType(holding.accountType) === els.accountTypeFilter.value) &&
+      (holdingScope === "all" || (holdingScope === "gain" && values.gainKrw >= 0) || (holdingScope === "loss" && values.gainKrw < 0)) &&
       (!query || haystack.includes(query))
     );
   });

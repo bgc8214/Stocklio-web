@@ -97,6 +97,11 @@ createServer(async (request, response) => {
       return;
     }
 
+    if (url.pathname === "/api/yahoo/history") {
+      await proxyYahooHistory(url, response);
+      return;
+    }
+
     await serveStatic(url.pathname, response);
   } catch (error) {
     sendJson(response, 500, { error: error.message || "Internal server error" });
@@ -136,6 +141,65 @@ async function proxyYahooChart(url, response) {
     "cache-control": symbol === "KRW=X" ? "public, max-age=3600" : "public, max-age=300",
   });
   response.end(body);
+}
+
+async function proxyYahooHistory(url, response) {
+  const symbol = String(url.searchParams.get("symbol") || "").trim().toUpperCase();
+  if (!/^[A-Z0-9.=^-]{1,20}$/.test(symbol)) {
+    sendJson(response, 400, { error: "valid symbol is required" });
+    return;
+  }
+  const start = url.searchParams.get("start") || "";
+  const end = url.searchParams.get("end") || "";
+  const interval = url.searchParams.get("interval") || "1mo";
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(start) || !/^\d{4}-\d{2}-\d{2}$/.test(end)) {
+    sendJson(response, 400, { error: "start and end must be YYYY-MM-DD" });
+    return;
+  }
+  if (!["1d", "1wk", "1mo"].includes(interval)) {
+    sendJson(response, 400, { error: "interval must be 1d, 1wk, or 1mo" });
+    return;
+  }
+  const period1 = Math.floor(new Date(start).getTime() / 1000);
+  const period2 = Math.floor(new Date(end).getTime() / 1000) + 86400;
+  const yahooUrl = new URL(`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}`);
+  yahooUrl.searchParams.set("period1", String(period1));
+  yahooUrl.searchParams.set("period2", String(period2));
+  yahooUrl.searchParams.set("interval", interval);
+  yahooUrl.searchParams.set("events", "div,splits");
+  yahooUrl.searchParams.set("includeAdjustedClose", "true");
+  const yahooResponse = await fetch(yahooUrl, {
+    headers: { accept: "application/json", "user-agent": "stock-portfolio-lab/0.1" },
+  });
+  if (!yahooResponse.ok) {
+    sendJson(response, yahooResponse.status === 404 ? 404 : 502, { error: "price provider error" });
+    return;
+  }
+  const data = await yahooResponse.json();
+  const result = data?.chart?.result?.[0];
+  if (!result) {
+    sendJson(response, 404, { error: `no data found for symbol: ${symbol}` });
+    return;
+  }
+  const timestamps = result.timestamp || [];
+  const closes = result.indicators?.quote?.[0]?.close || [];
+  const adjCloses = result.indicators?.adjclose?.[0]?.adjclose || [];
+  const currency = result.meta?.currency || "USD";
+  const rows = [];
+  for (let i = 0; i < timestamps.length; i++) {
+    const close = closes[i];
+    const adjClose = adjCloses[i] ?? null;
+    if (close == null || close <= 0) continue;
+    const date = new Date(timestamps[i] * 1000).toISOString().slice(0, 10);
+    rows.push({ date, close, adjClose: adjClose != null && adjClose > 0 ? adjClose : null });
+  }
+  if (rows.length === 0) {
+    sendJson(response, 404, { error: `no price data for ${symbol} in the requested range` });
+    return;
+  }
+  sendJson(response, 200, { symbol, currency, source: "Yahoo Finance", rows }, {
+    "cache-control": "public, max-age=3600, stale-while-revalidate=86400",
+  });
 }
 
 async function proxyYahooSearch(url, response) {
