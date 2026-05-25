@@ -306,6 +306,7 @@ els.logoutButton.addEventListener("click", () => {
   setStatus("로그아웃 중", "세션을 정리하고 있습니다");
   window.StocklioAuth?.signOut?.()
     .then(() => {
+      localStorage.removeItem(STORAGE_KEY);
       els.logoutButton.disabled = false;
       setStatus("로그아웃 완료", "다시 로그인할 수 있습니다");
     })
@@ -742,6 +743,10 @@ function loadState() {
       });
   }
   if (isStaticDeployment()) {
+    // Supabase 설정이 있지만 로그아웃 상태 → 데이터 노출 금지
+    if (window.StocklioAuth?.isConfigured?.()) {
+      return Promise.resolve(structuredClone(sampleState));
+    }
     if (!stored) {
       return Promise.resolve(structuredClone(sampleState));
     }
