@@ -932,7 +932,29 @@ function normalizeState(input) {
   };
 }
 
+function initTheme() {
+  const saved = localStorage.getItem("stocklio-theme");
+  const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+  const isDark = saved ? saved === "dark" : prefersDark;
+  applyTheme(isDark ? "dark" : "light");
+
+  document.getElementById("themeToggle")?.addEventListener("click", () => {
+    const next = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
+    applyTheme(next);
+    localStorage.setItem("stocklio-theme", next);
+  });
+}
+
+function applyTheme(theme) {
+  document.documentElement.dataset.theme = theme;
+  const icon = document.getElementById("themeToggleIcon");
+  const label = document.getElementById("themeToggleLabel");
+  if (icon) icon.textContent = theme === "dark" ? "☀️" : "🌙";
+  if (label) label.textContent = theme === "dark" ? "라이트 모드" : "다크 모드";
+}
+
 async function initialize() {
+  initTheme();
   try {
     configureRuntimeSurface();
     authState = await waitForAuthState();

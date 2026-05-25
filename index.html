@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>주식 포트폴리오 랩</title>
     <link rel="stylesheet" href="styles.css">
+    <script>(function(){var t=localStorage.getItem("stocklio-theme");if(t){document.documentElement.dataset.theme=t;}else if(window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches){document.documentElement.dataset.theme="dark";}})();</script>
     <script>window.STOCKLIO_USE_CRAFT = true;</script>
     <script>
       window.STOCKLIO_SUPABASE = {
@@ -44,6 +45,10 @@
             </div>
           </div>
           <div class="sidebar-foot">
+            <button class="theme-toggle" id="themeToggle" type="button" aria-label="테마 전환">
+              <span class="theme-toggle-icon" id="themeToggleIcon">🌙</span>
+              <span id="themeToggleLabel">다크 모드</span>
+            </button>
             <span>Numbers 이관</span>
             <strong>자동 가격 · 일일 알림</strong>
           </div>

@@ -4256,3 +4256,185 @@ button.secondary:hover,
   }
 }
 }
+
+/* ── DARK THEME ── */
+[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #0a0a0a;
+  --surface: #111111;
+  --surface-soft: #1a1a1a;
+  --ink: #f0f0ee;
+  --value: #ffffff;
+  --muted: rgba(240,240,238,0.45);
+  --subtle: rgba(240,240,238,0.3);
+  --line: rgba(255,255,255,0.08);
+  --accent: #1db97a;
+  --accent-dark: #17a368;
+  --red: #ff6b6b;
+  --blue: #5b9cf6;
+  --gain: #ff6b6b;
+  --loss: #5b9cf6;
+  --gold: #f0b429;
+  --control-bg: #161616;
+  --shadow: 0 16px 40px rgba(0,0,0,0.5);
+  --radius: 12px;
+  --header-height: 72px;
+  --rail-width: 248px;
+}
+
+[data-theme="dark"] body,
+[data-theme="dark"] html {
+  background: var(--bg);
+}
+
+[data-theme="dark"] .sidebar {
+  background: #0d0d0d;
+  border-right: 1px solid rgba(255,255,255,0.07);
+}
+
+[data-theme="dark"] .sidebar-brand {
+  border-bottom-color: rgba(255,255,255,0.07);
+}
+
+[data-theme="dark"] .view-tabs button {
+  color: rgba(255,255,255,0.4);
+}
+
+[data-theme="dark"] .view-tabs button:hover,
+[data-theme="dark"] .view-tabs button:focus-visible {
+  background: rgba(29,185,122,0.09);
+  color: rgba(255,255,255,0.8);
+}
+
+[data-theme="dark"] .view-tabs button.active {
+  background: rgba(29,185,122,0.14);
+  color: #1db97a;
+}
+
+[data-theme="dark"] .view-tabs button::before {
+  background: rgba(255,255,255,0.06);
+}
+
+[data-theme="dark"] .view-tabs button.active::before {
+  background: rgba(29,185,122,0.18);
+}
+
+[data-theme="dark"] .sidebar-foot {
+  border-top-color: rgba(255,255,255,0.07);
+}
+
+[data-theme="dark"] .toolbar {
+  background: #0a0a0a;
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+}
+
+[data-theme="dark"] .panel {
+  background: var(--surface);
+  border: 1px solid rgba(255,255,255,0.07);
+  box-shadow: none;
+}
+
+[data-theme="dark"] input,
+[data-theme="dark"] select {
+  background: #161616;
+  border-color: rgba(255,255,255,0.1);
+  color: var(--ink);
+}
+
+[data-theme="dark"] input:focus,
+[data-theme="dark"] select:focus {
+  border-color: rgba(29,185,122,0.5);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(29,185,122,0.12);
+}
+
+[data-theme="dark"] button.ghost,
+[data-theme="dark"] button.secondary,
+[data-theme="dark"] .small-button {
+  background: #1a1a1a;
+  border-color: rgba(255,255,255,0.1);
+  color: rgba(255,255,255,0.75);
+}
+
+[data-theme="dark"] button.ghost:hover,
+[data-theme="dark"] button.secondary:hover,
+[data-theme="dark"] .small-button:hover {
+  background: #222222;
+  border-color: rgba(29,185,122,0.3);
+  color: white;
+}
+
+[data-theme="dark"] table th {
+  background: #111111;
+  color: rgba(255,255,255,0.4);
+  border-bottom-color: rgba(255,255,255,0.07);
+}
+
+[data-theme="dark"] table td {
+  border-bottom-color: rgba(255,255,255,0.05);
+}
+
+[data-theme="dark"] tr:hover td {
+  background: rgba(255,255,255,0.03);
+}
+
+[data-theme="dark"] .kpi-label {
+  color: rgba(255,255,255,0.4);
+}
+
+[data-theme="dark"] .money-positive { color: #ff6b6b; }
+[data-theme="dark"] .money-negative { color: #5b9cf6; }
+[data-theme="dark"] .money-gain { color: #ff6b6b; }
+[data-theme="dark"] .money-loss { color: #5b9cf6; }
+
+[data-theme="dark"] .dashboard-layout-toolbar {
+  background: #0a0a0a;
+  border-bottom-color: rgba(255,255,255,0.07);
+}
+
+[data-theme="dark"] .holding-toolbar {
+  background: #0a0a0a;
+}
+
+/* theme toggle button */
+.theme-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: none;
+  border: 1px solid var(--line);
+  border-radius: 100px;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  min-height: 32px;
+  padding: 0 12px;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  width: 100%;
+  justify-content: center;
+  letter-spacing: -0.01em;
+}
+
+.theme-toggle:hover {
+  background: var(--surface-soft);
+  color: var(--ink);
+  border-color: rgba(29,185,122,0.3);
+}
+
+.theme-toggle-icon {
+  font-size: 14px;
+  line-height: 1;
+}
+
+[data-theme="dark"] .theme-toggle {
+  background: transparent;
+  border-color: rgba(255,255,255,0.1);
+  color: rgba(255,255,255,0.45);
+}
+
+[data-theme="dark"] .theme-toggle:hover {
+  background: rgba(255,255,255,0.05);
+  color: white;
+  border-color: rgba(29,185,122,0.4);
+}
