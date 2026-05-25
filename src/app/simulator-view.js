@@ -100,27 +100,34 @@ function buildShell() {
     </aside>
 
     <div class="sim-main">
-      <div class="sim-result-cards" id="simResultCards" hidden>
-        <div class="sim-stat" id="simStatPrincipal">
-          <span class="sim-stat-label">총 투자금</span>
-          <span class="sim-stat-value" id="simValPrincipal">—</span>
+      <div class="sim-result-area" id="simResultCards" hidden>
+        <!-- 단일 종목 모드 -->
+        <div class="sim-result-single" id="simResultSingle">
+          <div class="sim-result-cards">
+            <div class="sim-stat" id="simStatPrincipal">
+              <span class="sim-stat-label">총 투자금</span>
+              <span class="sim-stat-value" id="simValPrincipal">—</span>
+            </div>
+            <div class="sim-stat" id="simStatFinal">
+              <span class="sim-stat-label">최종 평가금액</span>
+              <span class="sim-stat-value" id="simValFinal">—</span>
+            </div>
+            <div class="sim-stat" id="simStatGain">
+              <span class="sim-stat-label">수익</span>
+              <span class="sim-stat-value" id="simValGain">—</span>
+            </div>
+            <div class="sim-stat" id="simStatReturn">
+              <span class="sim-stat-label">수익률</span>
+              <span class="sim-stat-value" id="simValReturn">—</span>
+            </div>
+            <div class="sim-stat" id="simStatMDD">
+              <span class="sim-stat-label">최대 낙폭</span>
+              <span class="sim-stat-value" id="simValMDD">—</span>
+            </div>
+          </div>
         </div>
-        <div class="sim-stat" id="simStatFinal">
-          <span class="sim-stat-label">최종 평가금액</span>
-          <span class="sim-stat-value" id="simValFinal">—</span>
-        </div>
-        <div class="sim-stat" id="simStatGain">
-          <span class="sim-stat-label">수익</span>
-          <span class="sim-stat-value" id="simValGain">—</span>
-        </div>
-        <div class="sim-stat" id="simStatReturn">
-          <span class="sim-stat-label">수익률</span>
-          <span class="sim-stat-value" id="simValReturn">—</span>
-        </div>
-        <div class="sim-stat" id="simStatMDD">
-          <span class="sim-stat-label">최대 낙폭</span>
-          <span class="sim-stat-value" id="simValMDD">—</span>
-        </div>
+        <!-- 비교 모드: 종목별 행 -->
+        <div class="sim-result-compare" id="simResultCompare" hidden></div>
       </div>
 
       <div class="sim-chart-wrap" id="simChartWrap">
@@ -377,18 +384,64 @@ async function runMultiSimulation(params, root, fxRate) {
 // ─── 결과 카드 ────────────────────────────────────────────────────
 
 function showResultCards(root, primary, _unused = null, comparisons = null) {
-  const cards = root.querySelector("#simResultCards");
-  cards.hidden = false;
+  const area = root.querySelector("#simResultCards");
+  const single = root.querySelector("#simResultSingle");
+  const compare = root.querySelector("#simResultCompare");
+  area.hidden = false;
 
-  const display = comparisons
-    ? [...comparisons].sort((a, b) => b.result.finalValue - a.result.finalValue)[0].result
-    : primary;
+  if (comparisons && comparisons.length > 1) {
+    single.hidden = true;
+    compare.hidden = false;
+    compare.innerHTML = comparisons.map(({ label, result }, i) =>
+      buildCompareRow(label, result, i)
+    ).join("");
+  } else {
+    single.hidden = false;
+    compare.hidden = true;
+    const display = comparisons ? comparisons[0].result : primary;
+    setCard(root, "simValPrincipal", formatKrw(display.totalPrincipal));
+    setCard(root, "simValFinal", formatKrw(display.finalValue));
+    setCard(root, "simValGain", formatKrw(display.gain), display.gain >= 0 ? "positive" : "negative");
+    setCard(root, "simValReturn", formatPercent(display.returnRate), display.returnRate >= 0 ? "positive" : "negative");
+    setCard(root, "simValMDD", formatPercent(-display.maxDrawdown), "negative");
+  }
+}
 
-  setCard(root, "simValPrincipal", formatKrw(display.totalPrincipal));
-  setCard(root, "simValFinal", formatKrw(display.finalValue));
-  setCard(root, "simValGain", formatKrw(display.gain), display.gain >= 0 ? "positive" : "negative");
-  setCard(root, "simValReturn", formatPercent(display.returnRate), display.returnRate >= 0 ? "positive" : "negative");
-  setCard(root, "simValMDD", formatPercent(-display.maxDrawdown), "negative");
+const COMPARE_COLORS = ["#3b82f6", "#f59e0b", "#10b981", "#ef4444", "#8b5cf6"];
+
+function buildCompareRow(label, result, index) {
+  const color = COMPARE_COLORS[index % COMPARE_COLORS.length];
+  const gainTone = result.gain >= 0 ? "positive" : "negative";
+  const returnTone = result.returnRate >= 0 ? "positive" : "negative";
+  return `
+<div class="sim-compare-row">
+  <div class="sim-compare-label">
+    <span class="sim-compare-dot" style="background:${color}"></span>
+    <strong>${label}</strong>
+  </div>
+  <div class="sim-result-cards">
+    <div class="sim-stat">
+      <span class="sim-stat-label">총 투자금</span>
+      <span class="sim-stat-value">${formatKrw(result.totalPrincipal)}</span>
+    </div>
+    <div class="sim-stat">
+      <span class="sim-stat-label">최종 평가금액</span>
+      <span class="sim-stat-value">${formatKrw(result.finalValue)}</span>
+    </div>
+    <div class="sim-stat">
+      <span class="sim-stat-label">수익</span>
+      <span class="sim-stat-value sim-stat-value--${gainTone}">${formatKrw(result.gain)}</span>
+    </div>
+    <div class="sim-stat">
+      <span class="sim-stat-label">수익률</span>
+      <span class="sim-stat-value sim-stat-value--${returnTone}">${formatPercent(result.returnRate)}</span>
+    </div>
+    <div class="sim-stat">
+      <span class="sim-stat-label">최대 낙폭</span>
+      <span class="sim-stat-value sim-stat-value--negative">${formatPercent(-result.maxDrawdown)}</span>
+    </div>
+  </div>
+</div>`;
 }
 
 function setCard(root, id, text, modifier = "") {
@@ -413,20 +466,44 @@ function renderChart(root, seriesList, title, actualStart, finalResult) {
 
   if (chartInstance) chartInstance.destroy();
 
+  const compareEl = root.querySelector("#simResultCompare");
+  const isCompareMode = compareEl && !compareEl.hidden;
+
   const onProgress = (date, seriesValues) => {
-    // 애니메이션 진행 중: 현재 시점 평가금액으로 카드 업데이트
     const nonPrincipal = seriesValues.filter((s) => s.label !== "원금");
     if (!nonPrincipal.length || !finalResult) return;
-
-    // 비교 모드: 가장 높은 현재값 기준
-    const cur = nonPrincipal.reduce((a, b) => (a.value > b.value ? a : b));
     const principal = seriesValues.find((s) => s.label === "원금")?.value ?? finalResult.totalPrincipal;
-    const curGain = cur.value - principal;
-    const curReturn = principal > 0 ? curGain / principal : 0;
 
-    setCard(root, "simValFinal", formatKrw(cur.value));
-    setCard(root, "simValGain", formatKrw(curGain), curGain >= 0 ? "positive" : "negative");
-    setCard(root, "simValReturn", formatPercent(curReturn), curReturn >= 0 ? "positive" : "negative");
+    if (isCompareMode) {
+      // 비교 모드: 각 종목 행의 수치를 개별 업데이트
+      const rows = compareEl.querySelectorAll(".sim-compare-row");
+      rows.forEach((row, i) => {
+        const sv = nonPrincipal[i];
+        if (!sv) return;
+        const curPrincipal = row.querySelector(".sim-stat:nth-child(1) .sim-stat-value");
+        const curFinal = row.querySelector(".sim-stat:nth-child(2) .sim-stat-value");
+        const curGainEl = row.querySelector(".sim-stat:nth-child(3) .sim-stat-value");
+        const curReturnEl = row.querySelector(".sim-stat:nth-child(4) .sim-stat-value");
+        const gain = sv.value - principal;
+        const ret = principal > 0 ? gain / principal : 0;
+        if (curFinal) curFinal.textContent = formatKrw(sv.value);
+        if (curGainEl) {
+          curGainEl.textContent = formatKrw(gain);
+          curGainEl.className = `sim-stat-value sim-stat-value--${gain >= 0 ? "positive" : "negative"}`;
+        }
+        if (curReturnEl) {
+          curReturnEl.textContent = formatPercent(ret);
+          curReturnEl.className = `sim-stat-value sim-stat-value--${ret >= 0 ? "positive" : "negative"}`;
+        }
+      });
+    } else {
+      const cur = nonPrincipal.reduce((a, b) => (a.value > b.value ? a : b));
+      const curGain = cur.value - principal;
+      const curReturn = principal > 0 ? curGain / principal : 0;
+      setCard(root, "simValFinal", formatKrw(cur.value));
+      setCard(root, "simValGain", formatKrw(curGain), curGain >= 0 ? "positive" : "negative");
+      setCard(root, "simValReturn", formatPercent(curReturn), curReturn >= 0 ? "positive" : "negative");
+    }
   };
 
   chartInstance = new SimulatorAnimatedChart(container, seriesList, { onProgress });
