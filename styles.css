@@ -1883,9 +1883,9 @@ main {
 
 .performance-detail-stats {
   display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
-  gap: 10px;
-  margin-bottom: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+  margin-bottom: 18px;
 }
 
 .performance-detail-stats div {
@@ -1893,9 +1893,9 @@ main {
   border: 1px solid var(--line);
   border-radius: 7px;
   display: grid;
-  gap: 4px;
+  gap: 6px;
   min-width: 0;
-  padding: 12px;
+  padding: 14px;
 }
 
 .performance-detail-stats span,
@@ -1906,13 +1906,14 @@ main {
 
 .performance-detail-stats strong {
   color: var(--value);
-  font-size: clamp(16px, 1.2vw, 22px);
+  display: block;
+  font-size: clamp(18px, 1.05vw, 24px);
   font-weight: 900;
   line-height: 1.15;
-  overflow: hidden;
-  overflow-wrap: normal;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  max-width: 100%;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  white-space: normal;
   font-variant-numeric: tabular-nums;
 }
 
@@ -3004,10 +3005,53 @@ td:nth-child(4) {
 .sim-run-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
 /* 결과 카드 */
+.sim-result-area {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
 .sim-result-cards {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
   gap: 0.75rem;
+}
+
+.sim-result-compare {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.sim-compare-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.sim-compare-label {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  padding-left: 0.1rem;
+}
+
+.sim-compare-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.sim-compare-row .sim-result-cards {
+  grid-template-columns: repeat(5, 1fr);
+}
+
+.sim-compare-row .sim-stat {
+  border-top-width: 2px;
 }
 
 .sim-stat {
@@ -3245,17 +3289,17 @@ td:nth-child(4) {
     bottom: 0;
     box-shadow: 0 -10px 30px rgba(23, 33, 27, 0.12);
     display: flex;
-    gap: 4px;
+    gap: 0;
     left: 0;
     margin: 0;
-    padding: 8px 10px calc(8px + env(safe-area-inset-bottom));
+    padding: 6px 4px calc(6px + env(safe-area-inset-bottom));
     position: fixed;
     right: 0;
     z-index: 20;
   }
 
   .operation-toast {
-    bottom: calc(82px + env(safe-area-inset-bottom));
+    bottom: calc(78px + env(safe-area-inset-bottom));
     left: 14px;
     right: 14px;
     max-width: none;
@@ -3267,9 +3311,9 @@ td:nth-child(4) {
     font-size: 0;
     gap: 2px;
     justify-content: center;
-    min-height: 50px;
+    min-height: 48px;
     min-width: 0;
-    padding: 0 4px;
+    padding: 0 2px;
   }
 
   .view-tabs button {
@@ -3282,16 +3326,16 @@ td:nth-child(4) {
   }
 
   .view-tabs button::before {
-    font-size: 19px;
-    height: 22px;
+    font-size: 18px;
+    height: 20px;
     margin-right: 0;
-    width: 22px;
+    width: 20px;
   }
 
   .view-tabs button::after {
     content: attr(data-mobile-label);
     display: block;
-    font-size: 10px;
+    font-size: 9px;
     font-weight: 800;
     line-height: 1.1;
     max-width: 100%;
@@ -3979,6 +4023,9 @@ button.secondary:hover,
     padding-bottom: 1rem;
   }
   .sim-result-cards {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .sim-compare-row .sim-result-cards {
     grid-template-columns: repeat(2, 1fr);
   }
   .sim-chart-container {
