@@ -43,7 +43,7 @@ export class SimulatorAnimatedChart {
 
   static COLORS = ["#3b82f6", "#f59e0b", "#10b981", "#ef4444", "#8b5cf6"];
   static PRINCIPAL_COLOR = "rgba(156,163,175,0.6)";
-  static PAD = { top: 36, right: 80, bottom: 40, left: 72 };
+  static PAD = { top: 52, right: 80, bottom: 40, left: 72 };
 
   constructor(container, series, { onProgress } = {}) {
     this.#container = container;
@@ -183,7 +183,7 @@ export class SimulatorAnimatedChart {
       }
     });
 
-    // 진행 날짜 라벨 (상단 우측)
+    // 진행 날짜 라벨 (상단 우측, 값 라벨 아래 줄)
     const dateLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
     dateLabel.setAttribute("x", String(w - PAD.right));
     dateLabel.setAttribute("y", String(PAD.top - 14));
@@ -437,7 +437,7 @@ export class SimulatorAnimatedChart {
       const pt = pts[ptIdx];
       const x = this.#PAD.left + i * labelSlot;
       el.setAttribute("x", String(x));
-      el.setAttribute("y", String(this.#PAD.top - 14));
+      el.setAttribute("y", String(this.#PAD.top - 30));
       el.textContent = `${series.label}: ${formatValueShort(pt.value)}`;
     });
 
