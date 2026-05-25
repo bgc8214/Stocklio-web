@@ -1873,7 +1873,7 @@ main {
 }
 
 .performance-stats div {
-  background: #fbfcfa;
+  background: var(--surface);
   border: 1px solid var(--line);
   border-radius: 7px;
   display: grid;
@@ -1905,7 +1905,7 @@ main {
 }
 
 .performance-detail-stats div {
-  background: #fbfcfa;
+  background: var(--surface);
   border: 1px solid var(--line);
   border-radius: 7px;
   display: grid;
@@ -1962,7 +1962,7 @@ main {
   stroke: var(--accent);
   stroke-linecap: round;
   stroke-linejoin: round;
-  stroke-width: 4;
+  stroke-width: 2;
 }
 
 .trend-point {
@@ -4436,4 +4436,13 @@ button.secondary:hover,
   background: rgba(255,255,255,0.05);
   color: white;
   border-color: rgba(29,185,122,0.4);
+}
+
+[data-theme="dark"] .trend-tooltip rect {
+  fill: #2a2a2a;
+  filter: drop-shadow(0 4px 12px rgba(0,0,0,0.5));
+}
+
+[data-theme="dark"] .trend-tooltip text {
+  fill: rgba(240,240,238,0.9);
 }
