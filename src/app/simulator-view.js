@@ -138,6 +138,11 @@ function buildShell() {
           </div>
         </div>
         <div class="sim-chart-controls" id="simChartControls" hidden>
+          <div class="sim-speed-control">
+            <label class="sim-speed-label" for="simSpeedSlider">🐢</label>
+            <input class="sim-speed-slider" id="simSpeedSlider" type="range" min="1" max="5" value="3" step="1">
+            <label class="sim-speed-label" for="simSpeedSlider">🐇</label>
+          </div>
           <button class="sim-ctrl-btn" id="simReplayBtn" type="button">다시 재생</button>
         </div>
       </div>
@@ -185,6 +190,13 @@ function bindEvents(root) {
 
   root.querySelector("#simReplayBtn").addEventListener("click", () => {
     chartInstance?.replay();
+  });
+
+  root.querySelector("#simSpeedSlider").addEventListener("input", (e) => {
+    const level = Number(e.target.value); // 1~5
+    // level 3 = 10s 기본, 각 단계마다 2배/절반
+    const durations = { 1: 30000, 2: 16000, 3: 10000, 4: 5000, 5: 2500 };
+    chartInstance?.setDuration(durations[level] ?? 10000);
   });
 }
 

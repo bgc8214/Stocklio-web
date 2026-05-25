@@ -32,7 +32,17 @@
             <button type="button" data-view-tab="cashflows" data-nav-icon="💸" data-mobile-label="입출금">현금흐름</button>
             <button type="button" data-view-tab="automation" data-nav-icon="🔔" data-mobile-label="설정">자동화/데이터</button>
             <button type="button" data-view-tab="simulator" data-nav-icon="🎬" data-mobile-label="시뮬">시뮬레이터</button>
+            <!-- 모바일 전용 더보기 버튼 (CSS로 표시) -->
+            <button type="button" class="nav-more-btn" id="navMoreBtn" data-mobile-label="더보기" aria-expanded="false" aria-controls="navMoreDrawer">•••</button>
           </nav>
+          <!-- 모바일 더보기 드로어 -->
+          <div class="nav-more-drawer" id="navMoreDrawer" hidden>
+            <div class="nav-more-backdrop" id="navMoreBackdrop"></div>
+            <div class="nav-more-sheet">
+              <div class="nav-more-sheet-handle"></div>
+              <div class="nav-more-sheet-items" id="navMoreItems"></div>
+            </div>
+          </div>
           <div class="sidebar-foot">
             <span>Numbers 이관</span>
             <strong>자동 가격 · 일일 알림</strong>

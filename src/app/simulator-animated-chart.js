@@ -71,6 +71,10 @@ export class SimulatorAnimatedChart {
     this.play();
   }
 
+  setDuration(ms) {
+    this.#duration = ms;
+  }
+
   destroy() {
     if (this.#raf) cancelAnimationFrame(this.#raf);
     this.#container.innerHTML = "";
