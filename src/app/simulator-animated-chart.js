@@ -17,7 +17,7 @@ export class SimulatorAnimatedChart {
   #svg = null;
   #raf = null;
   #startTs = null;
-  #duration = 5000;
+  #duration = 10000;
   #progress = 0;
   #playing = false;
   #unionDates = [];
@@ -173,6 +173,7 @@ export class SimulatorAnimatedChart {
         valLabel.setAttribute("font-size", "13");
         valLabel.setAttribute("fill", color);
         valLabel.setAttribute("font-weight", "700");
+        valLabel.setAttribute("text-anchor", "start");
         svg.appendChild(valLabel);
         this.#valueLabels.push({ el: valLabel, pts, series, color });
       }
@@ -422,12 +423,15 @@ export class SimulatorAnimatedChart {
       dot.setAttribute("cy", String(pt.y));
     });
 
-    // 상단 값 라벨
-    const nonPrincipalSeries = this.#series.filter((s) => !s.isPrincipal);
+    // 상단 값 라벨 — 날짜 라벨(우측 ~90px)과 겹치지 않도록 가용 너비를 나눔
+    const nonPrincipalCount = this.#valueLabels.length;
+    const dateLabelReserve = 90;
+    const availW = this.#w - this.#PAD.left - dateLabelReserve;
+    const labelSlot = nonPrincipalCount > 1 ? Math.floor(availW / nonPrincipalCount) : availW;
     this.#valueLabels.forEach(({ el, pts, series }, i) => {
       const ptIdx = Math.max(0, Math.min(pts.length - 1, Math.floor(progress * (pts.length - 1))));
       const pt = pts[ptIdx];
-      const x = this.#PAD.left + i * 170;
+      const x = this.#PAD.left + i * labelSlot;
       el.setAttribute("x", String(x));
       el.setAttribute("y", String(this.#PAD.top - 14));
       el.textContent = `${series.label}: ${formatValueShort(pt.value)}`;
