@@ -86,7 +86,13 @@ export class SimulatorAnimatedChart {
     this.#container.innerHTML = "";
     const w = this.#container.clientWidth || 640;
     const h = Math.max(this.#container.clientHeight || 320, 280);
-    const PAD = SimulatorAnimatedChart.PAD;
+
+    // 종목 수에 따라 상단 여백 동적 계산
+    // 날짜 1줄(16px) + 종목 라벨 n줄(18px each) + 여유(8px)
+    const nonPrincipalCount = this.#series.filter((s) => !s.isPrincipal).length;
+    const topPad = 16 + nonPrincipalCount * 18 + 8;
+    const PAD = { ...SimulatorAnimatedChart.PAD, top: topPad };
+
     const innerW = w - PAD.left - PAD.right;
     const innerH = h - PAD.top - PAD.bottom;
 
@@ -183,10 +189,10 @@ export class SimulatorAnimatedChart {
       }
     });
 
-    // 진행 날짜 라벨 (상단 우측, 값 라벨 아래 줄)
+    // 진행 날짜 라벨 (상단 첫 줄, 우측 정렬)
     const dateLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
     dateLabel.setAttribute("x", String(w - PAD.right));
-    dateLabel.setAttribute("y", String(PAD.top - 14));
+    dateLabel.setAttribute("y", "14");
     dateLabel.setAttribute("text-anchor", "end");
     dateLabel.setAttribute("font-size", "12");
     dateLabel.setAttribute("fill", "#6b7280");
@@ -427,17 +433,12 @@ export class SimulatorAnimatedChart {
       dot.setAttribute("cy", String(pt.y));
     });
 
-    // 상단 값 라벨 — 날짜 라벨(우측 ~90px)과 겹치지 않도록 가용 너비를 나눔
-    const nonPrincipalCount = this.#valueLabels.length;
-    const dateLabelReserve = 90;
-    const availW = this.#w - this.#PAD.left - dateLabelReserve;
-    const labelSlot = nonPrincipalCount > 1 ? Math.floor(availW / nonPrincipalCount) : availW;
+    // 상단 값 라벨 — 날짜(y=14) 아래에 종목별로 세로 스택
     this.#valueLabels.forEach(({ el, pts, series }, i) => {
       const ptIdx = Math.max(0, Math.min(pts.length - 1, Math.floor(progress * (pts.length - 1))));
       const pt = pts[ptIdx];
-      const x = this.#PAD.left + i * labelSlot;
-      el.setAttribute("x", String(x));
-      el.setAttribute("y", String(this.#PAD.top - 30));
+      el.setAttribute("x", String(this.#PAD.left));
+      el.setAttribute("y", String(14 + 18 + i * 18));
       el.textContent = `${series.label}: ${formatValueShort(pt.value)}`;
     });
 
