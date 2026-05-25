@@ -1899,8 +1899,8 @@ main {
 
 .performance-detail-stats {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 10px;
   margin-bottom: 18px;
 }
 
@@ -1923,7 +1923,7 @@ main {
 .performance-detail-stats strong {
   color: var(--value);
   display: block;
-  font-size: clamp(18px, 1.05vw, 24px);
+  font-size: clamp(14px, 0.95vw, 20px);
   font-weight: 900;
   line-height: 1.15;
   max-width: 100%;
@@ -2184,6 +2184,80 @@ main {
   color: var(--muted);
   font-size: 13px;
   line-height: 1.5;
+}
+
+/* ── 성과 탭 새 레이아웃 ── */
+.performance-view {
+  display: grid;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.performance-header {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  justify-content: space-between;
+  padding: 16px 18px;
+}
+
+.performance-header-left {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.performance-header-left h2 {
+  font-size: 17px;
+  font-weight: 900;
+  margin: 0;
+}
+
+.performance-header-left span {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.performance-header-actions {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.performance-kpi-row {
+  padding: 16px 18px;
+}
+
+.performance-kpi-row .performance-detail-stats {
+  margin-bottom: 0;
+}
+
+.performance-main-row {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+  align-items: start;
+}
+
+.performance-chart-panel {
+  min-width: 0;
+}
+
+.performance-waterfall-panel {
+  min-width: 0;
+}
+
+.performance-tables-row {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: 1fr 1fr;
+  align-items: start;
+}
+
+.performance-full-panel {
+  width: 100%;
 }
 
 .empty-state {
@@ -3272,9 +3346,12 @@ td:nth-child(4) {
   .notification-form,
   .inline-actions,
   .backup-actions,
-  .performance-stats,
-  .performance-detail-stats {
+  .performance-stats {
     grid-template-columns: 1fr;
+  }
+
+  .performance-detail-stats {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   .allocation-overview-grid {
@@ -3498,6 +3575,11 @@ td:nth-child(4) {
 
   .performance-overview-panel {
     grid-column: auto;
+  }
+
+  .performance-main-row,
+  .performance-tables-row {
+    grid-template-columns: 1fr;
   }
 
   #allocationDonut {
@@ -4130,6 +4212,19 @@ button.secondary:hover,
   .donut-wrap,
   .filters {
     grid-template-columns: 1fr;
+  }
+
+  .performance-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .performance-header-actions {
+    width: 100%;
+  }
+
+  .performance-detail-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   /* 시뮬레이터 모바일 */
