@@ -119,6 +119,61 @@ els.viewTabs.forEach((button) => {
   });
 });
 
+// ─── 모바일 더보기 드로어 ─────────────────────────────────────────
+(function initMoreDrawer() {
+  // 모바일 전용: CSS 로 .nav-more-btn 이 표시될 때만 동작
+  const moreBtn = document.getElementById("navMoreBtn");
+  const drawer = document.getElementById("navMoreDrawer");
+  const backdrop = document.getElementById("navMoreBackdrop");
+  const itemsEl = document.getElementById("navMoreItems");
+  if (!moreBtn || !drawer || !itemsEl) return;
+
+  // 더보기에 포함될 탭 (data-nav-more 속성으로 표시됨, JS 로 이동)
+  const MORE_TABS = ["cashflows", "automation", "simulator"];
+
+  function openDrawer() {
+    // 현재 탭 상태 반영해 아이템 생성
+    itemsEl.innerHTML = "";
+    MORE_TABS.forEach((tabId) => {
+      const src = document.querySelector(`[data-view-tab="${tabId}"]`);
+      if (!src) return;
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "nav-more-item" + (src.classList.contains("active") ? " active" : "");
+      btn.dataset.viewTab = tabId;
+      btn.innerHTML = `<span class="nav-more-icon">${src.dataset.navIcon}</span><span class="nav-more-name">${src.textContent}</span>`;
+      btn.addEventListener("click", () => {
+        setView(tabId);
+        closeDrawer();
+      });
+      itemsEl.appendChild(btn);
+    });
+    drawer.hidden = false;
+    moreBtn.setAttribute("aria-expanded", "true");
+    requestAnimationFrame(() => drawer.classList.add("open"));
+  }
+
+  function closeDrawer() {
+    drawer.classList.remove("open");
+    moreBtn.setAttribute("aria-expanded", "false");
+    drawer.addEventListener("transitionend", () => { drawer.hidden = true; }, { once: true });
+  }
+
+  moreBtn.addEventListener("click", () => {
+    drawer.hidden ? openDrawer() : closeDrawer();
+  });
+  backdrop.addEventListener("click", closeDrawer);
+
+  // setView 후 더보기 버튼 active 상태 갱신 (MORE_TABS 중 하나가 활성이면 강조)
+  const _origSetView = setView;
+  // setView 를 직접 패치하지 않고 viewTabs MutationObserver 대신 탭 클릭마다 갱신
+  document.addEventListener("click", (e) => {
+    if (!e.target.closest("[data-view-tab]")) return;
+    const activeTab = e.target.closest("[data-view-tab]")?.dataset.viewTab;
+    moreBtn.classList.toggle("active", MORE_TABS.includes(activeTab));
+  });
+})();
+
 els.refreshButton.addEventListener("click", () => {
   refreshPrices({ reason: "manual" }).catch((error) => {
     setStatus("가격 업데이트 실패", error.message);
