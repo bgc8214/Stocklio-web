@@ -4446,3 +4446,18 @@ button.secondary:hover,
 [data-theme="dark"] .trend-tooltip text {
   fill: rgba(240,240,238,0.9);
 }
+
+[data-theme="dark"] .segmented-control {
+  background: #1a1a1a;
+  border-color: rgba(255,255,255,0.08);
+}
+
+[data-theme="dark"] .segmented-control button {
+  color: rgba(255,255,255,0.45);
+}
+
+[data-theme="dark"] .segmented-control button.is-active {
+  background: #2e2e2e;
+  color: rgba(255,255,255,0.9);
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.1);
+}
