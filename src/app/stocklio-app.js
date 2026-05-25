@@ -3591,7 +3591,7 @@ function renderTrendChart(rows) {
       const tone = dailyChange >= 0 ? "+" : "";
       return `<g class="trend-point-group" tabindex="0" aria-label="${escapeHtml(`${row.date} 총자산 ${formatKrw(row.totalValueKrw)}, 일 증감 ${tone}${formatKrw(dailyChange)}`)}">
         <circle class="trend-hit" cx="${x}" cy="${y}" r="13"></circle>
-        <circle class="trend-point" cx="${x}" cy="${y}" r="3.5"></circle>
+        <circle class="trend-point" cx="${x}" cy="${y}" r="2.5"></circle>
         <g class="trend-tooltip" transform="translate(${tooltipX} ${tooltipY})">
           <rect width="${tooltipWidth}" height="${tooltipHeight}" rx="7"></rect>
           <text x="10" y="18">${escapeHtml(formatShortDate(row.date))} · ${escapeHtml(formatKrw(row.totalValueKrw))}</text>
