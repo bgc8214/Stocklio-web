@@ -502,6 +502,11 @@ els.performanceRange.addEventListener("change", () => {
   renderMonthlySummary();
 });
 
+els.snapshotDayFilter?.addEventListener("change", renderSnapshots);
+
+els.performanceCopyButton?.addEventListener("click", copyPerformanceSummary);
+els.performanceExportButton?.addEventListener("click", exportPerformanceCsv);
+
 els.cashFlowTypeFilter.addEventListener("change", renderCashFlows);
 els.cashFlowSort.addEventListener("change", () => {
   cashFlowHeaderSort = parseSortValue(els.cashFlowSort.value, DEFAULT_CASH_FLOW_SORT);
@@ -2128,33 +2133,32 @@ function renderCashSelectedPreview() {
 }
 
 function renderSnapshots() {
-  const rows = getFilteredSnapshotRows().slice(-12).reverse();
+  const dayFilter = els.snapshotDayFilter?.value || "all";
+  const base = getFilteredSnapshotRows();
+  const filtered = dayFilter === "7d" ? base.slice(-7) : dayFilter === "30d" ? base.slice(-30) : base;
+  const rows = filtered.slice().reverse();
   els.snapshotsBody.innerHTML = rows
     .map((row) => `<tr>
       <td>${escapeHtml(row.date)}</td>
       <td>${formatKrw(row.totalValueKrw)}</td>
       <td class="${row.dailyChangeKrw >= 0 ? "positive" : "negative"}">${formatKrw(row.dailyChangeKrw)}</td>
-      <td>${formatKrw(row.netInflowKrw)}</td>
       <td class="${row.investmentGainKrw >= 0 ? "positive" : "negative"}">${formatKrw(row.investmentGainKrw)}</td>
       <td class="${row.dailyReturn >= 0 ? "positive" : "negative"}">${formatPercent(row.dailyReturn)}</td>
       <td class="${row.monthToDateInvestmentGainKrw >= 0 ? "positive" : "negative"}">${formatKrw(row.monthToDateInvestmentGainKrw)}</td>
     </tr>`)
-    .join("") || `<tr><td colspan="7">저장된 성과 스냅샷이 없습니다</td></tr>`;
+    .join("") || `<tr><td colspan="6">저장된 성과 스냅샷이 없습니다</td></tr>`;
 }
 
 function renderMonthlySummary() {
   const rows = selectMonthlyRows(getFilteredSnapshotRows()).reverse();
   els.monthlySummaryBody.innerHTML = rows
     .map((row) => `<tr>
-      <td>${escapeHtml(row.month)}</td>
+      <td class="${row.changeKrw >= 0 ? "positive" : "negative"}">${escapeHtml(row.month)}</td>
       <td>${formatKrw(row.startValueKrw)}</td>
       <td>${formatKrw(row.endValueKrw)}</td>
       <td class="${row.changeKrw >= 0 ? "positive" : "negative"}">${formatKrw(row.changeKrw)}</td>
-      <td>${formatKrw(row.netInflowKrw)}</td>
-      <td class="${row.investmentGainKrw >= 0 ? "positive" : "negative"}">${formatKrw(row.investmentGainKrw)}</td>
-      <td class="${row.returnRate >= 0 ? "positive" : "negative"}">${formatPercent(row.returnRate)}</td>
     </tr>`)
-    .join("") || `<tr><td colspan="7">월별로 집계할 스냅샷이 없습니다</td></tr>`;
+    .join("") || `<tr><td colspan="4">월별로 집계할 스냅샷이 없습니다</td></tr>`;
 }
 
 function renderAccountPerformance(rows) {
@@ -2448,6 +2452,57 @@ function exportVisibleHoldings() {
   link.click();
   URL.revokeObjectURL(url);
   showOperationToast("보유 종목 내보내기 완료", `${rows.length}개 종목 CSV`, "success");
+}
+
+function exportPerformanceCsv() {
+  const rows = getFilteredSnapshotRows();
+  if (!rows.length) {
+    showOperationToast("내보내기 실패", "성과 데이터가 없습니다", "error");
+    return;
+  }
+  const header = ["날짜", "총자산(원)", "일 증감(원)", "입출금(원)", "투자손익(원)", "일 수익률", "월 누적(원)"];
+  const csvRows = rows.slice().reverse().map((row) => [
+    row.date,
+    row.totalValueKrw,
+    row.dailyChangeKrw ?? "",
+    row.netInflowKrw ?? "",
+    row.investmentGainKrw ?? "",
+    row.dailyReturn != null ? (row.dailyReturn * 100).toFixed(2) + "%" : "",
+    row.monthToDateInvestmentGainKrw ?? "",
+  ]);
+  const csv = [header, ...csvRows]
+    .map((row) => row.map((cell) => `"${String(cell ?? "").replaceAll("\"", "\"\"")}"`).join(","))
+    .join("\n");
+  const blob = new Blob([`﻿${csv}`], { type: "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `stocklio-performance-${todayKey()}.csv`;
+  link.click();
+  URL.revokeObjectURL(url);
+  showOperationToast("성과 내보내기 완료", `${rows.length}개 일자 CSV`, "success");
+}
+
+function copyPerformanceSummary() {
+  const rows = getFilteredSnapshotRows();
+  if (!rows.length) {
+    showOperationToast("복사 실패", "성과 데이터가 없습니다", "error");
+    return;
+  }
+  const stats = getPerformanceStats(rows);
+  const lines = [
+    `성과 요약 (${els.performanceRange?.options[els.performanceRange.selectedIndex]?.text ?? ""})`,
+    `최근 총자산: ${formatKrw(stats.latest.totalValueKrw)} (${escapeHtml(stats.latest.date)})`,
+    `기간 증감: ${formatKrw(stats.periodChangeKrw)} (${formatPercent(stats.periodReturn)})`,
+    `투자손익: ${formatKrw(stats.investmentGainKrw)}`,
+    `월 누적: ${formatKrw(stats.monthToDateGainKrw)} (${formatPercent(stats.monthToDateReturn)})`,
+    `최대 낙폭: ${formatKrw(stats.maxDrawdownKrw)} (${formatPercent(stats.maxDrawdownRate)})`,
+  ];
+  navigator.clipboard.writeText(lines.join("\n")).then(() => {
+    showOperationToast("요약 복사 완료", "클립보드에 복사했습니다", "success");
+  }).catch(() => {
+    showOperationToast("복사 실패", "클립보드 접근이 거부되었습니다", "error");
+  });
 }
 
 function renderHoldingEditRow(holding) {
