@@ -580,7 +580,7 @@ async function readBinaryBody(request) {
 }
 
 async function serveStatic(pathname, response) {
-  const cleanPath = pathname === "/" ? "/index.html" : pathname;
+  const cleanPath = pathname === "/" ? "/index.html" : pathname === "/landing" ? "/landing.html" : pathname;
   const absolutePath = normalize(join(rootDir, cleanPath));
   if (!absolutePath.startsWith(rootDir)) {
     sendJson(response, 403, { error: "Forbidden" });

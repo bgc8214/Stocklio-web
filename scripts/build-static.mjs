@@ -20,7 +20,7 @@ if (process.env.VERCEL_ENV === "production") {
 await rm(dist, { recursive: true, force: true });
 await mkdir(dist, { recursive: true });
 
-for (const file of ["index.html", "app.js", "styles.css"]) {
+for (const file of ["index.html", "app.js", "styles.css", "landing.html"]) {
   await cp(new URL(file, root), new URL(file, dist));
 }
 await mkdir(new URL("src/", dist), { recursive: true });
