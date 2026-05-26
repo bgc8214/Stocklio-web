@@ -671,6 +671,12 @@ main {
   gap: 8px;
 }
 
+.layout-status-badge {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
 .status-actions button {
   min-height: 32px;
   min-width: 0;
