@@ -143,14 +143,12 @@
       </section>
 
       <section class="dashboard-status-strip" data-view="dashboard" aria-label="대시보드 상태">
-        <div class="status-meta">
-          <span id="dashboardPriceStatus">확인 중</span>
-          <span id="dashboardPriceDetail"></span>
-        </div>
         <div class="status-actions">
           <button id="dashboardRefreshButton" class="ghost small-button" type="button">시세 확인</button>
           <button id="dashboardAddHoldingButton" class="primary small-button" type="button">종목 추가</button>
         </div>
+        <span id="dashboardPriceStatus" hidden></span>
+        <span id="dashboardPriceDetail" hidden></span>
         <span id="dashboardSnapshotStatus" hidden></span>
         <span id="dashboardSnapshotDetail" hidden></span>
         <span id="dashboardStorageStatus" hidden></span>
@@ -162,6 +160,7 @@
           <span>총자산</span>
           <strong id="totalValue">$0</strong>
           <small id="totalValueKrw">주식 + 예수금</small>
+          <div id="totalValueBadges" class="metric-badges"></div>
         </article>
         <article class="metric dashboard-card" data-dashboard-card="total-cost">
           <span>주식 매입금액</span>
@@ -186,7 +185,11 @@
 
         <div class="panel allocation-panel dashboard-card" data-dashboard-card="allocation">
           <div class="section-heading">
-            <div><h2>자산 비중</h2><span>현재 평가가격 기준</span></div>
+            <div class="section-heading-title">
+              <h2>자산 비중</h2>
+              <span id="allocationCount" class="section-badge"></span>
+            </div>
+            <span>현재 평가가격 기준</span>
             <div class="segmented-control compact-segmented" role="group" aria-label="자산 비중 기준">
               <button class="is-active" type="button" data-allocation-view="strategy">전략</button>
               <button type="button" data-allocation-view="holding">종목</button>

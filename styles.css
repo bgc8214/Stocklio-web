@@ -627,44 +627,48 @@ main {
 
 .dashboard-status-strip {
   align-items: center;
-  color: var(--muted);
   display: flex;
-  flex-wrap: wrap;
-  gap: 6px 14px;
-  margin: -2px 0 16px;
-  min-width: 0;
-}
-
-.status-meta {
-  display: flex;
-  align-items: baseline;
   gap: 8px;
-  flex: 1;
-  min-width: 0;
-}
-
-.status-meta span:first-child {
-  color: var(--ink);
-  font-size: 12px;
-  font-weight: 800;
-  white-space: nowrap;
-}
-
-.status-meta span:last-child {
-  color: var(--muted);
-  font-size: 11px;
-  font-weight: 600;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  justify-content: flex-end;
+  margin: -2px 0 16px;
 }
 
 .status-actions {
   align-items: center;
   display: inline-flex;
+  gap: 8px;
+}
+
+.metric-badges {
+  display: flex;
+  flex-wrap: wrap;
   gap: 6px;
-  margin-left: auto;
-  padding-right: 0;
+  margin-top: 10px;
+}
+
+.metric-badge {
+  background: var(--surface-soft);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 8px;
+  white-space: nowrap;
+}
+
+.section-badge {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.section-heading-title {
+  align-items: baseline;
+  display: flex;
+  gap: 8px;
 }
 
 .status-actions button {

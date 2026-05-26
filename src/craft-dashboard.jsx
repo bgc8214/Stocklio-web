@@ -259,13 +259,33 @@ function CraftCard({ item, appState, editing, layout, saveLayout }) {
 function CardContent({ id, state }) {
   const totals = getTotals(state);
   if (id === "total-value") {
-    return <Metric label="총자산" value={formatKrw(totals.valueKrw)} hint={`주식 ${formatKrw(totals.stockValueKrw)} · 예수금 ${formatKrw(totals.cashKrw)}`} />;
+    const marketContext = getCurrentMarketContext();
+    const latestPriceAsOf = [...state.holdings]
+      .filter((h) => h.priceAsOf)
+      .sort((a, b) => String(b.priceAsOf).localeCompare(String(a.priceAsOf)))[0]?.priceAsOf || state.fxRate?.asOf;
+    const dateText = latestPriceAsOf ? `${formatShortDate(latestPriceAsOf.slice(0, 10))} 종가` : (marketContext.isMarketClosed ? marketContext.label : "");
+    const fxText = state.fxRate?.rate ? `USD/KRW ${formatNumber(state.fxRate.rate, 2)}` : "";
+    const marketText = marketContext.isMarketClosed ? marketContext.closedReason || "미국장 휴장" : "";
+    const badges = [dateText, fxText, marketText].filter(Boolean);
+    return (
+      <>
+        <span>총자산</span>
+        <strong>{formatKrw(totals.valueKrw)}</strong>
+        <small>{`주식 ${formatKrw(totals.stockValueKrw)} · 예수금 ${formatKrw(totals.cashKrw)}`}</small>
+        {badges.length > 0 && (
+          <div className="metric-badges">
+            {badges.map((b) => <span key={b} className="metric-badge">{b}</span>)}
+          </div>
+        )}
+      </>
+    );
   }
   if (id === "total-cost") {
-    return <Metric label="주식 매입금액" value={formatKrw(totals.costKrw)} hint="평단 기준" />;
+    const stockCount = state.holdings.filter((h) => h.type !== "cash").length;
+    return <Metric label="주식 매입금액" value={formatKrw(totals.costKrw)} hint={`${stockCount}개 종목 · 평단 기준`} />;
   }
   if (id === "total-gain") {
-    return <Metric label="주식 평가손익" value={formatKrw(totals.gainKrw)} hint={formatPercent(totals.returnRate)} tone={totals.gainKrw >= 0 ? "positive" : "negative"} />;
+    return <Metric label="주식 평가순익" value={formatKrw(totals.gainKrw)} hint={formatPercent(totals.returnRate)} tone={totals.gainKrw >= 0 ? "positive" : "negative"} />;
   }
   if (id === "cash-total") {
     return <Metric label="예수금" value={formatKrw(totals.cashKrw)} hint="총자산에 포함" />;
@@ -299,7 +319,11 @@ function AllocationPanel({ state }) {
   return (
     <>
       <div className="section-heading">
-        <h2>자산 비중</h2>
+        <div className="section-heading-title">
+          <h2>자산 비중</h2>
+          <span className="section-badge">{items.length}개 {allocationViewLabels[view] || "항목"}</span>
+        </div>
+        <span>현재 평가가격 기준</span>
         <div className="segmented-control compact-segmented" role="group" aria-label="자산 비중 기준">
           {Object.entries(allocationViewLabels).map(([key, label]) => (
             <button className={view === key ? "is-active" : ""} type="button" key={key} onClick={() => setView(key)}>
