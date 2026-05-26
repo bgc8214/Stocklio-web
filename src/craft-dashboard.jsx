@@ -422,27 +422,43 @@ function PerformancePanel({ state }) {
           </defs>
           {gridLines.map((line) => (
             <g key={line.y}>
-              <line className="dashboard-chart-grid" x1={padding.left} x2={chartWidth - padding.right} y1={line.y} y2={line.y} />
+              <line className="trend-grid" x1={padding.left} x2={chartWidth - padding.right} y1={line.y} y2={line.y} />
               <text className="dashboard-chart-axis" x={padding.left - 14} y={line.y + 5} textAnchor="end">
                 {formatCompactKrw(line.value)}
               </text>
             </g>
           ))}
-          <path className="dashboard-chart-area" d={areaPath} />
-          <path className="dashboard-chart-line" d={linePath} />
-          {coordinates.map(({ x, y, point }) => (
-            <circle key={point.id || point.date} className="dashboard-chart-point" cx={x} cy={y} r="7">
-              <title>{`${formatShortDate(point.date)} · ${formatKrw(point.totalValueKrw)}`}</title>
-            </circle>
-          ))}
+          <path className="trend-area" d={areaPath} />
+          <path className="trend-line" d={linePath} />
+          {coordinates.map(({ x, y, point }, index) => {
+            const prev = coordinates[index - 1];
+            const dailyChange = prev ? point.totalValueKrw - prev.point.totalValueKrw : 0;
+            const tone = dailyChange >= 0 ? "+" : "";
+            const tooltipWidth = 180;
+            const tooltipHeight = 48;
+            const tooltipX = Math.max(padding.left, Math.min(chartWidth - padding.right - tooltipWidth, x - tooltipWidth / 2));
+            const tooltipY = Math.max(6, y - tooltipHeight - 12);
+            return (
+              <g key={point.id || point.date} className="trend-point-group" tabIndex={0}
+                aria-label={`${point.date} 총자산 ${formatKrw(point.totalValueKrw)}, 일 증감 ${tone}${formatKrw(dailyChange)}`}>
+                <circle className="trend-hit" cx={x} cy={y} r="13" />
+                <circle className="trend-point" cx={x} cy={y} r="2.5" />
+                <g className="trend-tooltip" transform={`translate(${tooltipX} ${tooltipY})`}>
+                  <rect width={tooltipWidth} height={tooltipHeight} rx="7" />
+                  <text x="10" y="18">{formatShortDate(point.date)} · {formatKrw(point.totalValueKrw)}</text>
+                  <text x="10" y="36">일 증감 {tone}{formatKrw(dailyChange)}</text>
+                </g>
+              </g>
+            );
+          })}
           {[coordinates[0], coordinates[Math.floor(coordinates.length / 2)], coordinates[coordinates.length - 1]]
             .filter(Boolean)
             .map(({ x, point }, index) => (
-              <text key={`${point.date}-${index}`} className="dashboard-chart-date" x={x} y={chartHeight - 14} textAnchor={index === 0 ? "start" : index === 2 ? "end" : "middle"}>
+              <text key={`${point.date}-${index}`} className="trend-label" x={x} y={chartHeight - 14} textAnchor={index === 0 ? "start" : index === 2 ? "end" : "middle"}>
                 {formatShortDate(point.date)}
               </text>
             ))}
-          <text className="dashboard-chart-latest" x={coordinates[coordinates.length - 1].x - 6} y={coordinates[coordinates.length - 1].y - 18} textAnchor="end">
+          <text className="trend-last-label" x={coordinates[coordinates.length - 1].x - 6} y={Math.max(16, coordinates[coordinates.length - 1].y - 10)} textAnchor="end">
             {formatCompactKrw(latest.totalValueKrw)}
           </text>
         </svg>
