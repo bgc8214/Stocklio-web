@@ -1571,6 +1571,23 @@ function renderAllocation() {
   const grouped = getAllocationItems(activeAllocationView);
   renderDonut(els.allocationDonut, grouped, allocationViewLabels[activeAllocationView] || "구성");
   renderAllocationLegend(els.allocationLegend, grouped);
+  // Craft.js가 DOM을 재구성하므로 allocation card 직접 탐색
+  const allocationCard = document.querySelector('[data-dashboard-card="allocation"]');
+  if (allocationCard) {
+    let countEl = allocationCard.querySelector(".allocation-count-badge");
+    if (!countEl) {
+      const heading = allocationCard.querySelector(".section-heading");
+      if (heading) {
+        countEl = document.createElement("span");
+        countEl.className = "allocation-count-badge section-badge";
+        heading.appendChild(countEl);
+      }
+    }
+    if (countEl) {
+      const label = allocationViewLabels[activeAllocationView] || "항목";
+      countEl.textContent = `${grouped.length}개 ${label}`;
+    }
+  }
 }
 
 function renderAllocationOverview() {
@@ -3115,24 +3132,28 @@ function renderDashboardStatus() {
     .filter((holding) => holding.priceAsOf)
     .sort((a, b) => String(b.priceAsOf).localeCompare(String(a.priceAsOf)))[0];
   const priceAsOf = latestHoldingPrice?.priceAsOf || state.fxRate?.asOf;
-  const latestSnapshot = [...(state.portfolioSnapshots || [])].sort((a, b) => b.date.localeCompare(a.date))[0];
 
-  if (els.dashboardPriceStatus) {
-    const dateLabel = marketContext.isMarketClosed ? marketContext.label : priceAsOf ? formatAsOf(priceAsOf) : "가격 갱신 필요";
-    const metaLabel = `${state.holdings.length}개 종목 · USD/KRW ${formatNumber(state.fxRate?.rate || 0, 2)}${marketContext.isMarketClosed ? " · 새 미국장 거래 없음" : ""}`;
-    els.dashboardPriceStatus.textContent = dateLabel;
-    if (els.dashboardPriceDetail) els.dashboardPriceDetail.textContent = metaLabel;
+  // 총자산 카드 뱃지: 날짜, FX, 장상태 (Craft.js가 DOM을 재구성하므로 카드 직접 탐색)
+  const totalValueCard = document.querySelector('[data-dashboard-card="total-value"]');
+  if (totalValueCard) {
+    let badgesEl = totalValueCard.querySelector(".metric-badges");
+    if (!badgesEl) {
+      badgesEl = document.createElement("div");
+      badgesEl.className = "metric-badges";
+      totalValueCard.appendChild(badgesEl);
+    }
+    const dateText = priceAsOf
+      ? `${formatShortDate(priceAsOf.slice(0, 10))} 종가`
+      : (marketContext.isMarketClosed ? marketContext.label : "");
+    const fxText = state.fxRate?.rate ? `USD/KRW ${formatNumber(state.fxRate.rate, 2)}` : "";
+    const marketText = marketContext.isMarketClosed ? marketContext.closedReason || "미국장 휴장" : "";
+    badgesEl.innerHTML = [dateText, fxText, marketText]
+      .filter(Boolean)
+      .map((t) => `<span class="metric-badge">${escapeHtml(t)}</span>`)
+      .join("");
   }
-  if (els.dashboardSnapshotStatus) {
-    const todaySnapshot = (state.portfolioSnapshots || []).find((s) => s.date === todayKey());
-    els.dashboardSnapshotStatus.textContent = marketContext.isMarketClosed
-      ? todaySnapshot ? "휴장일 기록됨" : "휴장일 기록 전"
-      : todaySnapshot ? "오늘 기록됨" : "오늘 기록 전";
-    if (els.dashboardSnapshotDetail) els.dashboardSnapshotDetail.textContent = latestSnapshot
-      ? `최근 스냅샷 ${latestSnapshot.date}`
-      : "스냅샷을 저장하면 성과 추이가 쌓입니다";
-  }
-  // 변동 요약 패널 레이블 업데이트
+
+  // 변동 요약 패널 레이블
   const breakdownDateLabel = document.getElementById("breakdownDateLabel");
   const breakdownSubtitle = document.getElementById("breakdownSubtitle");
   if (breakdownDateLabel) {
