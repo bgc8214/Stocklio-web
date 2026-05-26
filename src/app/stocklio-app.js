@@ -1345,6 +1345,7 @@ function renderDashboardLayout() {
   els.layoutStatus.textContent = isLayoutEditing
     ? `${visibleCount}/${state.dashboardLayout.length} 카드`
     : "";
+  els.layoutStatus.hidden = !isLayoutEditing;
   els.layoutEditButton.textContent = isLayoutEditing ? "완료" : "편집";
   els.layoutResetButton.hidden = !isLayoutEditing;
 }

@@ -131,19 +131,13 @@
         </div>
       </section>
 
-      <section class="dashboard-layout-toolbar" data-view="dashboard" aria-label="대시보드 레이아웃 설정">
-        <div class="layout-summary">
-          <span>대시보드</span>
-          <strong id="layoutStatus">기본 레이아웃</strong>
-        </div>
-        <div class="toolbar-actions">
-          <button id="layoutEditButton" class="ghost small-button" type="button">편집</button>
-          <button id="layoutResetButton" class="ghost small-button" type="button" hidden>기본값 복원</button>
-        </div>
-      </section>
+      <section class="dashboard-layout-toolbar" data-view="dashboard" aria-label="대시보드 레이아웃 설정" hidden></section>
 
       <section class="dashboard-status-strip" data-view="dashboard" aria-label="대시보드 상태">
         <div class="status-actions">
+          <span id="layoutStatus" class="layout-status-badge" hidden></span>
+          <button id="layoutResetButton" class="ghost small-button" type="button" hidden>기본값 복원</button>
+          <button id="layoutEditButton" class="ghost small-button" type="button">편집</button>
           <button id="dashboardRefreshButton" class="ghost small-button" type="button">시세 확인</button>
           <button id="dashboardAddHoldingButton" class="primary small-button" type="button">종목 추가</button>
         </div>
@@ -574,8 +568,7 @@
           </div>
           <div class="panel performance-detail-panel" style="align-self:start">
             <div class="section-heading">
-              <h2>일별 성과</h2>
-              <span>Numbers 일별 스냅샷 기준</span>
+              <div><h2>일별 성과</h2><span>Numbers 일별 스냅샷 기준</span></div>
               <select id="snapshotDayFilter" aria-label="일별 성과 날짜 범위">
                 <option value="all">전체 일자</option>
                 <option value="30d">최근 30일</option>
