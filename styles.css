@@ -1931,7 +1931,6 @@ main {
 
 .trend-chart svg {
   display: block;
-  min-width: 720px;
   width: 100%;
 }
 
@@ -3787,8 +3786,8 @@ td:nth-child(4) {
   .holdings-table .money-value,
   .holdings-table .amount-cell,
   .holdings-table .name-cell {
-    overflow-wrap: normal;
-    white-space: nowrap;
+    overflow-wrap: anywhere;
+    white-space: normal;
   }
 
   .holdings-table .row-menu {
@@ -4089,7 +4088,6 @@ button.secondary:hover,
 
 .dashboard-line-chart svg {
   display: block;
-  min-width: 760px;
   width: 100%;
 }
 
