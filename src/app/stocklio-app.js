@@ -201,6 +201,14 @@ els.dashboardSnapshotButton?.addEventListener("click", () => {
   });
 });
 
+els.dashboardAddHoldingButton?.addEventListener("click", () => {
+  editingHoldingId = null;
+  openHoldingDrawer();
+  updateEditControls();
+  renderAccountSelectors();
+  setView("holdings");
+});
+
 els.allocationDimensionButtons.forEach((button) => {
   button.addEventListener("click", () => {
     activeAllocationView = button.dataset.allocationView || "strategy";
@@ -1541,9 +1549,12 @@ function accountOption(account) {
 
 function renderSummary() {
   const totals = getTotals(state.holdings);
+  const stockCount = state.holdings.filter((h) => h.type !== "cash").length;
   els.totalValue.textContent = formatKrw(totals.valueKrw);
   els.totalValueKrw.textContent = `주식 ${formatKrw(totals.stockValueKrw)} · 예수금 ${formatKrw(totals.cashKrw)}`;
   els.totalCost.textContent = formatKrw(totals.costKrw);
+  const costMeta = document.getElementById("totalCostMeta");
+  if (costMeta) costMeta.textContent = `${stockCount}개 종목 · 평단 기준`;
   els.totalGain.textContent = formatKrw(totals.gainKrw);
   els.totalGain.className = totals.gainKrw >= 0 ? "positive" : "negative";
   els.totalReturn.textContent = formatPercent(totals.returnRate);
@@ -2298,7 +2309,7 @@ function renderHoldings() {
         <td data-label="전략"><span class="name-cell">${escapeHtml(holding.strategy)}</span></td>
         <td data-label="종목"><strong class="name-cell">${escapeHtml(holding.name || holding.ticker)}</strong>${holding.ticker && holding.ticker !== holding.name ? `<small class="name-cell">${escapeHtml(holding.ticker)}</small>` : ""}</td>
         <td data-label="수량"><span class="amount-cell">${formatNumber(holding.quantity, 4)}</span></td>
-        <td data-label="현재가"><span class="money-value">${formatMoney(holding.price, holding.currency)}</span><small>${escapeHtml(holding.priceSource || "사용자 입력")} · ${formatAsOf(holding.priceAsOf)}</small></td>
+        <td data-label="현재가"><span class="money-value">${formatMoney(holding.price, holding.currency)}</span></td>
         <td data-label="평단가"><span class="money-value">${formatMoney(holding.averageCost, holding.currency)}</span></td>
         <td data-label="평가금액"><span class="money-value">${formatMoney(value, holding.currency)}</span></td>
         <td data-label="일 영향" class="${dailyMove.valueKrw >= 0 ? "positive" : "negative"}">
@@ -3104,27 +3115,33 @@ function renderDashboardStatus() {
     .filter((holding) => holding.priceAsOf)
     .sort((a, b) => String(b.priceAsOf).localeCompare(String(a.priceAsOf)))[0];
   const priceAsOf = latestHoldingPrice?.priceAsOf || state.fxRate?.asOf;
-  const todaySnapshot = (state.portfolioSnapshots || []).find((snapshot) => snapshot.date === todayKey());
   const latestSnapshot = [...(state.portfolioSnapshots || [])].sort((a, b) => b.date.localeCompare(a.date))[0];
-  const storageLabel = authState.signedIn ? "클라우드 저장" : isStaticDeployment() ? "브라우저 저장" : "로컬 저장";
 
   if (els.dashboardPriceStatus) {
-    els.dashboardPriceStatus.textContent = marketContext.isMarketClosed ? marketContext.label : priceAsOf ? formatAsOf(priceAsOf) : "가격 갱신 필요";
-    els.dashboardPriceDetail.textContent = `${state.holdings.length}개 종목 · USD/KRW ${formatNumber(state.fxRate?.rate || 0, 2)}${marketContext.isMarketClosed ? " · 새 미국장 거래 없음" : ""}`;
+    const dateLabel = marketContext.isMarketClosed ? marketContext.label : priceAsOf ? formatAsOf(priceAsOf) : "가격 갱신 필요";
+    const metaLabel = `${state.holdings.length}개 종목 · USD/KRW ${formatNumber(state.fxRate?.rate || 0, 2)}${marketContext.isMarketClosed ? " · 새 미국장 거래 없음" : ""}`;
+    els.dashboardPriceStatus.textContent = dateLabel;
+    if (els.dashboardPriceDetail) els.dashboardPriceDetail.textContent = metaLabel;
   }
   if (els.dashboardSnapshotStatus) {
+    const todaySnapshot = (state.portfolioSnapshots || []).find((s) => s.date === todayKey());
     els.dashboardSnapshotStatus.textContent = marketContext.isMarketClosed
       ? todaySnapshot ? "휴장일 기록됨" : "휴장일 기록 전"
       : todaySnapshot ? "오늘 기록됨" : "오늘 기록 전";
-    els.dashboardSnapshotDetail.textContent = latestSnapshot
+    if (els.dashboardSnapshotDetail) els.dashboardSnapshotDetail.textContent = latestSnapshot
       ? `최근 스냅샷 ${latestSnapshot.date}`
       : "스냅샷을 저장하면 성과 추이가 쌓입니다";
   }
-  if (els.dashboardStorageStatus) {
-    els.dashboardStorageStatus.textContent = storageLabel;
-    els.dashboardStorageDetail.textContent = authState.signedIn
-      ? authState.user?.email || "계정에 동기화됩니다"
-      : "로그인하면 기기 밖에서도 이어서 볼 수 있습니다";
+  // 변동 요약 패널 레이블 업데이트
+  const breakdownDateLabel = document.getElementById("breakdownDateLabel");
+  const breakdownSubtitle = document.getElementById("breakdownSubtitle");
+  if (breakdownDateLabel) {
+    breakdownDateLabel.textContent = marketContext.isMarketClosed ? "휴장일 기준" : "오늘 기준";
+  }
+  if (breakdownSubtitle) {
+    breakdownSubtitle.textContent = marketContext.isMarketClosed
+      ? "휴장일에는 변동 대신 환율과 현금 흐름을 확인합니다"
+      : "종목별 가격 변동과 환율 효과를 분석합니다";
   }
 }
 
@@ -3826,7 +3843,7 @@ function setActionState(kind, isRunning) {
   }
   if (kind === "price" && els.dashboardRefreshButton) {
     els.dashboardRefreshButton.disabled = isRunning;
-    els.dashboardRefreshButton.textContent = isRunning ? "갱신 중..." : "가격 갱신";
+    els.dashboardRefreshButton.textContent = isRunning ? "확인 중..." : "시세 확인";
   }
   if (kind === "snapshot" && els.saveSnapshotButton) {
     els.saveSnapshotButton.disabled = isRunning;

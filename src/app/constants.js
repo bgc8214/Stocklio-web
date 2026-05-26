@@ -24,7 +24,7 @@ export const DEFAULT_CASH_FLOW_SORT = "date-desc";
 
 export const viewCopy = {
   dashboard: { title: "대시보드", subtitle: "포트폴리오 현황" },
-  holdings: { title: "보유 종목", subtitle: "종목, 전략, 계좌별 보유 현황" },
+  holdings: { title: "보유 종목", subtitle: "" },
   accounts: { title: "계좌/예수금", subtitle: "계좌와 현금 잔액 관리" },
   performance: { title: "성과", subtitle: "누적 수익과 일별 증감" },
   cashflows: { title: "현금흐름", subtitle: "입출금 기록과 조정값" },
