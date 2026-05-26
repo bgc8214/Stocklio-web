@@ -622,11 +622,7 @@ main {
 }
 
 .dashboard-layout-toolbar {
-  align-items: center;
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 8px;
-  min-height: 34px;
+  display: none;
 }
 
 .dashboard-status-strip {
@@ -639,50 +635,32 @@ main {
   min-width: 0;
 }
 
-.status-card {
+.status-meta {
+  display: flex;
   align-items: baseline;
-  background: transparent;
-  border: 0;
-  border-right: 1px solid var(--line);
-  border-radius: 0;
-  display: inline-flex;
-  gap: 6px;
+  gap: 8px;
+  flex: 1;
   min-width: 0;
-  padding: 0 14px 0 0;
 }
 
-.status-card span,
-.status-card small {
-  color: var(--muted);
-  font-size: 11px;
-  font-weight: 800;
-  line-height: 1.35;
-}
-
-.status-card strong {
+.status-meta span:first-child {
   color: var(--ink);
   font-size: 12px;
-  font-weight: 900;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  font-weight: 800;
   white-space: nowrap;
 }
 
-.status-card small {
-  max-width: 220px;
+.status-meta span:last-child {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 600;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.status-card:nth-child(3) small {
-  display: none;
 }
 
 .status-actions {
   align-items: center;
-  border-right: 0;
   display: inline-flex;
   gap: 6px;
   margin-left: auto;

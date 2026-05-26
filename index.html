@@ -143,25 +143,18 @@
       </section>
 
       <section class="dashboard-status-strip" data-view="dashboard" aria-label="대시보드 상태">
-        <div class="status-card">
-          <span>가격</span>
-          <strong id="dashboardPriceStatus">확인 중</strong>
-          <small id="dashboardPriceDetail">현재가와 환율 기준 시각</small>
+        <div class="status-meta">
+          <span id="dashboardPriceStatus">확인 중</span>
+          <span id="dashboardPriceDetail"></span>
         </div>
-        <div class="status-card">
-          <span>기록</span>
-          <strong id="dashboardSnapshotStatus">확인 중</strong>
-          <small id="dashboardSnapshotDetail">오늘 스냅샷 상태</small>
+        <div class="status-actions">
+          <button id="dashboardRefreshButton" class="ghost small-button" type="button">시세 확인</button>
+          <button id="dashboardAddHoldingButton" class="primary small-button" type="button">종목 추가</button>
         </div>
-        <div class="status-card">
-          <span>저장</span>
-          <strong id="dashboardStorageStatus">브라우저 저장</strong>
-          <small id="dashboardStorageDetail">로그인하면 클라우드에 저장됩니다</small>
-        </div>
-        <div class="status-card status-actions">
-          <button id="dashboardRefreshButton" class="ghost small-button" type="button">가격 갱신</button>
-          <button id="dashboardSnapshotButton" class="ghost small-button" type="button">스냅샷 저장</button>
-        </div>
+        <span id="dashboardSnapshotStatus" hidden></span>
+        <span id="dashboardSnapshotDetail" hidden></span>
+        <span id="dashboardStorageStatus" hidden></span>
+        <span id="dashboardStorageDetail" hidden></span>
       </section>
 
       <section id="dashboardBoard" class="dashboard-board" data-view="dashboard" aria-label="포트폴리오 대시보드">
@@ -173,10 +166,10 @@
         <article class="metric dashboard-card" data-dashboard-card="total-cost">
           <span>주식 매입금액</span>
           <strong id="totalCost">$0</strong>
-          <small>평단 기준</small>
+          <small id="totalCostMeta">평단 기준</small>
         </article>
         <article class="metric dashboard-card" data-dashboard-card="total-gain">
-          <span>주식 평가손익</span>
+          <span>주식 평가순익</span>
           <strong id="totalGain">$0</strong>
           <small id="totalReturn">0.00%</small>
         </article>
@@ -193,7 +186,7 @@
 
         <div class="panel allocation-panel dashboard-card" data-dashboard-card="allocation">
           <div class="section-heading">
-            <h2>자산 비중</h2>
+            <div><h2>자산 비중</h2><span>현재 평가가격 기준</span></div>
             <div class="segmented-control compact-segmented" role="group" aria-label="자산 비중 기준">
               <button class="is-active" type="button" data-allocation-view="strategy">전략</button>
               <button type="button" data-allocation-view="holding">종목</button>
@@ -209,7 +202,7 @@
 
         <div class="panel performance-panel dashboard-card" data-dashboard-card="performance-flow">
           <div class="section-heading">
-            <h2>성과 흐름</h2>
+            <div><h2>성과 흐름</h2><span>최근 총자산과 일별 증감</span></div>
             <span>금액과 증감</span>
           </div>
           <div id="performanceStats" class="performance-stats"></div>
@@ -218,8 +211,8 @@
 
         <div class="panel dashboard-card" data-dashboard-card="breakdown">
           <div class="section-heading">
-            <h2>오늘 변동 원인</h2>
-            <span>종목 기여도</span>
+            <div><h2>변동 요약</h2><span id="breakdownSubtitle">휴장일에는 변동 대신 환율과 현금 흐름을 확인합니다</span></div>
+            <span id="breakdownDateLabel">휴장일 기준</span>
           </div>
           <div id="breakdownList" class="breakdown-list"></div>
         </div>
