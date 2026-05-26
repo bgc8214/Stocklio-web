@@ -220,6 +220,10 @@ els.openLoginButton?.addEventListener("click", () => {
   openLoginDialog();
 });
 
+document.getElementById("sampleDataLoginButton")?.addEventListener("click", () => {
+  openLoginDialog();
+});
+
 els.loginDialogCloseButton?.addEventListener("click", () => {
   closeLoginDialog();
 });
@@ -1110,6 +1114,8 @@ function renderAuth() {
     els.openLoginButton.hidden = true;
     els.logoutButton.disabled = false;
     els.logoutButton.hidden = false;
+    const banner = document.getElementById("sampleDataBanner");
+    if (banner) banner.hidden = true;
     closeLoginDialog();
     renderSyncStatus();
     renderDashboardStatus();
@@ -1124,6 +1130,8 @@ function renderAuth() {
   els.emailLoginButton.disabled = false;
   els.logoutButton.disabled = false;
   els.logoutButton.hidden = true;
+  const banner = document.getElementById("sampleDataBanner");
+  if (banner) banner.hidden = false;
   renderDashboardStatus();
 }
 
