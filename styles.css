@@ -597,6 +597,10 @@ main {
 }
 
 @media (min-width: 981px) {
+  .nav-more-btn {
+    display: none !important;
+  }
+
   .view-tabs button:hover,
   .view-tabs button:focus-visible {
     background: rgba(47, 105, 255, 0.07);
