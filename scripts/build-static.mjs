@@ -27,6 +27,7 @@ await mkdir(new URL("src/", dist), { recursive: true });
 await cp(new URL("src/app/", root), new URL("src/app/", dist), { recursive: true });
 await cp(new URL("src/domain/", root), new URL("src/domain/", dist), { recursive: true });
 await cp(new URL("assets/", root), new URL("assets/", dist), { recursive: true });
+await cp(new URL("public/", root), dist, { recursive: true });
 
 const indexPath = new URL("index.html", dist);
 const html = await readFile(indexPath, "utf8");
