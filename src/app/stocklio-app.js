@@ -2458,17 +2458,17 @@ function renderHoldingsSummary(rows) {
     els.holdingsPriceMeta.textContent = latestPriceTime ? `마지막 가격 갱신 ${formatAsOf(new Date(latestPriceTime).toISOString())} · ${source}` : "가격 기준 없음";
   }
   if (els.holdingsSummaryValue) {
-    els.holdingsSummaryValue.textContent = formatCompactKrw(totalValue);
+    els.holdingsSummaryValue.textContent = formatKrw(totalValue);
   }
   if (els.holdingsSummaryGain) {
-    els.holdingsSummaryGain.textContent = `${totalGain >= 0 ? "+" : ""}${formatCompactKrw(totalGain)}`;
+    els.holdingsSummaryGain.textContent = `${totalGain >= 0 ? "+" : ""}${formatKrw(totalGain)}`;
     els.holdingsSummaryGain.className = totalGain >= 0 ? "positive" : "negative";
   }
   if (els.holdingsSummaryReturn) {
     els.holdingsSummaryReturn.textContent = formatPercent(returnRate);
   }
   if (els.holdingsSummaryDayMove) {
-    els.holdingsSummaryDayMove.textContent = `${totalDayMove >= 0 ? "+" : ""}${formatCompactKrw(totalDayMove)}`;
+    els.holdingsSummaryDayMove.textContent = `${totalDayMove >= 0 ? "+" : ""}${formatKrw(totalDayMove)}`;
     els.holdingsSummaryDayMove.className = totalDayMove >= 0 ? "positive" : "negative";
   }
   if (els.holdingsSummaryDayNote) {
