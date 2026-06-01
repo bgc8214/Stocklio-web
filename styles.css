@@ -2006,14 +2006,15 @@ main {
 }
 
 .trend-tooltip rect {
-  fill: var(--ink);
-  filter: drop-shadow(0 8px 18px rgba(18, 31, 25, 0.16));
+  fill: #1a2820;
+  filter: drop-shadow(0 8px 20px rgba(18, 31, 25, 0.28));
 }
 
 .trend-tooltip text {
-  fill: white;
-  font-size: 11px;
-  font-weight: 800;
+  fill: #ffffff;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
 }
 
 .trend-point-group:focus .trend-tooltip,
@@ -4362,16 +4363,16 @@ button.secondary:hover,
 [data-theme="dark"] button.ghost,
 [data-theme="dark"] button.secondary,
 [data-theme="dark"] .small-button {
-  background: #1a1a1a;
-  border-color: rgba(255,255,255,0.1);
-  color: rgba(255,255,255,0.75);
+  background: #252525;
+  border-color: rgba(255,255,255,0.18);
+  color: rgba(255,255,255,0.9);
 }
 
 [data-theme="dark"] button.ghost:hover,
 [data-theme="dark"] button.secondary:hover,
 [data-theme="dark"] .small-button:hover {
-  background: #222222;
-  border-color: rgba(29,185,122,0.3);
+  background: #2e2e2e;
+  border-color: rgba(29,185,122,0.5);
   color: white;
 }
 
@@ -4450,13 +4451,32 @@ button.secondary:hover,
   border-color: rgba(29,185,122,0.4);
 }
 
+[data-theme="dark"] .login-provider-google {
+  background: #1e1e1e;
+  border-color: rgba(255,255,255,0.18);
+  color: rgba(255,255,255,0.92);
+}
+
+[data-theme="dark"] .login-provider-google:hover {
+  background: #2a2a2a;
+  border-color: rgba(255,255,255,0.3);
+}
+
+[data-theme="dark"] .login-provider-google span {
+  background: #2e2e2e;
+  border-color: rgba(255,255,255,0.15);
+  color: #7baaf7;
+}
+
 [data-theme="dark"] .trend-tooltip rect {
-  fill: #2a2a2a;
-  filter: drop-shadow(0 4px 12px rgba(0,0,0,0.5));
+  fill: #1e2b24;
+  filter: drop-shadow(0 4px 16px rgba(0,0,0,0.7));
+  stroke: rgba(29,185,122,0.35);
+  stroke-width: 1;
 }
 
 [data-theme="dark"] .trend-tooltip text {
-  fill: rgba(240,240,238,0.9);
+  fill: #ffffff;
 }
 
 [data-theme="dark"] .segmented-control {
