@@ -2030,13 +2030,13 @@ main {
 }
 
 .trend-tooltip .tooltip-positive {
-  fill: #1db97a;
+  fill: #e84040;
   font-size: 12px;
   font-weight: 700;
 }
 
 .trend-tooltip .tooltip-negative {
-  fill: #ff6b6b;
+  fill: #4a90d9;
   font-size: 12px;
   font-weight: 700;
 }
