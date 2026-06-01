@@ -2017,6 +2017,30 @@ main {
   letter-spacing: 0.01em;
 }
 
+.trend-tooltip .tooltip-date {
+  fill: rgba(255,255,255,0.55);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.trend-tooltip .tooltip-value {
+  fill: #ffffff;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.trend-tooltip .tooltip-positive {
+  fill: #1db97a;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.trend-tooltip .tooltip-negative {
+  fill: #ff6b6b;
+  font-size: 12px;
+  font-weight: 700;
+}
+
 .trend-point-group:focus .trend-tooltip,
 .trend-point-group:hover .trend-tooltip {
   opacity: 1;
@@ -4477,6 +4501,17 @@ button.secondary:hover,
 
 [data-theme="dark"] .trend-tooltip text {
   fill: #ffffff;
+}
+
+[data-theme="dark"] .operation-toast {
+  background: #1e1e1e;
+  border: 1px solid rgba(255,255,255,0.12);
+  color: #ffffff;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+}
+
+[data-theme="dark"] .operation-toast span {
+  color: rgba(255,255,255,0.75);
 }
 
 [data-theme="dark"] .segmented-control {
