@@ -433,20 +433,23 @@ function PerformancePanel({ state }) {
           {coordinates.map(({ x, y, point }, index) => {
             const prev = coordinates[index - 1];
             const dailyChange = prev ? point.totalValueKrw - prev.point.totalValueKrw : 0;
-            const tone = dailyChange >= 0 ? "+" : "";
-            const tooltipWidth = 180;
-            const tooltipHeight = 48;
+            const isPositive = dailyChange >= 0;
+            const arrow = isPositive ? "▲" : "▼";
+            const changeClass = isPositive ? "tooltip-positive" : "tooltip-negative";
+            const tooltipWidth = 160;
+            const tooltipHeight = 64;
             const tooltipX = Math.max(padding.left, Math.min(chartWidth - padding.right - tooltipWidth, x - tooltipWidth / 2));
             const tooltipY = Math.max(6, y - tooltipHeight - 12);
             return (
               <g key={point.id || point.date} className="trend-point-group" tabIndex={0}
-                aria-label={`${point.date} 총자산 ${formatKrw(point.totalValueKrw)}, 일 증감 ${tone}${formatKrw(dailyChange)}`}>
+                aria-label={`${point.date} 총자산 ${formatKrw(point.totalValueKrw)}, 일 증감 ${isPositive ? "+" : ""}${formatKrw(dailyChange)}`}>
                 <circle className="trend-hit" cx={x} cy={y} r="13" />
                 <circle className="trend-point" cx={x} cy={y} r="2.5" />
                 <g className="trend-tooltip" transform={`translate(${tooltipX} ${tooltipY})`}>
-                  <rect width={tooltipWidth} height={tooltipHeight} rx="7" />
-                  <text x="10" y="18">{formatShortDate(point.date)} · {formatKrw(point.totalValueKrw)}</text>
-                  <text x="10" y="36">일 증감 {tone}{formatKrw(dailyChange)}</text>
+                  <rect width={tooltipWidth} height={tooltipHeight} rx="8" />
+                  <text className="tooltip-date" x="12" y="19">{formatMonthDay(point.date)}</text>
+                  <text className="tooltip-value" x="12" y="38">{formatKrw(point.totalValueKrw)}</text>
+                  <text className={changeClass} x="12" y="56">{arrow} {formatKrw(Math.abs(dailyChange))}</text>
                 </g>
               </g>
             );
@@ -869,6 +872,12 @@ function formatPercent(value) {
 function formatShortDate(value) {
   const date = new Date(`${value}T00:00:00`);
   return Number.isNaN(date.getTime()) ? value : date.toLocaleDateString("ko-KR", { month: "numeric", day: "numeric" });
+}
+
+function formatMonthDay(value) {
+  const date = new Date(`${value}T00:00:00`);
+  if (Number.isNaN(date.getTime())) return value;
+  return `${date.getMonth() + 1}/${date.getDate()}`;
 }
 
 function formatAsOf(value) {
