@@ -1,4 +1,4 @@
-import { cp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
+import { cp, mkdir, readFile, rm, stat, writeFile } from "node:fs/promises";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 
@@ -27,7 +27,11 @@ await mkdir(new URL("src/", dist), { recursive: true });
 await cp(new URL("src/app/", root), new URL("src/app/", dist), { recursive: true });
 await cp(new URL("src/domain/", root), new URL("src/domain/", dist), { recursive: true });
 await cp(new URL("assets/", root), new URL("assets/", dist), { recursive: true });
-await cp(new URL("public/", root), dist, { recursive: true });
+const publicDir = new URL("public/", root);
+const publicExists = await stat(publicDir).then(() => true).catch(() => false);
+if (publicExists) {
+  await cp(publicDir, dist, { recursive: true });
+}
 
 const indexPath = new URL("index.html", dist);
 const html = await readFile(indexPath, "utf8");
