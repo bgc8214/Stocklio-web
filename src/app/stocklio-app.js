@@ -30,6 +30,7 @@ import {
   formatMoney,
   formatNumber,
   formatPercent,
+  formatMonthDay,
   formatShortDate,
 } from "./formatters.js";
 import {
@@ -3636,18 +3637,22 @@ function renderTrendChart(rows) {
       const y = yFor(row.totalValueKrw);
       const previous = chartRows[index - 1];
       const dailyChange = Number(row.dailyChangeKrw ?? (previous ? row.totalValueKrw - previous.totalValueKrw : 0));
-      const tooltipWidth = 164;
-      const tooltipHeight = 48;
+      const tooltipWidth = 160;
+      const tooltipHeight = 64;
       const tooltipX = Math.max(padding.left, Math.min(width - padding.right - tooltipWidth, x - tooltipWidth / 2));
       const tooltipY = Math.max(6, y - tooltipHeight - 12);
-      const tone = dailyChange >= 0 ? "+" : "";
-      return `<g class="trend-point-group" tabindex="0" aria-label="${escapeHtml(`${row.date} 총자산 ${formatKrw(row.totalValueKrw)}, 일 증감 ${tone}${formatKrw(dailyChange)}`)}">
+      const isPositive = dailyChange >= 0;
+      const arrow = isPositive ? "▲" : "▼";
+      const changeClass = isPositive ? "tooltip-positive" : "tooltip-negative";
+      const dateStr = escapeHtml(formatMonthDay(row.date));
+      return `<g class="trend-point-group" tabindex="0" aria-label="${escapeHtml(`${row.date} 총자산 ${formatKrw(row.totalValueKrw)}, 일 증감 ${isPositive ? "+" : ""}${formatKrw(dailyChange)}`)}">
         <circle class="trend-hit" cx="${x}" cy="${y}" r="13"></circle>
         <circle class="trend-point" cx="${x}" cy="${y}" r="2.5"></circle>
         <g class="trend-tooltip" transform="translate(${tooltipX} ${tooltipY})">
-          <rect width="${tooltipWidth}" height="${tooltipHeight}" rx="7"></rect>
-          <text x="10" y="18">${escapeHtml(formatShortDate(row.date))} · ${escapeHtml(formatKrw(row.totalValueKrw))}</text>
-          <text x="10" y="36">일 증감 ${escapeHtml(tone + formatKrw(dailyChange))}</text>
+          <rect width="${tooltipWidth}" height="${tooltipHeight}" rx="8"></rect>
+          <text class="tooltip-date" x="12" y="19">${dateStr}</text>
+          <text class="tooltip-value" x="12" y="38">${escapeHtml(formatKrw(row.totalValueKrw))}</text>
+          <text class="${changeClass}" x="12" y="56">${arrow} ${escapeHtml(formatKrw(Math.abs(dailyChange)))}</text>
         </g>
       </g>`;
     })
