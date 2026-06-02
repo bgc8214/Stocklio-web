@@ -2370,7 +2370,7 @@ function renderHoldings() {
         <td data-label="투자자">${escapeHtml(holding.investor)}</td>
         <td data-label="계좌"><span class="name-cell">${escapeHtml(holding.account)}</span></td>
         <td data-label="전략"><span class="name-cell">${escapeHtml(holding.strategy)}</span></td>
-        <td data-label="종목"><strong class="name-cell">${escapeHtml(holding.name || holding.ticker)}</strong>${holding.ticker && holding.ticker !== holding.name ? `<small class="name-cell">${escapeHtml(holding.ticker)}</small>` : ""}</td>
+        <td data-label="종목"><span class="name-cell-logo">${tickerLogoHtml(holding.ticker, holding.name, 28)}<span><strong class="name-cell">${escapeHtml(holding.name || holding.ticker)}</strong>${holding.ticker && holding.ticker !== holding.name ? `<small class="name-cell">${escapeHtml(holding.ticker)}</small>` : ""}</span></span></td>
         <td data-label="수량"><span class="amount-cell">${formatNumber(holding.quantity, 4)}</span></td>
         <td data-label="현재가"><span class="money-value">${formatMoney(holding.price, holding.currency)}</span></td>
         <td data-label="평단가"><span class="money-value">${formatMoney(holding.averageCost, holding.currency)}</span></td>
@@ -2529,6 +2529,24 @@ function renderHoldingsViewToggle() {
   els.holdingsViewSummary?.setAttribute("aria-pressed", String(isSummary));
 }
 
+const TICKER_LOGO_COLORS = [
+  "#1d6fa4","#e8572a","#2e7d32","#7b1fa2","#c62828",
+  "#00695c","#283593","#f57f17","#4e342e","#37474f",
+];
+function tickerLogoHtml(ticker, name, size = 36) {
+  const clean = (ticker || name || "?").replace(/[^A-Za-z0-9]/g, "").toUpperCase();
+  const letter = clean[0] || "?";
+  const colorIdx = [...clean].reduce((a, c) => a + c.charCodeAt(0), 0) % TICKER_LOGO_COLORS.length;
+  const bg = TICKER_LOGO_COLORS[colorIdx];
+  const imgUrl = `https://assets.parqet.com/logos/symbol/${encodeURIComponent(clean)}?format=svg`;
+  const id = `logo-${clean}`;
+  return `<span class="ticker-logo" style="width:${size}px;height:${size}px" data-ticker="${escapeHtml(clean)}">
+    <img src="${imgUrl}" alt="${escapeHtml(clean)}" width="${size}" height="${size}"
+      onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+    <span class="ticker-logo-fallback" style="display:none;background:${bg};width:${size}px;height:${size}px;font-size:${Math.round(size * 0.42)}px">${escapeHtml(letter)}</span>
+  </span>`;
+}
+
 function renderHoldingsSummaryView(rows) {
   if (!els.holdingsSummaryView) return;
 
@@ -2580,9 +2598,10 @@ function renderHoldingsSummaryView(rows) {
     return `<div class="holdings-overview-row">
       <div class="holdings-overview-bar" style="width:${weightPct}%"></div>
       <div class="holdings-overview-main">
+        ${tickerLogoHtml(item.ticker, item.name, 38)}
         <div class="holdings-overview-left">
           <strong class="holdings-overview-name">${escapeHtml(item.name)}</strong>
-          <span class="holdings-overview-meta">${escapeHtml(item.ticker)}${item.ticker !== item.name ? "" : ""} · ${formatNumber(item.quantity, 4)}주 · ${formatPercent(weight)}</span>
+          <span class="holdings-overview-meta">${escapeHtml(item.ticker)} · ${formatNumber(item.quantity, 4)}주 · ${formatPercent(weight)}</span>
         </div>
         <div class="holdings-overview-right">
           <strong class="holdings-overview-value">${formatKrw(item.valueKrw)}</strong>
