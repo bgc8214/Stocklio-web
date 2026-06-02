@@ -2475,7 +2475,7 @@ main {
 
 .holdings-overview-row {
   border-bottom: 1px solid var(--line);
-  padding: 10px 0;
+  padding: 8px 0;
   position: relative;
   overflow: hidden;
 }
@@ -2498,12 +2498,21 @@ main {
 .holdings-overview-main {
   align-items: center;
   display: flex;
-  gap: 12px;
+  gap: 0;
   justify-content: space-between;
   position: relative;
 }
 
 .holdings-overview-left {
+  align-items: center;
+  display: flex;
+  flex: 1;
+  gap: 12px;
+  min-width: 0;
+  padding-right: 16px;
+}
+
+.holdings-overview-text {
   display: flex;
   flex-direction: column;
   gap: 3px;
@@ -2511,7 +2520,7 @@ main {
 }
 
 .holdings-overview-name {
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 800;
   overflow: hidden;
   text-overflow: ellipsis;
