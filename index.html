@@ -380,14 +380,12 @@
 
       <section class="panel holdings-panel" data-view="holdings" hidden>
         <div class="holding-toolbar">
-          <div>
+          <div class="holding-toolbar-meta">
             <strong id="holdingsMeta">0개 종목</strong>
             <span id="holdingsPriceMeta">가격 기준 없음</span>
+            <button id="holdingsExportButton" class="ghost small-button holding-export-btn" type="button" title="CSV 내보내기">↓ 내보내기</button>
           </div>
-          <div class="holding-toolbar-actions">
-            <button id="holdingsExportButton" class="secondary small-button" type="button">내보내기</button>
-            <button id="addHoldingButton" class="primary small-button" type="button">종목 추가</button>
-          </div>
+          <button id="addHoldingButton" class="primary small-button" type="button">+ 종목 추가</button>
         </div>
         <div class="holdings-summary-grid" aria-label="보유 종목 요약">
           <article class="holding-summary-card">
