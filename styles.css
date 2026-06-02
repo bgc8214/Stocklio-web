@@ -2441,6 +2441,38 @@ main {
 }
 
 /* 요약 뷰 */
+/* 종목 로고 */
+.ticker-logo {
+  border-radius: 50%;
+  display: inline-flex;
+  flex-shrink: 0;
+  overflow: hidden;
+  position: relative;
+}
+
+.ticker-logo img {
+  border-radius: 50%;
+  display: block;
+  height: 100%;
+  object-fit: contain;
+  width: 100%;
+}
+
+.ticker-logo-fallback {
+  align-items: center;
+  border-radius: 50%;
+  color: #fff;
+  font-weight: 800;
+  justify-content: center;
+  letter-spacing: -0.02em;
+}
+
+.name-cell-logo {
+  align-items: center;
+  display: flex;
+  gap: 8px;
+}
+
 .holdings-overview-row {
   border-bottom: 1px solid var(--line);
   padding: 10px 0;
