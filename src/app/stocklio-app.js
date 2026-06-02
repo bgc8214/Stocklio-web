@@ -2533,17 +2533,43 @@ const TICKER_LOGO_COLORS = [
   "#1d6fa4","#e8572a","#2e7d32","#7b1fa2","#c62828",
   "#00695c","#283593","#f57f17","#4e342e","#37474f",
 ];
+
+// 한국 ETF 운용사 prefix → Parqet 심볼 매핑 (실제 응답 확인된 심볼)
+const KR_ETF_PROVIDER_SYMBOLS = {
+  "KODEX": "005930.KS",   // 삼성자산운용 → 삼성전자 로고로 대체
+  "TIGER": "006800.KS",   // 미래에셋자산운용 → 미래에셋증권
+  "ACE": "071050.KS",     // 한국투자신탁운용 → 한국금융지주
+  "RISE": "RISE",         // KB자산운용 (직접 심볼)
+  "HANARO": "086790.KS",  // NH아문디 → 하나금융 (근사값)
+  "하나1Q": "086790.KS",  // 하나자산운용 → 하나금융지주
+  "SOL": "055550.KS",     // 신한자산운용 → 신한지주
+  "ARIRANG": "000370.KS", // 한화자산운용 → 한화
+  "KINDEX": "071050.KS",  // 한국투자신탁
+};
+
+function resolveLogoSymbol(ticker, name) {
+  // 한국 주식: 종목코드.KS 형식
+  if (/^\d{6}\.KS$/.test(ticker)) return ticker;
+  // 한국 ETF: 이름이 운용사 prefix로 시작
+  const fullName = (name || ticker || "").trim();
+  for (const [prefix, sym] of Object.entries(KR_ETF_PROVIDER_SYMBOLS)) {
+    if (fullName.startsWith(prefix + " ") || fullName === prefix) return sym;
+  }
+  // 미국 주식/ETF: 알파벳 ticker 그대로
+  return (ticker || name || "").replace(/[^A-Za-z0-9.]/g, "").toUpperCase();
+}
+
 function tickerLogoHtml(ticker, name, size = 36) {
-  const clean = (ticker || name || "?").replace(/[^A-Za-z0-9]/g, "").toUpperCase();
-  const letter = clean[0] || "?";
-  const colorIdx = [...clean].reduce((a, c) => a + c.charCodeAt(0), 0) % TICKER_LOGO_COLORS.length;
+  const symbol = resolveLogoSymbol(ticker, name);
+  const fallbackLetter = (ticker || name || "?").replace(/[^A-Za-z0-9가-힣]/g, "")[0]?.toUpperCase() || "?";
+  const colorKey = (ticker || name || "").toUpperCase();
+  const colorIdx = [...colorKey].reduce((a, c) => a + c.charCodeAt(0), 0) % TICKER_LOGO_COLORS.length;
   const bg = TICKER_LOGO_COLORS[colorIdx];
-  const imgUrl = `https://assets.parqet.com/logos/symbol/${encodeURIComponent(clean)}?format=svg`;
-  const id = `logo-${clean}`;
-  return `<span class="ticker-logo" style="width:${size}px;height:${size}px" data-ticker="${escapeHtml(clean)}">
-    <img src="${imgUrl}" alt="${escapeHtml(clean)}" width="${size}" height="${size}"
+  const imgUrl = `https://assets.parqet.com/logos/symbol/${encodeURIComponent(symbol)}?format=svg`;
+  return `<span class="ticker-logo" style="width:${size}px;height:${size}px">
+    <img src="${imgUrl}" alt="${escapeHtml(ticker || name)}" width="${size}" height="${size}"
       onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
-    <span class="ticker-logo-fallback" style="display:none;background:${bg};width:${size}px;height:${size}px;font-size:${Math.round(size * 0.42)}px">${escapeHtml(letter)}</span>
+    <span class="ticker-logo-fallback" style="display:none;background:${bg};width:${size}px;height:${size}px;font-size:${Math.round(size * 0.42)}px">${escapeHtml(fallbackLetter)}</span>
   </span>`;
 }
 
