@@ -36,6 +36,7 @@ import {
 import {
   filterSnapshotRows,
   getAccountPerformanceRows as selectAccountPerformanceRows,
+  getAvailableMonths,
   getMonthlyRows as selectMonthlyRows,
   getNumbersChartSource,
   getPerformanceStats,
@@ -75,7 +76,8 @@ let editingCashBalanceId = null;
 let editingAccountId = null;
 let holdingPage = 1;
 let holdingScope = "all";
-let holdingsViewMode = "detail"; // "detail" | "summary"
+let holdingsViewMode = "detail";
+let selectedNumbersMonth = null; // "YYYY-MM" or null (= latest) // "detail" | "summary"
 let isLayoutEditing = false;
 let draggedDashboardCardId = null;
 let resizingDashboardCard = null;
@@ -1742,8 +1744,31 @@ function renderPerformanceDetails(rows) {
   renderStrategyPerformance();
 }
 
+function renderNumbersMonthNav(rows) {
+  const navEl = document.getElementById("numbersMonthNav");
+  if (!navEl) return;
+  const allRows = getSnapshotRows();
+  const months = getAvailableMonths(allRows);
+  if (months.length <= 1) { navEl.hidden = true; return; }
+  navEl.hidden = false;
+  const latestYm = allRows[allRows.length - 1]?.date.slice(0, 7);
+  const active = selectedNumbersMonth || latestYm;
+  navEl.innerHTML = months.slice(-12).reverse().map((ym) => {
+    const [y, m] = ym.split("-");
+    const label = `${Number(y.slice(2))}년 ${Number(m)}월`;
+    return `<button class="ghost small-button${ym === active ? " is-active" : ""}" type="button" data-numbers-month="${ym}">${label}</button>`;
+  }).join("");
+  navEl.querySelectorAll("[data-numbers-month]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      selectedNumbersMonth = btn.dataset.numbersMonth;
+      renderNumbersPerformanceChart(rows);
+    });
+  });
+}
+
 function renderNumbersPerformanceChart(rows) {
-  const source = getNumbersChartSource(rows, getSnapshotRows());
+  renderNumbersMonthNav(rows);
+  const source = getNumbersChartSource(rows, getSnapshotRows(), selectedNumbersMonth);
   if (!source.points.length) {
     els.numbersChartCaption.textContent = "월간 성과 데이터 없음";
     els.numbersSourceHead.innerHTML = "";
