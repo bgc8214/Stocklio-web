@@ -106,13 +106,24 @@ export function getPerformanceStats(rows) {
   };
 }
 
-export function getNumbersChartSource(rows, allRows = rows) {
+export function getAvailableMonths(rows) {
+  const seen = new Set();
+  const months = [];
+  for (const row of rows) {
+    const ym = row.date.slice(0, 7);
+    if (!seen.has(ym)) { seen.add(ym); months.push(ym); }
+  }
+  return months;
+}
+
+export function getNumbersChartSource(rows, allRows = rows, targetYearMonth = null) {
   const latest = rows[rows.length - 1];
   if (!latest) {
     return { points: [], rows: [], monthLabel: "", yearLabel: "" };
   }
-  const year = latest.date.slice(0, 4);
-  const month = latest.date.slice(5, 7);
+  const ym = targetYearMonth || latest.date.slice(0, 7);
+  const year = ym.slice(0, 4);
+  const month = ym.slice(5, 7);
   const monthRows = rows.filter((row) => row.date.startsWith(`${year}-${month}`));
   let yearCumulativeKrw = 0;
   let monthCumulativeKrw = 0;

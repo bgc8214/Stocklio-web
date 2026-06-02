@@ -2058,6 +2058,25 @@ main {
   font-weight: 900;
 }
 
+.numbers-month-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.numbers-month-nav button.is-active {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--bg);
+}
+
+[data-theme="dark"] .numbers-month-nav button.is-active {
+  background: rgba(255,255,255,0.9);
+  border-color: rgba(255,255,255,0.9);
+  color: #111;
+}
+
 .numbers-source-wrap {
   border: 1px solid var(--line);
   border-radius: 7px;
