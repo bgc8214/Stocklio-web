@@ -42,6 +42,12 @@
             <div class="nav-more-sheet">
               <div class="nav-more-sheet-handle"></div>
               <div class="nav-more-sheet-items" id="navMoreItems"></div>
+              <div class="nav-more-sheet-footer">
+                <button class="theme-toggle nav-more-theme-toggle" id="themeToggleMobile" type="button" aria-label="테마 전환">
+                  <span class="theme-toggle-icon" id="themeToggleIconMobile">🌙</span>
+                  <span id="themeToggleLabelMobile">다크 모드</span>
+                </button>
+              </div>
             </div>
           </div>
           <div class="sidebar-foot">
@@ -405,6 +411,12 @@
             <small id="holdingsSummaryTopNames">-</small>
           </article>
         </div>
+        <div class="holdings-view-bar">
+          <div class="holding-view-toggle" role="group" aria-label="보기 방식">
+            <button id="holdingsViewDetail" class="ghost small-button is-active" type="button" aria-pressed="true">상세</button>
+            <button id="holdingsViewSummary" class="ghost small-button" type="button" aria-pressed="false">요약</button>
+          </div>
+        </div>
         <div class="filters" aria-label="보유 종목 필터">
           <select id="investorFilter" aria-label="투자자 필터"></select>
           <select id="strategyFilter" aria-label="전략 필터"></select>
@@ -435,6 +447,7 @@
           </div>
           <span id="holdingsPageInfo" class="status-pill">10개 표시</span>
         </div>
+        <div id="holdingsSummaryView" hidden></div>
         <div id="holdingDrawerBackdrop" class="drawer-backdrop" hidden></div>
         <aside id="holdingFormPanel" class="side-drawer holding-drawer" aria-label="보유 종목 입력" hidden>
           <div class="drawer-heading">

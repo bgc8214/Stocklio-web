@@ -2,10 +2,21 @@ export function getDailyMoveRows({ holdings = [], fxRate = 1, marketContext = nu
   if (marketContext?.isMarketClosed) {
     return [];
   }
-  const rows = holdings
-    .map((holding) => {
-      const move = getHoldingDailyMove(holding, fxRate);
-      return {
+
+  // 동일 ticker는 계좌 불문하고 합산
+  const byTicker = new Map();
+  for (const holding of holdings) {
+    const move = getHoldingDailyMove(holding, fxRate);
+    if (!move.hasData) continue;
+    const key = holding.ticker;
+    if (byTicker.has(key)) {
+      const existing = byTicker.get(key);
+      existing.quantity += Number(holding.quantity || 0);
+      existing.value += move.valueKrw;
+      existing.priceEffectKrw += move.priceEffectKrw;
+      existing.fxEffectKrw += move.fxEffectKrw;
+    } else {
+      byTicker.set(key, {
         id: holding.id,
         name: holding.name || holding.ticker,
         ticker: holding.ticker,
@@ -14,10 +25,13 @@ export function getDailyMoveRows({ holdings = [], fxRate = 1, marketContext = nu
         priceEffectKrw: move.priceEffectKrw,
         fxEffectKrw: move.fxEffectKrw,
         changePercent: move.changePercent,
-        hasData: move.hasData,
-      };
-    })
-    .filter((item) => item.hasData && item.value !== 0)
+        hasData: true,
+      });
+    }
+  }
+
+  const rows = [...byTicker.values()]
+    .filter((item) => item.value !== 0)
     .sort((a, b) => Math.abs(b.value) - Math.abs(a.value));
 
   const grossMoveKrw = rows.reduce((sum, row) => sum + Math.abs(row.value), 0);

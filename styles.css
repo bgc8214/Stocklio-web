@@ -2400,6 +2400,110 @@ main {
   background: var(--surface-soft);
 }
 
+.holdings-view-bar {
+  align-items: center;
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 10px;
+  margin-top: 12px;
+}
+
+.holding-view-toggle {
+  display: flex;
+  gap: 4px;
+}
+
+.holding-view-toggle button.is-active {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--bg);
+}
+
+/* 요약 뷰 */
+.holdings-overview-row {
+  border-bottom: 1px solid var(--line);
+  padding: 10px 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.holdings-overview-row:last-child {
+  border-bottom: 0;
+}
+
+.holdings-overview-bar {
+  background: var(--accent);
+  border-radius: 0 3px 3px 0;
+  height: 100%;
+  left: 0;
+  opacity: 0.06;
+  position: absolute;
+  top: 0;
+  transition: width 0.3s ease;
+}
+
+.holdings-overview-main {
+  align-items: center;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+  position: relative;
+}
+
+.holdings-overview-left {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.holdings-overview-name {
+  font-size: 16px;
+  font-weight: 800;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.holdings-overview-meta {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.holdings-overview-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.holdings-overview-value {
+  font-size: 16px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 800;
+}
+
+.holdings-overview-gain {
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+}
+
+.holdings-overview-day {
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  opacity: 0.8;
+}
+
+.holdings-summary-empty {
+  color: var(--muted);
+  padding: 24px 0;
+  text-align: center;
+}
+
 .pagination-bar {
   align-items: center;
   display: flex;
@@ -3580,6 +3684,16 @@ td:nth-child(4) {
     color: #2f69ff;
   }
 
+  .nav-more-sheet-footer {
+    border-top: 1px solid var(--line);
+    margin-top: 8px;
+    padding: 12px 20px 0;
+  }
+
+  .nav-more-theme-toggle {
+    width: 100%;
+  }
+
   .dashboard-board {
     grid-template-columns: 1fr;
   }
@@ -3667,7 +3781,7 @@ td:nth-child(4) {
   }
 
   .holdings-summary-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr 1fr;
   }
 
   .account-overview-grid {
@@ -4332,6 +4446,23 @@ button.secondary:hover,
   border-bottom-color: rgba(255,255,255,0.07);
 }
 
+[data-theme="dark"] .view-tabs {
+  background: rgba(18,18,18,0.97);
+  box-shadow: 0 -1px 0 rgba(255,255,255,0.07), 0 -10px 30px rgba(0,0,0,0.5);
+}
+
+[data-theme="dark"] .nav-more-sheet {
+  background: #161616;
+}
+
+[data-theme="dark"] .nav-more-sheet-handle {
+  background: rgba(255,255,255,0.15);
+}
+
+[data-theme="dark"] .nav-more-sheet-footer {
+  border-top-color: rgba(255,255,255,0.08);
+}
+
 [data-theme="dark"] .view-tabs button {
   color: rgba(255,255,255,0.4);
 }
@@ -4512,6 +4643,26 @@ button.secondary:hover,
 
 [data-theme="dark"] .operation-toast span {
   color: rgba(255,255,255,0.75);
+}
+
+[data-theme="dark"] .holding-view-toggle button.is-active {
+  background: rgba(255,255,255,0.9);
+  border-color: rgba(255,255,255,0.9);
+  color: #111;
+}
+
+[data-theme="dark"] .holdings-overview-bar {
+  opacity: 0.1;
+}
+
+[data-theme="dark"] .daily-move-summary {
+  background: #1a1a1a;
+  border-color: rgba(255,255,255,0.08);
+}
+
+[data-theme="dark"] .daily-move-insight {
+  background: rgba(29,185,122,0.1);
+  color: rgba(255,255,255,0.85);
 }
 
 [data-theme="dark"] .segmented-control {

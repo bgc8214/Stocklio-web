@@ -75,6 +75,7 @@ let editingCashBalanceId = null;
 let editingAccountId = null;
 let holdingPage = 1;
 let holdingScope = "all";
+let holdingsViewMode = "detail"; // "detail" | "summary"
 let isLayoutEditing = false;
 let draggedDashboardCardId = null;
 let resizingDashboardCard = null;
@@ -477,6 +478,15 @@ for (const [button, scope] of [
     renderHoldings();
   });
 }
+
+els.holdingsViewDetail?.addEventListener("click", () => {
+  holdingsViewMode = "detail";
+  renderHoldings();
+});
+els.holdingsViewSummary?.addEventListener("click", () => {
+  holdingsViewMode = "summary";
+  renderHoldings();
+});
 
 els.holdingForm.elements.ticker.addEventListener("input", () => {
   els.holdingForm.elements.name.value = "";
@@ -956,19 +966,26 @@ function initTheme() {
   const isDark = saved ? saved === "dark" : prefersDark;
   applyTheme(isDark ? "dark" : "light");
 
-  document.getElementById("themeToggle")?.addEventListener("click", () => {
+  const toggleTheme = () => {
     const next = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
     applyTheme(next);
     localStorage.setItem("stocklio-theme", next);
-  });
+  };
+  document.getElementById("themeToggle")?.addEventListener("click", toggleTheme);
+  document.getElementById("themeToggleMobile")?.addEventListener("click", toggleTheme);
 }
 
 function applyTheme(theme) {
   document.documentElement.dataset.theme = theme;
+  const isDark = theme === "dark";
   const icon = document.getElementById("themeToggleIcon");
   const label = document.getElementById("themeToggleLabel");
-  if (icon) icon.textContent = theme === "dark" ? "☀️" : "🌙";
-  if (label) label.textContent = theme === "dark" ? "라이트 모드" : "다크 모드";
+  const iconM = document.getElementById("themeToggleIconMobile");
+  const labelM = document.getElementById("themeToggleLabelMobile");
+  if (icon) icon.textContent = isDark ? "☀️" : "🌙";
+  if (label) label.textContent = isDark ? "라이트 모드" : "다크 모드";
+  if (iconM) iconM.textContent = isDark ? "☀️" : "🌙";
+  if (labelM) labelM.textContent = isDark ? "라이트 모드" : "다크 모드";
 }
 
 async function initialize() {
@@ -2316,6 +2333,25 @@ function priceRefreshImpactInsight(impact) {
 function renderHoldings() {
   const rows = filteredHoldings();
   renderHoldingsSummary(rows);
+  renderHoldingsViewToggle();
+
+  const isSummary = holdingsViewMode === "summary";
+  if (els.holdingsSummaryView) els.holdingsSummaryView.hidden = !isSummary;
+  const tableWrap = document.querySelector(".holdings-table-wrap");
+  if (tableWrap) tableWrap.hidden = isSummary;
+  const paginationEl = document.querySelector("#holdingPagination");
+  if (paginationEl) paginationEl.hidden = isSummary;
+  const filtersEl = document.querySelector(".filters");
+  if (filtersEl) filtersEl.hidden = isSummary;
+  const listToolsEl = document.querySelector(".holding-list-tools");
+  if (listToolsEl) listToolsEl.hidden = isSummary;
+
+  if (isSummary) {
+    renderHoldingsSummaryView(rows);
+    renderHoldingScopeControls();
+    return;
+  }
+
   const totalPages = Math.max(1, Math.ceil(rows.length / HOLDINGS_PAGE_SIZE));
   holdingPage = Math.min(Math.max(1, holdingPage), totalPages);
   const pageRows = rows.slice((holdingPage - 1) * HOLDINGS_PAGE_SIZE, holdingPage * HOLDINGS_PAGE_SIZE);
@@ -2483,6 +2519,79 @@ function renderHoldingsSummary(rows) {
   if (els.holdingsSummaryTopNames) {
     els.holdingsSummaryTopNames.textContent = topNames;
   }
+}
+
+function renderHoldingsViewToggle() {
+  const isSummary = holdingsViewMode === "summary";
+  els.holdingsViewDetail?.classList.toggle("is-active", !isSummary);
+  els.holdingsViewDetail?.setAttribute("aria-pressed", String(!isSummary));
+  els.holdingsViewSummary?.classList.toggle("is-active", isSummary);
+  els.holdingsViewSummary?.setAttribute("aria-pressed", String(isSummary));
+}
+
+function renderHoldingsSummaryView(rows) {
+  if (!els.holdingsSummaryView) return;
+
+  // ticker 기준으로 합산
+  const byTicker = new Map();
+  for (const holding of rows) {
+    const key = holding.ticker || holding.name;
+    const values = getHoldingValues(holding);
+    const dailyMove = getHoldingDailyMove(holding);
+    if (byTicker.has(key)) {
+      const existing = byTicker.get(key);
+      existing.quantity += Number(holding.quantity || 0);
+      existing.valueKrw += values.valueKrw;
+      existing.costKrw += values.costKrw;
+      existing.gainKrw += values.gainKrw;
+      existing.dayMoveKrw += dailyMove.hasData ? dailyMove.valueKrw : 0;
+      existing.hasDayData = existing.hasDayData || dailyMove.hasData;
+    } else {
+      byTicker.set(key, {
+        ticker: holding.ticker,
+        name: holding.name || holding.ticker,
+        quantity: Number(holding.quantity || 0),
+        price: holding.price,
+        currency: holding.currency,
+        valueKrw: values.valueKrw,
+        costKrw: values.costKrw,
+        gainKrw: values.gainKrw,
+        dayMoveKrw: dailyMove.hasData ? dailyMove.valueKrw : 0,
+        hasDayData: dailyMove.hasData,
+        changePercent: Number(holding.priceChangePercent || 0),
+      });
+    }
+  }
+
+  const merged = [...byTicker.values()].sort((a, b) => b.valueKrw - a.valueKrw);
+  const totalValue = merged.reduce((sum, r) => sum + r.valueKrw, 0);
+
+  if (!merged.length) {
+    els.holdingsSummaryView.innerHTML = `<div class="holdings-summary-empty">조건에 맞는 종목이 없습니다</div>`;
+    return;
+  }
+
+  els.holdingsSummaryView.innerHTML = merged.map((item) => {
+    const returnRate = item.costKrw ? item.gainKrw / item.costKrw : 0;
+    const weight = totalValue ? item.valueKrw / totalValue : 0;
+    const gainPositive = item.gainKrw >= 0;
+    const dayPositive = item.dayMoveKrw >= 0;
+    const weightPct = Math.max(4, Math.round(weight * 100));
+    return `<div class="holdings-overview-row">
+      <div class="holdings-overview-bar" style="width:${weightPct}%"></div>
+      <div class="holdings-overview-main">
+        <div class="holdings-overview-left">
+          <strong class="holdings-overview-name">${escapeHtml(item.name)}</strong>
+          <span class="holdings-overview-meta">${escapeHtml(item.ticker)}${item.ticker !== item.name ? "" : ""} · ${formatNumber(item.quantity, 4)}주 · ${formatPercent(weight)}</span>
+        </div>
+        <div class="holdings-overview-right">
+          <strong class="holdings-overview-value">${formatKrw(item.valueKrw)}</strong>
+          <span class="holdings-overview-gain ${gainPositive ? "positive" : "negative"}">${gainPositive ? "+" : ""}${formatKrw(item.gainKrw)} (${gainPositive ? "+" : ""}${formatPercent(returnRate)})</span>
+          ${item.hasDayData ? `<span class="holdings-overview-day ${dayPositive ? "positive" : "negative"}">${dayPositive ? "▲" : "▼"} ${formatKrw(Math.abs(item.dayMoveKrw))}</span>` : ""}
+        </div>
+      </div>
+    </div>`;
+  }).join("");
 }
 
 function exportVisibleHoldings() {
