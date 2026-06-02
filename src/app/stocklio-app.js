@@ -2624,10 +2624,12 @@ function renderHoldingsSummaryView(rows) {
     return `<div class="holdings-overview-row">
       <div class="holdings-overview-bar" style="width:${weightPct}%"></div>
       <div class="holdings-overview-main">
-        ${tickerLogoHtml(item.ticker, item.name, 38)}
         <div class="holdings-overview-left">
-          <strong class="holdings-overview-name">${escapeHtml(item.name)}</strong>
-          <span class="holdings-overview-meta">${escapeHtml(item.ticker)} · ${formatNumber(item.quantity, 4)}주 · ${formatPercent(weight)}</span>
+          ${tickerLogoHtml(item.ticker, item.name, 36)}
+          <div class="holdings-overview-text">
+            <strong class="holdings-overview-name">${escapeHtml(item.name)}</strong>
+            <span class="holdings-overview-meta">${escapeHtml(item.ticker)} · ${formatNumber(item.quantity, 4)}주 · ${formatPercent(weight)}</span>
+          </div>
         </div>
         <div class="holdings-overview-right">
           <strong class="holdings-overview-value">${formatKrw(item.valueKrw)}</strong>
