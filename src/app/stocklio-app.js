@@ -1753,16 +1753,16 @@ function renderNumbersMonthNav(rows) {
   navEl.hidden = false;
   const latestYm = allRows[allRows.length - 1]?.date.slice(0, 7);
   const active = selectedNumbersMonth || latestYm;
-  navEl.innerHTML = months.slice(-12).reverse().map((ym) => {
-    const [y, m] = ym.split("-");
-    const label = `${Number(y.slice(2))}년 ${Number(m)}월`;
-    return `<button class="ghost small-button${ym === active ? " is-active" : ""}" type="button" data-numbers-month="${ym}">${label}</button>`;
-  }).join("");
-  navEl.querySelectorAll("[data-numbers-month]").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      selectedNumbersMonth = btn.dataset.numbersMonth;
-      renderNumbersPerformanceChart(rows);
-    });
+  navEl.innerHTML = `<select class="numbers-month-select" aria-label="월 선택">
+    ${months.slice().reverse().map((ym) => {
+      const [y, m] = ym.split("-");
+      const label = `${y}년 ${Number(m)}월`;
+      return `<option value="${ym}"${ym === active ? " selected" : ""}>${label}</option>`;
+    }).join("")}
+  </select>`;
+  navEl.querySelector(".numbers-month-select").addEventListener("change", (e) => {
+    selectedNumbersMonth = e.target.value;
+    renderNumbersPerformanceChart(rows);
   });
 }
 

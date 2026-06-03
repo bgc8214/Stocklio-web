@@ -2060,21 +2060,14 @@ main {
 
 .numbers-month-nav {
   display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-bottom: 16px;
+  justify-content: flex-end;
+  margin-bottom: 14px;
 }
 
-.numbers-month-nav button.is-active {
-  background: var(--ink);
-  border-color: var(--ink);
-  color: var(--bg);
-}
-
-[data-theme="dark"] .numbers-month-nav button.is-active {
-  background: rgba(255,255,255,0.9);
-  border-color: rgba(255,255,255,0.9);
-  color: #111;
+.numbers-month-select {
+  font-size: 13px;
+  font-weight: 700;
+  min-width: 130px;
 }
 
 .numbers-source-wrap {
