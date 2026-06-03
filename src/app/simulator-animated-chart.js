@@ -142,6 +142,23 @@ export class SimulatorAnimatedChart {
       }));
       const d = pts.map((p, j) => `${j === 0 ? "M" : "L"}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" ");
 
+      // 애니메이션용 clipPath (비원금 시리즈만): X 기준으로 reveal
+      let clipRect = null;
+      if (!series.isPrincipal) {
+        const clipId = `sim-clip-${i}-${Date.now()}`;
+        const clipEl = document.createElementNS("http://www.w3.org/2000/svg", "clipPath");
+        clipEl.setAttribute("id", clipId);
+        const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+        rect.setAttribute("x", String(PAD.left));
+        rect.setAttribute("y", "0");
+        rect.setAttribute("width", "0");
+        rect.setAttribute("height", String(h));
+        clipEl.appendChild(rect);
+        svg.appendChild(clipEl);
+        clipRect = rect;
+        clipRect._clipId = clipId;
+      }
+
       const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
       path.setAttribute("d", d);
       path.setAttribute("fill", "none");
@@ -150,13 +167,13 @@ export class SimulatorAnimatedChart {
       if (series.isPrincipal) {
         path.setAttribute("stroke-dasharray", "4 3");
       } else {
-        path.setAttribute("stroke-dasharray", "1");
-        path.setAttribute("stroke-dashoffset", "1");
+        path.setAttribute("clip-path", `url(#${clipRect._clipId})`);
       }
       svg.appendChild(path);
 
       path._pts = pts;
       path._color = color;
+      path._clipRect = clipRect;
       this.#paths.push(path);
 
       if (!series.isPrincipal) {
@@ -205,16 +222,7 @@ export class SimulatorAnimatedChart {
     // svg를 DOM에 먼저 붙여야 getTotalLength()가 정확한 값을 반환한다.
     this.#container.appendChild(svg);
 
-    // path 길이를 DOM 반영 후 재계산
-    this.#paths.forEach((path, i) => {
-      if (this.#series[i].isPrincipal) return;
-      const len = path.getTotalLength ? path.getTotalLength() : 1000;
-      if (len > 0) {
-        path._totalLen = len;
-        path.setAttribute("stroke-dasharray", String(len));
-        path.setAttribute("stroke-dashoffset", String(len));
-      }
-    });
+    // clipRect 초기 width = 0 (이미 설정됨)
 
     // 마우스 이벤트 등록
     this.#bindHover(svg);
@@ -418,11 +426,17 @@ export class SimulatorAnimatedChart {
 
     if (this.#dateLabel) this.#dateLabel.textContent = formatDateLabel(curDate);
 
-    // path reveal
+    // path reveal — clipRect.width를 현재 X 위치까지 확장
     this.#paths.forEach((path, i) => {
       if (this.#series[i].isPrincipal) return;
-      const totalLen = path._totalLen || 1000;
-      path.setAttribute("stroke-dashoffset", String(totalLen * (1 - progress)));
+      const clipRect = path._clipRect;
+      if (!clipRect) return;
+      const pts = path._pts;
+      if (!pts || !pts.length) return;
+      const ptIdx = Math.max(0, Math.min(pts.length - 1, Math.floor(progress * (pts.length - 1))));
+      const curX = pts[ptIdx].x;
+      const revealWidth = Math.max(0, curX - this.#PAD.left + 6);
+      clipRect.setAttribute("width", String(revealWidth));
     });
 
     // 진행 점
@@ -455,6 +469,11 @@ export class SimulatorAnimatedChart {
   }
 
   #onComplete() {
+    // clipRect 완전 열기
+    this.#paths.forEach((path) => {
+      if (path._clipRect) path._clipRect.setAttribute("width", String(this.#innerW + 80));
+    });
+
     // 진행 점 숨기기
     this.#dots.forEach(({ dot }) => {
       dot.setAttribute("r", "0");
