@@ -31,10 +31,11 @@ body {
   margin: 0;
   background: var(--bg);
   color: var(--ink);
-  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, system-ui, "Segoe UI", sans-serif;
   font-feature-settings: "tnum" 1;
   line-height: 1.5;
   overflow-x: hidden;
+  word-break: keep-all;
 }
 
 button,
@@ -52,10 +53,20 @@ button {
   min-height: 42px;
   padding: 0 16px;
   font-weight: 700;
+  transition: background 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+              color 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 button:hover {
   background: var(--accent-dark);
+  transform: scale(1.02);
+}
+
+button:active {
+  transform: scale(0.97);
 }
 
 button.secondary {
@@ -70,6 +81,7 @@ button.ghost {
 
 button.ghost:hover {
   background: var(--surface-soft);
+  transform: scale(1.02);
 }
 
 button.icon-danger {
@@ -488,8 +500,10 @@ main {
 
 .toolbar {
   align-items: center;
-  background: rgba(246, 247, 243, 0.94);
-  border-bottom: 1px solid rgba(219, 225, 218, 0.78);
+  background: rgba(246, 247, 243, 0.88);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(219, 225, 218, 0.6);
   display: flex;
   justify-content: space-between;
   margin: 0 -24px 22px;
@@ -947,8 +961,8 @@ main {
 .panel {
   background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: 8px;
-  box-shadow: var(--shadow);
+  border-radius: 10px;
+  box-shadow: var(--shadow), inset 0 1px 0 rgba(255, 255, 255, 0.7);
   min-width: 0;
 }
 
@@ -2407,7 +2421,7 @@ main {
   margin: 10px 0 8px;
   min-width: 0;
   overflow-wrap: break-word;
-  word-break: break-all;
+  word-break: keep-all;
 }
 
 .holdings-table-wrap {
@@ -3172,7 +3186,7 @@ td:nth-child(4) {
   font-size: 0.9rem;
   font-weight: 600;
   cursor: pointer;
-  transition: color 0.15s, border-color 0.15s;
+  transition: color 0.25s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   min-height: unset;
 }
 .sim-scenario-tab:hover {
@@ -3264,7 +3278,7 @@ td:nth-child(4) {
   cursor: pointer;
   min-height: unset;
   line-height: 1.4;
-  transition: background 0.12s, color 0.12s, border-color 0.12s;
+  transition: background 0.25s cubic-bezier(0.16, 1, 0.3, 1), color 0.25s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .sim-chip:hover {
   border-color: var(--accent);
@@ -4562,14 +4576,16 @@ button.secondary:hover,
 }
 
 [data-theme="dark"] .toolbar {
-  background: #0a0a0a;
+  background: rgba(10,10,10,0.88);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border-bottom: 1px solid rgba(255,255,255,0.07);
 }
 
 [data-theme="dark"] .panel {
   background: var(--surface);
   border: 1px solid rgba(255,255,255,0.07);
-  box-shadow: none;
+  box-shadow: 0 16px 40px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.06);
 }
 
 [data-theme="dark"] input,
@@ -4648,7 +4664,7 @@ button.secondary:hover,
   font-weight: 600;
   min-height: 32px;
   padding: 0 12px;
-  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  transition: background 0.25s cubic-bezier(0.16, 1, 0.3, 1), color 0.25s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   width: 100%;
   justify-content: center;
   letter-spacing: -0.01em;
@@ -4749,4 +4765,27 @@ button.secondary:hover,
   background: #2e2e2e;
   color: rgba(255,255,255,0.9);
   box-shadow: 0 0 0 1px rgba(255,255,255,0.1);
+}
+
+/* ── VIEW ENTER ANIMATION ── */
+@keyframes viewFadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+[data-entering] {
+  animation: viewFadeUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+[data-entering] .panel,
+[data-entering] .metric,
+[data-entering] .dashboard-card {
+  animation: viewFadeUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: calc(var(--stagger, 0) * 60ms);
 }

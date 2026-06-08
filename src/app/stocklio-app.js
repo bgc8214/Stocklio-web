@@ -1305,6 +1305,10 @@ function setView(view) {
     const isActive = section.dataset.view === view;
     section.hidden = !isActive;
     section.inert = !isActive;
+    if (isActive) {
+      section.dataset.entering = "";
+      setTimeout(() => delete section.dataset.entering, 500);
+    }
   });
   if (view === "simulator" && !simulatorInitialized) {
     simulatorInitialized = true;
