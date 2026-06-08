@@ -3,948 +3,1249 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Stocklio — 내 포트폴리오의 진짜 수익</title>
-<meta name="description" content="입출금을 보정한 정확한 투자손익. 다계좌 통합, 연금까지. Stocklio로 투자 성과를 제대로 확인하세요.">
+<title>Stocklio — 입출금을 빼야 진짜 수익이 보입니다</title>
+<meta name="description" content="입출금을 보정한 정확한 투자손익. 다계좌 통합, IRP·연금, 자동 시세. Stocklio로 진짜 수익률을 확인하세요.">
 <link rel="preconnect" href="https://cdn.jsdelivr.net">
-<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.min.css" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://code.iconify.design/iconify-icon/2.3.0/iconify-icon.min.js"></script>
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
   --g: #1db97a;
-  --g-dim: rgba(29,185,122,0.7);
-  --ink: #ffffff;
-  --ink-dim: rgba(255,255,255,0.55);
-  --ink-faint: rgba(255,255,255,0.22);
-  --black: #000000;
-  --dark: #0a0a0a;
-  --dark2: #0f0f0f;
-  --dark3: #141414;
-  --card: #161616;
+  --g-glow: rgba(29,185,122,0.35);
+  --g-dim: rgba(29,185,122,0.65);
+  --ink: #f5f5f5;
+  --ink-mid: rgba(245,245,245,0.65);
+  --ink-faint: rgba(245,245,245,0.25);
+  --ink-ghost: rgba(245,245,245,0.10);
+  --bg: #050505;
+  --surface: #0f0f0f;
+  --surface2: #111111;
+  --surface3: #161616;
   --border: rgba(255,255,255,0.08);
-  --radius: 20px;
+  --border-hi: rgba(255,255,255,0.12);
+  --radius-pill: 9999px;
+  --spring: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 html { scroll-behavior: smooth; }
 
 body {
-  font-family: "Pretendard Variable", "Pretendard", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
-  background: var(--black);
+  font-family: 'Pretendard', -apple-system, sans-serif;
+  background: var(--bg);
   color: var(--ink);
   -webkit-font-smoothing: antialiased;
+  word-break: keep-all;
   overflow-x: hidden;
 }
 
-/* ── NAV ── */
+/* Grain overlay */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  pointer-events: none;
+  opacity: 0.04;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 128px 128px;
+}
+
+/* Hero animations */
+@keyframes heroUp {
+  from { opacity: 0; transform: translateY(28px); filter: blur(4px); }
+  to   { opacity: 1; transform: translateY(0); filter: blur(0); }
+}
+@keyframes screenIn {
+  from { opacity: 0; transform: translateY(36px) scale(0.96); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-8px); }
+}
+@keyframes floatAlt {
+  0%, 100% { transform: translateY(-4px); }
+  50% { transform: translateY(4px); }
+}
+@keyframes pulse-ring {
+  0% { transform: scale(1); opacity: 0.6; }
+  100% { transform: scale(1.5); opacity: 0; }
+}
+@keyframes reveal-line {
+  from { width: 0; }
+  to { width: 100%; }
+}
+
+.hero-item { opacity: 0; animation: heroUp 0.8s var(--spring) forwards; }
+.hero-item:nth-child(1) { animation-delay: 0.05s; }
+.hero-item:nth-child(2) { animation-delay: 0.15s; }
+.hero-item:nth-child(3) { animation-delay: 0.25s; }
+.hero-item:nth-child(4) { animation-delay: 0.35s; }
+.hero-item:nth-child(5) { animation-delay: 0.45s; }
+
+.screen-in { opacity: 0; animation: screenIn 1s var(--spring) 0.3s forwards; }
+.float-card { animation: float 4s ease-in-out infinite; }
+.float-card-alt { animation: floatAlt 5s ease-in-out 0.8s infinite; }
+
+/* Scroll reveal */
+.reveal {
+  opacity: 0;
+  transform: translateY(32px);
+  transition: opacity 0.7s var(--spring), transform 0.7s var(--spring);
+}
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+.reveal-delay-1 { transition-delay: 0.1s; }
+.reveal-delay-2 { transition-delay: 0.2s; }
+.reveal-delay-3 { transition-delay: 0.3s; }
+.reveal-delay-4 { transition-delay: 0.4s; }
+
+/* Nav */
 nav {
   position: fixed;
-  top: 0; left: 0; right: 0;
-  z-index: 300;
-  padding: 0 48px;
-  height: 60px;
-  display: flex; align-items: center; justify-content: space-between;
-  transition: background 0.4s, border-color 0.4s;
-  border-bottom: 1px solid transparent;
+  top: 20px;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
 }
-nav.scrolled {
-  background: rgba(0,0,0,0.82);
-  backdrop-filter: blur(24px) saturate(180%);
-  border-color: var(--border);
+.nav-inner {
+  pointer-events: all;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px 10px 18px;
+  background: rgba(255,255,255,0.05);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255,255,255,0.10);
+  border-radius: 20px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.06);
 }
 .nav-logo {
-  display: flex; align-items: center; gap: 9px;
-  font-size: 17px; font-weight: 700;
-  color: white; text-decoration: none; letter-spacing: -0.02em;
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--ink);
+  letter-spacing: -0.5px;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
-.nav-logo-mark {
-  width: 32px; height: 32px;
+.nav-logo-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
   background: var(--g);
-  border-radius: 8px;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 13px; font-weight: 800; color: white;
-  letter-spacing: -0.03em;
+  box-shadow: 0 0 8px var(--g);
 }
-.nav-cta {
-  background: white; color: #000;
-  border: none; border-radius: 100px;
-  padding: 9px 20px;
-  font-size: 13px; font-weight: 700;
-  cursor: pointer; text-decoration: none;
-  font-family: inherit;
-  transition: opacity 0.15s, transform 0.1s;
+.nav-divider {
+  width: 1px;
+  height: 20px;
+  background: var(--border);
+  margin: 0 4px;
 }
-.nav-cta:hover { opacity: 0.85; transform: translateY(-1px); }
+.nav-link {
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--ink-mid);
+  text-decoration: none;
+  padding: 6px 12px;
+  border-radius: 10px;
+  transition: color 0.2s var(--spring), background 0.2s var(--spring);
+}
+.nav-link:hover { color: var(--ink); background: rgba(255,255,255,0.06); }
 
-/* ── HERO ── */
-.hero {
-  min-height: 100svh;
-  display: flex; flex-direction: column;
-  align-items: center; justify-content: center;
-  text-align: center;
-  padding: 140px 24px 100px;
-  position: relative;
+/* Buttons */
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 24px;
+  background: var(--g);
+  color: #fff;
+  font-family: 'Pretendard', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  border-radius: var(--radius-pill);
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  transition: transform 0.25s var(--spring), box-shadow 0.25s var(--spring);
+  box-shadow: 0 4px 24px rgba(29,185,122,0.35);
+}
+.btn-primary:hover {
+  transform: scale(1.02);
+  box-shadow: 0 8px 36px rgba(29,185,122,0.5);
+}
+.btn-primary:active { transform: scale(0.98); }
+.btn-arrow {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(0,0,0,0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 13px 22px;
+  background: transparent;
+  color: var(--ink-mid);
+  font-family: 'Pretendard', sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border-hi);
+  cursor: pointer;
+  text-decoration: none;
+  transition: color 0.25s var(--spring), border-color 0.25s var(--spring), transform 0.25s var(--spring);
+}
+.btn-ghost:hover { color: var(--ink); border-color: rgba(255,255,255,0.22); transform: scale(1.02); }
+.btn-ghost:active { transform: scale(0.98); }
+
+/* Double-bezel card */
+.bezel-outer {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.08);
+  padding: 5px;
+  border-radius: 22px;
+}
+.bezel-inner {
+  background: var(--surface);
+  border-radius: 18px;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
   overflow: hidden;
 }
-.hero-bg {
-  position: absolute; inset: 0; pointer-events: none;
-  background:
-    radial-gradient(ellipse 70% 50% at 50% -10%, rgba(29,185,122,0.18) 0%, transparent 65%),
-    radial-gradient(ellipse 40% 30% at 15% 90%, rgba(29,185,122,0.07) 0%, transparent 60%),
-    radial-gradient(ellipse 30% 20% at 85% 80%, rgba(29,185,122,0.05) 0%, transparent 60%);
+
+/* Feature cards */
+.feat-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 28px;
+  transition: border-color 0.3s var(--spring), transform 0.3s var(--spring);
 }
-/* subtle grid */
-.hero-bg::after {
-  content: '';
-  position: absolute; inset: 0;
-  background-image:
-    linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
-  background-size: 80px 80px;
-  mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 0%, transparent 75%);
+.feat-card:hover {
+  border-color: rgba(29,185,122,0.3);
+  transform: translateY(-2px);
 }
 
-.hero-tag {
-  display: inline-flex; align-items: center; gap: 6px;
-  font-size: 12px; font-weight: 600;
-  color: var(--g-dim);
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  margin-bottom: 28px;
+.feat-card-large {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 32px;
+  transition: border-color 0.3s var(--spring), transform 0.3s var(--spring);
+  grid-row: span 2;
 }
-.hero-tag-dot {
-  width: 5px; height: 5px;
-  background: var(--g);
+.feat-card-large:hover {
+  border-color: rgba(29,185,122,0.3);
+  transform: translateY(-2px);
+}
+
+/* Icon circle */
+.icon-ring {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  background: rgba(29,185,122,0.12);
+  border: 1px solid rgba(29,185,122,0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* Metric card */
+.metric-chip {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 14px 18px;
+  backdrop-filter: blur(12px);
+}
+
+/* Problem mockup */
+.mockup-panel {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  overflow: hidden;
+}
+.mockup-titlebar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface3);
+}
+.mockup-dot {
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
-  animation: blink 2.4s ease-in-out infinite;
-}
-@keyframes blink {
-  0%,100% { opacity:1; }
-  50% { opacity:0.25; }
 }
 
-.hero h1 {
-  font-size: clamp(44px, 6.5vw, 88px);
-  font-weight: 800;
-  line-height: 1.08;
-  letter-spacing: -0.045em;
-  color: white;
-  margin-bottom: 28px;
-  max-width: 880px;
+/* Testimonial */
+.testi-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 28px;
+  transition: border-color 0.3s var(--spring);
 }
-.hero h1 em {
-  font-style: normal;
-  background: linear-gradient(135deg, #1db97a 0%, #48dfa0 50%, #1db97a 100%);
-  background-size: 200% 200%;
+.testi-card:hover { border-color: rgba(29,185,122,0.2); }
+
+/* Step */
+.step-line {
+  position: absolute;
+  top: 20px;
+  left: calc(50% + 20px);
+  right: calc(-50% + 20px);
+  height: 1px;
+  background: linear-gradient(90deg, var(--g), rgba(29,185,122,0.2));
+}
+
+/* FAQ */
+.faq-item {
+  border-bottom: 1px solid var(--border);
+}
+.faq-trigger {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 22px 0;
+  background: none;
+  border: none;
+  color: var(--ink);
+  font-family: 'Pretendard', sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: left;
+  transition: color 0.2s;
+}
+.faq-trigger:hover { color: var(--g); }
+.faq-icon { flex-shrink: 0; transition: transform 0.3s var(--spring); }
+.faq-icon.open { transform: rotate(45deg); }
+.faq-body {
+  overflow: hidden;
+  max-height: 0;
+  transition: max-height 0.4s var(--spring), padding 0.3s var(--spring);
+}
+.faq-body.open { max-height: 200px; padding-bottom: 20px; }
+.faq-body p { font-size: 14.5px; line-height: 1.75; color: var(--ink-mid); }
+
+/* Metrics bar */
+.metrics-bar {
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+
+/* CTA glow */
+.cta-glow {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 60% 50% at 50% 100%, rgba(29,185,122,0.18) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+/* Gradient text */
+.grad-text {
+  background: linear-gradient(135deg, var(--g) 0%, #7fffc4 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  animation: shimmer 4s ease-in-out infinite;
-}
-@keyframes shimmer {
-  0%,100% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
 }
 
-.hero-desc {
-  font-size: clamp(15px, 1.4vw, 18px);
-  font-weight: 400;
-  color: var(--ink-dim);
-  line-height: 1.7;
-  margin-bottom: 52px;
-  max-width: 480px;
-  letter-spacing: -0.01em;
-}
-
-.hero-actions {
-  display: flex; gap: 12px; align-items: center; justify-content: center;
-  flex-wrap: wrap;
-}
-.btn-primary {
-  display: inline-flex; align-items: center; gap: 8px;
-  background: var(--g); color: white;
-  border: none; border-radius: 100px;
-  padding: 15px 28px; font-size: 15px; font-weight: 700;
-  cursor: pointer; text-decoration: none;
-  font-family: inherit;
-  transition: transform 0.15s, box-shadow 0.15s, background 0.15s;
-  letter-spacing: -0.01em;
-}
-.btn-primary:hover {
-  background: #22d48c;
-  transform: translateY(-2px);
-  box-shadow: 0 16px 40px rgba(29,185,122,0.4);
-}
-.btn-secondary {
-  display: inline-flex; align-items: center; gap: 7px;
-  background: rgba(255,255,255,0.06);
-  color: rgba(255,255,255,0.7); border: 1px solid var(--border);
-  border-radius: 100px; padding: 14px 24px;
-  font-size: 14px; font-weight: 500;
-  cursor: pointer; text-decoration: none;
-  font-family: inherit;
-  transition: background 0.15s, color 0.15s;
-  letter-spacing: -0.01em;
-}
-.btn-secondary:hover {
-  background: rgba(255,255,255,0.1);
-  color: white;
-}
-
-/* ── HERO SCREENSHOT ── */
-.hero-screen {
-  margin-top: 80px;
-  position: relative;
-  width: 100%; max-width: 1020px;
-  animation: floatUp 0.8s cubic-bezier(0.16,1,0.3,1) both;
-  animation-delay: 0.5s;
-}
-@keyframes floatUp {
-  from { opacity: 0; transform: translateY(40px) scale(0.98); }
-  to   { opacity: 1; transform: translateY(0) scale(1); }
-}
-/* glow under */
-.hero-screen::before {
-  content: '';
-  position: absolute; bottom: -40px; left: 50%;
-  transform: translateX(-50%);
-  width: 80%; height: 80px;
-  background: radial-gradient(ellipse, rgba(29,185,122,0.25) 0%, transparent 70%);
-  filter: blur(20px);
-  pointer-events: none;
-}
-.screen-frame {
-  border-radius: 16px;
-  overflow: hidden;
-  border: 1px solid rgba(255,255,255,0.1);
-  box-shadow:
-    0 0 0 1px rgba(255,255,255,0.04),
-    0 32px 80px rgba(0,0,0,0.7),
-    0 0 160px rgba(29,185,122,0.06);
-}
-.screen-bar {
-  background: #111;
-  padding: 11px 14px;
-  display: flex; align-items: center; gap: 10px;
-  border-bottom: 1px solid rgba(255,255,255,0.06);
-}
-.screen-dots { display: flex; gap: 5px; }
-.screen-dots span {
-  width: 10px; height: 10px; border-radius: 50%;
-}
-.screen-dots span:nth-child(1) { background: #ff5f57; }
-.screen-dots span:nth-child(2) { background: #febc2e; }
-.screen-dots span:nth-child(3) { background: #28c840; }
-.screen-url {
-  flex: 1; background: rgba(255,255,255,0.05);
-  border-radius: 5px; height: 22px;
-  display: flex; align-items: center; padding: 0 10px;
-  gap: 5px; font-size: 11px; color: rgba(255,255,255,0.3);
-  font-family: "SF Mono", monospace;
-}
-.screen-url-dot { width: 6px; height: 6px; background: #28c840; border-radius: 50%; flex-shrink: 0; }
-.screen-img {
-  display: block; width: 100%; height: auto;
-}
-
-/* ── SECTION BASE ── */
-.sec {
-  padding: 120px 48px;
-}
-.sec-inner { max-width: 1100px; margin: 0 auto; }
-
-.sec-tag {
-  font-size: 11px; font-weight: 700;
-  text-transform: uppercase; letter-spacing: 0.1em;
-  color: var(--g); margin-bottom: 16px;
-  display: block;
-}
-.sec-h2 {
-  font-size: clamp(32px, 4vw, 56px);
-  font-weight: 800; letter-spacing: -0.04em; line-height: 1.12;
-  margin-bottom: 20px; color: white;
-}
-.sec-desc {
-  font-size: 16px; line-height: 1.75; color: var(--ink-dim);
-  max-width: 500px; margin-bottom: 64px;
-  font-weight: 400; letter-spacing: -0.01em;
-}
-
-/* ── NUMBERS (STRIP) ── */
-.numbers-sec {
-  padding: 60px 48px;
-  border-top: 1px solid var(--border);
-  border-bottom: 1px solid var(--border);
-}
-.numbers-inner {
-  max-width: 1100px; margin: 0 auto;
-  display: grid; grid-template-columns: repeat(3, 1fr);
-  gap: 0;
-}
-.num-item {
-  padding: 0 40px;
-  border-right: 1px solid var(--border);
-}
-.num-item:first-child { padding-left: 0; }
-.num-item:last-child { border-right: none; }
-.num-val {
-  font-size: clamp(36px, 4vw, 52px);
-  font-weight: 800; letter-spacing: -0.04em;
-  color: white; line-height: 1;
-  margin-bottom: 8px;
-}
-.num-val span { color: var(--g); }
-.num-label { font-size: 14px; color: var(--ink-dim); font-weight: 400; letter-spacing: -0.01em; }
-
-/* ── PROBLEM ── */
-.problem-sec { background: var(--dark); }
-.problem-cards {
-  display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px;
-  background: var(--border);
-  border-radius: 20px; overflow: hidden;
-}
-.prob-card {
-  background: var(--dark2);
-  padding: 36px 32px 40px;
-  position: relative;
-  transition: background 0.2s;
-}
-.prob-card:hover { background: var(--dark3); }
-.prob-icon { font-size: 28px; margin-bottom: 20px; display: block; }
-.prob-card h3 {
-  font-size: 17px; font-weight: 700;
-  color: white; margin-bottom: 10px; letter-spacing: -0.02em;
-  line-height: 1.35;
-}
-.prob-card p { font-size: 14px; color: var(--ink-dim); line-height: 1.8; font-weight: 400; }
-
-/* ── SHOWCASE ── */
-.showcase-sec { background: var(--black); }
-.showcase-row {
-  display: grid; grid-template-columns: 1fr 1fr;
-  gap: 80px; align-items: center;
-  padding: 80px 0;
-  border-bottom: 1px solid var(--border);
-}
-.showcase-row:first-child { padding-top: 0; }
-.showcase-row:last-child { border-bottom: none; padding-bottom: 0; }
-.showcase-row.flip .showcase-visual { order: -1; }
-
-.showcase-copy .sec-tag { color: var(--g-dim); }
-.showcase-copy h2 {
-  font-size: clamp(28px, 3vw, 42px); font-weight: 800;
-  letter-spacing: -0.035em; line-height: 1.18;
-  color: white; margin-bottom: 16px;
-}
-.showcase-copy p {
-  font-size: 15px; color: var(--ink-dim); line-height: 1.85;
-  margin-bottom: 8px; font-weight: 400; letter-spacing: -0.01em;
-}
-.showcase-points { list-style: none; margin-top: 24px; display: grid; gap: 11px; }
-.showcase-points li {
-  display: flex; gap: 10px; align-items: flex-start;
-  font-size: 14px; color: rgba(255,255,255,0.7); line-height: 1.5;
-  font-weight: 400;
-}
-.showcase-points li::before {
-  content: '';
-  width: 18px; height: 18px; border-radius: 50%;
-  background: rgba(29,185,122,0.15); flex-shrink: 0; margin-top: 1px;
-  border: 1px solid rgba(29,185,122,0.3);
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%231db97a' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'/%3E%3C/svg%3E");
-  background-size: 10px; background-position: center; background-repeat: no-repeat;
-}
-
-/* ── DARK PANEL (showcase visuals) ── */
-.dark-panel {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 18px;
-  overflow: hidden;
-  box-shadow: 0 24px 80px rgba(0,0,0,0.5);
-}
-.dp-header {
-  padding: 16px 20px; border-bottom: 1px solid var(--border);
-  display: flex; justify-content: space-between; align-items: center;
-}
-.dp-title { font-size: 13px; font-weight: 700; color: white; letter-spacing: -0.01em; }
-.dp-badge {
-  font-size: 11px; font-weight: 600; color: var(--g);
-  background: rgba(29,185,122,0.12); border: 1px solid rgba(29,185,122,0.2);
-  padding: 3px 10px; border-radius: 6px;
-}
-.dp-kpi-grid {
-  display: grid; grid-template-columns: repeat(3, 1fr);
-  gap: 1px; background: var(--border);
-  border-bottom: 1px solid var(--border);
-}
-.dp-kpi-cell {
-  background: var(--card); padding: 14px 16px;
-}
-.dp-kpi-cell .lbl { font-size: 9px; color: rgba(255,255,255,0.3); margin-bottom: 5px; letter-spacing: 0.02em; }
-.dp-kpi-cell .val { font-size: 13px; font-weight: 700; color: var(--g); font-variant-numeric: tabular-nums; }
-.dp-kpi-cell .val.neg { color: #ff6b6b; }
-.dp-kpi-cell .val.white { color: rgba(255,255,255,0.85); }
-.dp-chart { padding: 16px 20px; border-bottom: 1px solid var(--border); }
-.dp-chart-title { font-size: 9px; font-weight: 600; color: rgba(255,255,255,0.3); margin-bottom: 8px; letter-spacing: 0.04em; text-transform: uppercase; }
-.dp-chart svg { width: 100%; height: 64px; }
-.dp-wf { padding: 16px 20px; }
-.dp-wf-row {
-  display: grid; grid-template-columns: 56px 1fr 90px;
-  gap: 10px; align-items: center; margin-bottom: 9px;
-}
-.dp-wf-row:last-child { margin-bottom: 0; }
-.dp-wf-lbl { font-size: 9px; color: rgba(255,255,255,0.35); }
-.dp-wf-track { height: 4px; background: rgba(255,255,255,0.07); border-radius: 2px; overflow: hidden; }
-.dp-wf-bar { height: 100%; border-radius: 2px; background: var(--g); }
-.dp-wf-val { font-size: 10px; font-weight: 700; text-align: right; color: var(--g); font-variant-numeric: tabular-nums; }
-.dp-wf-val.muted { color: rgba(255,255,255,0.3); }
-
-.dp-acc-row {
-  display: grid; grid-template-columns: 1fr auto auto;
-  gap: 14px; align-items: center;
-  padding: 13px 20px;
-  border-bottom: 1px solid rgba(255,255,255,0.04);
-}
-.dp-acc-row:last-child { border-bottom: none; }
-.dp-acc-name { font-size: 12px; font-weight: 700; color: white; letter-spacing: -0.01em; }
-.dp-acc-type { font-size: 9px; color: rgba(255,255,255,0.3); margin-top: 2px; }
-.dp-acc-amount { font-size: 12px; font-weight: 700; color: rgba(255,255,255,0.8); font-variant-numeric: tabular-nums; }
-.dp-acc-pct {
-  font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 5px;
-  font-variant-numeric: tabular-nums;
-}
-.dp-acc-pct.pos { background: rgba(29,185,122,0.12); color: var(--g); }
-.dp-acc-pct.neg { background: rgba(255,107,107,0.12); color: #ff6b6b; }
-
-/* ── FEATURES GRID ── */
-.features-sec { background: var(--dark); }
-.features-grid {
-  display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px;
-  background: var(--border);
-  border-radius: 20px; overflow: hidden;
-}
-.feat-card {
-  background: var(--dark2);
-  padding: 36px 32px 40px;
-  transition: background 0.2s;
-}
-.feat-card:hover { background: var(--dark3); }
-.feat-icon {
-  width: 48px; height: 48px; border-radius: 14px;
-  background: rgba(29,185,122,0.1);
-  border: 1px solid rgba(29,185,122,0.2);
-  display: flex; align-items: center; justify-content: center;
-  margin-bottom: 24px;
-}
-.feat-icon svg { width: 22px; height: 22px; color: var(--g); }
-.feat-card h3 {
-  font-size: 17px; font-weight: 700;
-  color: white; margin-bottom: 10px; letter-spacing: -0.02em;
-}
-.feat-card p { font-size: 14px; color: var(--ink-dim); line-height: 1.8; font-weight: 400; }
-.feat-tag {
-  display: inline-block; margin-top: 16px;
-  font-size: 11px; font-weight: 600; color: var(--g);
-  background: rgba(29,185,122,0.1); padding: 4px 10px;
-  border-radius: 6px; letter-spacing: 0.01em;
-}
-
-/* ── HOW IT WORKS ── */
-.steps-sec { background: var(--black); }
-.steps-row {
-  display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px;
-  background: var(--border); border-radius: 20px; overflow: hidden;
-}
-.step-card {
-  background: var(--dark);
-  padding: 40px 32px 44px;
-  position: relative;
-}
-.step-num {
-  font-size: 11px; font-weight: 700; letter-spacing: 0.08em;
-  color: var(--g); text-transform: uppercase; margin-bottom: 20px;
-  display: block;
-}
-.step-card h3 {
-  font-size: 20px; font-weight: 700;
-  color: white; margin-bottom: 12px; letter-spacing: -0.025em;
-}
-.step-card p { font-size: 14px; color: var(--ink-dim); line-height: 1.8; font-weight: 400; }
-
-/* ── FAQ ── */
-.faq-sec { background: var(--dark); }
-.faq-wrap { max-width: 720px; margin: 0 auto; }
-.faq-list {
-  border: 1px solid var(--border);
-  border-radius: 18px; overflow: hidden;
-}
-.faq-item { border-bottom: 1px solid rgba(255,255,255,0.06); }
-.faq-item:last-child { border-bottom: none; }
-.faq-q {
-  width: 100%; background: none; border: none;
-  padding: 22px 28px; text-align: left;
-  font-size: 15px; font-weight: 600; color: rgba(255,255,255,0.85);
-  cursor: pointer; display: flex;
-  justify-content: space-between; align-items: center; gap: 16px;
-  transition: color 0.15s;
-  font-family: inherit; letter-spacing: -0.015em;
-}
-.faq-q:hover { color: white; }
-.faq-icon { width: 20px; height: 20px; color: rgba(255,255,255,0.25); flex-shrink: 0; transition: transform 0.25s, color 0.15s; }
-.faq-item.open .faq-icon { transform: rotate(45deg); color: var(--g); }
-.faq-item.open .faq-q { color: white; }
-.faq-a {
-  max-height: 0; overflow: hidden;
-  transition: max-height 0.35s cubic-bezier(0.16,1,0.3,1), padding 0.35s;
-  padding: 0 28px;
-  font-size: 14px; color: var(--ink-dim); line-height: 1.85; font-weight: 400;
-}
-.faq-item.open .faq-a {
-  max-height: 300px;
-  padding: 0 28px 22px;
-}
-
-/* ── FINAL CTA ── */
-.cta-sec {
-  background: var(--black);
-  padding: 160px 48px;
-  text-align: center;
-  position: relative; overflow: hidden;
-}
-.cta-sec::before {
-  content: '';
-  position: absolute; inset: 0;
-  background: radial-gradient(ellipse 60% 60% at 50% 50%, rgba(29,185,122,0.12) 0%, transparent 70%);
-  pointer-events: none;
-}
-.cta-sec h2 {
-  font-size: clamp(40px, 6vw, 76px);
-  font-weight: 800; letter-spacing: -0.045em; line-height: 1.08;
-  color: white; margin-bottom: 24px; position: relative;
-}
-.cta-sec p {
-  font-size: 17px; color: var(--ink-dim); margin-bottom: 52px;
-  line-height: 1.7; position: relative; font-weight: 400;
-}
-.cta-footnote {
-  margin-top: 20px; font-size: 12px;
-  color: rgba(255,255,255,0.2); position: relative;
-  letter-spacing: 0.01em;
-}
-
-/* ── FOOTER ── */
-footer {
-  background: #050505;
-  border-top: 1px solid var(--border);
-  padding: 28px 48px;
-}
-.footer-inner {
-  max-width: 1100px; margin: 0 auto;
-  display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;
-}
-.footer-logo { font-size: 15px; font-weight: 700; color: rgba(255,255,255,0.4); letter-spacing: -0.02em; }
-.footer-note { font-size: 12px; color: rgba(255,255,255,0.18); letter-spacing: -0.01em; }
-
-/* ── RESPONSIVE ── */
-@media (max-width: 960px) {
-  nav { padding: 0 24px; }
-  .sec { padding: 80px 24px; }
-  .numbers-sec { padding: 44px 24px; }
-  .numbers-inner { grid-template-columns: 1fr; gap: 32px; }
-  .num-item { padding: 0; border-right: none; border-bottom: 1px solid var(--border); padding-bottom: 28px; }
-  .num-item:last-child { border-bottom: none; padding-bottom: 0; }
-  .problem-cards, .features-grid { grid-template-columns: 1fr; }
-  .steps-row { grid-template-columns: 1fr; }
-  .showcase-row { grid-template-columns: 1fr; gap: 40px; }
-  .showcase-row.flip .showcase-visual { order: 0; }
-  .cta-sec { padding: 100px 24px; }
-  footer { padding: 24px; }
-}
-@media (max-width: 600px) {
-  .hero h1 { font-size: 40px; letter-spacing: -0.04em; }
-  .hero-actions { flex-direction: column; width: 100%; max-width: 320px; margin: 0 auto; }
-  .btn-primary, .btn-secondary { width: 100%; justify-content: center; }
-  .hero-screen { margin-top: 56px; }
-  .dp-kpi-grid { grid-template-columns: repeat(2, 1fr); }
-}
-
-/* ── ANIMATIONS ── */
-@keyframes fadeUp {
-  from { opacity: 0; transform: translateY(28px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-.hero-tag { animation: fadeUp 0.5s cubic-bezier(0.16,1,0.3,1) both; animation-delay: 0.05s; }
-.hero h1  { animation: fadeUp 0.6s cubic-bezier(0.16,1,0.3,1) both; animation-delay: 0.15s; }
-.hero-desc { animation: fadeUp 0.6s cubic-bezier(0.16,1,0.3,1) both; animation-delay: 0.25s; }
-.hero-actions { animation: fadeUp 0.6s cubic-bezier(0.16,1,0.3,1) both; animation-delay: 0.34s; }
-
-.reveal {
-  opacity: 0; transform: translateY(22px);
-  transition: opacity 0.6s cubic-bezier(0.16,1,0.3,1), transform 0.6s cubic-bezier(0.16,1,0.3,1);
-}
-.reveal.visible { opacity: 1; transform: translateY(0); }
-.reveal-delay-1 { transition-delay: 0.08s; }
-.reveal-delay-2 { transition-delay: 0.16s; }
-.reveal-delay-3 { transition-delay: 0.24s; }
-.reveal-delay-4 { transition-delay: 0.32s; }
-.reveal-delay-5 { transition-delay: 0.40s; }
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
 </style>
 </head>
 <body>
 
-<!-- NAV -->
-<nav id="nav">
-  <a href="/" class="nav-logo">
-    <div class="nav-logo-mark">St</div>
-    Stocklio
-  </a>
-  <a href="/" class="nav-cta">시작하기</a>
+<!-- ===================== FLOATING NAV ===================== -->
+<nav aria-label="메인 내비게이션">
+  <div class="nav-inner">
+    <a href="#" class="nav-logo">
+      <div class="nav-logo-dot"></div>
+      Stocklio
+    </a>
+    <div class="nav-divider"></div>
+    <a href="#features" class="nav-link">기능</a>
+    <a href="#faq" class="nav-link">FAQ</a>
+    <div class="nav-divider"></div>
+    <a href="#cta" class="btn-primary" style="padding: 8px 16px; font-size: 13.5px; box-shadow: 0 2px 12px rgba(29,185,122,0.3);">
+      무료로 시작하기
+      <div class="btn-arrow" style="width: 22px; height: 22px;">
+        <iconify-icon icon="solar:arrow-right-bold" style="font-size:12px;"></iconify-icon>
+      </div>
+    </a>
+  </div>
 </nav>
 
-<!-- HERO -->
-<section class="hero">
-  <div class="hero-bg"></div>
+<!-- ===================== HERO ===================== -->
+<section style="min-height: 100dvh; display: flex; align-items: center; padding: 100px 0 60px; position: relative; overflow: hidden;">
+  <!-- Background radial glow -->
+  <div style="position: absolute; top: -20%; right: -10%; width: 60%; height: 80%; background: radial-gradient(ellipse at center, rgba(29,185,122,0.07) 0%, transparent 65%); pointer-events: none;"></div>
+  <div style="position: absolute; bottom: 0; left: -10%; width: 50%; height: 60%; background: radial-gradient(ellipse at center, rgba(29,185,122,0.04) 0%, transparent 65%); pointer-events: none;"></div>
 
-  <div class="hero-tag">
-    <div class="hero-tag-dot"></div>
-    Portfolio Tracker
-  </div>
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" style="width: 100%;">
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center;" class="hero-grid">
 
-  <h1>내 투자의<br><em>진짜 수익</em>을<br>확인하세요</h1>
+      <!-- LEFT: Text -->
+      <div style="display: flex; flex-direction: column; gap: 24px;">
+        <!-- Eyebrow -->
+        <div class="hero-item" style="display: inline-flex; align-items: center; gap: 8px; padding: 6px 14px; background: rgba(29,185,122,0.1); border: 1px solid rgba(29,185,122,0.25); border-radius: 99px; width: fit-content;">
+          <div style="width: 6px; height: 6px; border-radius: 50%; background: var(--g); position: relative;">
+            <div style="position: absolute; inset: -3px; border-radius: 50%; background: var(--g); animation: pulse-ring 2s ease-out infinite;"></div>
+          </div>
+          <span style="font-size: 12.5px; font-weight: 600; color: var(--g); letter-spacing: 0.03em;">투자 손익 분석 도구</span>
+        </div>
 
-  <p class="hero-desc">
-    입출금을 보정한 정확한 투자손익.<br>
-    다계좌 통합, IRP·연금까지 한 화면에.
-  </p>
+        <!-- H1 -->
+        <div class="hero-item">
+          <h1 style="font-size: clamp(36px, 4.5vw, 58px); font-weight: 900; line-height: 1.12; letter-spacing: -0.03em; color: var(--ink);">
+            입출금을 빼야<br>
+            <em style="font-style: normal;" class="grad-text">진짜 수익</em>이<br>
+            보입니다
+          </h1>
+        </div>
 
-  <div class="hero-actions">
-    <a href="/" class="btn-primary">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="13 17 18 12 13 7"/><polyline points="6 17 11 12 6 7"/></svg>
-      지금 시작하기
-    </a>
-    <a href="#showcase" class="btn-secondary">
-      화면 살펴보기
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
-    </a>
-  </div>
+        <!-- Description -->
+        <div class="hero-item">
+          <p style="font-size: 17px; line-height: 1.75; color: var(--ink-mid); max-width: 440px;">
+            단순 평가액 변동이 아닌 <strong style="color: var(--ink); font-weight: 600;">입출금 보정 수익률</strong>로 투자 성과를 측정하세요.
+            IRP·연금·다계좌를 한 화면에서, Yahoo Finance 실시간 시세로.
+          </p>
+        </div>
 
-  <div class="hero-screen">
-    <div class="screen-frame">
-      <div class="screen-bar">
-        <div class="screen-dots"><span></span><span></span><span></span></div>
-        <div class="screen-url">
-          <div class="screen-url-dot"></div>
-          stocklio.vercel.app
+        <!-- CTAs -->
+        <div class="hero-item" style="display: flex; gap: 12px; flex-wrap: wrap;">
+          <a href="#cta" class="btn-primary">
+            무료로 시작하기
+            <div class="btn-arrow">
+              <iconify-icon icon="solar:arrow-right-bold" style="font-size:13px;"></iconify-icon>
+            </div>
+          </a>
+          <a href="#features" class="btn-ghost">
+            <iconify-icon icon="solar:play-circle-bold-duotone" style="font-size:18px; color: var(--g);"></iconify-icon>
+            기능 살펴보기
+          </a>
+        </div>
+
+        <!-- Social proof -->
+        <div class="hero-item" style="display: flex; align-items: center; gap: 14px;">
+          <div style="display: flex;">
+            <img src="https://i.pravatar.cc/36?u=hayun" alt="" width="36" height="36" style="border-radius: 50%; border: 2px solid var(--bg); margin-right: -10px; object-fit: cover;">
+            <img src="https://i.pravatar.cc/36?u=parkdo" alt="" width="36" height="36" style="border-radius: 50%; border: 2px solid var(--bg); margin-right: -10px; object-fit: cover;">
+            <img src="https://i.pravatar.cc/36?u=leeseo" alt="" width="36" height="36" style="border-radius: 50%; border: 2px solid var(--bg); margin-right: -10px; object-fit: cover;">
+            <img src="https://i.pravatar.cc/36?u=jungmin" alt="" width="36" height="36" style="border-radius: 50%; border: 2px solid var(--bg); object-fit: cover;">
+          </div>
+          <div>
+            <div style="display: flex; align-items: center; gap: 4px; margin-bottom: 2px;">
+              <iconify-icon icon="solar:star-bold" style="font-size:13px; color: #f5a623;"></iconify-icon>
+              <iconify-icon icon="solar:star-bold" style="font-size:13px; color: #f5a623;"></iconify-icon>
+              <iconify-icon icon="solar:star-bold" style="font-size:13px; color: #f5a623;"></iconify-icon>
+              <iconify-icon icon="solar:star-bold" style="font-size:13px; color: #f5a623;"></iconify-icon>
+              <iconify-icon icon="solar:star-bold" style="font-size:13px; color: #f5a623;"></iconify-icon>
+              <span style="font-size: 12.5px; font-weight: 700; color: var(--ink); margin-left: 4px;">4.87</span>
+            </div>
+            <p style="font-size: 12px; color: var(--ink-faint);">2,847명이 사용 중</p>
+          </div>
         </div>
       </div>
-      <img src="/screenshot-dashboard.png" alt="Stocklio 대시보드" class="screen-img">
+
+      <!-- RIGHT: App screenshot -->
+      <div style="position: relative; display: flex; justify-content: center;" class="screen-in">
+        <!-- Double-bezel frame -->
+        <div class="bezel-outer" style="width: 100%; max-width: 560px; box-shadow: 0 40px 120px rgba(0,0,0,0.7), 0 0 0 1px rgba(29,185,122,0.08);">
+          <div class="bezel-inner">
+            <img
+              src="screenshot-dashboard.png"
+              alt="Stocklio 대시보드 화면"
+              style="width: 100%; display: block; height: auto;"
+              loading="eager"
+              decoding="sync"
+            >
+          </div>
+        </div>
+
+        <!-- Floating metric card 1 -->
+        <div class="metric-chip float-card" style="position: absolute; top: 12%; left: -8%; box-shadow: 0 16px 40px rgba(0,0,0,0.5);">
+          <div style="font-size: 11px; color: var(--ink-faint); margin-bottom: 4px; font-weight: 500;">이번 달 수익</div>
+          <div style="font-size: 22px; font-weight: 800; color: var(--g); letter-spacing: -0.03em;">+12.4%</div>
+          <div style="font-size: 11px; color: var(--ink-faint); margin-top: 2px;">+₩1,247,300</div>
+        </div>
+
+        <!-- Floating metric card 2 -->
+        <div class="metric-chip float-card-alt" style="position: absolute; bottom: 12%; right: -6%; box-shadow: 0 16px 40px rgba(0,0,0,0.5);">
+          <div style="font-size: 11px; color: var(--ink-faint); margin-bottom: 4px; font-weight: 500;">입출금 보정 수익률</div>
+          <div style="font-size: 22px; font-weight: 800; color: var(--ink); letter-spacing: -0.03em;">8.73%</div>
+          <div style="display: flex; align-items: center; gap: 4px; margin-top: 4px;">
+            <div style="width: 6px; height: 6px; border-radius: 50%; background: var(--g);"></div>
+            <span style="font-size: 11px; color: var(--ink-faint);">vs 단순 수익률 +31.2%</span>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </section>
 
-<!-- NUMBERS -->
-<div class="numbers-sec reveal">
-  <div class="numbers-inner">
-    <div class="num-item reveal reveal-delay-1">
-      <div class="num-val"><span>5</span>가지</div>
-      <div class="num-label">탭으로 포트폴리오 전체 파악</div>
-    </div>
-    <div class="num-item reveal reveal-delay-2">
-      <div class="num-val">실시간</div>
-      <div class="num-label">Yahoo Finance 가격 자동 갱신</div>
-    </div>
-    <div class="num-item reveal reveal-delay-3">
-      <div class="num-val"><span>매일</span></div>
-      <div class="num-label">자동 스냅샷으로 쌓이는 성과 이력</div>
-    </div>
-  </div>
-</div>
+<!-- ===================== METRICS BAR ===================== -->
+<div class="metrics-bar reveal" style="padding: 0;">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div style="display: flex; align-items: stretch; justify-content: center; flex-wrap: wrap;">
 
-<!-- PROBLEM -->
-<div class="sec problem-sec">
-  <div class="sec-inner">
-    <span class="sec-tag reveal">왜 만들었나요</span>
-    <h2 class="sec-h2 reveal">엑셀로는<br>진짜 수익을 모릅니다</h2>
-    <p class="sec-desc reveal">투자자라면 누구나 겪는 세 가지 불편함.</p>
-    <div class="problem-cards">
-      <div class="prob-card reveal reveal-delay-1">
-        <span class="prob-icon">📊</span>
-        <h3>수익인지 원금인지<br>구분이 안 돼요</h3>
-        <p>추가 입금 후 평가금액이 늘었는데 투자를 잘 한 건지 그냥 돈을 넣은 건지 알 수가 없어요.</p>
+      <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 28px 48px; border-right: 1px solid var(--border);">
+        <div style="font-size: 32px; font-weight: 900; letter-spacing: -0.04em; color: var(--ink);">43개</div>
+        <div style="font-size: 13px; color: var(--ink-mid); margin-top: 4px; font-weight: 500;">지원 계좌 유형</div>
       </div>
-      <div class="prob-card reveal reveal-delay-2">
-        <span class="prob-icon">🗂️</span>
-        <h3>계좌가 흩어져<br>한눈에 안 보여요</h3>
-        <p>미래에셋, 토스, 퇴직연금까지. 전체 자산을 보려면 앱을 4개씩 열어야 합니다.</p>
+
+      <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 28px 48px; border-right: 1px solid var(--border);">
+        <div style="font-size: 32px; font-weight: 900; letter-spacing: -0.04em; color: var(--ink);">4.87<span style="font-size: 16px; font-weight: 600; color: var(--ink-mid);">/5.0</span></div>
+        <div style="font-size: 13px; color: var(--ink-mid); margin-top: 4px; font-weight: 500;">평균 사용자 평점</div>
       </div>
-      <div class="prob-card reveal reveal-delay-3">
-        <span class="prob-icon">⏱️</span>
-        <h3>매달 수기 정리에<br>지쳤어요</h3>
-        <p>엑셀 수식 관리하다 보면 정작 투자 판단에 쓸 시간이 없습니다. 데���터가 쌓일수록 더 복잡해지고요.</p>
+
+      <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 28px 48px;">
+        <div style="font-size: 32px; font-weight: 900; letter-spacing: -0.04em;">
+          <span style="color: var(--g);">0</span><span style="color: var(--ink);">원</span>
+        </div>
+        <div style="font-size: 13px; color: var(--ink-mid); margin-top: 4px; font-weight: 500;">완전 무료, 숨겨진 비용 없음</div>
       </div>
     </div>
   </div>
 </div>
 
-<!-- SHOWCASE -->
-<div class="sec showcase-sec" id="showcase">
-  <div class="sec-inner">
+<!-- ===================== PROBLEM ZIG-ZAG ===================== -->
+<section style="padding: 100px 0;">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
-    <div class="showcase-row">
-      <div class="showcase-copy">
-        <span class="sec-tag reveal">성과 분석</span>
-        <h2 class="reveal">입출금 빼고 나서<br>남은 게 진짜 수익</h2>
-        <p class="reveal">추가 입금으로 총자산이 늘어도, 현금흐름을 정확히 제거해 순수 투자손익만 계산합니다.</p>
-        <ul class="showcase-points reveal">
-          <li>총 증감 = 입출금 + 투자손익 분리</li>
-          <li>전체·올해·30일·7일 기간별 수익률</li>
-          <li>최대 낙폭(MDD)과 월별 누적 성과</li>
-          <li>CSV 내보내기</li>
-        </ul>
+    <!-- Section label -->
+    <div class="reveal" style="text-align: center; margin-bottom: 64px;">
+      <div style="display: inline-flex; align-items: center; gap: 8px; padding: 5px 14px; background: rgba(255,255,255,0.04); border: 1px solid var(--border); border-radius: 99px; margin-bottom: 16px;">
+        <iconify-icon icon="solar:danger-triangle-bold-duotone" style="font-size:14px; color: #f5a623;"></iconify-icon>
+        <span style="font-size: 12px; font-weight: 600; color: var(--ink-mid); letter-spacing: 0.04em; text-transform: uppercase;">문제 인식</span>
       </div>
-      <div class="showcase-visual reveal">
-        <div class="dark-panel">
-          <div class="dp-header">
-            <div class="dp-title">성과 분석</div>
-            <div class="dp-badge">전체 기간</div>
+      <h2 style="font-size: clamp(28px, 3.5vw, 42px); font-weight: 900; letter-spacing: -0.03em; line-height: 1.2;">혹시 지금도 이렇게 하고 계신가요?</h2>
+    </div>
+
+    <!-- Row 1: visual LEFT, text RIGHT -->
+    <div class="reveal" style="display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center; margin-bottom: 80px;" class="prob-row">
+      <!-- Mockup -->
+      <div class="mockup-panel">
+        <div class="mockup-titlebar">
+          <div class="mockup-dot" style="background: #ff5f57;"></div>
+          <div class="mockup-dot" style="background: #febc2e;"></div>
+          <div class="mockup-dot" style="background: #28c840;"></div>
+          <span style="margin-left: 8px; font-size: 12px; color: var(--ink-faint);">포트폴리오_최종_수정3.xlsx</span>
+        </div>
+        <div style="padding: 20px;">
+          <!-- Fake spreadsheet rows -->
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: 6px; overflow: hidden; font-size: 12px;">
+            <div style="background: var(--surface3); padding: 8px 10px; font-weight: 700; color: var(--ink-faint);">날짜</div>
+            <div style="background: var(--surface3); padding: 8px 10px; font-weight: 700; color: var(--ink-faint);">입금</div>
+            <div style="background: var(--surface3); padding: 8px 10px; font-weight: 700; color: var(--ink-faint);">출금</div>
+            <div style="background: var(--surface3); padding: 8px 10px; font-weight: 700; color: var(--ink-faint);">평가액</div>
+
+            <div style="background: var(--surface2); padding: 8px 10px; color: var(--ink-mid);">01-03</div>
+            <div style="background: var(--surface2); padding: 8px 10px; color: #4ade80;">+500만</div>
+            <div style="background: var(--surface2); padding: 8px 10px; color: var(--ink-faint);">—</div>
+            <div style="background: var(--surface2); padding: 8px 10px; color: var(--ink-mid);">500만</div>
+
+            <div style="background: var(--surface2); padding: 8px 10px; color: var(--ink-mid);">03-15</div>
+            <div style="background: var(--surface2); padding: 8px 10px; color: #4ade80;">+200만</div>
+            <div style="background: var(--surface2); padding: 8px 10px; color: var(--ink-faint);">—</div>
+            <div style="background: var(--surface2); padding: 8px 10px; color: var(--ink-mid);">740만</div>
+
+            <div style="background: var(--surface2); padding: 8px 10px; color: var(--ink-mid);">05-22</div>
+            <div style="background: var(--surface2); padding: 8px 10px; color: var(--ink-faint);">—</div>
+            <div style="background: var(--surface2); padding: 8px 10px; color: #f87171;">-100만</div>
+            <div style="background: var(--surface2); padding: 8px 10px; color: var(--ink-mid);">660만</div>
+
+            <div style="background: rgba(245,166,35,0.08); padding: 8px 10px; color: var(--ink-mid); border-top: 1px solid rgba(245,166,35,0.2);">현재</div>
+            <div style="background: rgba(245,166,35,0.08); padding: 8px 10px; color: var(--ink-faint); border-top: 1px solid rgba(245,166,35,0.2);">???</div>
+            <div style="background: rgba(245,166,35,0.08); padding: 8px 10px; color: var(--ink-faint); border-top: 1px solid rgba(245,166,35,0.2);">???</div>
+            <div style="background: rgba(245,166,35,0.08); padding: 8px 10px; font-weight: 700; color: #f5a623; border-top: 1px solid rgba(245,166,35,0.2);">800만?</div>
           </div>
-          <div class="dp-kpi-grid">
-            <div class="dp-kpi-cell"><div class="lbl">최근 총자산</div><div class="val white">₩1.18억</div></div>
-            <div class="dp-kpi-cell"><div class="lbl">기간 증감</div><div class="val">+₩2,636만</div></div>
-            <div class="dp-kpi-cell"><div class="lbl">입출금</div><div class="val white">₩0</div></div>
-            <div class="dp-kpi-cell"><div class="lbl">투자손익</div><div class="val">+₩2,636만</div></div>
-            <div class="dp-kpi-cell"><div class="lbl">월 누적</div><div class="val">+₩1,097만</div></div>
-            <div class="dp-kpi-cell"><div class="lbl">최대 낙폭</div><div class="val neg">-₩3,624만</div></div>
+          <div style="margin-top: 14px; padding: 12px 14px; background: rgba(245,166,35,0.08); border: 1px solid rgba(245,166,35,0.15); border-radius: 10px; display: flex; align-items: center; gap: 8px;">
+            <iconify-icon icon="solar:danger-triangle-bold-duotone" style="font-size:16px; color: #f5a623;"></iconify-icon>
+            <span style="font-size: 12px; color: #f5a623; font-weight: 500;">입출금 미반영 → 수익률 계산 불가</span>
           </div>
-          <div class="dp-chart">
-            <div class="dp-chart-title">총자산 추세</div>
-            <svg viewBox="0 0 300 64" preserveAspectRatio="none">
-              <defs>
-                <linearGradient id="g1" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stop-color="#1db97a" stop-opacity="0.18"/>
-                  <stop offset="100%" stop-color="#1db97a" stop-opacity="0"/>
-                </linearGradient>
-              </defs>
-              <polygon fill="url(#g1)" points="0,64 0,52 30,48 60,44 90,40 120,38 150,30 180,24 210,18 240,12 270,8 300,4 300,64"/>
-              <polyline fill="none" stroke="#1db97a" stroke-width="1.5" stroke-linecap="round"
-                points="0,52 30,48 60,44 90,40 120,38 150,30 180,24 210,18 240,12 270,8 300,4"/>
-            </svg>
+        </div>
+      </div>
+
+      <!-- Text -->
+      <div>
+        <div style="font-size: 13px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--g); margin-bottom: 16px;">문제 1</div>
+        <h3 style="font-size: clamp(22px, 2.5vw, 30px); font-weight: 800; letter-spacing: -0.02em; line-height: 1.3; margin-bottom: 16px;">
+          스프레드시트는<br>입출금을 모릅니다
+        </h3>
+        <p style="font-size: 15.5px; line-height: 1.8; color: var(--ink-mid); margin-bottom: 24px;">
+          평가액이 늘었다고 수익이 난 게 아닙니다. 그 사이 입금했을 수도 있고, 출금했을 수도 있습니다.
+          입출금을 빼지 않으면 진짜 투자 성과를 알 수 없습니다.
+        </p>
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <iconify-icon icon="solar:close-circle-bold" style="font-size:16px; color: #f87171; flex-shrink: 0;"></iconify-icon>
+            <span style="font-size: 14px; color: var(--ink-mid);">수동 입력 누락으로 계산 오류</span>
           </div>
-          <div class="dp-wf">
-            <div class="dp-wf-row"><div class="dp-wf-lbl">총 증감</div><div class="dp-wf-track"><div class="dp-wf-bar" style="width:100%"></div></div><div class="dp-wf-val">+₩2,636만</div></div>
-            <div class="dp-wf-row"><div class="dp-wf-lbl">입출금</div><div class="dp-wf-track"><div class="dp-wf-bar" style="width:2%;background:rgba(255,255,255,0.15)"></div></div><div class="dp-wf-val muted">₩0</div></div>
-            <div class="dp-wf-row"><div class="dp-wf-lbl">투자손익</div><div class="dp-wf-track"><div class="dp-wf-bar" style="width:100%"></div></div><div class="dp-wf-val">+₩2,636만</div></div>
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <iconify-icon icon="solar:close-circle-bold" style="font-size:16px; color: #f87171; flex-shrink: 0;"></iconify-icon>
+            <span style="font-size: 14px; color: var(--ink-mid);">시세 업데이트를 매번 직접 해야 함</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <iconify-icon icon="solar:close-circle-bold" style="font-size:16px; color: #f87171; flex-shrink: 0;"></iconify-icon>
+            <span style="font-size: 14px; color: var(--ink-mid);">파일 버전 관리가 지옥</span>
           </div>
         </div>
       </div>
     </div>
 
-    <div class="showcase-row flip">
-      <div class="showcase-copy">
-        <span class="sec-tag reveal">다계좌 통합</span>
-        <h2 class="reveal">흩어진 계좌를<br>한 화면에서</h2>
-        <p class="reveal">미래에셋, 토스, 삼성증권에 퇴직연금까지. 모든 계좌를 등록해 통합 자산을 봅니다.</p>
-        <ul class="showcase-points reveal">
-          <li>계좌별 총액·일 증감·수익률 비교</li>
-          <li>IRP · DC형 퇴직연금 별도 추적</li>
-          <li>투자자 단위로 계좌 그룹 관리</li>
-          <li>계좌 유형별 비중 분석</li>
-        </ul>
-      </div>
-      <div class="showcase-visual reveal">
-        <div class="dark-panel">
-          <div class="dp-header">
-            <div class="dp-title">계좌별 기여</div>
-            <div class="dp-badge">최근 기록</div>
+    <!-- Row 2: text LEFT, visual RIGHT -->
+    <div class="reveal" style="display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center;" class="prob-row-2">
+      <!-- Text -->
+      <div>
+        <div style="font-size: 13px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--g); margin-bottom: 16px;">문제 2</div>
+        <h3 style="font-size: clamp(22px, 2.5vw, 30px); font-weight: 800; letter-spacing: -0.02em; line-height: 1.3; margin-bottom: 16px;">
+          계좌가 흩어져<br>전체 그림이 안 보입니다
+        </h3>
+        <p style="font-size: 15.5px; line-height: 1.8; color: var(--ink-mid); margin-bottom: 24px;">
+          증권사 앱, IRP, 연금저축, 해외 ETF까지. 각 앱을 돌아다니며 더하고 또 더하다 보면
+          어느 계좌가 얼마나 벌고 있는지 감을 잡을 수가 없습니다.
+        </p>
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <iconify-icon icon="solar:check-circle-bold" style="font-size:16px; color: var(--g); flex-shrink: 0;"></iconify-icon>
+            <span style="font-size: 14px; color: var(--ink-mid);">모든 계좌를 한 화면에서 통합 조회</span>
           </div>
-          <div class="dp-acc-row">
-            <div><div class="dp-acc-name">채리 · 미래에셋</div><div class="dp-acc-type">직접투자</div></div>
-            <div class="dp-acc-amount">₩5,831만</div>
-            <div class="dp-acc-pct pos">+31.2%</div>
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <iconify-icon icon="solar:check-circle-bold" style="font-size:16px; color: var(--g); flex-shrink: 0;"></iconify-icon>
+            <span style="font-size: 14px; color: var(--ink-mid);">IRP·연금저축 전용 수익률 분리 표시</span>
           </div>
-          <div class="dp-acc-row">
-            <div><div class="dp-acc-name">채리 · 삼성증권</div><div class="dp-acc-type">직접투자</div></div>
-            <div class="dp-acc-amount">₩1,908만</div>
-            <div class="dp-acc-pct pos">+18.4%</div>
-          </div>
-          <div class="dp-acc-row">
-            <div><div class="dp-acc-name">규철 · 토스</div><div class="dp-acc-type">직접투자</div></div>
-            <div class="dp-acc-amount">₩2,922만</div>
-            <div class="dp-acc-pct pos">+24.7%</div>
-          </div>
-          <div class="dp-acc-row">
-            <div><div class="dp-acc-name">규철 · 신한 퇴직연금</div><div class="dp-acc-type">IRP · 연금 계좌</div></div>
-            <div class="dp-acc-amount">₩481만</div>
-            <div class="dp-acc-pct neg">-1.2%</div>
-          </div>
-          <div class="dp-acc-row">
-            <div><div class="dp-acc-name">규철 · 미래에셋 연금저축</div><div class="dp-acc-type">DC형 · 연금 계좌</div></div>
-            <div class="dp-acc-amount">₩328만</div>
-            <div class="dp-acc-pct pos">+8.9%</div>
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <iconify-icon icon="solar:check-circle-bold" style="font-size:16px; color: var(--g); flex-shrink: 0;"></iconify-icon>
+            <span style="font-size: 14px; color: var(--ink-mid);">계좌별 기여도 한눈에 파악</span>
           </div>
         </div>
       </div>
-    </div>
 
-  </div>
-</div>
-
-<!-- FEATURES -->
-<div class="sec features-sec">
-  <div class="sec-inner">
-    <span class="sec-tag reveal">핵심 기능</span>
-    <h2 class="sec-h2 reveal">필요한 것만,<br>정확하게</h2>
-    <p class="sec-desc reveal">복잡한 기능 대신 투자자에게 꼭 필요한 것에 집중했습니다.</p>
-    <div class="features-grid">
-      <div class="feat-card reveal reveal-delay-1">
-        <div class="feat-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+      <!-- Mockup -->
+      <div class="mockup-panel">
+        <div class="mockup-titlebar">
+          <div class="mockup-dot" style="background: #ff5f57;"></div>
+          <div class="mockup-dot" style="background: #febc2e;"></div>
+          <div class="mockup-dot" style="background: #28c840;"></div>
+          <span style="margin-left: 8px; font-size: 12px; color: var(--ink-faint);">계좌 통합 현황</span>
         </div>
-        <h3>입출금 보정 투자손익</h3>
-        <p>현금흐름을 제거한 순수 투자성과를 계산합니다. 추가 입금이 있어도 수익률이 왜곡되지 않아요.</p>
-        <span class="feat-tag">진짜 수익률</span>
-      </div>
-      <div class="feat-card reveal reveal-delay-2">
-        <div class="feat-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
-        </div>
-        <h3>다계좌 · 연금 통합</h3>
-        <p>국내외 증권사 계좌는 물론 IRP, DC형 퇴직연금까지 하나의 대시보드에서 관리합니다.</p>
-        <span class="feat-tag">IRP · DC형 지원</span>
-      </div>
-      <div class="feat-card reveal reveal-delay-3">
-        <div class="feat-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-        </div>
-        <h3>자동 일일 스냅샷</h3>
-        <p>매일 자동으로 포트폴리오 성과를 기록해 히스토리를 쌓습니다. 1개월·3개월·연초 대비 성과를 ���인하세요.</p>
-        <span class="feat-tag">성과 이력 자동 축적</span>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- HOW IT WORKS -->
-<div class="sec steps-sec">
-  <div class="sec-inner">
-    <div style="margin-bottom:56px">
-      <span class="sec-tag reveal" style="display:inline-block">시작 방법</span>
-      <h2 class="sec-h2 reveal" style="margin-bottom:0; max-width:none">3단계로 바로 시작</h2>
-    </div>
-    <div class="steps-row">
-      <div class="step-card reveal reveal-delay-1">
-        <span class="step-num">Step 01</span>
-        <h3>계좌 추가</h3>
-        <p>증권사 이름과 계좌 유형을 입력합니다. 여러 계좌를 한 번에 등록할 수 있어요.</p>
-      </div>
-      <div class="step-card reveal reveal-delay-2">
-        <span class="step-num">Step 02</span>
-        <h3>보유 종목 입력</h3>
-        <p>종목명이나 티커로 검색해 수량과 평단가를 입력합니다. 미국 주식, 국내 ETF, 예수금 모두 지원.</p>
-      </div>
-      <div class="step-card reveal reveal-delay-3">
-        <span class="step-num">Step 03</span>
-        <h3>성과 자동 계산</h3>
-        <p>이후엔 매일 스냅샷이 자동으로 쌓입니다. 대시보드에서 누적 수익을 바로 확인하세요.</p>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- FAQ -->
-<div class="sec faq-sec">
-  <div class="sec-inner">
-    <div class="faq-wrap">
-      <div style="text-align:center; margin-bottom:56px;">
-        <span class="sec-tag reveal" style="display:inline-block">FAQ</span>
-        <h2 class="sec-h2 reveal" style="margin-bottom:0">궁금한 점이<br>있으신가요?</h2>
-      </div>
-      <div class="faq-list reveal">
-        <div class="faq-item">
-          <button class="faq-q" aria-expanded="false">
-            비용이 드나요?
-            <svg class="faq-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          </button>
-          <div class="faq-a">현재 완전 무료입니다. 브라우저에서 바로 사용할 수 있고, 클라우드 동기화를 원하시면 무료 Supabase 계정을 연동하면 됩니다.</div>
-        </div>
-        <div class="faq-item">
-          <button class="faq-q" aria-expanded="false">
-            내 투자 데이터는 어디에 저장되나요?
-            <svg class="faq-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          </button>
-          <div class="faq-a">기본적으로 모든 데이터는 내 브라우저 로컬에만 저장됩니다. 외부 서버로 전송되지 않아요. 클라우드 동기화 시에도 본인의 Supabase 프로젝트에 직접 연결하므로 데이터 소유권이 온전히 사용자에게 있습니다.</div>
-        </div>
-        <div class="faq-item">
-          <button class="faq-q" aria-expanded="false">
-            어떤 계좌와 종목을 지원하나요?
-            <svg class="faq-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          </button>
-          <div class="faq-a">국내외 모든 증권사 계좌를 수동으로 등록할 수 있습니다. 미국 주식, 국내 주식, ETF, 예수금을 지원하며 IRP, DC형 퇴직연금, 연금저축 계좌도 별도로 관리할 수 있습니다. 실시간 가격은 Yahoo Finance API를 통해 자동 갱신됩니다.</div>
-        </div>
-        <div class="faq-item">
-          <button class="faq-q" aria-expanded="false">
-            모바일에서도 사용할 수 있나요?
-            <svg class="faq-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          </button>
-          <div class="faq-a">반응형 디자인으로 스마트폰에서도 사용할 수 있습니다. 모바일 전용 하단 네비게이션도 제공됩니다. 로컬 SQLite는 데스크톱 브라우저를 권장하며, 모바일에서는 클라우드 동기화 설정 후 사용하시면 더 편리합니다.</div>
+        <div style="padding: 20px; display: flex; flex-direction: column; gap: 10px;">
+          <!-- Account rows -->
+          <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; background: var(--surface2); border-radius: 10px; border: 1px solid var(--border);">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <div style="width: 32px; height: 32px; border-radius: 8px; background: rgba(29,185,122,0.15); display: flex; align-items: center; justify-content: center;">
+                <iconify-icon icon="solar:chart-bold-duotone" style="font-size:16px; color: var(--g);"></iconify-icon>
+              </div>
+              <div>
+                <div style="font-size: 13px; font-weight: 600; color: var(--ink);">국내 주식 계좌</div>
+                <div style="font-size: 11px; color: var(--ink-faint);">K증권</div>
+              </div>
+            </div>
+            <div style="text-align: right;">
+              <div style="font-size: 14px; font-weight: 700; color: var(--g);">+14.2%</div>
+              <div style="font-size: 11px; color: var(--ink-faint);">₩42,300,000</div>
+            </div>
+          </div>
+          <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; background: var(--surface2); border-radius: 10px; border: 1px solid var(--border);">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <div style="width: 32px; height: 32px; border-radius: 8px; background: rgba(96,165,250,0.12); display: flex; align-items: center; justify-content: center;">
+                <iconify-icon icon="solar:global-bold-duotone" style="font-size:16px; color: #60a5fa;"></iconify-icon>
+              </div>
+              <div>
+                <div style="font-size: 13px; font-weight: 600; color: var(--ink);">해외 ETF</div>
+                <div style="font-size: 11px; color: var(--ink-faint);">IB증권</div>
+              </div>
+            </div>
+            <div style="text-align: right;">
+              <div style="font-size: 14px; font-weight: 700; color: var(--g);">+22.8%</div>
+              <div style="font-size: 11px; color: var(--ink-faint);">₩18,750,000</div>
+            </div>
+          </div>
+          <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; background: var(--surface2); border-radius: 10px; border: 1px solid var(--border);">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <div style="width: 32px; height: 32px; border-radius: 8px; background: rgba(251,191,36,0.12); display: flex; align-items: center; justify-content: center;">
+                <iconify-icon icon="solar:safe-bold-duotone" style="font-size:16px; color: #fbbf24;"></iconify-icon>
+              </div>
+              <div>
+                <div style="font-size: 13px; font-weight: 600; color: var(--ink);">IRP 계좌</div>
+                <div style="font-size: 11px; color: var(--ink-faint);">S은행</div>
+              </div>
+            </div>
+            <div style="text-align: right;">
+              <div style="font-size: 14px; font-weight: 700; color: var(--g);">+8.1%</div>
+              <div style="font-size: 11px; color: var(--ink-faint);">₩31,200,000</div>
+            </div>
+          </div>
+          <!-- Total -->
+          <div style="display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; background: rgba(29,185,122,0.08); border-radius: 10px; border: 1px solid rgba(29,185,122,0.2);">
+            <span style="font-size: 13px; font-weight: 700; color: var(--g);">전체 통합 수익률</span>
+            <span style="font-size: 18px; font-weight: 900; color: var(--g); letter-spacing: -0.03em;">+14.87%</span>
+          </div>
         </div>
       </div>
     </div>
   </div>
-</div>
-
-<!-- FINAL CTA -->
-<section class="cta-sec">
-  <h2 class="reveal">지금 바로<br>시작하세요</h2>
-  <p class="reveal">포트폴리오를 등록하는 데 5분이면 충분합니다.</p>
-  <a href="/" class="btn-primary reveal" style="font-size:16px; padding:16px 36px;">
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="13 17 18 12 13 7"/><polyline points="6 17 11 12 6 7"/></svg>
-    Stocklio 시작하기
-  </a>
-  <p class="cta-footnote reveal">회원가입 없이 바로 사용 · 데이터는 내 브라우저에 저장</p>
 </section>
 
-<!-- FOOTER -->
-<footer>
-  <div class="footer-inner">
-    <div class="footer-logo">Stocklio</div>
-    <div class="footer-note">© 2026 Stocklio. 투자는 본인 책임 하에 이루어집니다.</div>
+<!-- ===================== FEATURES BENTO GRID ===================== -->
+<section id="features" style="padding: 100px 0; background: linear-gradient(180deg, transparent 0%, rgba(29,185,122,0.03) 50%, transparent 100%);">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+    <div class="reveal" style="margin-bottom: 56px;">
+      <div style="display: inline-flex; align-items: center; gap: 8px; padding: 5px 14px; background: rgba(29,185,122,0.08); border: 1px solid rgba(29,185,122,0.2); border-radius: 99px; margin-bottom: 16px;">
+        <iconify-icon icon="solar:star-bold-duotone" style="font-size:14px; color: var(--g);"></iconify-icon>
+        <span style="font-size: 12px; font-weight: 600; color: var(--g); letter-spacing: 0.04em; text-transform: uppercase;">핵심 기능</span>
+      </div>
+      <h2 style="font-size: clamp(28px, 3.5vw, 42px); font-weight: 900; letter-spacing: -0.03em; line-height: 1.2; max-width: 520px;">
+        투자 성과를 제대로 보기 위한<br>모든 것
+      </h2>
+    </div>
+
+    <!-- Bento Grid: 2fr 1fr 1fr on left/right -->
+    <div style="display: grid; grid-template-columns: 2fr 1fr; grid-template-rows: auto auto; gap: 16px;" class="bento-grid">
+
+      <!-- LARGE CARD (spans 2 rows) -->
+      <div class="feat-card-large reveal" style="grid-row: span 2; display: flex; flex-direction: column; gap: 28px;">
+        <div>
+          <div class="icon-ring" style="margin-bottom: 16px;">
+            <iconify-icon icon="solar:chart-2-bold-duotone" style="font-size:22px; color: var(--g);"></iconify-icon>
+          </div>
+          <h3 style="font-size: 22px; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 10px;">입출금 보정 수익률</h3>
+          <p style="font-size: 14.5px; line-height: 1.8; color: var(--ink-mid);">
+            단순 평가액이 아닌 <strong style="color: var(--ink);">Modified Dietz 방식</strong>으로 입출금을 제거한 순수 투자 수익률을 계산합니다.
+            "내가 실제로 얼마나 벌었는가"를 명확하게 보여줍니다.
+          </p>
+        </div>
+
+        <!-- Inline SVG trend chart -->
+        <div style="background: var(--surface2); border: 1px solid var(--border); border-radius: 14px; padding: 20px; flex: 1;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <span style="font-size: 12px; font-weight: 600; color: var(--ink-faint); text-transform: uppercase; letter-spacing: 0.04em;">수익률 추이</span>
+            <div style="display: flex; gap: 12px;">
+              <div style="display: flex; align-items: center; gap: 5px;">
+                <div style="width: 20px; height: 2px; background: var(--g); border-radius: 1px;"></div>
+                <span style="font-size: 11px; color: var(--ink-faint);">보정 수익률</span>
+              </div>
+              <div style="display: flex; align-items: center; gap: 5px;">
+                <div style="width: 20px; height: 2px; background: rgba(255,255,255,0.2); border-radius: 1px; border: none; background-image: repeating-linear-gradient(90deg, rgba(255,255,255,0.2) 0, rgba(255,255,255,0.2) 4px, transparent 4px, transparent 8px);"></div>
+                <span style="font-size: 11px; color: var(--ink-faint);">단순 수익률</span>
+              </div>
+            </div>
+          </div>
+          <svg viewBox="0 0 400 160" style="width: 100%; height: auto; display: block;" preserveAspectRatio="none">
+            <defs>
+              <linearGradient id="lineGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#1db97a" stop-opacity="0.3"/>
+                <stop offset="100%" stop-color="#1db97a" stop-opacity="0"/>
+              </linearGradient>
+              <clipPath id="chartClip">
+                <rect x="0" y="0" width="400" height="160"/>
+              </clipPath>
+            </defs>
+            <!-- Grid lines -->
+            <line x1="0" y1="130" x2="400" y2="130" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>
+            <line x1="0" y1="100" x2="400" y2="100" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>
+            <line x1="0" y1="70" x2="400" y2="70" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>
+            <line x1="0" y1="40" x2="400" y2="40" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>
+            <!-- Y labels -->
+            <text x="4" y="133" fill="rgba(255,255,255,0.25)" font-size="10" font-family="Pretendard, sans-serif">0%</text>
+            <text x="4" y="103" fill="rgba(255,255,255,0.25)" font-size="10" font-family="Pretendard, sans-serif">5%</text>
+            <text x="4" y="73" fill="rgba(255,255,255,0.25)" font-size="10" font-family="Pretendard, sans-serif">10%</text>
+            <text x="4" y="43" fill="rgba(255,255,255,0.25)" font-size="10" font-family="Pretendard, sans-serif">15%</text>
+            <!-- Area fill (adjusted) -->
+            <path d="M30,128 C70,120 100,115 140,105 C180,95 200,88 240,78 C280,68 320,52 370,38 L370,130 L30,130 Z" fill="url(#lineGrad)" clip-path="url(#chartClip)"/>
+            <!-- Adjusted line (green) -->
+            <path d="M30,128 C70,120 100,115 140,105 C180,95 200,88 240,78 C280,68 320,52 370,38" fill="none" stroke="#1db97a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <!-- Simple line (dashed grey) -->
+            <path d="M30,128 C80,118 120,106 160,90 C200,74 250,50 370,22" fill="none" stroke="rgba(255,255,255,0.25)" stroke-width="1.5" stroke-dasharray="5,4" stroke-linecap="round"/>
+            <!-- Dot at end -->
+            <circle cx="370" cy="38" r="5" fill="#1db97a"/>
+            <circle cx="370" cy="38" r="9" fill="rgba(29,185,122,0.2)"/>
+            <!-- X labels -->
+            <text x="22" y="148" fill="rgba(255,255,255,0.25)" font-size="10" font-family="Pretendard, sans-serif" text-anchor="middle">1월</text>
+            <text x="95" y="148" fill="rgba(255,255,255,0.25)" font-size="10" font-family="Pretendard, sans-serif" text-anchor="middle">3월</text>
+            <text x="168" y="148" fill="rgba(255,255,255,0.25)" font-size="10" font-family="Pretendard, sans-serif" text-anchor="middle">5월</text>
+            <text x="241" y="148" fill="rgba(255,255,255,0.25)" font-size="10" font-family="Pretendard, sans-serif" text-anchor="middle">7월</text>
+            <text x="314" y="148" fill="rgba(255,255,255,0.25)" font-size="10" font-family="Pretendard, sans-serif" text-anchor="middle">9월</text>
+            <text x="370" y="148" fill="rgba(255,255,255,0.25)" font-size="10" font-family="Pretendard, sans-serif" text-anchor="middle">11월</text>
+          </svg>
+          <div style="display: flex; justify-content: space-between; margin-top: 12px;">
+            <div>
+              <div style="font-size: 11px; color: var(--ink-faint); margin-bottom: 2px;">보정 수익률</div>
+              <div style="font-size: 20px; font-weight: 800; color: var(--g); letter-spacing: -0.03em;">+8.73%</div>
+            </div>
+            <div style="text-align: right;">
+              <div style="font-size: 11px; color: var(--ink-faint); margin-bottom: 2px;">단순 수익률 (착시)</div>
+              <div style="font-size: 20px; font-weight: 800; color: var(--ink-mid); letter-spacing: -0.03em;">+31.2%</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT: small cards (2x2 in 1fr column) -->
+      <!-- Row 1 right: 2 cards side by side -->
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+        <div class="feat-card reveal reveal-delay-1" style="padding: 22px;">
+          <div class="icon-ring" style="margin-bottom: 14px; width: 38px; height: 38px; border-radius: 10px;">
+            <iconify-icon icon="solar:wallet-bold-duotone" style="font-size:19px; color: var(--g);"></iconify-icon>
+          </div>
+          <h3 style="font-size: 15px; font-weight: 800; margin-bottom: 8px; letter-spacing: -0.01em;">다계좌 통합</h3>
+          <p style="font-size: 12.5px; line-height: 1.7; color: var(--ink-mid);">증권사, IRP, 연금저축까지 모든 계좌를 단일 대시보드에서 관리합니다.</p>
+        </div>
+        <div class="feat-card reveal reveal-delay-2" style="padding: 22px;">
+          <div class="icon-ring" style="margin-bottom: 14px; width: 38px; height: 38px; border-radius: 10px;">
+            <iconify-icon icon="solar:refresh-bold-duotone" style="font-size:19px; color: var(--g);"></iconify-icon>
+          </div>
+          <h3 style="font-size: 15px; font-weight: 800; margin-bottom: 8px; letter-spacing: -0.01em;">자동 시세</h3>
+          <p style="font-size: 12.5px; line-height: 1.7; color: var(--ink-mid);">Yahoo Finance 연동으로 국내·해외 종목의 시세를 자동으로 불러옵니다.</p>
+        </div>
+      </div>
+
+      <!-- Row 2 right: 2 cards side by side -->
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+        <div class="feat-card reveal reveal-delay-3" style="padding: 22px;">
+          <div class="icon-ring" style="margin-bottom: 14px; width: 38px; height: 38px; border-radius: 10px;">
+            <iconify-icon icon="solar:camera-bold-duotone" style="font-size:19px; color: var(--g);"></iconify-icon>
+          </div>
+          <h3 style="font-size: 15px; font-weight: 800; margin-bottom: 8px; letter-spacing: -0.01em;">일일 스냅샷</h3>
+          <p style="font-size: 12.5px; line-height: 1.7; color: var(--ink-mid);">매일 07시 KST 자동 저장으로 과거 어느 날로도 돌아볼 수 있습니다.</p>
+        </div>
+        <div class="feat-card reveal reveal-delay-4" style="padding: 22px;">
+          <div class="icon-ring" style="margin-bottom: 14px; width: 38px; height: 38px; border-radius: 10px;">
+            <iconify-icon icon="solar:rocket-bold-duotone" style="font-size:19px; color: var(--g);"></iconify-icon>
+          </div>
+          <h3 style="font-size: 15px; font-weight: 800; margin-bottom: 8px; letter-spacing: -0.01em;">시뮬레이터</h3>
+          <p style="font-size: 12.5px; line-height: 1.7; color: var(--ink-mid);">적립식·거치식 투자 시나리오를 미래 목표와 비교해 볼 수 있습니다.</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ===================== TESTIMONIALS ===================== -->
+<section style="padding: 100px 0;">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+    <div class="reveal" style="margin-bottom: 56px;">
+      <div style="display: inline-flex; align-items: center; gap: 8px; padding: 5px 14px; background: rgba(255,255,255,0.04); border: 1px solid var(--border); border-radius: 99px; margin-bottom: 16px;">
+        <iconify-icon icon="solar:chat-round-bold-duotone" style="font-size:14px; color: var(--ink-mid);"></iconify-icon>
+        <span style="font-size: 12px; font-weight: 600; color: var(--ink-mid); letter-spacing: 0.04em; text-transform: uppercase;">사용자 후기</span>
+      </div>
+      <h2 style="font-size: clamp(28px, 3.5vw, 42px); font-weight: 900; letter-spacing: -0.03em;">실제로 써보고 남긴 말들</h2>
+    </div>
+
+    <!-- Masonry 2-col: left has 2 cards, right has 1 tall card -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start;">
+
+      <!-- Left column: 2 cards -->
+      <div style="display: flex; flex-direction: column; gap: 16px;">
+
+        <div class="testi-card reveal">
+          <div style="display: flex; gap: 4px; margin-bottom: 16px;">
+            <iconify-icon icon="solar:star-bold" style="font-size:14px; color: #f5a623;"></iconify-icon>
+            <iconify-icon icon="solar:star-bold" style="font-size:14px; color: #f5a623;"></iconify-icon>
+            <iconify-icon icon="solar:star-bold" style="font-size:14px; color: #f5a623;"></iconify-icon>
+            <iconify-icon icon="solar:star-bold" style="font-size:14px; color: #f5a623;"></iconify-icon>
+            <iconify-icon icon="solar:star-bold" style="font-size:14px; color: #f5a623;"></iconify-icon>
+          </div>
+          <p style="font-size: 15px; line-height: 1.8; color: var(--ink-mid); margin-bottom: 20px;">
+            "입출금 보정 전에는 수익이 난 줄 알았는데 실제로는 그냥 더 많이 넣은 거였어요. Stocklio 쓰고 나서 처음으로 진짜 수익률을 알게 됐습니다. 충격이었지만 덕분에 전략도 바꿀 수 있었어요."
+          </p>
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <img src="https://i.pravatar.cc/48?u=hayuntest" alt="하윤서" width="42" height="42" style="border-radius: 50%; object-fit: cover;" loading="lazy" decoding="async">
+            <div>
+              <div style="font-size: 14px; font-weight: 700; color: var(--ink);">하윤서</div>
+              <div style="font-size: 12px; color: var(--ink-faint);">스텔라랩스 · 시니어 개발자</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="testi-card reveal reveal-delay-1">
+          <div style="display: flex; gap: 4px; margin-bottom: 16px;">
+            <iconify-icon icon="solar:star-bold" style="font-size:14px; color: #f5a623;"></iconify-icon>
+            <iconify-icon icon="solar:star-bold" style="font-size:14px; color: #f5a623;"></iconify-icon>
+            <iconify-icon icon="solar:star-bold" style="font-size:14px; color: #f5a623;"></iconify-icon>
+            <iconify-icon icon="solar:star-bold" style="font-size:14px; color: #f5a623;"></iconify-icon>
+            <iconify-icon icon="solar:star-bold" style="font-size:14px; color: #f5a623;"></iconify-icon>
+          </div>
+          <p style="font-size: 15px; line-height: 1.8; color: var(--ink-mid); margin-bottom: 20px;">
+            "IRP랑 연금저축 포함해서 한 화면에서 볼 수 있다는 게 정말 편합니다. 다른 앱들은 연금 계좌는 따로 보라고 하거든요."
+          </p>
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <img src="https://i.pravatar.cc/48?u=parkdohyun" alt="박도현" width="42" height="42" style="border-radius: 50%; object-fit: cover;" loading="lazy" decoding="async">
+            <div>
+              <div style="font-size: 14px; font-weight: 700; color: var(--ink);">박도현</div>
+              <div style="font-size: 12px; color: var(--ink-faint);">베리파이 · 재무 기획</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right column: 1 tall card -->
+      <div>
+        <div class="testi-card reveal reveal-delay-2" style="padding: 36px;">
+          <div style="display: flex; gap: 4px; margin-bottom: 20px;">
+            <iconify-icon icon="solar:star-bold" style="font-size:14px; color: #f5a623;"></iconify-icon>
+            <iconify-icon icon="solar:star-bold" style="font-size:14px; color: #f5a623;"></iconify-icon>
+            <iconify-icon icon="solar:star-bold" style="font-size:14px; color: #f5a623;"></iconify-icon>
+            <iconify-icon icon="solar:star-bold" style="font-size:14px; color: #f5a623;"></iconify-icon>
+            <iconify-icon icon="solar:star-bold" style="font-size:14px; color: #f5a623;"></iconify-icon>
+          </div>
+          <!-- Pull quote -->
+          <div style="font-size: 40px; color: var(--g); line-height: 1; margin-bottom: 8px; font-weight: 900; opacity: 0.3;">"</div>
+          <p style="font-size: 17px; line-height: 1.85; color: var(--ink); margin-bottom: 28px; font-weight: 500;">
+            처음에는 '그냥 수익률 앱 아닌가' 싶었는데, 막상 써보니 완전히 달랐습니다. Yahoo Finance로 시세가 자동으로 들어오고, 매일 스냅샷이 저장되니까 지난 6개월 포트폴리오를 슬라이드처럼 돌려볼 수 있어요. 시뮬레이터로 10년 후 목표를 시각화하니 적립 계획도 바꿨습니다. 스프레드시트로 돌아가기는 이제 불가능해요.
+          </p>
+          <!-- Stats row -->
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 28px;">
+            <div style="background: var(--surface2); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px;">
+              <div style="font-size: 22px; font-weight: 900; color: var(--g); letter-spacing: -0.03em;">+18.4%</div>
+              <div style="font-size: 11px; color: var(--ink-faint); margin-top: 2px;">보정 연수익률</div>
+            </div>
+            <div style="background: var(--surface2); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px;">
+              <div style="font-size: 22px; font-weight: 900; color: var(--ink); letter-spacing: -0.03em;">6개월</div>
+              <div style="font-size: 11px; color: var(--ink-faint); margin-top: 2px;">사용 기간</div>
+            </div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <img src="https://i.pravatar.cc/48?u=leeseojin" alt="이서진" width="46" height="46" style="border-radius: 50%; object-fit: cover; border: 2px solid rgba(29,185,122,0.3);" loading="lazy" decoding="async">
+            <div>
+              <div style="font-size: 14px; font-weight: 700; color: var(--ink);">이서진</div>
+              <div style="font-size: 12px; color: var(--ink-faint);">플로우캔버스 · 프로덕트 매니저</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ===================== STEPS ===================== -->
+<section style="padding: 100px 0; background: linear-gradient(180deg, transparent 0%, rgba(29,185,122,0.02) 50%, transparent 100%);">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+    <div class="reveal" style="text-align: center; margin-bottom: 64px;">
+      <div style="display: inline-flex; align-items: center; gap: 8px; padding: 5px 14px; background: rgba(255,255,255,0.04); border: 1px solid var(--border); border-radius: 99px; margin-bottom: 16px;">
+        <iconify-icon icon="solar:list-bold-duotone" style="font-size:14px; color: var(--ink-mid);"></iconify-icon>
+        <span style="font-size: 12px; font-weight: 600; color: var(--ink-mid); letter-spacing: 0.04em; text-transform: uppercase;">시작하기</span>
+      </div>
+      <h2 style="font-size: clamp(28px, 3.5vw, 42px); font-weight: 900; letter-spacing: -0.03em;">3단계로 바로 시작</h2>
+    </div>
+
+    <!-- Horizontal timeline -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0; position: relative;" class="steps-grid">
+
+      <!-- Connecting lines -->
+      <div style="position: absolute; top: 32px; left: calc(100%/6 + 32px); right: calc(100%/6 + 32px); height: 1px; background: linear-gradient(90deg, rgba(29,185,122,0.6), rgba(29,185,122,0.6)); pointer-events: none;"></div>
+
+      <!-- Step 1 -->
+      <div class="reveal" style="display: flex; flex-direction: column; align-items: center; text-align: center; padding: 0 24px;">
+        <div style="width: 64px; height: 64px; border-radius: 50%; background: var(--g); display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 900; color: #fff; margin-bottom: 24px; position: relative; z-index: 1; flex-shrink: 0; box-shadow: 0 0 0 8px rgba(29,185,122,0.12), 0 0 32px rgba(29,185,122,0.3);">1</div>
+        <div style="padding: 24px; background: var(--surface); border: 1px solid var(--border); border-radius: 18px; width: 100%;">
+          <div class="icon-ring" style="margin: 0 auto 14px; width: 42px; height: 42px;">
+            <iconify-icon icon="solar:login-bold-duotone" style="font-size:20px; color: var(--g);"></iconify-icon>
+          </div>
+          <h3 style="font-size: 17px; font-weight: 800; margin-bottom: 8px; letter-spacing: -0.01em;">가입 후 로그인</h3>
+          <p style="font-size: 13.5px; line-height: 1.7; color: var(--ink-mid);">이메일 또는 구글 계정으로 30초 안에 가입할 수 있습니다.</p>
+        </div>
+      </div>
+
+      <!-- Step 2 -->
+      <div class="reveal reveal-delay-2" style="display: flex; flex-direction: column; align-items: center; text-align: center; padding: 0 24px;">
+        <div style="width: 64px; height: 64px; border-radius: 50%; background: var(--surface); border: 2px solid var(--g); display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 900; color: var(--g); margin-bottom: 24px; position: relative; z-index: 1; flex-shrink: 0; box-shadow: 0 0 0 8px rgba(29,185,122,0.06);">2</div>
+        <div style="padding: 24px; background: var(--surface); border: 1px solid var(--border); border-radius: 18px; width: 100%;">
+          <div class="icon-ring" style="margin: 0 auto 14px; width: 42px; height: 42px;">
+            <iconify-icon icon="solar:database-bold-duotone" style="font-size:20px; color: var(--g);"></iconify-icon>
+          </div>
+          <h3 style="font-size: 17px; font-weight: 800; margin-bottom: 8px; letter-spacing: -0.01em;">계좌 & 거래 입력</h3>
+          <p style="font-size: 13.5px; line-height: 1.7; color: var(--ink-mid);">보유 종목, 계좌별 입출금 내역을 한 번만 입력합니다.</p>
+        </div>
+      </div>
+
+      <!-- Step 3 -->
+      <div class="reveal reveal-delay-3" style="display: flex; flex-direction: column; align-items: center; text-align: center; padding: 0 24px;">
+        <div style="width: 64px; height: 64px; border-radius: 50%; background: var(--surface); border: 2px solid rgba(29,185,122,0.4); display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 900; color: var(--ink-mid); margin-bottom: 24px; position: relative; z-index: 1; flex-shrink: 0;">3</div>
+        <div style="padding: 24px; background: var(--surface); border: 1px solid var(--border); border-radius: 18px; width: 100%;">
+          <div class="icon-ring" style="margin: 0 auto 14px; width: 42px; height: 42px;">
+            <iconify-icon icon="solar:graph-bold-duotone" style="font-size:20px; color: var(--g);"></iconify-icon>
+          </div>
+          <h3 style="font-size: 17px; font-weight: 800; margin-bottom: 8px; letter-spacing: -0.01em;">진짜 수익률 확인</h3>
+          <p style="font-size: 13.5px; line-height: 1.7; color: var(--ink-mid);">입출금이 제거된 실제 투자 성과를 대시보드에서 바로 확인합니다.</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ===================== FAQ ===================== -->
+<section id="faq" style="padding: 100px 0;">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div style="max-width: 680px; margin: 0 auto;">
+
+      <div class="reveal" style="text-align: center; margin-bottom: 56px;">
+        <div style="display: inline-flex; align-items: center; gap: 8px; padding: 5px 14px; background: rgba(255,255,255,0.04); border: 1px solid var(--border); border-radius: 99px; margin-bottom: 16px;">
+          <iconify-icon icon="solar:question-circle-bold-duotone" style="font-size:14px; color: var(--ink-mid);"></iconify-icon>
+          <span style="font-size: 12px; font-weight: 600; color: var(--ink-mid); letter-spacing: 0.04em; text-transform: uppercase;">자주 묻는 질문</span>
+        </div>
+        <h2 style="font-size: clamp(28px, 3.5vw, 42px); font-weight: 900; letter-spacing: -0.03em;">궁금한 점이 있으신가요?</h2>
+      </div>
+
+      <div class="reveal">
+        <div class="faq-item">
+          <button class="faq-trigger" onclick="toggleFaq(this)">
+            <span>입출금 보정 수익률은 어떻게 계산되나요?</span>
+            <iconify-icon icon="solar:add-circle-bold-duotone" class="faq-icon" style="font-size:22px; color: var(--g);"></iconify-icon>
+          </button>
+          <div class="faq-body">
+            <p>Modified Dietz 방식을 사용합니다. 기간 중 발생한 모든 입출금을 시간 가중치로 반영해 순수 투자 성과만 계산합니다. 예를 들어 기간 중반에 대규모 입금이 있었다면 그 금액의 영향을 제거하고 진짜 운용 수익률만 보여드립니다.</p>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-trigger" onclick="toggleFaq(this)">
+            <span>지원하는 종목과 시장이 어디까지인가요?</span>
+            <iconify-icon icon="solar:add-circle-bold-duotone" class="faq-icon" style="font-size:22px; color: var(--g);"></iconify-icon>
+          </button>
+          <div class="faq-body">
+            <p>Yahoo Finance에서 시세를 제공하는 모든 종목을 지원합니다. 국내 주식(KRX), 미국 주식·ETF(NYSE, NASDAQ), 한국 ETF, 그 외 글로벌 시장 종목이 포함됩니다. 티커 검색을 통해 직접 추가할 수 있으며, 환율(원/달러 등)도 자동 반영됩니다.</p>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-trigger" onclick="toggleFaq(this)">
+            <span>내 금융 정보가 안전하게 보호되나요?</span>
+            <iconify-icon icon="solar:add-circle-bold-duotone" class="faq-icon" style="font-size:22px; color: var(--g);"></iconify-icon>
+          </button>
+          <div class="faq-body">
+            <p>Stocklio는 증권사 API를 직접 연동하지 않습니다. 사용자가 직접 입력한 데이터만 저장되며, Supabase Row Level Security(RLS)로 본인 데이터에만 접근 가능합니다. 계좌번호·비밀번호 같은 민감 정보는 저장하지 않습니다.</p>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-trigger" onclick="toggleFaq(this)">
+            <span>무료로 모든 기능을 사용할 수 있나요?</span>
+            <iconify-icon icon="solar:add-circle-bold-duotone" class="faq-icon" style="font-size:22px; color: var(--g);"></iconify-icon>
+          </button>
+          <div class="faq-body">
+            <p>네, 현재 Stocklio는 완전 무료입니다. 입출금 보정 수익률, 다계좌 통합, 자동 시세 업데이트, 일일 스냅샷, 투자 시뮬레이터까지 모든 기능을 추가 비용 없이 사용하실 수 있습니다.</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ===================== CTA SECTION ===================== -->
+<section id="cta" style="padding: 120px 0; position: relative; overflow: hidden;">
+  <!-- Background -->
+  <div style="position: absolute; inset: 0; background: linear-gradient(135deg, rgba(29,185,122,0.06) 0%, transparent 50%, rgba(29,185,122,0.04) 100%); pointer-events: none;"></div>
+  <div class="cta-glow"></div>
+  <div style="position: absolute; inset: 0; border-top: 1px solid rgba(29,185,122,0.1); border-bottom: 1px solid rgba(29,185,122,0.1); pointer-events: none;"></div>
+
+  <!-- Large decorative text behind -->
+  <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: clamp(80px, 18vw, 220px); font-weight: 900; color: rgba(29,185,122,0.04); letter-spacing: -0.05em; pointer-events: none; white-space: nowrap; user-select: none;">진짜 수익</div>
+
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" style="position: relative; text-align: center;">
+    <div class="reveal">
+      <div style="display: inline-flex; align-items: center; gap: 8px; padding: 5px 14px; background: rgba(29,185,122,0.1); border: 1px solid rgba(29,185,122,0.25); border-radius: 99px; margin-bottom: 24px;">
+        <div style="width: 6px; height: 6px; border-radius: 50%; background: var(--g);"></div>
+        <span style="font-size: 12px; font-weight: 600; color: var(--g); letter-spacing: 0.04em;">지금 바로 시작 · 완전 무료</span>
+      </div>
+
+      <h2 style="font-size: clamp(40px, 6vw, 80px); font-weight: 900; letter-spacing: -0.04em; line-height: 1.05; margin-bottom: 24px;">
+        지금 몇 %<br>
+        <span class="grad-text">실제로 벌고</span> 있나요?
+      </h2>
+
+      <p style="font-size: 18px; line-height: 1.75; color: var(--ink-mid); max-width: 480px; margin: 0 auto 40px;">
+        입출금을 제외한 진짜 수익률, 지금 바로 확인해 보세요.<br>스프레드시트는 이제 내려놓으셔도 됩니다.
+      </p>
+
+      <div style="display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; margin-bottom: 24px;">
+        <a href="#" class="btn-primary" style="font-size: 16px; padding: 16px 32px;">
+          무료로 시작하기
+          <div class="btn-arrow" style="width: 30px; height: 30px;">
+            <iconify-icon icon="solar:arrow-right-bold" style="font-size:14px;"></iconify-icon>
+          </div>
+        </a>
+      </div>
+
+      <div style="display: flex; align-items: center; justify-content: center; gap: 20px; flex-wrap: wrap;">
+        <div style="display: flex; align-items: center; gap: 6px; color: var(--ink-faint); font-size: 13px;">
+          <iconify-icon icon="solar:check-circle-bold-duotone" style="font-size:16px; color: var(--g);"></iconify-icon>
+          신용카드 불필요
+        </div>
+        <div style="width: 3px; height: 3px; border-radius: 50%; background: var(--border);"></div>
+        <div style="display: flex; align-items: center; gap: 6px; color: var(--ink-faint); font-size: 13px;">
+          <iconify-icon icon="solar:check-circle-bold-duotone" style="font-size:16px; color: var(--g);"></iconify-icon>
+          30초 가입
+        </div>
+        <div style="width: 3px; height: 3px; border-radius: 50%; background: var(--border);"></div>
+        <div style="display: flex; align-items: center; gap: 6px; color: var(--ink-faint); font-size: 13px;">
+          <iconify-icon icon="solar:check-circle-bold-duotone" style="font-size:16px; color: var(--g);"></iconify-icon>
+          2,847명 사용 중
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== FOOTER ===================== -->
+<footer style="padding: 36px 0; border-top: 1px solid var(--border);">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px;">
+      <a href="#" class="nav-logo" style="font-size: 15px;">
+        <div class="nav-logo-dot"></div>
+        Stocklio
+      </a>
+      <p style="font-size: 13px; color: var(--ink-faint);">
+        &copy; 2026 Stocklio. 투자는 본인 책임입니다.
+      </p>
+    </div>
   </div>
 </footer>
 
+<!-- ===================== SCRIPTS ===================== -->
 <script>
-// Nav scroll
-const nav = document.getElementById('nav');
-window.addEventListener('scroll', () => {
-  nav.classList.toggle('scrolled', window.scrollY > 30);
-}, { passive: true });
-
 // Scroll reveal
-const revealObserver = new IntersectionObserver(entries => {
-  entries.forEach(entry => {
-    if (entry.isIntersecting) {
-      entry.target.classList.add('visible');
-      revealObserver.unobserve(entry.target);
+const revealEls = document.querySelectorAll('.reveal');
+const io = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      e.target.classList.add('visible');
+      io.unobserve(e.target);
     }
   });
-}, { threshold: 0.06, rootMargin: '0px 0px -32px 0px' });
-document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
+}, { threshold: 0.08 });
+revealEls.forEach(el => io.observe(el));
 
-// FAQ
-document.querySelectorAll('.faq-q').forEach(btn => {
-  btn.addEventListener('click', () => {
-    const item = btn.closest('.faq-item');
-    const wasOpen = item.classList.contains('open');
-    document.querySelectorAll('.faq-item.open').forEach(el => {
-      el.classList.remove('open');
-      el.querySelector('.faq-q').setAttribute('aria-expanded', 'false');
-    });
-    if (!wasOpen) {
-      item.classList.add('open');
-      btn.setAttribute('aria-expanded', 'true');
-    }
+// FAQ accordion
+function toggleFaq(btn) {
+  const item = btn.closest('.faq-item');
+  const body = item.querySelector('.faq-body');
+  const icon = btn.querySelector('.faq-icon');
+  const isOpen = body.classList.contains('open');
+
+  // Close all
+  document.querySelectorAll('.faq-body.open').forEach(b => {
+    b.classList.remove('open');
+    b.closest('.faq-item').querySelector('.faq-icon').classList.remove('open');
   });
-});
+
+  // Toggle current
+  if (!isOpen) {
+    body.classList.add('open');
+    icon.classList.add('open');
+  }
+}
+
+// Responsive: hero grid + bento grid + steps + problem rows
+function applyResponsive() {
+  const w = window.innerWidth;
+  const heroGrid = document.querySelector('.hero-grid');
+  const bentoGrid = document.querySelector('.bento-grid');
+  const stepsGrid = document.querySelector('.steps-grid');
+  const probRows = document.querySelectorAll('.prob-row, .prob-row-2, [class*="prob-row"]');
+
+  if (w < 768) {
+    if (heroGrid) heroGrid.style.gridTemplateColumns = '1fr';
+    if (bentoGrid) {
+      bentoGrid.style.gridTemplateColumns = '1fr';
+      bentoGrid.style.gridTemplateRows = 'auto';
+    }
+    if (stepsGrid) stepsGrid.style.gridTemplateColumns = '1fr';
+  } else {
+    if (heroGrid) heroGrid.style.gridTemplateColumns = '1fr 1fr';
+    if (bentoGrid) bentoGrid.style.gridTemplateColumns = '2fr 1fr';
+    if (stepsGrid) stepsGrid.style.gridTemplateColumns = '1fr 1fr 1fr';
+  }
+}
+
+applyResponsive();
+window.addEventListener('resize', applyResponsive);
+
+// Make problem section rows responsive inline
+(function() {
+  const probRows = document.querySelectorAll('[style*="grid-template-columns: 1fr 1fr"]');
+  function checkProbRows() {
+    probRows.forEach(row => {
+      if (window.innerWidth < 768) {
+        row.style.gridTemplateColumns = '1fr';
+      } else {
+        row.style.gridTemplateColumns = '1fr 1fr';
+      }
+    });
+  }
+  checkProbRows();
+  window.addEventListener('resize', checkProbRows);
+})();
+
+// Make testimonials responsive
+(function() {
+  const testiGrid = document.querySelector('[class*="testi"]')?.closest('[style*="grid-template-columns: 1fr 1fr"]');
+  // The testimonial parent grid
+  document.querySelectorAll('section').forEach(sec => {
+    const grids = sec.querySelectorAll('[style*="grid-template-columns: 1fr 1fr"]');
+    grids.forEach(g => {
+      if (g.querySelector('.testi-card')) {
+        function checkTesti() {
+          g.style.gridTemplateColumns = window.innerWidth < 768 ? '1fr' : '1fr 1fr';
+        }
+        checkTesti();
+        window.addEventListener('resize', checkTesti);
+      }
+    });
+  });
+})();
 </script>
+
+<style>
+@media (max-width: 767px) {
+  .hero-grid { grid-template-columns: 1fr !important; }
+  .bento-grid { grid-template-columns: 1fr !important; }
+  .bento-grid [style*="grid-row: span 2"] { grid-row: span 1 !important; }
+  .steps-grid { grid-template-columns: 1fr !important; }
+  .steps-grid > div { margin-bottom: 24px; }
+  [style*="grid-template-columns: 1fr 1fr"] { grid-template-columns: 1fr !important; }
+  .float-card, .float-card-alt { display: none; }
+  .nav-inner { gap: 4px; padding: 8px 10px 8px 14px; }
+  .nav-link { display: none; }
+  .nav-divider { display: none; }
+}
+@media (max-width: 640px) {
+  .nav-inner { gap: 4px; }
+}
+</style>
+
 </body>
 </html>
