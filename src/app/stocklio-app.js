@@ -99,7 +99,7 @@ let authState = {
   signedIn: false,
   user: null,
 };
-let activeView = "dashboard";
+let activeView = window.innerWidth <= 980 ? "holdings" : "dashboard";
 let activeAllocationView = "strategy";
 let syncState = {
   status: "idle",
@@ -997,12 +997,14 @@ async function initialize() {
     authState = await waitForAuthState();
     [state] = await Promise.all([loadState(), loadNotificationState()]);
     render();
+    setView(activeView);
     renderAuth();
     setStatus(authState.signedIn ? "Supabase 데이터 불러옴" : "데이터 불러옴", authState.user?.email || state.automation?.lastResult || "저장소와 연결됨");
     queueAutomaticPriceRefresh();
   } catch {
     state = structuredClone(sampleState);
     render();
+    setView(activeView);
     setStatus("샘플 데이터 불러옴", "서버 저장소를 사용할 수 없습니다");
   }
 }
