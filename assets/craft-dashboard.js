@@ -12501,23 +12501,30 @@ function Qa({ state: e }) {
 }
 function $a(e, t = null) {
 	if (t?.isMarketClosed) return [];
-	let n = (e.holdings || []).map((t) => {
-		let n = eo(e, t);
-		return {
+	let n = /* @__PURE__ */ new Map();
+	for (let t of e.holdings || []) {
+		let r = eo(e, t);
+		if (!r.hasData) continue;
+		let i = t.ticker;
+		if (n.has(i)) {
+			let e = n.get(i);
+			e.quantity += Number(t.quantity || 0), e.value += r.valueKrw, e.priceEffectKrw += r.priceEffectKrw, e.fxEffectKrw += r.fxEffectKrw;
+		} else n.set(i, {
 			id: t.id,
 			name: t.name || t.ticker,
 			ticker: t.ticker,
 			quantity: Number(t.quantity || 0),
-			value: n.valueKrw,
-			priceEffectKrw: n.priceEffectKrw,
-			fxEffectKrw: n.fxEffectKrw,
-			changePercent: n.changePercent,
-			hasData: n.hasData
-		};
-	}).filter((e) => e.hasData && e.value !== 0).sort((e, t) => Math.abs(t.value) - Math.abs(e.value)), r = n.reduce((e, t) => e + Math.abs(t.value), 0);
-	return n.map((e) => ({
+			value: r.valueKrw,
+			priceEffectKrw: r.priceEffectKrw,
+			fxEffectKrw: r.fxEffectKrw,
+			changePercent: r.changePercent,
+			hasData: !0
+		});
+	}
+	let r = [...n.values()].filter((e) => e.value !== 0).sort((e, t) => Math.abs(t.value) - Math.abs(e.value)), i = r.reduce((e, t) => e + Math.abs(t.value), 0);
+	return r.map((e) => ({
 		...e,
-		contributionShare: r ? Math.abs(e.value) / r : 0
+		contributionShare: i ? Math.abs(e.value) / i : 0
 	}));
 }
 function eo(e, t) {

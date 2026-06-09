@@ -4789,3 +4789,1765 @@ button.secondary:hover,
   animation: viewFadeUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
   animation-delay: calc(var(--stagger, 0) * 60ms);
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   STOCKLIO UX ENHANCEMENT LAYER
+   — 사이드바 SVG 아이콘 · 활성탭 · 모바일 내비 · 접근성 · 공통 UX
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── 공통 CSS 변수 보강 ── */
+:root {
+  --nav-active-bg: #edf2ff;
+  --nav-active-color: #2f67f6;
+  --nav-active-indicator: #2f67f6;
+  --nav-icon-bg: #f0f4f0;
+  --nav-icon-active-bg: rgba(47, 103, 246, 0.12);
+  --focus-ring: 0 0 0 3px rgba(35, 122, 92, 0.28);
+  --focus-ring-offset: 2px;
+  --transition-fast: 140ms cubic-bezier(0.16, 1, 0.3, 1);
+  --transition-base: 220ms cubic-bezier(0.16, 1, 0.3, 1);
+  --transition-spring: 380ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  --card-shadow: 0 1px 3px rgba(23, 33, 27, 0.06), 0 4px 12px rgba(23, 33, 27, 0.05);
+  --card-shadow-hover: 0 2px 8px rgba(23, 33, 27, 0.08), 0 8px 24px rgba(23, 33, 27, 0.08);
+  --toast-bg: #1a2420;
+  --skeleton-base: #e8ede8;
+  --skeleton-shine: #f2f5f2;
+}
+
+[data-theme="dark"] {
+  --nav-active-bg: rgba(29, 185, 122, 0.12);
+  --nav-active-color: #1db97a;
+  --nav-active-indicator: #1db97a;
+  --nav-icon-bg: rgba(255, 255, 255, 0.05);
+  --nav-icon-active-bg: rgba(29, 185, 122, 0.16);
+  --focus-ring: 0 0 0 3px rgba(29, 185, 122, 0.3);
+  --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.3), 0 4px 12px rgba(0, 0, 0, 0.2);
+  --card-shadow-hover: 0 2px 8px rgba(0, 0, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.3);
+  --toast-bg: #1e1e1e;
+  --skeleton-base: #1e1e1e;
+  --skeleton-shine: #252525;
+}
+
+/* ════════════════════════════════════════
+   1. 사이드바 네비게이션 SVG 아이콘 + 활성 탭
+   ════════════════════════════════════════ */
+
+/* ::before의 이모지 content를 제거하고 SVG background-image로 교체 */
+.view-tabs button::before {
+  content: "" !important;
+  flex-shrink: 0;
+  background-color: var(--nav-icon-bg);
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 16px 16px;
+  border-radius: 7px;
+  display: inline-flex;
+  height: 28px;
+  width: 28px;
+  margin-right: 10px;
+  transition: background-color var(--transition-fast), transform var(--transition-fast);
+}
+
+/* 각 탭별 SVG 아이콘 — 라이트 모드 */
+.view-tabs button[data-view-tab="dashboard"]::before {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2366746d' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='3' width='7' height='7' rx='1'/%3E%3Crect x='14' y='3' width='7' height='7' rx='1'/%3E%3Crect x='3' y='14' width='7' height='7' rx='1'/%3E%3Crect x='14' y='14' width='7' height='7' rx='1'/%3E%3C/svg%3E");
+}
+
+.view-tabs button[data-view-tab="holdings"]::before {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2366746d' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='22 7 13.5 15.5 8.5 10.5 2 17'/%3E%3Cpolyline points='16 7 22 7 22 13'/%3E%3C/svg%3E");
+}
+
+.view-tabs button[data-view-tab="accounts"]::before {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2366746d' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='2' y='6' width='20' height='14' rx='2'/%3E%3Cpath d='M16 14a2 2 0 0 1-4 0'/%3E%3Cpath d='M2 10h20'/%3E%3C/svg%3E");
+}
+
+.view-tabs button[data-view-tab="performance"]::before {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2366746d' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='18' y1='20' x2='18' y2='10'/%3E%3Cline x1='12' y1='20' x2='12' y2='4'/%3E%3Cline x1='6' y1='20' x2='6' y2='14'/%3E%3C/svg%3E");
+}
+
+.view-tabs button[data-view-tab="cashflows"]::before {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2366746d' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpath d='M14.5 9.5C14.5 8.4 13.4 7.5 12 7.5S9.5 8.4 9.5 9.5c0 2 5 2 5 4.5 0 1.1-1.1 2-2.5 2s-2.5-.9-2.5-2'/%3E%3Cline x1='12' y1='6' x2='12' y2='7.5'/%3E%3Cline x1='12' y1='16' x2='12' y2='18'/%3E%3C/svg%3E");
+}
+
+.view-tabs button[data-view-tab="automation"]::before {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2366746d' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9'/%3E%3Cpath d='M13.73 21a2 2 0 0 1-3.46 0'/%3E%3C/svg%3E");
+}
+
+.view-tabs button[data-view-tab="simulator"]::before {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2366746d' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpolygon points='10 8 16 12 10 16 10 8'/%3E%3C/svg%3E");
+}
+
+/* 활성 탭 아이콘 — 파란색으로 변경 */
+.view-tabs button.active[data-view-tab="dashboard"]::before {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%232f67f6' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='3' width='7' height='7' rx='1'/%3E%3Crect x='14' y='3' width='7' height='7' rx='1'/%3E%3Crect x='3' y='14' width='7' height='7' rx='1'/%3E%3Crect x='14' y='14' width='7' height='7' rx='1'/%3E%3C/svg%3E");
+  background-color: var(--nav-icon-active-bg);
+}
+
+.view-tabs button.active[data-view-tab="holdings"]::before {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%232f67f6' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='22 7 13.5 15.5 8.5 10.5 2 17'/%3E%3Cpolyline points='16 7 22 7 22 13'/%3E%3C/svg%3E");
+  background-color: var(--nav-icon-active-bg);
+}
+
+.view-tabs button.active[data-view-tab="accounts"]::before {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%232f67f6' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='2' y='6' width='20' height='14' rx='2'/%3E%3Cpath d='M16 14a2 2 0 0 1-4 0'/%3E%3Cpath d='M2 10h20'/%3E%3C/svg%3E");
+  background-color: var(--nav-icon-active-bg);
+}
+
+.view-tabs button.active[data-view-tab="performance"]::before {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%232f67f6' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='18' y1='20' x2='18' y2='10'/%3E%3Cline x1='12' y1='20' x2='12' y2='4'/%3E%3Cline x1='6' y1='20' x2='6' y2='14'/%3E%3C/svg%3E");
+  background-color: var(--nav-icon-active-bg);
+}
+
+.view-tabs button.active[data-view-tab="cashflows"]::before {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%232f67f6' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpath d='M14.5 9.5C14.5 8.4 13.4 7.5 12 7.5S9.5 8.4 9.5 9.5c0 2 5 2 5 4.5 0 1.1-1.1 2-2.5 2s-2.5-.9-2.5-2'/%3E%3Cline x1='12' y1='6' x2='12' y2='7.5'/%3E%3Cline x1='12' y1='16' x2='12' y2='18'/%3E%3C/svg%3E");
+  background-color: var(--nav-icon-active-bg);
+}
+
+.view-tabs button.active[data-view-tab="automation"]::before {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%232f67f6' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9'/%3E%3Cpath d='M13.73 21a2 2 0 0 1-3.46 0'/%3E%3C/svg%3E");
+  background-color: var(--nav-icon-active-bg);
+}
+
+.view-tabs button.active[data-view-tab="simulator"]::before {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%232f67f6' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpolygon points='10 8 16 12 10 16 10 8'/%3E%3C/svg%3E");
+  background-color: var(--nav-icon-active-bg);
+}
+
+/* hover 상태에서도 아이콘 색 변경 */
+@media (min-width: 981px) {
+  .view-tabs button:hover[data-view-tab="dashboard"]::before,
+  .view-tabs button:focus-visible[data-view-tab="dashboard"]::before {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%232f67f6' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='3' width='7' height='7' rx='1'/%3E%3Crect x='14' y='3' width='7' height='7' rx='1'/%3E%3Crect x='3' y='14' width='7' height='7' rx='1'/%3E%3Crect x='14' y='14' width='7' height='7' rx='1'/%3E%3C/svg%3E");
+    background-color: rgba(47, 103, 246, 0.08);
+  }
+
+  .view-tabs button:hover[data-view-tab="holdings"]::before,
+  .view-tabs button:focus-visible[data-view-tab="holdings"]::before {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%232f67f6' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='22 7 13.5 15.5 8.5 10.5 2 17'/%3E%3Cpolyline points='16 7 22 7 22 13'/%3E%3C/svg%3E");
+    background-color: rgba(47, 103, 246, 0.08);
+  }
+
+  .view-tabs button:hover[data-view-tab="accounts"]::before,
+  .view-tabs button:focus-visible[data-view-tab="accounts"]::before {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%232f67f6' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='2' y='6' width='20' height='14' rx='2'/%3E%3Cpath d='M16 14a2 2 0 0 1-4 0'/%3E%3Cpath d='M2 10h20'/%3E%3C/svg%3E");
+    background-color: rgba(47, 103, 246, 0.08);
+  }
+
+  .view-tabs button:hover[data-view-tab="performance"]::before,
+  .view-tabs button:focus-visible[data-view-tab="performance"]::before {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%232f67f6' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='18' y1='20' x2='18' y2='10'/%3E%3Cline x1='12' y1='20' x2='12' y2='4'/%3E%3Cline x1='6' y1='20' x2='6' y2='14'/%3E%3C/svg%3E");
+    background-color: rgba(47, 103, 246, 0.08);
+  }
+
+  .view-tabs button:hover[data-view-tab="cashflows"]::before,
+  .view-tabs button:focus-visible[data-view-tab="cashflows"]::before {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%232f67f6' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpath d='M14.5 9.5C14.5 8.4 13.4 7.5 12 7.5S9.5 8.4 9.5 9.5c0 2 5 2 5 4.5 0 1.1-1.1 2-2.5 2s-2.5-.9-2.5-2'/%3E%3Cline x1='12' y1='6' x2='12' y2='7.5'/%3E%3Cline x1='12' y1='16' x2='12' y2='18'/%3E%3C/svg%3E");
+    background-color: rgba(47, 103, 246, 0.08);
+  }
+
+  .view-tabs button:hover[data-view-tab="automation"]::before,
+  .view-tabs button:focus-visible[data-view-tab="automation"]::before {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%232f67f6' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9'/%3E%3Cpath d='M13.73 21a2 2 0 0 1-3.46 0'/%3E%3C/svg%3E");
+    background-color: rgba(47, 103, 246, 0.08);
+  }
+
+  .view-tabs button:hover[data-view-tab="simulator"]::before,
+  .view-tabs button:focus-visible[data-view-tab="simulator"]::before {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%232f67f6' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpolygon points='10 8 16 12 10 16 10 8'/%3E%3C/svg%3E");
+    background-color: rgba(47, 103, 246, 0.08);
+  }
+}
+
+/* 다크모드 아이콘 — 비활성 상태 */
+[data-theme="dark"] .view-tabs button[data-view-tab="dashboard"]::before {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.4)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='3' width='7' height='7' rx='1'/%3E%3Crect x='14' y='3' width='7' height='7' rx='1'/%3E%3Crect x='3' y='14' width='7' height='7' rx='1'/%3E%3Crect x='14' y='14' width='7' height='7' rx='1'/%3E%3C/svg%3E");
+}
+
+[data-theme="dark"] .view-tabs button[data-view-tab="holdings"]::before {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.4)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='22 7 13.5 15.5 8.5 10.5 2 17'/%3E%3Cpolyline points='16 7 22 7 22 13'/%3E%3C/svg%3E");
+}
+
+[data-theme="dark"] .view-tabs button[data-view-tab="accounts"]::before {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.4)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='2' y='6' width='20' height='14' rx='2'/%3E%3Cpath d='M16 14a2 2 0 0 1-4 0'/%3E%3Cpath d='M2 10h20'/%3E%3C/svg%3E");
+}
+
+[data-theme="dark"] .view-tabs button[data-view-tab="performance"]::before {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.4)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='18' y1='20' x2='18' y2='10'/%3E%3Cline x1='12' y1='20' x2='12' y2='4'/%3E%3Cline x1='6' y1='20' x2='6' y2='14'/%3E%3C/svg%3E");
+}
+
+[data-theme="dark"] .view-tabs button[data-view-tab="cashflows"]::before {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.4)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpath d='M14.5 9.5C14.5 8.4 13.4 7.5 12 7.5S9.5 8.4 9.5 9.5c0 2 5 2 5 4.5 0 1.1-1.1 2-2.5 2s-2.5-.9-2.5-2'/%3E%3Cline x1='12' y1='6' x2='12' y2='7.5'/%3E%3Cline x1='12' y1='16' x2='12' y2='18'/%3E%3C/svg%3E");
+}
+
+[data-theme="dark"] .view-tabs button[data-view-tab="automation"]::before {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.4)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9'/%3E%3Cpath d='M13.73 21a2 2 0 0 1-3.46 0'/%3E%3C/svg%3E");
+}
+
+[data-theme="dark"] .view-tabs button[data-view-tab="simulator"]::before {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.4)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpolygon points='10 8 16 12 10 16 10 8'/%3E%3C/svg%3E");
+}
+
+/* 다크모드 활성 탭 아이콘 */
+[data-theme="dark"] .view-tabs button.active[data-view-tab="dashboard"]::before {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%231db97a' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='3' width='7' height='7' rx='1'/%3E%3Crect x='14' y='3' width='7' height='7' rx='1'/%3E%3Crect x='3' y='14' width='7' height='7' rx='1'/%3E%3Crect x='14' y='14' width='7' height='7' rx='1'/%3E%3C/svg%3E");
+}
+
+[data-theme="dark"] .view-tabs button.active[data-view-tab="holdings"]::before {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%231db97a' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='22 7 13.5 15.5 8.5 10.5 2 17'/%3E%3Cpolyline points='16 7 22 7 22 13'/%3E%3C/svg%3E");
+}
+
+[data-theme="dark"] .view-tabs button.active[data-view-tab="accounts"]::before {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%231db97a' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='2' y='6' width='20' height='14' rx='2'/%3E%3Cpath d='M16 14a2 2 0 0 1-4 0'/%3E%3Cpath d='M2 10h20'/%3E%3C/svg%3E");
+}
+
+[data-theme="dark"] .view-tabs button.active[data-view-tab="performance"]::before {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%231db97a' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='18' y1='20' x2='18' y2='10'/%3E%3Cline x1='12' y1='20' x2='12' y2='4'/%3E%3Cline x1='6' y1='20' x2='6' y2='14'/%3E%3C/svg%3E");
+}
+
+[data-theme="dark"] .view-tabs button.active[data-view-tab="cashflows"]::before {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%231db97a' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpath d='M14.5 9.5C14.5 8.4 13.4 7.5 12 7.5S9.5 8.4 9.5 9.5c0 2 5 2 5 4.5 0 1.1-1.1 2-2.5 2s-2.5-.9-2.5-2'/%3E%3Cline x1='12' y1='6' x2='12' y2='7.5'/%3E%3Cline x1='12' y1='16' x2='12' y2='18'/%3E%3C/svg%3E");
+}
+
+[data-theme="dark"] .view-tabs button.active[data-view-tab="automation"]::before {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%231db97a' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9'/%3E%3Cpath d='M13.73 21a2 2 0 0 1-3.46 0'/%3E%3C/svg%3E");
+}
+
+[data-theme="dark"] .view-tabs button.active[data-view-tab="simulator"]::before {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%231db97a' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpolygon points='10 8 16 12 10 16 10 8'/%3E%3C/svg%3E");
+}
+
+/* 더보기 버튼 아이콘 처리 — 모바일 전용 */
+.view-tabs .nav-more-btn::before {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2366746d' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='5' cy='12' r='1.5'/%3E%3Ccircle cx='12' cy='12' r='1.5'/%3E%3Ccircle cx='19' cy='12' r='1.5'/%3E%3C/svg%3E") !important;
+  content: "" !important;
+}
+
+/* ════════════════════════════════════════
+   2. 활성 탭 왼쪽 인디케이터 — 사이드바
+   ════════════════════════════════════════ */
+
+@media (min-width: 981px) {
+  .view-tabs button {
+    position: relative;
+    transition: background var(--transition-fast), color var(--transition-fast);
+  }
+
+  .view-tabs button.active {
+    background: var(--nav-active-bg);
+    color: var(--nav-active-color);
+    font-weight: 800;
+  }
+
+  .view-tabs button.active::after {
+    background: var(--nav-active-indicator);
+    border-radius: 0 3px 3px 0;
+    bottom: 7px;
+    content: "";
+    left: -12px;
+    position: absolute;
+    top: 7px;
+    width: 3px;
+  }
+}
+
+/* ════════════════════════════════════════
+   3. 접근성 — 포커스 링
+   ════════════════════════════════════════ */
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: var(--focus-ring-offset);
+  border-radius: 4px;
+}
+
+button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  box-shadow: var(--focus-ring);
+  border-radius: 8px;
+}
+
+input:focus-visible,
+select:focus-visible {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: var(--focus-ring);
+}
+
+/* ════════════════════════════════════════
+   4. 버튼 인터랙션 일관화
+   ════════════════════════════════════════ */
+
+button {
+  position: relative;
+  transition: background var(--transition-fast), color var(--transition-fast),
+              border-color var(--transition-fast), box-shadow var(--transition-fast),
+              transform var(--transition-fast);
+}
+
+button:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+button:active:not(:disabled) {
+  transform: translateY(0) scale(0.975);
+}
+
+button.primary {
+  background: var(--accent);
+  box-shadow: 0 2px 8px rgba(35, 122, 92, 0.3);
+}
+
+button.primary:hover:not(:disabled) {
+  background: var(--accent-dark);
+  box-shadow: 0 4px 14px rgba(35, 122, 92, 0.4);
+}
+
+/* ghost/small 버튼 hover 향상 */
+button.ghost:hover:not(:disabled),
+button.secondary:hover:not(:disabled),
+.small-button:hover:not(:disabled) {
+  box-shadow: 0 2px 6px rgba(23, 33, 27, 0.08);
+}
+
+/* ════════════════════════════════════════
+   5. 카드 / 패널 깊이 + 그림자 일관성
+   ════════════════════════════════════════ */
+
+.metric,
+.panel {
+  box-shadow: var(--card-shadow);
+  transition: box-shadow var(--transition-base), transform var(--transition-base);
+}
+
+.dashboard-card:not(.is-layout-editing):hover .panel,
+.dashboard-card:not(.is-layout-editing):hover.panel,
+.holding-summary-card:hover,
+.account-overview-card:hover {
+  box-shadow: var(--card-shadow-hover);
+}
+
+/* ════════════════════════════════════════
+   6. 테이블 행 호버 + 선택 상태
+   ════════════════════════════════════════ */
+
+tbody tr {
+  transition: background var(--transition-fast);
+}
+
+tbody tr:hover {
+  background: rgba(35, 122, 92, 0.03);
+}
+
+[data-theme="dark"] tbody tr:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.holdings-table tbody tr {
+  cursor: pointer;
+}
+
+.holdings-table tbody tr:hover td {
+  background: transparent;
+}
+
+/* ════════════════════════════════════════
+   7. 입력 폼 요소 일관화
+   ════════════════════════════════════════ */
+
+input,
+select {
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+input:hover:not(:focus),
+select:hover:not(:focus) {
+  border-color: color-mix(in srgb, var(--accent) 35%, var(--line));
+}
+
+select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2366746d' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  padding-right: 32px;
+}
+
+[data-theme="dark"] select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.4)' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+}
+
+/* 체크박스/라디오 기본 스타일 보정 */
+input[type="checkbox"] {
+  accent-color: var(--accent);
+  width: 18px;
+  min-height: unset;
+  height: 18px;
+  cursor: pointer;
+  appearance: auto;
+  -webkit-appearance: auto;
+  padding: 0;
+  border: 0;
+  border-radius: 4px;
+}
+
+input[type="radio"] {
+  accent-color: var(--accent);
+  width: 18px;
+  min-height: unset;
+  height: 18px;
+  cursor: pointer;
+  appearance: auto;
+  -webkit-appearance: auto;
+  padding: 0;
+  border: 0;
+}
+
+input[type="search"] {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2366746d' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: left 10px center;
+  padding-left: 34px;
+}
+
+[data-theme="dark"] input[type="search"] {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.35)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E");
+}
+
+/* 날짜 입력 */
+input[type="date"] {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2366746d' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2'/%3E%3Cline x1='16' y1='2' x2='16' y2='6'/%3E%3Cline x1='8' y1='2' x2='8' y2='6'/%3E%3Cline x1='3' y1='10' x2='21' y2='10'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  padding-right: 36px;
+}
+
+/* ════════════════════════════════════════
+   8. 토스트 알림 개선
+   ════════════════════════════════════════ */
+
+.operation-toast {
+  align-items: flex-start;
+  background: var(--toast-bg);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  bottom: 24px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.28), 0 2px 8px rgba(0, 0, 0, 0.14);
+  display: grid;
+  gap: 4px;
+  max-width: min(400px, calc(100vw - 48px));
+  padding: 14px 16px;
+  position: fixed;
+  right: 24px;
+  z-index: 50;
+  animation: toastSlideIn 0.32s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+.operation-toast strong {
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.operation-toast span {
+  font-size: 12.5px;
+  font-weight: 600;
+  line-height: 1.45;
+  opacity: 0.75;
+}
+
+.operation-toast[data-tone="success"] {
+  border-color: rgba(29, 185, 122, 0.3);
+  box-shadow: 0 8px 32px rgba(29, 185, 122, 0.12), 0 2px 8px rgba(0, 0, 0, 0.14);
+}
+
+.operation-toast[data-tone="error"] {
+  border-color: rgba(199, 67, 61, 0.3);
+  box-shadow: 0 8px 32px rgba(199, 67, 61, 0.12), 0 2px 8px rgba(0, 0, 0, 0.14);
+}
+
+.operation-toast[data-tone="warning"] {
+  border-color: rgba(169, 120, 25, 0.3);
+}
+
+@keyframes toastSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ════════════════════════════════════════
+   9. 빈 상태(Empty State) 개선
+   ════════════════════════════════════════ */
+
+.empty-portfolio {
+  background: linear-gradient(135deg, var(--surface) 0%, color-mix(in srgb, var(--accent) 4%, var(--surface)) 100%);
+  border: 1px solid color-mix(in srgb, var(--accent) 16%, var(--line));
+  border-radius: var(--radius);
+  box-shadow: var(--card-shadow);
+  gap: 20px;
+  padding: 24px;
+}
+
+.empty-portfolio strong {
+  font-size: 17px;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+}
+
+.empty-portfolio span {
+  color: var(--muted);
+  font-size: 13.5px;
+  line-height: 1.55;
+}
+
+/* 빈 상태 유틸리티 클래스 */
+.empty-state-card {
+  align-items: center;
+  background: var(--surface);
+  border: 1.5px dashed var(--line);
+  border-radius: var(--radius);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  justify-content: center;
+  min-height: 160px;
+  padding: 32px 24px;
+  text-align: center;
+}
+
+.empty-state-card .empty-state-icon {
+  background: var(--surface-soft);
+  border-radius: 50%;
+  height: 52px;
+  width: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.empty-state-card .empty-state-icon::before {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='22' height='22' viewBox='0 0 24 24' fill='none' stroke='%23879189' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 3h18v18H3z'/%3E%3Cpath d='M9 9h6M9 12h6M9 15h4'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 22px;
+  content: "";
+  display: block;
+  height: 24px;
+  width: 24px;
+}
+
+.empty-state-card strong {
+  color: var(--ink);
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.empty-state-card span {
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
+  max-width: 280px;
+}
+
+/* ════════════════════════════════════════
+   10. 스켈레톤 로딩 UI
+   ════════════════════════════════════════ */
+
+@keyframes skeletonShimmer {
+  0% { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+
+.skeleton {
+  background: linear-gradient(90deg,
+    var(--skeleton-base) 25%,
+    var(--skeleton-shine) 50%,
+    var(--skeleton-base) 75%
+  );
+  background-size: 800px 100%;
+  animation: skeletonShimmer 1.6s infinite linear;
+  border-radius: 6px;
+  display: block;
+}
+
+.skeleton-text {
+  height: 14px;
+  margin-bottom: 8px;
+  width: 100%;
+}
+
+.skeleton-text.short { width: 60%; }
+.skeleton-text.medium { width: 80%; }
+
+.skeleton-value {
+  height: 28px;
+  margin-bottom: 4px;
+  width: 70%;
+}
+
+.skeleton-card {
+  min-height: 128px;
+  border-radius: var(--radius);
+}
+
+/* ════════════════════════════════════════
+   11. 모바일 하단 내비게이션 UX 개선
+   ════════════════════════════════════════ */
+
+@media (max-width: 980px) {
+  .view-tabs {
+    background: rgba(255, 255, 255, 0.96);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    box-shadow: 0 -1px 0 rgba(0, 0, 0, 0.06), 0 -8px 24px rgba(23, 33, 27, 0.08);
+    padding: 8px 6px calc(8px + env(safe-area-inset-bottom));
+  }
+
+  [data-theme="dark"] .view-tabs {
+    background: rgba(14, 14, 14, 0.96);
+    box-shadow: 0 -1px 0 rgba(255, 255, 255, 0.07), 0 -8px 24px rgba(0, 0, 0, 0.5);
+  }
+
+  /* 모바일 탭 버튼 최소 터치 타겟 44px 보장 */
+  .view-tabs button {
+    border-radius: 10px;
+    flex: 1 1 0;
+    min-height: 52px;
+    min-width: 44px;
+    padding: 6px 4px;
+    gap: 4px;
+  }
+
+  /* 모바일 아이콘 컨테이너 (::before 크기) */
+  .view-tabs button::before {
+    border-radius: 10px !important;
+    content: "" !important;
+    height: 30px !important;
+    width: 30px !important;
+    margin-right: 0 !important;
+    background-size: 18px 18px !important;
+    background-color: transparent !important;
+    transition: background-color var(--transition-fast), transform var(--transition-spring) !important;
+  }
+
+  .view-tabs button.active::before {
+    background-color: var(--nav-icon-active-bg) !important;
+    transform: scale(1.08);
+  }
+
+  /* 모바일 활성 탭 레이블 색상 */
+  .view-tabs button::after {
+    font-size: 10.5px;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    margin-top: 2px;
+    transition: color var(--transition-fast);
+  }
+
+  .view-tabs button.active::after {
+    color: var(--nav-active-color);
+  }
+
+  /* 탭 active pill 제거 (::after 인디케이터 재설정) */
+  .view-tabs button.active::after {
+    content: attr(data-mobile-label);
+    display: block;
+    color: var(--nav-active-color);
+  }
+
+  /* 더보기 버튼 아이콘 모바일 */
+  .view-tabs .nav-more-btn::before {
+    background-size: 18px 18px !important;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%2366746d' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='5' cy='12' r='1.5'/%3E%3Ccircle cx='12' cy='12' r='1.5'/%3E%3Ccircle cx='19' cy='12' r='1.5'/%3E%3C/svg%3E") !important;
+  }
+}
+
+/* ════════════════════════════════════════
+   12. 더보기 드로어 개선 애니메이션
+   ════════════════════════════════════════ */
+
+@media (max-width: 980px) {
+  .nav-more-backdrop {
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    background: rgba(0, 0, 0, 0.4);
+    opacity: 0;
+    transition: opacity 0.26s ease;
+  }
+
+  .nav-more-drawer.open .nav-more-backdrop {
+    opacity: 1;
+  }
+
+  .nav-more-sheet {
+    background: var(--surface);
+    border-radius: 20px 20px 0 0;
+    box-shadow: 0 -16px 48px rgba(0, 0, 0, 0.18);
+    padding-bottom: calc(24px + env(safe-area-inset-bottom));
+    transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+  }
+
+  [data-theme="dark"] .nav-more-sheet {
+    background: #161616;
+    box-shadow: 0 -16px 48px rgba(0, 0, 0, 0.6), 0 -1px 0 rgba(255, 255, 255, 0.07);
+  }
+
+  .nav-more-sheet-handle {
+    background: var(--line);
+    border-radius: 99px;
+    height: 4px;
+    margin: 0 auto 20px;
+    opacity: 0.7;
+    width: 40px;
+  }
+
+  .nav-more-item {
+    align-items: center;
+    border-radius: 12px;
+    display: flex;
+    gap: 16px;
+    margin: 2px 12px;
+    min-height: 52px;
+    padding: 12px 16px;
+    transition: background var(--transition-fast);
+    width: auto;
+  }
+
+  .nav-more-item:hover,
+  .nav-more-item:active {
+    background: var(--surface-soft);
+  }
+
+  [data-theme="dark"] .nav-more-item:hover,
+  [data-theme="dark"] .nav-more-item:active {
+    background: rgba(255, 255, 255, 0.06);
+  }
+
+  .nav-more-item.active {
+    background: var(--nav-active-bg);
+  }
+
+  .nav-more-item.active .nav-more-name {
+    color: var(--nav-active-color);
+    font-weight: 800;
+  }
+
+  .nav-more-icon {
+    align-items: center;
+    background: var(--surface-soft);
+    border-radius: 10px;
+    display: flex;
+    font-size: 18px;
+    height: 36px;
+    justify-content: center;
+    width: 36px;
+    flex-shrink: 0;
+  }
+
+  .nav-more-item.active .nav-more-icon {
+    background: var(--nav-icon-active-bg);
+  }
+
+  .nav-more-name {
+    color: var(--ink);
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+}
+
+/* ════════════════════════════════════════
+   13. 모바일 카드 패딩 최적화
+   ════════════════════════════════════════ */
+
+@media (max-width: 640px) {
+  .metric {
+    min-height: 110px;
+    padding: 16px;
+  }
+
+  .metric strong {
+    font-size: clamp(20px, 5vw, 26px);
+  }
+
+  .panel {
+    padding: 16px;
+  }
+
+  .holding-summary-card {
+    padding: 14px 16px 12px;
+  }
+
+  .account-overview-card {
+    padding: 16px;
+  }
+
+  .section-heading h2 {
+    font-size: 17px;
+  }
+
+  .toolbar {
+    min-height: 58px;
+  }
+
+  .page-heading strong {
+    font-size: 18px;
+  }
+
+  .page-heading span {
+    font-size: 12px;
+  }
+}
+
+/* ════════════════════════════════════════
+   14. 툴바 영역 auth/sync 정보 개선
+   ════════════════════════════════════════ */
+
+.auth-panel {
+  align-items: center;
+  gap: 10px;
+}
+
+.auth-panel #authStatus {
+  background: var(--surface-soft);
+  border: 1px solid var(--line);
+  border-radius: 99px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+  max-width: min(200px, 28vw);
+  overflow: hidden;
+  padding: 4px 10px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+[data-theme="dark"] .auth-panel #authStatus {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+/* 샘플 데이터 배너 개선 */
+.sample-data-banner {
+  animation: toastSlideIn 0.3s ease both;
+  border-radius: var(--radius);
+  gap: 14px;
+}
+
+/* ════════════════════════════════════════
+   15. 사이드바 브랜드 + 풋 개선
+   ════════════════════════════════════════ */
+
+.brand-mark {
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%);
+  box-shadow: 0 2px 8px rgba(35, 122, 92, 0.3);
+  font-size: 13px;
+  letter-spacing: -0.02em;
+}
+
+.sidebar-brand {
+  align-items: center;
+  display: flex;
+  gap: 12px;
+}
+
+.brand-lockup h1 {
+  letter-spacing: -0.03em;
+}
+
+.sidebar-foot {
+  gap: 6px;
+}
+
+.sidebar-foot span {
+  font-size: 11.5px;
+  letter-spacing: 0;
+  opacity: 0.7;
+}
+
+.sidebar-foot strong {
+  color: var(--ink);
+  font-size: 12.5px;
+  font-weight: 700;
+  opacity: 0.85;
+}
+
+/* ════════════════════════════════════════
+   16. 상태 배지/필 개선
+   ════════════════════════════════════════ */
+
+.status-pill {
+  border-radius: 99px;
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: 0;
+}
+
+/* ════════════════════════════════════════
+   17. 섹션 구분선과 heading 개선
+   ════════════════════════════════════════ */
+
+.section-heading h2 {
+  letter-spacing: -0.02em;
+}
+
+/* ════════════════════════════════════════
+   18. 계좌 목록 행 선택 상태 명확화
+   ════════════════════════════════════════ */
+
+.account-list-row {
+  border-radius: 10px;
+  transition: background var(--transition-fast), border-color var(--transition-fast),
+              box-shadow var(--transition-fast);
+}
+
+.account-list-row:hover,
+.account-list-row:focus-visible {
+  box-shadow: 0 2px 8px rgba(47, 103, 246, 0.08);
+}
+
+.account-list-row.is-selected {
+  background: rgba(47, 105, 255, 0.06);
+  border-color: rgba(47, 105, 255, 0.28);
+  box-shadow: 0 2px 10px rgba(47, 103, 246, 0.1);
+}
+
+/* ════════════════════════════════════════
+   19. 세그먼트 컨트롤 transition
+   ════════════════════════════════════════ */
+
+.segmented-control button {
+  transition: background var(--transition-fast), color var(--transition-fast),
+              box-shadow var(--transition-fast);
+}
+
+/* ════════════════════════════════════════
+   20. 모바일 툴바 간소화
+   ════════════════════════════════════════ */
+
+@media (max-width: 980px) {
+  /* authStatus 칩은 모바일에서 감추기 (auth-panel span 기존 hide 유지) */
+  .auth-panel #authStatus {
+    display: none;
+  }
+
+  /* 토스트는 탭바 위에 */
+  .operation-toast {
+    bottom: calc(80px + env(safe-area-inset-bottom));
+    left: 16px;
+    right: 16px;
+    max-width: none;
+    border-radius: 14px;
+  }
+}
+
+/* ════════════════════════════════════════
+   21. 드로어 슬라이드 트랜지션 개선
+   ════════════════════════════════════════ */
+
+.side-drawer {
+  border-radius: 16px 0 0 16px;
+  box-shadow: -12px 0 48px rgba(17, 26, 21, 0.14);
+  transition: transform var(--transition-base);
+}
+
+@media (max-width: 640px) {
+  .side-drawer {
+    border-radius: 20px 20px 0 0;
+    bottom: 0;
+    box-shadow: 0 -12px 48px rgba(17, 26, 21, 0.14);
+    top: auto;
+    transform: translateY(100%);
+    width: 100vw;
+    max-width: none;
+    padding: 20px 16px calc(20px + env(safe-area-inset-bottom));
+  }
+
+  .side-drawer.is-open {
+    transform: translateY(0);
+  }
+}
+
+/* ════════════════════════════════════════
+   22. 페이지 전환 애니메이션 세부 조정
+   ════════════════════════════════════════ */
+
+@keyframes viewFadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ════════════════════════════════════════
+   23. 사이드바 overflow 처리
+   ════════════════════════════════════════ */
+
+.view-tabs {
+  overflow-y: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.view-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+/* ════════════════════════════════════════
+   24. 성과 KPI 카드 미세 조정
+   ════════════════════════════════════════ */
+
+.performance-detail-stats div {
+  border-radius: 10px;
+  transition: box-shadow var(--transition-fast);
+}
+
+.performance-detail-stats div:hover {
+  box-shadow: var(--card-shadow-hover);
+}
+
+/* ════════════════════════════════════════
+   25. 모바일 filter 간소화
+   ════════════════════════════════════════ */
+
+@media (max-width: 980px) {
+  .filters {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .filters {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ════════════════════════════════════════
+   26. 기능별 UX 세부 개선
+   ════════════════════════════════════════ */
+
+/* ── 드로어(종목 추가/편집) ─────────────────── */
+
+/* 드로어 내부 스크롤 처리 — 폼이 길면 스크롤, 버튼은 하단 고정 */
+.side-drawer {
+  overflow: hidden;
+}
+
+.holding-drawer .holding-form {
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--line) transparent;
+  padding-right: 4px;
+}
+
+/* 드로어 헤더 — 제목 영역 시각 강화 */
+.drawer-heading {
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 22px;
+  padding-bottom: 18px;
+}
+
+.drawer-heading h2 {
+  font-size: 18px;
+  letter-spacing: -0.02em;
+}
+
+/* 드로어 "닫기" 버튼 — 찾기 쉽게 */
+.drawer-heading > button.ghost {
+  flex-shrink: 0;
+  font-size: 13px;
+  min-height: 32px;
+  padding: 0 10px;
+  color: var(--muted);
+}
+
+/* 드로어 폼 레이블 — label 위 여백 + 글자 크기 */
+.holding-drawer label {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--subtle);
+  gap: 6px;
+}
+
+/* 드로어 입력 focus 스타일 */
+.holding-drawer input:focus,
+.holding-drawer select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 14%, transparent);
+  outline: none;
+}
+
+/* 드로어 액션 버튼 — 목록 추가(primary) + 취소 구분 */
+.drawer-actions {
+  border-top: 1px solid var(--line);
+  gap: 10px;
+  grid-template-columns: 1fr 1fr;
+  padding-top: 20px;
+}
+
+.drawer-actions button:first-child {
+  grid-column: 1 / -1;
+}
+
+/* 취소 버튼이 단독 있을 때는 전체 너비 유지 */
+.drawer-actions button:only-child {
+  grid-column: 1 / -1;
+}
+
+/* ── 행 메뉴 (⋮ 팝오버) ──────────────────── */
+
+/* 팝오버 그림자 강화 + 넓이 */
+.row-menu-popover {
+  min-width: 128px;
+  box-shadow: 0 8px 24px rgba(17, 26, 21, 0.14), 0 2px 6px rgba(17, 26, 21, 0.06);
+  border-radius: 10px;
+  padding: 5px;
+  gap: 2px;
+}
+
+/* 팝오버 버튼 — 가독성과 터치 타겟 */
+.row-menu-popover button {
+  border-radius: 7px;
+  font-size: 13.5px;
+  font-weight: 600;
+  min-height: 36px;
+  padding: 0 12px;
+}
+
+.row-menu-popover button:hover,
+.row-menu-popover button:focus-visible {
+  background: var(--surface-soft);
+  transform: none;
+}
+
+/* 삭제 버튼 hover 시 배경색도 붉게 */
+.row-menu-popover .row-menu-danger:hover,
+.row-menu-popover .row-menu-danger:focus-visible {
+  background: color-mix(in srgb, var(--red) 8%, transparent);
+  color: var(--red);
+}
+
+/* 수정/삭제 사이 구분선 */
+.row-menu-popover .row-menu-danger {
+  border-top: 1px solid var(--line);
+  margin-top: 2px;
+  padding-top: 4px;
+}
+
+/* ⋮ 트리거 버튼 — 호버 시 더 명확하게 */
+.row-menu summary {
+  background: transparent;
+  border-color: transparent;
+  color: var(--muted);
+  font-size: 18px;
+  height: 32px;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+  width: 32px;
+}
+
+.row-menu summary:hover,
+.row-menu[open] summary {
+  background: var(--surface-soft);
+  border-color: var(--line);
+  color: var(--ink);
+}
+
+/* ── 보유 종목 테이블 ──────────────────────── */
+
+/* 행 hover 배경 */
+.holdings-table tbody tr {
+  transition: background 0.12s;
+}
+
+.holdings-table tbody tr:hover {
+  background: color-mix(in srgb, var(--accent) 4%, var(--surface));
+}
+
+/* th-sort 버튼 — 현재 열 강조 */
+.th-sort {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.th-sort:hover,
+.th-sort:focus-visible {
+  color: var(--accent);
+  transform: none;
+}
+
+/* 테이블 헤더 행 배경 */
+.holdings-table thead th {
+  background: var(--surface-soft);
+}
+
+/* 숫자 셀 오른쪽 정렬 통일 */
+.holdings-table td .money-value,
+.holdings-table td .amount-cell {
+  display: block;
+  text-align: right;
+}
+
+/* 일 영향 + 손익 셀 — 양수/음수 폰트 굵기 강화 */
+td.positive .money-value,
+td.negative .money-value {
+  font-weight: 900;
+}
+
+td.positive {
+  color: var(--gain);
+}
+
+td.negative {
+  color: var(--loss);
+}
+
+/* ── 계좌/예수금 탭 ───────────────────────── */
+
+/* 계좌 카드 행 메뉴 터치 타겟 */
+.account-row-menu summary,
+.account-card-row .row-menu summary {
+  height: 36px;
+  width: 36px;
+}
+
+/* 계좌 카드 hover */
+.account-card-row:hover {
+  background: color-mix(in srgb, var(--accent) 3%, var(--surface));
+}
+
+/* ── 현금흐름 탭 ─────────────────────────── */
+
+/* 현금흐름 폼 — 입력 폼 카드 스타일 */
+[data-view="cashflows"] .panel {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 22px 22px 18px;
+}
+
+/* 현금흐름 폼 레이아웃 — 날짜/계좌/유형을 첫 줄, 금액/메모/버튼을 둘째 줄 */
+.cash-flow-form {
+  grid-template-columns: 160px 1fr 140px 180px 1fr auto;
+  gap: 10px;
+  align-items: end;
+  margin-bottom: 18px;
+}
+
+/* 현금흐름 폼 — 입력 필드 focus */
+.cash-flow-form input:focus,
+.cash-flow-form select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 14%, transparent);
+  outline: none;
+}
+
+/* 현금흐름 필터 바 */
+.compact-filters {
+  margin-bottom: 12px;
+}
+
+/* 현금흐름 테이블 헤더 */
+[data-view="cashflows"] thead th {
+  background: var(--surface-soft);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+/* th-sort 버튼 — 정렬 표시 스타일 */
+th[data-sort],
+.th-sort {
+  cursor: pointer;
+  user-select: none;
+}
+
+th[data-sort]:hover {
+  color: var(--accent);
+}
+
+/* 빈 상태 (데이터 없을 때) — 전체 탭 공통 */
+.empty-state {
+  align-items: center;
+  background: var(--surface);
+  border: 1.5px dashed var(--line);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  justify-content: center;
+  min-height: 200px;
+  padding: 40px 24px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 14px;
+  margin-top: 12px;
+}
+
+/* 테이블 tbody 빈 상태 — CSS :empty pseudo로 처리 */
+.table-wrap tbody:empty::after {
+  color: var(--muted);
+  content: "기록된 데이터가 없습니다";
+  display: block;
+  font-size: 13.5px;
+  padding: 40px 20px;
+  text-align: center;
+}
+
+/* 현금흐름 탭 빈 tbody */
+[data-view="cashflows"] tbody:empty::after {
+  content: "입출금 기록이 없습니다. 위 폼에서 첫 기록을 추가해보세요.";
+}
+
+/* ── 시뮬레이터 서브탭 ─────────────────────── */
+
+/* 서브탭 라인 강화 */
+.sim-scenario-tabs {
+  border-bottom-color: var(--line);
+  border-bottom-width: 1.5px;
+}
+
+/* 서브탭 버튼 — 타겟 크기 + 폰트 */
+.sim-scenario-tab {
+  font-size: 13.5px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  min-height: 40px;
+  padding: 0 18px;
+}
+
+.sim-scenario-tab.active {
+  font-weight: 900;
+}
+
+/* 시뮬레이터 폼 레이블 — 가독성 */
+.sim-label {
+  color: var(--muted);
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  margin-bottom: 5px;
+}
+
+/* 시뮬레이터 실행 버튼 — 크기 통일 */
+.sim-run-btn {
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 800;
+  min-height: 46px;
+  padding: 0 20px;
+}
+
+/* ── 성과 탭 ──────────────────────────────── */
+
+/* CSV 내보내기 버튼 — ghost 스타일 명확화 */
+.performance-export-btn,
+button.ghost[id*="Export"] {
+  border-color: var(--line);
+  color: var(--muted);
+  font-size: 13px;
+}
+
+/* ── 전역 input/select focus ──────────────── */
+
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 14%, transparent);
+  outline: none;
+}
+
+/* ── 보유 종목 툴바 ───────────────────────── */
+
+/* "+ 종목 추가" 버튼 — 좌측 여백 명확화 */
+#addHoldingButton {
+  flex-shrink: 0;
+  letter-spacing: -0.01em;
+}
+
+/* ── 세그먼트 컨트롤 (전체/수익/손실) ────── */
+
+.segmented-control button {
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.segmented-control button.is-active {
+  font-weight: 900;
+}
+
+/* ── 계좌 탭 툴바 버튼 ─────────────────────── */
+
+.account-page-actions button,
+#addAccountBtn,
+#accountCashSaveBtn {
+  font-weight: 800;
+}
+
+/* ── 자동화/데이터 탭 ─────────────────────── */
+
+/* 수동 작업 / 기록과 백업 아코디언 — 헤더 클릭 영역 강조 */
+.automation-section-toggle,
+details > summary {
+  cursor: pointer;
+}
+
+/* ── 페이지 전환 뷰 애니메이션 ────────────── */
+
+.panel {
+  animation: viewFadeUp 220ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* ── 모바일(≤640px) 보완 ───────────────────── */
+
+@media (max-width: 640px) {
+  /* 드로어 버튼 세로 스택 */
+  .drawer-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .drawer-actions button:first-child {
+    grid-column: 1;
+  }
+
+  /* 현금흐름 폼 — 세로 스택 */
+  .cash-flow-form {
+    grid-template-columns: 1fr;
+  }
+
+  /* 계좌 형식 폼 세로 스택 */
+  .account-form {
+    grid-template-columns: 1fr;
+  }
+
+  /* 보유 종목 요약 카드 2열 */
+  .holdings-summary-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  /* 행 메뉴 팝오버 — 화면 오른쪽으로 밀리지 않게 */
+  .row-menu-popover {
+    right: 0;
+    left: auto;
+  }
+}
+
+/* ── END STOCKLIO UX ENHANCEMENT LAYER ── */
+
+/* ════════════════════════════════════════
+   27. UX 2차 개선 — 행 메뉴 / 드로어 / 테이블 / 현금흐름 / 시뮬레이터
+   ════════════════════════════════════════ */
+
+/* ── A. 행 메뉴 (⋮ 버튼 + 팝오버) ────────── */
+
+/* ⋮ 트리거: 기본 상태에서 거의 안 보이다가 hover/open 시 명확하게 */
+details.row-menu > summary {
+  opacity: 0.38;
+  border-color: transparent;
+  background: transparent;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  font-size: 18px;
+  transition: opacity 0.15s ease, background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.holdings-table tbody tr:hover details.row-menu > summary,
+details.row-menu > summary:hover,
+details.row-menu[open] > summary {
+  opacity: 1;
+  background: var(--surface-soft);
+  border-color: var(--line);
+  color: var(--ink);
+}
+
+/* 팝오버: 넉넉한 너비 + 강한 그림자 + overflow hidden */
+details.row-menu .row-menu-popover {
+  min-width: 160px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  box-shadow:
+    0 0 0 1px rgba(17, 26, 21, 0.04),
+    0 4px 12px rgba(17, 26, 21, 0.10),
+    0 16px 40px rgba(17, 26, 21, 0.12);
+  overflow: hidden;
+  padding: 4px;
+  gap: 2px;
+}
+
+/* 팝오버 버튼: 넉넉한 터치 타겟 + 좌측 정렬 텍스트 */
+details.row-menu .row-menu-popover button {
+  min-height: 40px;
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: 8px;
+  width: 100%;
+  text-align: left;
+  padding: 0 12px;
+  justify-content: flex-start;
+}
+
+/* 삭제 버튼: 구분선 + 위험 강조 */
+details.row-menu .row-menu-popover .row-menu-danger {
+  margin-top: 4px;
+  border-top: 1px dashed var(--line);
+  padding-top: 4px;
+  color: var(--red);
+  font-weight: 700;
+}
+
+details.row-menu .row-menu-popover .row-menu-danger:hover,
+details.row-menu .row-menu-popover .row-menu-danger:focus-visible {
+  background: color-mix(in srgb, var(--red) 10%, transparent);
+  color: var(--red);
+}
+
+/* ── B. 드로어 폼 개선 ─────────────────────── */
+
+/* 폼 그룹: 레이블↑ 인풋↓ 세로 스택 */
+.holding-drawer .holding-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+/* 인풋/셀렉트: 충분한 터치 높이 */
+.holding-drawer input,
+.holding-drawer select {
+  min-height: 44px;
+  border-radius: 9px;
+  font-size: 14px;
+}
+
+/* focus 링 강화 */
+.holding-drawer input:focus,
+.holding-drawer select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 12%, transparent);
+  outline: none;
+}
+
+/* 드로어 액션 영역: 세로 스택 + 충분한 패딩 */
+.holding-drawer .drawer-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px 0 0;
+  border-top: 1px solid var(--line);
+  margin-top: 8px;
+}
+
+/* 제출 버튼: 더 크고 눈에 띄게 */
+.holding-drawer .drawer-actions button[type="submit"],
+.holding-drawer .drawer-actions #holdingSubmit {
+  min-height: 48px;
+  font-size: 15px;
+  font-weight: 800;
+  border-radius: 10px;
+  letter-spacing: -0.01em;
+}
+
+/* 취소 버튼: 전체 너비 */
+.holding-drawer .drawer-actions .ghost,
+.holding-drawer .drawer-actions #holdingCancel {
+  min-height: 40px;
+  font-size: 14px;
+}
+
+/* ── C. 보유 종목 테이블 ─────────────────────── */
+
+/* 행 높이: 모바일 터치 고려 */
+.holdings-table tbody tr td {
+  padding-top: 13px;
+  padding-bottom: 13px;
+}
+
+/* 헤더: 작은 대문자 레이블 스타일 */
+.holdings-table thead th {
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+  padding-top: 9px;
+  padding-bottom: 9px;
+  background: var(--surface-soft);
+}
+
+/* 수익/손실 숫자: font-weight 최대 강조 */
+.holdings-table td.positive,
+.holdings-table td.positive .money-value,
+.holdings-table td.positive .return-value {
+  font-weight: 800;
+  color: var(--gain);
+}
+
+.holdings-table td.negative,
+.holdings-table td.negative .money-value,
+.holdings-table td.negative .return-value {
+  font-weight: 800;
+  color: var(--loss);
+}
+
+/* gain/loss 클래스 범용 (JS에서 다양하게 사용) */
+[class*="gain-cell"],
+[class*="loss-cell"] {
+  font-weight: 800;
+}
+
+/* ── D. 현금흐름 폼 개선 ─────────────────────── */
+
+/* 폼: flex wrap으로 여러 줄 자연스럽게 */
+.cash-flow-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: flex-end;
+}
+
+/* 각 필드: 최소 폭으로 자동 줄 배분 */
+.cash-flow-form > * {
+  flex: 1 1 140px;
+}
+
+/* 날짜/금액 필드는 좀 더 좁게 */
+.cash-flow-form input[type="date"],
+.cash-flow-form input[type="number"] {
+  flex: 1 1 120px;
+}
+
+/* 제출 버튼: 고정 크기, 줄 배분에서 제외 */
+.cash-flow-form > button[type="submit"],
+.cash-flow-form > [id*="cashSubmit"],
+.cash-flow-form > [id*="flowSubmit"],
+.cash-flow-form > button:last-child {
+  flex: 0 0 auto;
+  min-height: 44px;
+  font-weight: 700;
+  white-space: nowrap;
+  padding: 0 18px;
+}
+
+/* 980px 이하: 세로 스택 */
+@media (max-width: 980px) {
+  .cash-flow-form {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .cash-flow-form > * {
+    flex: none;
+    width: 100%;
+  }
+}
+
+/* ── E. 시뮬레이터 개선 ─────────────────────── */
+
+/* 왼쪽 폼 패널: 카드 스타일로 우측 결과 영역과 명확히 구분 */
+.sim-panel {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 22px 20px;
+  border-right: none;
+}
+
+/* sim-layout: 더 넉넉한 gap */
+.sim-layout {
+  gap: 28px;
+}
+
+/* 시뮬레이션 실행 버튼: 더 강조 */
+.sim-run-btn {
+  min-height: 50px;
+  font-size: 15px;
+  font-weight: 800;
+  border-radius: 10px;
+  letter-spacing: -0.01em;
+  width: 100%;
+  margin-top: 4px;
+}
+
+/* 빈 상태 플레이스홀더 */
+.sim-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  min-height: 320px;
+  padding: 48px 24px;
+  text-align: center;
+  border: 1.5px dashed var(--line);
+  border-radius: 16px;
+  background: var(--surface-soft);
+  color: var(--muted);
+}
+
+.sim-placeholder::before {
+  content: "📊";
+  display: block;
+  font-size: 42px;
+  line-height: 1;
+  margin-bottom: 4px;
+  filter: saturate(0.6);
+}
+
+.sim-placeholder span {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--muted);
+  letter-spacing: -0.01em;
+}
+
+/* ── F. 다크모드 보완 ─────────────────────────── */
+
+[data-theme="dark"] details.row-menu .row-menu-popover {
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.06),
+    0 4px 12px rgba(0, 0, 0, 0.30),
+    0 16px 40px rgba(0, 0, 0, 0.40);
+}
+
+[data-theme="dark"] .holdings-table thead th {
+  background: var(--surface-soft);
+}
+
+[data-theme="dark"] .sim-panel {
+  border-color: var(--line);
+  background: var(--surface);
+}
+
+[data-theme="dark"] .sim-placeholder {
+  background: var(--surface-soft);
+  border-color: var(--line);
+}
+
+[data-theme="dark"] .holdings-table tbody tr:hover {
+  background: color-mix(in srgb, var(--accent) 6%, var(--surface));
+}
+
+/* ── END UX 2차 개선 ── */
