@@ -65,7 +65,7 @@ import {
 
 let holdingHeaderSort = { key: "value", dir: "desc" };
 let cashFlowHeaderSort = { key: "date", dir: "desc" };
-const HOLDINGS_PAGE_SIZE = 10;
+const HOLDINGS_PAGE_SIZE = window.innerWidth <= 980 ? 100 : 10;
 
 const sampleState = createSampleState(makeId);
 
