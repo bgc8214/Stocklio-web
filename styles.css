@@ -588,8 +588,8 @@ main {
 }
 
 .view-tabs button.active {
-  background: rgba(47, 105, 255, 0.1);
-  color: #2f69ff;
+  background: rgba(31, 122, 91, 0.1);
+  color: var(--accent-dark);
 }
 
 .view-tabs button::before {
@@ -617,8 +617,8 @@ main {
 
   .view-tabs button:hover,
   .view-tabs button:focus-visible {
-    background: rgba(47, 105, 255, 0.07);
-    color: #2f69ff;
+    background: rgba(31, 122, 91, 0.07);
+    color: var(--accent-dark);
   }
 
   .view-tabs button::before {
@@ -631,7 +631,7 @@ main {
   }
 
   .view-tabs button.active::before {
-    background: rgba(47, 105, 255, 0.12);
+    background: rgba(31, 122, 91, 0.12);
   }
 
   .dashboard-layout-toolbar {
@@ -1153,8 +1153,8 @@ main {
 .account-list-row:hover,
 .account-list-row:focus-visible,
 .account-list-row.is-selected {
-  background: rgba(47, 105, 255, 0.06);
-  border-color: rgba(47, 105, 255, 0.28);
+  background: rgba(31, 122, 91, 0.06);
+  border-color: rgba(31, 122, 91, 0.28);
   outline: none;
 }
 
@@ -2661,7 +2661,7 @@ td {
 }
 
 tr.is-editing-row td {
-  background: rgba(47, 105, 255, 0.08);
+  background: rgba(31, 122, 91, 0.08);
 }
 
 .inline-edit-cell {
@@ -2679,9 +2679,9 @@ tr.is-editing-row td {
 }
 
 .inline-edit-chip {
-  background: rgba(47, 105, 255, 0.1);
+  background: rgba(31, 122, 91, 0.1);
   border-radius: 999px;
-  color: #2f69ff;
+  color: var(--accent-dark);
   display: inline-flex;
   font-size: 12px;
   font-weight: 900;
@@ -3472,7 +3472,7 @@ td:nth-child(4) {
   user-select: none;
 }
 .sim-speed-slider {
-  accent-color: var(--accent, #2f69ff);
+  accent-color: var(--accent, #1f7a5b);
   cursor: pointer;
   height: 3px;
   width: 72px;
@@ -3680,8 +3680,8 @@ td:nth-child(4) {
   }
 
   .view-tabs button.active {
-    background: rgba(47, 105, 255, 0.1);
-    color: #2f69ff;
+    background: rgba(31, 122, 91, 0.1);
+    color: var(--accent-dark);
   }
 
   .view-tabs button::before {
@@ -3755,10 +3755,10 @@ td:nth-child(4) {
     width: 100%;
   }
   .nav-more-item.active {
-    color: #2f69ff;
+    color: var(--accent-dark);
   }
   .nav-more-item:active {
-    background: rgba(47, 105, 255, 0.06);
+    background: rgba(31, 122, 91, 0.06);
   }
   .nav-more-icon {
     font-size: 22px;
@@ -3769,7 +3769,7 @@ td:nth-child(4) {
     flex: 1;
   }
   .nav-more-item.active .nav-more-name {
-    color: #2f69ff;
+    color: var(--accent-dark);
   }
 
   .nav-more-sheet-footer {
@@ -4801,7 +4801,7 @@ button.secondary:hover,
   --nav-active-color: #2f67f6;
   --nav-active-indicator: #2f67f6;
   --nav-icon-bg: #f0f4f0;
-  --nav-icon-active-bg: rgba(47, 103, 246, 0.12);
+  --nav-icon-active-bg: rgba(31, 122, 91, 0.12);
   --focus-ring: 0 0 0 3px rgba(35, 122, 92, 0.28);
   --focus-ring-offset: 2px;
   --transition-fast: 140ms cubic-bezier(0.16, 1, 0.3, 1);
@@ -4877,39 +4877,39 @@ button.secondary:hover,
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2366746d' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpolygon points='10 8 16 12 10 16 10 8'/%3E%3C/svg%3E");
 }
 
-/* 활성 탭 아이콘 — 파란색으로 변경 */
+/* 활성 탭 아이콘 — 브랜드 색으로 정렬 */
 .view-tabs button.active[data-view-tab="dashboard"]::before {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%232f67f6' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='3' width='7' height='7' rx='1'/%3E%3Crect x='14' y='3' width='7' height='7' rx='1'/%3E%3Crect x='3' y='14' width='7' height='7' rx='1'/%3E%3Crect x='14' y='14' width='7' height='7' rx='1'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%231f7a5b' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='3' width='7' height='7' rx='1'/%3E%3Crect x='14' y='3' width='7' height='7' rx='1'/%3E%3Crect x='3' y='14' width='7' height='7' rx='1'/%3E%3Crect x='14' y='14' width='7' height='7' rx='1'/%3E%3C/svg%3E");
   background-color: var(--nav-icon-active-bg);
 }
 
 .view-tabs button.active[data-view-tab="holdings"]::before {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%232f67f6' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='22 7 13.5 15.5 8.5 10.5 2 17'/%3E%3Cpolyline points='16 7 22 7 22 13'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%231f7a5b' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='22 7 13.5 15.5 8.5 10.5 2 17'/%3E%3Cpolyline points='16 7 22 7 22 13'/%3E%3C/svg%3E");
   background-color: var(--nav-icon-active-bg);
 }
 
 .view-tabs button.active[data-view-tab="accounts"]::before {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%232f67f6' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='2' y='6' width='20' height='14' rx='2'/%3E%3Cpath d='M16 14a2 2 0 0 1-4 0'/%3E%3Cpath d='M2 10h20'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%231f7a5b' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='2' y='6' width='20' height='14' rx='2'/%3E%3Cpath d='M16 14a2 2 0 0 1-4 0'/%3E%3Cpath d='M2 10h20'/%3E%3C/svg%3E");
   background-color: var(--nav-icon-active-bg);
 }
 
 .view-tabs button.active[data-view-tab="performance"]::before {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%232f67f6' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='18' y1='20' x2='18' y2='10'/%3E%3Cline x1='12' y1='20' x2='12' y2='4'/%3E%3Cline x1='6' y1='20' x2='6' y2='14'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%231f7a5b' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='18' y1='20' x2='18' y2='10'/%3E%3Cline x1='12' y1='20' x2='12' y2='4'/%3E%3Cline x1='6' y1='20' x2='6' y2='14'/%3E%3C/svg%3E");
   background-color: var(--nav-icon-active-bg);
 }
 
 .view-tabs button.active[data-view-tab="cashflows"]::before {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%232f67f6' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpath d='M14.5 9.5C14.5 8.4 13.4 7.5 12 7.5S9.5 8.4 9.5 9.5c0 2 5 2 5 4.5 0 1.1-1.1 2-2.5 2s-2.5-.9-2.5-2'/%3E%3Cline x1='12' y1='6' x2='12' y2='7.5'/%3E%3Cline x1='12' y1='16' x2='12' y2='18'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%231f7a5b' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpath d='M14.5 9.5C14.5 8.4 13.4 7.5 12 7.5S9.5 8.4 9.5 9.5c0 2 5 2 5 4.5 0 1.1-1.1 2-2.5 2s-2.5-.9-2.5-2'/%3E%3Cline x1='12' y1='6' x2='12' y2='7.5'/%3E%3Cline x1='12' y1='16' x2='12' y2='18'/%3E%3C/svg%3E");
   background-color: var(--nav-icon-active-bg);
 }
 
 .view-tabs button.active[data-view-tab="automation"]::before {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%232f67f6' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9'/%3E%3Cpath d='M13.73 21a2 2 0 0 1-3.46 0'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%231f7a5b' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9'/%3E%3Cpath d='M13.73 21a2 2 0 0 1-3.46 0'/%3E%3C/svg%3E");
   background-color: var(--nav-icon-active-bg);
 }
 
 .view-tabs button.active[data-view-tab="simulator"]::before {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%232f67f6' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpolygon points='10 8 16 12 10 16 10 8'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%231f7a5b' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpolygon points='10 8 16 12 10 16 10 8'/%3E%3C/svg%3E");
   background-color: var(--nav-icon-active-bg);
 }
 
@@ -4917,44 +4917,44 @@ button.secondary:hover,
 @media (min-width: 981px) {
   .view-tabs button:hover[data-view-tab="dashboard"]::before,
   .view-tabs button:focus-visible[data-view-tab="dashboard"]::before {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%232f67f6' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='3' width='7' height='7' rx='1'/%3E%3Crect x='14' y='3' width='7' height='7' rx='1'/%3E%3Crect x='3' y='14' width='7' height='7' rx='1'/%3E%3Crect x='14' y='14' width='7' height='7' rx='1'/%3E%3C/svg%3E");
-    background-color: rgba(47, 103, 246, 0.08);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%231f7a5b' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='3' width='7' height='7' rx='1'/%3E%3Crect x='14' y='3' width='7' height='7' rx='1'/%3E%3Crect x='3' y='14' width='7' height='7' rx='1'/%3E%3Crect x='14' y='14' width='7' height='7' rx='1'/%3E%3C/svg%3E");
+    background-color: rgba(31, 122, 91, 0.08);
   }
 
   .view-tabs button:hover[data-view-tab="holdings"]::before,
   .view-tabs button:focus-visible[data-view-tab="holdings"]::before {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%232f67f6' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='22 7 13.5 15.5 8.5 10.5 2 17'/%3E%3Cpolyline points='16 7 22 7 22 13'/%3E%3C/svg%3E");
-    background-color: rgba(47, 103, 246, 0.08);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%231f7a5b' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='22 7 13.5 15.5 8.5 10.5 2 17'/%3E%3Cpolyline points='16 7 22 7 22 13'/%3E%3C/svg%3E");
+    background-color: rgba(31, 122, 91, 0.08);
   }
 
   .view-tabs button:hover[data-view-tab="accounts"]::before,
   .view-tabs button:focus-visible[data-view-tab="accounts"]::before {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%232f67f6' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='2' y='6' width='20' height='14' rx='2'/%3E%3Cpath d='M16 14a2 2 0 0 1-4 0'/%3E%3Cpath d='M2 10h20'/%3E%3C/svg%3E");
-    background-color: rgba(47, 103, 246, 0.08);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%231f7a5b' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='2' y='6' width='20' height='14' rx='2'/%3E%3Cpath d='M16 14a2 2 0 0 1-4 0'/%3E%3Cpath d='M2 10h20'/%3E%3C/svg%3E");
+    background-color: rgba(31, 122, 91, 0.08);
   }
 
   .view-tabs button:hover[data-view-tab="performance"]::before,
   .view-tabs button:focus-visible[data-view-tab="performance"]::before {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%232f67f6' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='18' y1='20' x2='18' y2='10'/%3E%3Cline x1='12' y1='20' x2='12' y2='4'/%3E%3Cline x1='6' y1='20' x2='6' y2='14'/%3E%3C/svg%3E");
-    background-color: rgba(47, 103, 246, 0.08);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%231f7a5b' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='18' y1='20' x2='18' y2='10'/%3E%3Cline x1='12' y1='20' x2='12' y2='4'/%3E%3Cline x1='6' y1='20' x2='6' y2='14'/%3E%3C/svg%3E");
+    background-color: rgba(31, 122, 91, 0.08);
   }
 
   .view-tabs button:hover[data-view-tab="cashflows"]::before,
   .view-tabs button:focus-visible[data-view-tab="cashflows"]::before {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%232f67f6' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpath d='M14.5 9.5C14.5 8.4 13.4 7.5 12 7.5S9.5 8.4 9.5 9.5c0 2 5 2 5 4.5 0 1.1-1.1 2-2.5 2s-2.5-.9-2.5-2'/%3E%3Cline x1='12' y1='6' x2='12' y2='7.5'/%3E%3Cline x1='12' y1='16' x2='12' y2='18'/%3E%3C/svg%3E");
-    background-color: rgba(47, 103, 246, 0.08);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%231f7a5b' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpath d='M14.5 9.5C14.5 8.4 13.4 7.5 12 7.5S9.5 8.4 9.5 9.5c0 2 5 2 5 4.5 0 1.1-1.1 2-2.5 2s-2.5-.9-2.5-2'/%3E%3Cline x1='12' y1='6' x2='12' y2='7.5'/%3E%3Cline x1='12' y1='16' x2='12' y2='18'/%3E%3C/svg%3E");
+    background-color: rgba(31, 122, 91, 0.08);
   }
 
   .view-tabs button:hover[data-view-tab="automation"]::before,
   .view-tabs button:focus-visible[data-view-tab="automation"]::before {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%232f67f6' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9'/%3E%3Cpath d='M13.73 21a2 2 0 0 1-3.46 0'/%3E%3C/svg%3E");
-    background-color: rgba(47, 103, 246, 0.08);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%231f7a5b' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9'/%3E%3Cpath d='M13.73 21a2 2 0 0 1-3.46 0'/%3E%3C/svg%3E");
+    background-color: rgba(31, 122, 91, 0.08);
   }
 
   .view-tabs button:hover[data-view-tab="simulator"]::before,
   .view-tabs button:focus-visible[data-view-tab="simulator"]::before {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%232f67f6' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpolygon points='10 8 16 12 10 16 10 8'/%3E%3C/svg%3E");
-    background-color: rgba(47, 103, 246, 0.08);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%231f7a5b' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpolygon points='10 8 16 12 10 16 10 8'/%3E%3C/svg%3E");
+    background-color: rgba(31, 122, 91, 0.08);
   }
 }
 
@@ -5609,6 +5609,1000 @@ input[type="date"] {
 }
 
 /* ════════════════════════════════════════
+   31. Uncodixfy hardening pass
+   - 장식성, 과한 그림자, 튀는 인터랙션을 낮추고 금융 데이터 가독성을 우선한다.
+   ════════════════════════════════════════ */
+
+:root {
+  --radius: 8px;
+  --shadow: none;
+  --card-shadow: none;
+  --card-shadow-hover: none;
+  --nav-active-bg: color-mix(in srgb, var(--accent) 9%, var(--surface));
+  --nav-active-color: var(--accent-dark);
+  --nav-active-indicator: var(--accent);
+  --nav-icon-active-bg: color-mix(in srgb, var(--accent) 10%, transparent);
+}
+
+button,
+button.primary,
+button.ghost,
+button.secondary,
+.small-button {
+  box-shadow: none !important;
+  transition: background-color 140ms ease, border-color 140ms ease, color 140ms ease, opacity 140ms ease;
+}
+
+button:hover:not(:disabled),
+button:active:not(:disabled),
+button.ghost:hover:not(:disabled),
+button.secondary:hover:not(:disabled),
+.small-button:hover:not(:disabled) {
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+button.primary:hover:not(:disabled) {
+  background: var(--accent-dark);
+}
+
+.metric,
+.panel,
+.holding-summary-card,
+.account-overview-card,
+.empty-portfolio,
+.inline-create-panel,
+.side-drawer,
+.login-card,
+.status-pill,
+.segmented-control,
+.row-menu-popover,
+.ticker-suggestions,
+.account-card-row,
+.performance-header,
+.sim-panel,
+.sim-placeholder {
+  border-radius: var(--radius) !important;
+  box-shadow: none !important;
+}
+
+.metric,
+.panel,
+.holding-summary-card,
+.account-overview-card {
+  border-color: var(--line);
+}
+
+.dashboard-card:not(.is-layout-editing):hover .panel,
+.dashboard-card:not(.is-layout-editing):hover.panel,
+.holding-summary-card:hover,
+.account-overview-card:hover,
+.account-card-row:hover {
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+.empty-portfolio {
+  background: var(--surface) !important;
+}
+
+.dashboard-status-strip {
+  align-items: center;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 12px;
+}
+
+.status-actions {
+  gap: 8px;
+}
+
+.status-actions #dashboardAddHoldingButton,
+.status-actions #dashboardRefreshButton,
+.status-actions #layoutEditButton {
+  order: unset;
+}
+
+.status-actions #layoutEditButton,
+.status-actions #dashboardRefreshButton {
+  background: var(--surface);
+  color: var(--ink);
+}
+
+.craft-dashboard-board .dashboard-card:not(.is-layout-editing)[data-dashboard-card="total-value"],
+.craft-dashboard-board .dashboard-card:not(.is-layout-editing)[data-dashboard-card="total-cost"],
+.craft-dashboard-board .dashboard-card:not(.is-layout-editing)[data-dashboard-card="total-gain"],
+.craft-dashboard-board .dashboard-card:not(.is-layout-editing)[data-dashboard-card="cash-total"] {
+  flex-basis: calc(25% - 9px);
+}
+
+.dashboard-card.metric {
+  min-height: 118px;
+  padding: 16px;
+}
+
+.metric {
+  min-height: 118px;
+}
+
+.metric strong,
+.holding-summary-card strong,
+.account-overview-card strong,
+.performance-detail-stat strong,
+.summary-grid strong,
+.account-card-metrics strong,
+.account-detail-summary strong {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0;
+  max-width: 100%;
+  overflow: visible !important;
+  overflow-wrap: anywhere;
+  text-overflow: clip !important;
+  white-space: normal !important;
+  word-break: keep-all;
+}
+
+.metric strong {
+  font-size: clamp(21px, 1.35vw, 27px);
+}
+
+.account-overview-card strong,
+.holding-summary-card strong {
+  font-size: clamp(22px, 1.65vw, 30px);
+  line-height: 1.12;
+}
+
+.section-heading span,
+.metric span,
+.metric small,
+.holding-summary-card span,
+.holding-summary-card small,
+.account-overview-card span,
+.account-overview-card small {
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.view-tabs button {
+  color: var(--muted);
+  font-weight: 760;
+}
+
+.view-tabs button.active,
+.view-tabs button:hover,
+.view-tabs button:focus-visible {
+  background: var(--nav-active-bg) !important;
+  color: var(--nav-active-color) !important;
+}
+
+.view-tabs button.active::after {
+  background: var(--nav-active-indicator);
+}
+
+.view-tabs button::before {
+  background-color: transparent;
+}
+
+.view-tabs button.active::before,
+.view-tabs button:hover::before,
+.view-tabs button:focus-visible::before {
+  background-color: var(--nav-icon-active-bg);
+}
+
+.inline-create-panel,
+.daily-move-summary {
+  background: var(--surface-soft);
+}
+
+.dashboard-chart-line {
+  stroke-width: 4;
+}
+
+.dashboard-chart-point {
+  stroke-width: 3;
+}
+
+.dashboard-chart-latest {
+  font-size: 15px;
+}
+
+.operation-toast {
+  border-radius: var(--radius);
+  box-shadow: none;
+}
+
+.layout-controls {
+  border-radius: var(--radius);
+  box-shadow: none;
+}
+
+.layout-drag-handle,
+.layout-controls button,
+.layout-card-label,
+.layout-size-readout {
+  border-radius: 6px;
+}
+
+.layout-resize-handle {
+  border-radius: 6px;
+  box-shadow: none;
+}
+
+@media (max-width: 1180px) {
+  .craft-dashboard-board .dashboard-card:not(.is-layout-editing)[data-dashboard-card="total-value"],
+  .craft-dashboard-board .dashboard-card:not(.is-layout-editing)[data-dashboard-card="total-cost"],
+  .craft-dashboard-board .dashboard-card:not(.is-layout-editing)[data-dashboard-card="total-gain"],
+  .craft-dashboard-board .dashboard-card:not(.is-layout-editing)[data-dashboard-card="cash-total"] {
+    flex-basis: calc(50% - 6px);
+  }
+}
+
+@media (max-width: 980px) {
+  body {
+    padding-bottom: calc(62px + env(safe-area-inset-bottom));
+  }
+
+  .sidebar {
+    border-bottom: 1px solid var(--line);
+  }
+
+  .sidebar-brand {
+    min-height: 54px;
+    padding: 10px 14px;
+  }
+
+  .brand-lockup h1 {
+    font-size: 24px;
+  }
+
+  .toolbar {
+    border-top: 0;
+    display: flex;
+    gap: 10px;
+    margin-bottom: 12px;
+    min-height: 52px;
+    padding-bottom: 8px;
+    padding-top: 8px;
+  }
+
+  .page-heading {
+    min-width: 0;
+  }
+
+  .page-heading strong {
+    font-size: 18px;
+    line-height: 1.15;
+  }
+
+  .page-heading span {
+    display: none;
+  }
+
+  .auth-panel {
+    gap: 6px;
+  }
+
+  .auth-panel #authStatus,
+  .auth-panel .sync-status {
+    display: none !important;
+  }
+
+  .auth-panel button {
+    min-height: 34px;
+    padding: 0 10px;
+  }
+
+  .content {
+    padding-bottom: 24px;
+  }
+
+  .dashboard-layout-toolbar,
+  .dashboard-status-strip {
+    display: none !important;
+  }
+
+  .dashboard-board.craft-dashboard-board {
+    gap: 10px;
+  }
+
+  .craft-dashboard-board .dashboard-card.metric {
+    min-height: 104px;
+    padding: 14px;
+  }
+
+  .craft-dashboard-board .dashboard-card.metric[data-dashboard-card="total-value"] {
+    min-height: 116px;
+  }
+
+  .metric strong {
+    font-size: clamp(20px, 5vw, 25px);
+    line-height: 1.12;
+  }
+
+  .metric span,
+  .metric small {
+    font-size: 12px;
+  }
+
+  .view-tabs {
+    background: var(--surface);
+    border-radius: 0;
+    border-top: 1px solid var(--line);
+    box-shadow: none;
+    min-height: calc(58px + env(safe-area-inset-bottom));
+    padding: 5px 4px calc(5px + env(safe-area-inset-bottom));
+  }
+
+  .view-tabs button {
+    min-height: 46px;
+  }
+
+  .view-tabs button.active {
+    background: var(--nav-active-bg) !important;
+    color: var(--nav-active-color) !important;
+  }
+
+  .view-tabs button::before {
+    height: 19px;
+    width: 19px;
+  }
+
+  .view-tabs button::after {
+    font-size: 10px;
+  }
+
+  .nav-more-sheet {
+    border-radius: 8px 8px 0 0;
+    box-shadow: none;
+  }
+
+  .nav-more-item.active,
+  .nav-more-item.active .nav-more-name {
+    color: var(--accent-dark) !important;
+  }
+
+  .operation-toast {
+    top: calc(58px + env(safe-area-inset-top));
+  }
+}
+
+/* ════════════════════════════════════════
+   36. EOF Uncodixfy sweep lock
+   This is the actual final override.
+   ════════════════════════════════════════ */
+
+.performance-detail-panel table:not(.numbers-source-table) {
+  min-width: 100% !important;
+  table-layout: auto !important;
+}
+
+.sim-panel,
+.sim-chart-wrap,
+.sim-placeholder,
+.sim-chip,
+.sim-scenario-tab,
+.sim-run-btn {
+  border-radius: 8px !important;
+  box-shadow: none !important;
+}
+
+.sim-label {
+  letter-spacing: 0 !important;
+  text-transform: none !important;
+}
+
+.sim-placeholder::before {
+  content: none !important;
+}
+
+@supports selector(body:has(dialog[open])) {
+  body:has(dialog[open]) .view-tabs {
+    opacity: 0;
+    pointer-events: none;
+  }
+}
+
+@media (max-width: 1600px) {
+  .performance-tables-row {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (max-width: 700px) {
+  body {
+    padding-bottom: calc(88px + env(safe-area-inset-bottom)) !important;
+  }
+
+  .content,
+  .view-section,
+  .sim-view-section {
+    padding-bottom: calc(104px + env(safe-area-inset-bottom)) !important;
+  }
+
+  .cash-flow-form {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+    align-items: stretch !important;
+  }
+
+  .cash-flow-form > * {
+    flex: none !important;
+    width: 100% !important;
+  }
+
+  .cash-flow-form input,
+  .cash-flow-form select,
+  .cash-flow-form button {
+    min-height: 42px !important;
+    height: 42px !important;
+    max-height: 42px !important;
+    padding-block: 0 !important;
+    font-size: 14px !important;
+  }
+
+  .cash-flow-form button[type="submit"] {
+    min-height: 44px !important;
+    height: 44px !important;
+    max-height: 44px !important;
+  }
+
+  .performance-detail-panel .table-wrap.compact,
+  [data-view="cashflows"] .table-wrap.compact {
+    max-height: none !important;
+    overflow: visible !important;
+  }
+
+  .performance-detail-panel table:not(.numbers-source-table),
+  [data-view="cashflows"] table {
+    min-width: 0 !important;
+    width: 100% !important;
+  }
+
+  .performance-detail-panel table:not(.numbers-source-table) thead,
+  [data-view="cashflows"] thead {
+    display: none !important;
+  }
+
+  .performance-detail-panel table:not(.numbers-source-table) tbody,
+  [data-view="cashflows"] tbody {
+    display: grid !important;
+    gap: 8px !important;
+  }
+
+  .performance-detail-panel table:not(.numbers-source-table) tbody tr,
+  [data-view="cashflows"] tbody tr {
+    display: grid !important;
+    gap: 7px !important;
+    padding: 12px !important;
+    border: 1px solid var(--line) !important;
+    border-radius: 8px !important;
+    background: var(--surface) !important;
+  }
+
+  .performance-detail-panel table:not(.numbers-source-table) tbody td,
+  [data-view="cashflows"] tbody td {
+    display: flex !important;
+    align-items: baseline !important;
+    justify-content: space-between !important;
+    gap: 16px !important;
+    min-width: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    text-align: right !important;
+    white-space: normal !important;
+  }
+
+  .performance-detail-panel table:not(.numbers-source-table) tbody td::before,
+  [data-view="cashflows"] tbody td::before {
+    content: attr(data-label);
+    flex: 0 0 auto;
+    color: var(--muted);
+    font-weight: 800;
+    text-align: left;
+  }
+
+  .performance-detail-panel table:not(.numbers-source-table) tbody td[colspan]::before,
+  [data-view="cashflows"] tbody td[colspan]::before {
+    content: none !important;
+  }
+
+  [data-view="cashflows"] tbody td input,
+  [data-view="cashflows"] tbody td select {
+    width: min(100%, 220px) !important;
+    min-height: 38px !important;
+    height: 38px !important;
+  }
+
+  .sim-scenario-tabs {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+    overflow: visible !important;
+    padding-bottom: 0 !important;
+    border-bottom: 0 !important;
+  }
+
+  .sim-scenario-tab {
+    min-width: 0 !important;
+    width: 100% !important;
+    min-height: 36px !important;
+    padding: 0 8px !important;
+    font-size: 12px !important;
+  }
+
+  .sim-chart-container {
+    min-height: 220px !important;
+    height: 220px !important;
+  }
+
+  .sim-placeholder {
+    min-height: 168px !important;
+    padding: 18px 14px !important;
+  }
+}
+
+/* ════════════════════════════════════════
+   35. Final Uncodixfy sweep lock
+   Keep this block at EOF.
+   ════════════════════════════════════════ */
+
+.performance-detail-panel table:not(.numbers-source-table) {
+  min-width: 100% !important;
+}
+
+.sim-panel,
+.sim-chart-wrap,
+.sim-placeholder,
+.sim-chip,
+.sim-scenario-tab,
+.sim-run-btn {
+  border-radius: 8px !important;
+  box-shadow: none !important;
+}
+
+.sim-label {
+  letter-spacing: 0 !important;
+  text-transform: none !important;
+}
+
+.sim-placeholder::before {
+  content: none !important;
+}
+
+@supports selector(body:has(dialog[open])) {
+  body:has(dialog[open]) .view-tabs {
+    opacity: 0;
+    pointer-events: none;
+  }
+}
+
+@media (max-width: 700px) {
+  body {
+    padding-bottom: calc(88px + env(safe-area-inset-bottom)) !important;
+  }
+
+  .content,
+  .view-section,
+  .sim-view-section {
+    padding-bottom: calc(104px + env(safe-area-inset-bottom)) !important;
+  }
+
+  .cash-flow-form {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+    align-items: stretch !important;
+  }
+
+  .cash-flow-form > * {
+    flex: none !important;
+    width: 100% !important;
+  }
+
+  .cash-flow-form input,
+  .cash-flow-form select,
+  .cash-flow-form button {
+    min-height: 42px !important;
+    height: 42px !important;
+    max-height: 42px !important;
+    padding-block: 0 !important;
+    font-size: 14px !important;
+  }
+
+  .cash-flow-form button[type="submit"] {
+    min-height: 44px !important;
+    height: 44px !important;
+    max-height: 44px !important;
+  }
+
+  .performance-detail-panel .table-wrap.compact,
+  [data-view="cashflows"] .table-wrap.compact {
+    max-height: none !important;
+    overflow: visible !important;
+  }
+
+  .performance-detail-panel table:not(.numbers-source-table),
+  [data-view="cashflows"] table {
+    min-width: 0 !important;
+    width: 100% !important;
+  }
+
+  .performance-detail-panel table:not(.numbers-source-table) thead,
+  [data-view="cashflows"] thead {
+    display: none !important;
+  }
+
+  .performance-detail-panel table:not(.numbers-source-table) tbody,
+  [data-view="cashflows"] tbody {
+    display: grid !important;
+    gap: 8px !important;
+  }
+
+  .performance-detail-panel table:not(.numbers-source-table) tbody tr,
+  [data-view="cashflows"] tbody tr {
+    display: grid !important;
+    gap: 7px !important;
+    padding: 12px !important;
+    border: 1px solid var(--line) !important;
+    border-radius: 8px !important;
+    background: var(--surface) !important;
+  }
+
+  .performance-detail-panel table:not(.numbers-source-table) tbody td,
+  [data-view="cashflows"] tbody td {
+    display: flex !important;
+    align-items: baseline !important;
+    justify-content: space-between !important;
+    gap: 16px !important;
+    min-width: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    text-align: right !important;
+    white-space: normal !important;
+  }
+
+  .performance-detail-panel table:not(.numbers-source-table) tbody td::before,
+  [data-view="cashflows"] tbody td::before {
+    content: attr(data-label);
+    flex: 0 0 auto;
+    color: var(--muted);
+    font-weight: 800;
+    text-align: left;
+  }
+
+  .performance-detail-panel table:not(.numbers-source-table) tbody td[colspan]::before,
+  [data-view="cashflows"] tbody td[colspan]::before {
+    content: none !important;
+  }
+
+  [data-view="cashflows"] tbody td input,
+  [data-view="cashflows"] tbody td select {
+    width: min(100%, 220px) !important;
+    min-height: 38px !important;
+    height: 38px !important;
+  }
+
+  .sim-scenario-tabs {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+    overflow: visible !important;
+    padding-bottom: 0 !important;
+    border-bottom: 0 !important;
+  }
+
+  .sim-scenario-tab {
+    min-width: 0 !important;
+    width: 100% !important;
+    min-height: 36px !important;
+    padding: 0 8px !important;
+    font-size: 12px !important;
+  }
+
+  .sim-chart-container {
+    min-height: 220px !important;
+    height: 220px !important;
+  }
+
+  .sim-placeholder {
+    min-height: 168px !important;
+    padding: 18px 14px !important;
+  }
+}
+
+/* ════════════════════════════════════════
+   34. Uncodixfy full-feature sweep
+   ════════════════════════════════════════ */
+
+.performance-detail-panel .table-wrap,
+[data-view="cashflows"] .table-wrap,
+.sim-root,
+.sim-panel,
+.sim-chart-wrap {
+  min-width: 0;
+}
+
+.performance-detail-panel td,
+.performance-detail-panel th,
+[data-view="cashflows"] td,
+[data-view="cashflows"] th {
+  overflow-wrap: anywhere;
+}
+
+.sim-root {
+  max-width: none;
+  margin: 0;
+}
+
+.sim-panel {
+  border-radius: 8px;
+  border-right: 1px solid var(--line);
+  box-shadow: none;
+  padding: 18px;
+}
+
+.sim-layout {
+  gap: 18px;
+}
+
+.sim-label {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.sim-chip,
+.sim-scenario-tab,
+.sim-run-btn,
+.sim-chart-wrap,
+.sim-placeholder {
+  border-radius: 8px;
+  box-shadow: none;
+}
+
+.sim-placeholder {
+  min-height: 220px;
+  padding: 28px 20px;
+}
+
+.sim-placeholder::before {
+  content: none;
+}
+
+@supports selector(body:has(dialog[open])) {
+  body:has(dialog[open]) .view-tabs {
+    opacity: 0;
+    pointer-events: none;
+  }
+}
+
+@media (max-width: 700px) {
+  body {
+    padding-bottom: calc(88px + env(safe-area-inset-bottom));
+  }
+
+  .content,
+  .view-section,
+  .sim-view-section {
+    padding-bottom: calc(102px + env(safe-area-inset-bottom));
+  }
+
+  .view-tabs {
+    border-top: 1px solid var(--line);
+    min-height: calc(64px + env(safe-area-inset-bottom));
+  }
+
+  .cash-flow-form {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .cash-flow-form > *,
+  .cash-flow-form input,
+  .cash-flow-form select,
+  .cash-flow-form button,
+  .notification-form input,
+  .notification-form button,
+  .sim-input,
+  .sim-select {
+    width: 100%;
+    min-height: 42px !important;
+    height: 42px;
+    padding: 0 12px;
+    font-size: 14px;
+  }
+
+  .cash-flow-form input[type="date"],
+  .cash-flow-form input[type="number"] {
+    min-height: 42px !important;
+    height: 42px !important;
+    flex: none;
+  }
+
+  .cash-flow-form > button[type="submit"],
+  .cash-flow-form > button:last-child {
+    height: 44px;
+    min-height: 44px !important;
+  }
+
+  .performance-header,
+  .performance-main-row,
+  .performance-tables-row {
+    gap: 12px;
+  }
+
+  .performance-header {
+    align-items: stretch;
+  }
+
+  .performance-header-actions {
+    grid-template-columns: 1fr;
+    width: 100%;
+  }
+
+  .performance-detail-panel .table-wrap.compact,
+  [data-view="cashflows"] .table-wrap.compact {
+    max-height: none;
+    overflow: visible;
+  }
+
+  .performance-detail-panel table:not(.numbers-source-table),
+  [data-view="cashflows"] table {
+    min-width: 0 !important;
+    width: 100%;
+  }
+
+  .performance-detail-panel table:not(.numbers-source-table) thead,
+  [data-view="cashflows"] thead {
+    display: none;
+  }
+
+  .performance-detail-panel table:not(.numbers-source-table) tbody,
+  [data-view="cashflows"] tbody {
+    display: grid;
+    gap: 8px;
+  }
+
+  .performance-detail-panel table:not(.numbers-source-table) tbody tr,
+  [data-view="cashflows"] tbody tr {
+    display: grid;
+    gap: 7px;
+    padding: 12px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--surface);
+  }
+
+  .performance-detail-panel table:not(.numbers-source-table) tbody td,
+  [data-view="cashflows"] tbody td {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 16px;
+    min-width: 0;
+    padding: 0;
+    border: 0;
+    text-align: right;
+    white-space: normal;
+  }
+
+  .performance-detail-panel table:not(.numbers-source-table) tbody td::before,
+  [data-view="cashflows"] tbody td::before {
+    content: attr(data-label);
+    flex: 0 0 auto;
+    color: var(--muted);
+    font-weight: 800;
+    text-align: left;
+  }
+
+  .performance-detail-panel table:not(.numbers-source-table) tbody td[colspan],
+  [data-view="cashflows"] tbody td[colspan] {
+    justify-content: center;
+    text-align: center;
+  }
+
+  .performance-detail-panel table:not(.numbers-source-table) tbody td[colspan]::before,
+  [data-view="cashflows"] tbody td[colspan]::before {
+    content: none;
+  }
+
+  [data-view="cashflows"] tbody td .row-actions {
+    justify-content: flex-end;
+    width: 100%;
+  }
+
+  [data-view="cashflows"] tbody td input,
+  [data-view="cashflows"] tbody td select {
+    width: min(100%, 220px);
+    min-height: 38px;
+  }
+
+  .sim-view-section {
+    padding-inline: 12px;
+  }
+
+  .sim-root {
+    gap: 14px;
+  }
+
+  .sim-layout {
+    gap: 12px;
+  }
+
+  .sim-panel {
+    padding: 14px;
+  }
+
+  .sim-chart-container {
+    min-height: 220px;
+    height: 220px;
+  }
+
+  .sim-placeholder {
+    min-height: 168px;
+    padding: 18px 14px;
+  }
+
+  .sim-scenario-tabs {
+    gap: 8px;
+    padding-bottom: 0;
+    border-bottom: 0;
+  }
+
+  .sim-scenario-tab {
+    min-height: 36px;
+    padding: 0 12px;
+    border: 1px solid var(--line);
+    background: var(--surface);
+  }
+
+  .sim-scenario-tab.active {
+    border-color: color-mix(in srgb, var(--accent) 42%, var(--line));
+    background: color-mix(in srgb, var(--accent) 9%, var(--surface));
+    color: var(--accent-dark);
+  }
+}
+
+@media (max-width: 640px) {
+  .content {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  .toolbar {
+    margin-left: -12px;
+    margin-right: -12px;
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  .holdings-summary-grid {
+    margin-bottom: 10px !important;
+  }
+
+  .holdings-summary-grid .holding-summary-card:first-child strong {
+    font-size: clamp(23px, 7vw, 32px) !important;
+  }
+
+  .holdings-summary-grid .holding-summary-card:not(:first-child) strong {
+    font-size: 14px !important;
+    max-width: 64%;
+  }
+
+  .account-overview-card strong,
+  .holding-summary-card strong {
+    font-size: clamp(18px, 5.5vw, 25px);
+  }
+
+  .performance-detail-stats {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* ════════════════════════════════════════
    14. 툴바 영역 auth/sync 정보 개선
    ════════════════════════════════════════ */
 
@@ -5712,13 +6706,13 @@ input[type="date"] {
 
 .account-list-row:hover,
 .account-list-row:focus-visible {
-  box-shadow: 0 2px 8px rgba(47, 103, 246, 0.08);
+  box-shadow: 0 2px 8px rgba(31, 122, 91, 0.08);
 }
 
 .account-list-row.is-selected {
-  background: rgba(47, 105, 255, 0.06);
-  border-color: rgba(47, 105, 255, 0.28);
-  box-shadow: 0 2px 10px rgba(47, 103, 246, 0.1);
+  background: rgba(31, 122, 91, 0.06);
+  border-color: rgba(31, 122, 91, 0.28);
+  box-shadow: 0 2px 10px rgba(31, 122, 91, 0.1);
 }
 
 /* ════════════════════════════════════════
@@ -6887,5 +7881,448 @@ details.row-menu .row-menu-popover .row-menu-danger:focus-visible {
   /* 페이지네이션 숨김 (모바일에선 전체 리스트 노출 권장) */
   #holdingPagination {
     display: none !important;
+  }
+}
+
+/* ════════════════════════════════════════
+   30. UX book review pass
+   - 첫인상, 행동 유도, 피드백, 모바일 스캔성 개선
+   ════════════════════════════════════════ */
+
+.dashboard-status-strip {
+  justify-content: flex-start;
+}
+
+.status-actions {
+  flex-wrap: wrap;
+}
+
+.status-actions #dashboardAddHoldingButton {
+  order: 1;
+  box-shadow: 0 8px 18px rgba(31, 122, 91, 0.18);
+}
+
+.status-actions #dashboardRefreshButton {
+  order: 2;
+}
+
+.status-actions #layoutEditButton {
+  order: 3;
+}
+
+.status-actions #layoutResetButton,
+.status-actions .layout-status-badge {
+  order: 4;
+}
+
+.operation-toast {
+  bottom: auto !important;
+  max-width: min(360px, calc(100vw - 48px));
+  right: 24px;
+  top: 84px;
+}
+
+.login-dialog::backdrop,
+.email-login-dialog::backdrop {
+  background: rgba(17, 31, 25, 0.5);
+}
+
+.login-card {
+  gap: 18px;
+}
+
+.login-provider-button {
+  min-height: 56px;
+}
+
+.login-provider-button:disabled {
+  background: #f6f7f3;
+  border-color: var(--line);
+  color: var(--muted);
+  opacity: 1;
+}
+
+@media (max-width: 980px) {
+  .operation-toast {
+    left: 14px;
+    max-width: none;
+    right: 14px;
+    top: calc(72px + env(safe-area-inset-top));
+  }
+
+  .dashboard-board.craft-dashboard-board {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .craft-dashboard-board .dashboard-card.metric {
+    grid-column: auto;
+    min-height: 112px;
+    padding: 15px;
+  }
+
+  .craft-dashboard-board .dashboard-card.metric[data-dashboard-card="total-value"] {
+    grid-column: 1 / -1;
+  }
+
+  .craft-dashboard-board .dashboard-card:not(.metric) {
+    grid-column: 1 / -1;
+  }
+
+  .metric span,
+  .metric small {
+    font-size: 12px;
+  }
+
+  .metric strong {
+    font-size: clamp(20px, 5.1vw, 26px);
+    line-height: 1.12;
+  }
+
+  .metric-badges {
+    margin-top: 4px;
+  }
+
+  .page-heading strong {
+    font-size: 18px;
+  }
+
+  .page-heading span {
+    font-size: 12px;
+  }
+}
+
+/* ════════════════════════════════════════
+   33. Uncodixfy final override - keep this last
+   ════════════════════════════════════════ */
+
+button,
+button.primary,
+button.ghost,
+button.secondary,
+.small-button {
+  box-shadow: none !important;
+}
+
+button:hover:not(:disabled),
+button:active:not(:disabled),
+button.primary:hover:not(:disabled),
+button.ghost:hover:not(:disabled),
+button.secondary:hover:not(:disabled),
+.small-button:hover:not(:disabled) {
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+.metric,
+.panel,
+.dashboard-card.metric,
+.dashboard-card.panel,
+.holding-summary-card,
+.account-overview-card,
+.account-card-row,
+.performance-header,
+.side-drawer,
+.login-card,
+.operation-toast {
+  border-radius: 8px !important;
+  box-shadow: none !important;
+}
+
+.status-actions #dashboardAddHoldingButton,
+.status-actions #dashboardRefreshButton,
+.status-actions #layoutEditButton,
+.status-actions #layoutResetButton,
+.status-actions .layout-status-badge {
+  order: unset;
+}
+
+.status-actions #dashboardAddHoldingButton {
+  box-shadow: none !important;
+}
+
+.view-tabs button.active,
+.view-tabs button:hover,
+.view-tabs button:focus-visible {
+  background: color-mix(in srgb, var(--accent) 9%, var(--surface)) !important;
+  color: var(--accent-dark) !important;
+}
+
+.view-tabs button.active::after {
+  background: var(--accent) !important;
+}
+
+.metric strong,
+.holding-summary-card strong,
+.account-overview-card strong,
+.performance-detail-stat strong,
+.summary-grid strong,
+.account-card-metrics strong,
+.account-detail-summary strong {
+  overflow: visible !important;
+  text-overflow: clip !important;
+  white-space: normal !important;
+}
+
+@media (max-width: 980px) {
+  body {
+    padding-bottom: calc(62px + env(safe-area-inset-bottom));
+  }
+
+  .sidebar-brand {
+    min-height: 54px;
+    padding: 10px 14px;
+  }
+
+  .brand-lockup h1 {
+    font-size: 24px;
+  }
+
+  .toolbar {
+    border-top: 0;
+    margin-bottom: 12px;
+    min-height: 52px;
+    padding-bottom: 8px;
+    padding-top: 8px;
+  }
+
+  .page-heading strong {
+    font-size: 18px;
+    line-height: 1.15;
+  }
+
+  .page-heading span {
+    display: none;
+  }
+
+  .dashboard-layout-toolbar,
+  .dashboard-status-strip {
+    display: none !important;
+  }
+
+  .view-tabs {
+    border-radius: 0;
+    box-shadow: none;
+    min-height: calc(58px + env(safe-area-inset-bottom));
+    padding: 5px 4px calc(5px + env(safe-area-inset-bottom));
+  }
+
+  .view-tabs button {
+    font-size: 0 !important;
+    line-height: 1;
+    min-height: 46px;
+  }
+
+  .view-tabs button::after {
+    content: attr(data-mobile-label);
+    display: block;
+    font-size: 10px !important;
+    font-weight: 800;
+    line-height: 1.1;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .account-page-heading {
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+
+  .account-page-heading > div span,
+  .account-page-heading > .status-pill {
+    display: none;
+  }
+
+  .account-page-actions {
+    display: flex;
+    gap: 8px;
+    width: 100%;
+  }
+
+  .account-page-actions button {
+    flex: 1 1 0;
+    min-height: 38px;
+  }
+
+  .account-overview-grid {
+    gap: 10px;
+  }
+
+  .account-overview-card {
+    min-height: 118px;
+    padding: 16px;
+  }
+
+  .operation-toast {
+    top: calc(58px + env(safe-area-inset-top));
+  }
+}
+
+/* ════════════════════════════════════════
+   37. Actual EOF Uncodixfy sweep lock
+   ════════════════════════════════════════ */
+
+.performance-detail-panel table:not(.numbers-source-table) {
+  min-width: 100% !important;
+}
+
+.sim-panel,
+.sim-chart-wrap,
+.sim-placeholder,
+.sim-chip,
+.sim-scenario-tab,
+.sim-run-btn {
+  border-radius: 8px !important;
+  box-shadow: none !important;
+}
+
+.sim-label {
+  letter-spacing: 0 !important;
+  text-transform: none !important;
+}
+
+.sim-placeholder::before {
+  content: none !important;
+}
+
+@supports selector(body:has(dialog[open])) {
+  body:has(dialog[open]) .view-tabs {
+    opacity: 0;
+    pointer-events: none;
+  }
+}
+
+@media (max-width: 700px) {
+  body {
+    padding-bottom: calc(88px + env(safe-area-inset-bottom)) !important;
+  }
+
+  .content,
+  .view-section,
+  .sim-view-section {
+    padding-bottom: calc(104px + env(safe-area-inset-bottom)) !important;
+  }
+
+  .cash-flow-form {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+    align-items: stretch !important;
+  }
+
+  .cash-flow-form > * {
+    flex: none !important;
+    width: 100% !important;
+  }
+
+  .cash-flow-form input,
+  .cash-flow-form select,
+  .cash-flow-form button {
+    min-height: 42px !important;
+    height: 42px !important;
+    max-height: 42px !important;
+    padding-block: 0 !important;
+    font-size: 14px !important;
+  }
+
+  .cash-flow-form button[type="submit"] {
+    min-height: 44px !important;
+    height: 44px !important;
+    max-height: 44px !important;
+  }
+
+  .performance-detail-panel .table-wrap.compact,
+  [data-view="cashflows"] .table-wrap.compact {
+    max-height: none !important;
+    overflow: visible !important;
+  }
+
+  .performance-detail-panel table:not(.numbers-source-table),
+  [data-view="cashflows"] table {
+    min-width: 0 !important;
+    width: 100% !important;
+  }
+
+  .performance-detail-panel table:not(.numbers-source-table) thead,
+  [data-view="cashflows"] thead {
+    display: none !important;
+  }
+
+  .performance-detail-panel table:not(.numbers-source-table) tbody,
+  [data-view="cashflows"] tbody {
+    display: grid !important;
+    gap: 8px !important;
+  }
+
+  .performance-detail-panel table:not(.numbers-source-table) tbody tr,
+  [data-view="cashflows"] tbody tr {
+    display: grid !important;
+    gap: 7px !important;
+    padding: 12px !important;
+    border: 1px solid var(--line) !important;
+    border-radius: 8px !important;
+    background: var(--surface) !important;
+  }
+
+  .performance-detail-panel table:not(.numbers-source-table) tbody td,
+  [data-view="cashflows"] tbody td {
+    display: flex !important;
+    align-items: baseline !important;
+    justify-content: space-between !important;
+    gap: 16px !important;
+    min-width: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    text-align: right !important;
+    white-space: normal !important;
+  }
+
+  .performance-detail-panel table:not(.numbers-source-table) tbody td::before,
+  [data-view="cashflows"] tbody td::before {
+    content: attr(data-label);
+    flex: 0 0 auto;
+    color: var(--muted);
+    font-weight: 800;
+    text-align: left;
+  }
+
+  .performance-detail-panel table:not(.numbers-source-table) tbody td[colspan]::before,
+  [data-view="cashflows"] tbody td[colspan]::before {
+    content: none !important;
+  }
+
+  [data-view="cashflows"] tbody td input,
+  [data-view="cashflows"] tbody td select {
+    width: min(100%, 220px) !important;
+    min-height: 38px !important;
+    height: 38px !important;
+  }
+
+  .sim-scenario-tabs {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+    overflow: visible !important;
+    padding-bottom: 0 !important;
+    border-bottom: 0 !important;
+  }
+
+  .sim-scenario-tab {
+    min-width: 0 !important;
+    width: 100% !important;
+    min-height: 36px !important;
+    padding: 0 8px !important;
+    font-size: 12px !important;
+  }
+
+  .sim-chart-container {
+    min-height: 220px !important;
+    height: 220px !important;
+  }
+
+  .sim-placeholder {
+    min-height: 168px !important;
+    padding: 18px 14px !important;
   }
 }
