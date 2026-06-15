@@ -21,3 +21,7 @@ exports/
 *.csv
 *.tsv
 .vercel
+
+# Local UX/blog evidence screenshots may include portfolio values
+_workspace/stock-portfolio/14_ux_book_review/before/
+_workspace/stock-portfolio/14_ux_book_review/after/

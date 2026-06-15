@@ -2252,12 +2252,12 @@ function renderSnapshots() {
   const rows = filtered.slice().reverse();
   els.snapshotsBody.innerHTML = rows
     .map((row) => `<tr>
-      <td>${escapeHtml(row.date)}</td>
-      <td>${formatKrw(row.totalValueKrw)}</td>
-      <td class="${row.dailyChangeKrw >= 0 ? "positive" : "negative"}">${formatKrw(row.dailyChangeKrw)}</td>
-      <td class="${row.investmentGainKrw >= 0 ? "positive" : "negative"}">${formatKrw(row.investmentGainKrw)}</td>
-      <td class="${row.dailyReturn >= 0 ? "positive" : "negative"}">${formatPercent(row.dailyReturn)}</td>
-      <td class="${row.monthToDateInvestmentGainKrw >= 0 ? "positive" : "negative"}">${formatKrw(row.monthToDateInvestmentGainKrw)}</td>
+      <td data-label="날짜">${escapeHtml(row.date)}</td>
+      <td data-label="총자산">${formatKrw(row.totalValueKrw)}</td>
+      <td data-label="일 증감" class="${row.dailyChangeKrw >= 0 ? "positive" : "negative"}">${formatKrw(row.dailyChangeKrw)}</td>
+      <td data-label="투자손익" class="${row.investmentGainKrw >= 0 ? "positive" : "negative"}">${formatKrw(row.investmentGainKrw)}</td>
+      <td data-label="일 수익률" class="${row.dailyReturn >= 0 ? "positive" : "negative"}">${formatPercent(row.dailyReturn)}</td>
+      <td data-label="월 누적" class="${row.monthToDateInvestmentGainKrw >= 0 ? "positive" : "negative"}">${formatKrw(row.monthToDateInvestmentGainKrw)}</td>
     </tr>`)
     .join("") || `<tr><td colspan="6">저장된 성과 스냅샷이 없습니다</td></tr>`;
 }
@@ -2266,10 +2266,10 @@ function renderMonthlySummary() {
   const rows = selectMonthlyRows(getFilteredSnapshotRows()).reverse();
   els.monthlySummaryBody.innerHTML = rows
     .map((row) => `<tr>
-      <td class="${row.changeKrw >= 0 ? "positive" : "negative"}">${escapeHtml(row.month)}</td>
-      <td>${formatKrw(row.startValueKrw)}</td>
-      <td>${formatKrw(row.endValueKrw)}</td>
-      <td class="${row.changeKrw >= 0 ? "positive" : "negative"}">${formatKrw(row.changeKrw)}</td>
+      <td data-label="월" class="${row.changeKrw >= 0 ? "positive" : "negative"}">${escapeHtml(row.month)}</td>
+      <td data-label="월초 총자산">${formatKrw(row.startValueKrw)}</td>
+      <td data-label="월말 총자산">${formatKrw(row.endValueKrw)}</td>
+      <td data-label="월 증감" class="${row.changeKrw >= 0 ? "positive" : "negative"}">${formatKrw(row.changeKrw)}</td>
     </tr>`)
     .join("") || `<tr><td colspan="4">월별로 집계할 스냅샷이 없습니다</td></tr>`;
 }
@@ -2278,13 +2278,13 @@ function renderAccountPerformance(rows) {
   const accountRows = selectAccountPerformanceRows(state.accountSnapshots, rows);
   els.accountPerformanceBody.innerHTML = accountRows
     .map((row) => `<tr>
-      <td>${escapeHtml(row.account)}<small>${escapeHtml(row.investor)}</small></td>
-      <td>${formatKrw(row.latestValueKrw)}</td>
-      <td class="${row.dailyChangeKrw >= 0 ? "positive" : "negative"}">${formatKrw(row.dailyChangeKrw)}</td>
-      <td class="${row.periodChangeKrw >= 0 ? "positive" : "negative"}">${formatKrw(row.periodChangeKrw)}</td>
-      <td>${formatKrw(row.stockValueKrw)}</td>
-      <td>${formatKrw(row.cashKrw)}</td>
-      <td class="${row.returnRate >= 0 ? "positive" : "negative"}">${formatPercent(row.returnRate)}</td>
+      <td data-label="계좌">${escapeHtml(row.account)}<small>${escapeHtml(row.investor)}</small></td>
+      <td data-label="최근 총액">${formatKrw(row.latestValueKrw)}</td>
+      <td data-label="일 증감" class="${row.dailyChangeKrw >= 0 ? "positive" : "negative"}">${formatKrw(row.dailyChangeKrw)}</td>
+      <td data-label="기간 증감" class="${row.periodChangeKrw >= 0 ? "positive" : "negative"}">${formatKrw(row.periodChangeKrw)}</td>
+      <td data-label="주식">${formatKrw(row.stockValueKrw)}</td>
+      <td data-label="예수금">${formatKrw(row.cashKrw)}</td>
+      <td data-label="수익률" class="${row.returnRate >= 0 ? "positive" : "negative"}">${formatPercent(row.returnRate)}</td>
     </tr>`)
     .join("") || `<tr><td colspan="7">계좌별 스냅샷이 없습니다. 오늘 성과 저장 또는 자동 기록 후 표시됩니다.</td></tr>`;
 }
@@ -2293,12 +2293,12 @@ function renderStrategyPerformance() {
   const rows = getStrategyPerformanceRows();
   els.strategyPerformanceBody.innerHTML = rows
     .map((row) => `<tr>
-      <td>${escapeHtml(row.strategy)}</td>
-      <td>${formatKrw(row.valueKrw)}</td>
-      <td>${formatPercent(row.weight)}</td>
-      <td class="${row.gainKrw >= 0 ? "positive" : "negative"}">${formatKrw(row.gainKrw)}</td>
-      <td class="${row.returnRate >= 0 ? "positive" : "negative"}">${formatPercent(row.returnRate)}</td>
-      <td>${formatNumber(row.count)}</td>
+      <td data-label="전략">${escapeHtml(row.strategy)}</td>
+      <td data-label="평가금액">${formatKrw(row.valueKrw)}</td>
+      <td data-label="비중">${formatPercent(row.weight)}</td>
+      <td data-label="평가손익" class="${row.gainKrw >= 0 ? "positive" : "negative"}">${formatKrw(row.gainKrw)}</td>
+      <td data-label="수익률" class="${row.returnRate >= 0 ? "positive" : "negative"}">${formatPercent(row.returnRate)}</td>
+      <td data-label="종목 수">${formatNumber(row.count)}</td>
     </tr>`)
     .join("") || `<tr><td colspan="6">보유 종목이 없습니다</td></tr>`;
 }
@@ -3049,13 +3049,13 @@ function renderCashFlows() {
     .slice(0, 30);
   els.cashFlowsBody.innerHTML = rows
     .map((flow) => editingCashFlowId === flow.id ? renderCashFlowEditRow(flow) : `<tr>
-      <td>${escapeHtml(flow.date)}</td>
-      <td>${escapeHtml(flow.investor)}</td>
-      <td>${escapeHtml(flow.account)}</td>
-      <td>${formatFlowType(flow.type)}</td>
-      <td><span class="money-value">${formatKrw(flow.amountKrw)}</span></td>
-      <td>${escapeHtml(flow.note || "")}</td>
-      <td>
+      <td data-label="날짜">${escapeHtml(flow.date)}</td>
+      <td data-label="투자자">${escapeHtml(flow.investor)}</td>
+      <td data-label="계좌">${escapeHtml(flow.account)}</td>
+      <td data-label="유형">${formatFlowType(flow.type)}</td>
+      <td data-label="금액"><span class="money-value">${formatKrw(flow.amountKrw)}</span></td>
+      <td data-label="메모">${escapeHtml(flow.note || "")}</td>
+      <td data-label="작업">
         ${rowActionMenu(`${flow.date} 입출금 작업`, [
           `<button type="button" data-edit-flow="${flow.id}">수정</button>`,
           `<button class="row-menu-danger" type="button" data-delete-flow="${flow.id}">삭제</button>`,
@@ -3093,14 +3093,14 @@ function renderCashFlowEditRow(flow) {
     .map((account) => `<option value="${escapeHtml(account.key)}" ${account.key === accountKeyFor(flow) ? "selected" : ""}>${escapeHtml(account.investor)} · ${escapeHtml(account.account)}</option>`)
     .join("");
   return `<tr class="is-editing-row">
-    <td><input data-inline-flow-field="date" type="date" value="${escapeHtml(flow.date || todayKey())}" aria-label="날짜"></td>
-    <td colspan="2">
+    <td data-label="날짜"><input data-inline-flow-field="date" type="date" value="${escapeHtml(flow.date || todayKey())}" aria-label="날짜"></td>
+    <td data-label="계좌" colspan="2">
       <select data-inline-flow-field="accountKey" aria-label="계좌">${accountOptions}</select>
     </td>
-    <td><select data-inline-flow-field="type" aria-label="유형">${cashFlowTypeOptions(flow.type)}</select></td>
-    <td><input data-inline-flow-field="amountKrw" type="number" step="1" min="0" value="${escapeHtml(flow.amountKrw ?? "")}" aria-label="금액 KRW"></td>
-    <td><input data-inline-flow-field="note" value="${escapeHtml(flow.note || "")}" placeholder="메모" aria-label="메모"></td>
-    <td>
+    <td data-label="유형"><select data-inline-flow-field="type" aria-label="유형">${cashFlowTypeOptions(flow.type)}</select></td>
+    <td data-label="금액"><input data-inline-flow-field="amountKrw" type="number" step="1" min="0" value="${escapeHtml(flow.amountKrw ?? "")}" aria-label="금액 KRW"></td>
+    <td data-label="메모"><input data-inline-flow-field="note" value="${escapeHtml(flow.note || "")}" placeholder="메모" aria-label="메모"></td>
+    <td data-label="작업">
       <div class="row-actions">
         <button class="secondary small-button" type="button" data-save-flow="${flow.id}">저장</button>
         <button class="ghost small-button" type="button" data-cancel-flow-edit>취소</button>
@@ -4086,11 +4086,9 @@ function showOperationToast(title, detail, tone = "info") {
   els.operationToast.dataset.tone = tone;
   els.operationToastTitle.textContent = title;
   els.operationToastDetail.textContent = detail;
-  if (tone !== "busy") {
-    toastTimer = window.setTimeout(() => {
-      els.operationToast.hidden = true;
-    }, 4200);
-  }
+  toastTimer = window.setTimeout(() => {
+    els.operationToast.hidden = true;
+  }, tone === "busy" ? 2200 : 4200);
 }
 
 function todayKey() {
