@@ -549,6 +549,29 @@ els.dashboardBoard.addEventListener("dragend", () => {
   clearDashboardDragState();
 });
 
+// 필터 팝오버 토글
+els.filterPopoverBtn?.addEventListener("click", (e) => {
+  e.stopPropagation();
+  const open = !els.filterPopover.hidden;
+  els.filterPopover.hidden = open;
+  els.filterPopoverBtn.setAttribute("aria-expanded", String(!open));
+});
+document.addEventListener("click", (e) => {
+  if (!els.filterPopover?.hidden && !els.filterPopover.contains(e.target) && e.target !== els.filterPopoverBtn) {
+    els.filterPopover.hidden = true;
+    els.filterPopoverBtn?.setAttribute("aria-expanded", "false");
+  }
+});
+
+// 필터 초기화
+els.filterResetBtn?.addEventListener("click", () => {
+  if (els.investorFilter) els.investorFilter.value = "";
+  if (els.strategyFilter) els.strategyFilter.value = "";
+  if (els.accountTypeFilter) els.accountTypeFilter.value = "";
+  holdingPage = 1;
+  renderHoldings();
+});
+
 for (const filter of [els.investorFilter, els.strategyFilter, els.accountTypeFilter, els.holdingSort]) {
   filter.addEventListener("change", () => {
     holdingPage = 1;

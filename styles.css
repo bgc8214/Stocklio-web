@@ -8326,3 +8326,92 @@ button.secondary:hover:not(:disabled),
     padding: 18px 14px !important;
   }
 }
+
+/* == 계좌 칩 필터 바 == */
+.filters[aria-label="보유 종목 필터"] {
+  flex-direction: column;
+  gap: 8px;
+  padding: 0;
+}
+.account-chips-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+.account-chip {
+  display: inline-flex;
+  align-items: center;
+  height: 30px;
+  padding: 0 12px;
+  border-radius: 15px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 13px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.12s, border-color 0.12s, color 0.12s;
+}
+.account-chip:hover { border-color: var(--accent); color: var(--accent); }
+.account-chip.is-active { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+.account-chip-overflow-wrap { position: relative; }
+.account-chip-overflow {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0,0,0,.12);
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  z-index: 200;
+  min-width: 160px;
+}
+.account-chip-overflow .account-chip {
+  width: 100%;
+  justify-content: flex-start;
+  border-radius: 6px;
+  border-color: transparent;
+}
+.filters-row2 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.filters-row2 input[type="search"] { flex: 1; min-width: 160px; }
+.filter-popover-wrap { position: relative; }
+.filter-popover {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: 0 4px 20px rgba(0,0,0,.14);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 300;
+  min-width: 220px;
+}
+.filter-popover select { width: 100%; }
+.filter-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 9px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  margin-left: 4px;
+  vertical-align: middle;
+}
