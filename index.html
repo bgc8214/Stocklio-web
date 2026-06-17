@@ -421,26 +421,35 @@
           </div>
         </div>
         <div class="filters" aria-label="보유 종목 필터">
-          <select id="investorFilter" aria-label="투자자 필터"></select>
-          <select id="strategyFilter" aria-label="전략 필터"></select>
-          <select id="accountTypeFilter" aria-label="계좌 유형 필터"></select>
-          <input id="holdingSearch" type="search" placeholder="종목/티커/계좌 검색" aria-label="보유 종목 검색">
-          <select id="holdingSort" aria-label="보유 종목 정렬">
-            <option value="value-desc">평가금액 높은 순</option>
-            <option value="value-asc">평가금액 낮은 순</option>
-            <option value="gain-desc">손익 높은 순</option>
-            <option value="gain-asc">손익 낮은 순</option>
-            <option value="return-desc">수익률 높은 순</option>
-            <option value="return-asc">수익률 낮은 순</option>
-            <option value="dayChange-desc">일 영향 큰 순</option>
-            <option value="dayChange-asc">일 영향 낮은 순</option>
-            <option value="quantity-desc">수량 많은 순</option>
-            <option value="quantity-asc">수량 적은 순</option>
-            <option value="price-desc">현재가 높은 순</option>
-            <option value="price-asc">현재가 낮은 순</option>
-            <option value="name-asc">종목명 가나다순</option>
-            <option value="name-desc">종목명 역순</option>
-          </select>
+          <div id="accountChipsBar" class="account-chips-bar" role="group" aria-label="계좌 선택"></div>
+          <div class="filters-row2">
+            <input id="holdingSearch" type="search" placeholder="종목/티커 검색" aria-label="보유 종목 검색">
+            <div class="filter-popover-wrap">
+              <button id="filterPopoverBtn" class="ghost small-button" type="button" aria-expanded="false">필터 <span id="filterActiveBadge" class="filter-badge" hidden></span></button>
+              <div id="filterPopover" class="filter-popover" hidden>
+                <select id="investorFilter" aria-label="투자자 필터"></select>
+                <select id="strategyFilter" aria-label="전략 필터"></select>
+                <select id="accountTypeFilter" aria-label="계좌 유형 필터"></select>
+                <button id="filterResetBtn" class="ghost small-button" type="button">초기화</button>
+              </div>
+            </div>
+            <select id="holdingSort" aria-label="보유 종목 정렬">
+              <option value="value-desc">평가금액 높은 순</option>
+              <option value="value-asc">평가금액 낮은 순</option>
+              <option value="gain-desc">손익 높은 순</option>
+              <option value="gain-asc">손익 낮은 순</option>
+              <option value="return-desc">수익률 높은 순</option>
+              <option value="return-asc">수익률 낮은 순</option>
+              <option value="dayChange-desc">일 영향 큰 순</option>
+              <option value="dayChange-asc">일 영향 낮은 순</option>
+              <option value="quantity-desc">수량 많은 순</option>
+              <option value="quantity-asc">수량 적은 순</option>
+              <option value="price-desc">현재가 높은 순</option>
+              <option value="price-asc">현재가 낮은 순</option>
+              <option value="name-asc">종목명 가나다순</option>
+              <option value="name-desc">종목명 역순</option>
+            </select>
+          </div>
         </div>
         <div class="holding-list-tools">
           <div class="segmented-control compact-segmented" role="group" aria-label="보유 종목 범위">

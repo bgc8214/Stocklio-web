@@ -27,7 +27,7 @@ const importPreviewStatePath = join(privateDataDir, "import-preview-state.json")
 const stateKey = "default";
 const automationIntervalMs = 15 * 60 * 1000;
 const execFileAsync = promisify(execFile);
-const pythonBin = process.env.PYTHON_BIN || "/Users/boss.back/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3";
+const pythonBin = process.env.PYTHON_BIN || "python3";
 
 const mimeTypes = {
   ".html": "text/html; charset=utf-8",
@@ -689,32 +689,53 @@ function createSeedState() {
     version: 6,
     fxRate: {
       pair: "USD/KRW",
-      rate: 1350,
+      rate: 1380,
+      previousClose: 1375,
+      change: 5,
+      changePercent: 0.0036,
       source: "샘플 환율",
       asOf: "샘플",
     },
     holdings: [
-      createHolding("투자자 A", "연금 계좌", "pension", "QQQ", "QQQ", "Invesco QQQ Trust", 18, 408.25, 430.15),
-      createHolding("투자자 A", "일반 계좌", "brokerage", "기타", "MSFT", "Microsoft", 12, 375.4, 414.92),
-      createHolding("투자자 B", "일반 계좌", "brokerage", "기타", "NVDA", "NVIDIA", 20, 104.5, 128.4),
-      createHolding("투자자 B", "코어 계좌", "brokerage", "S&P500", "VOO", "Vanguard S&P 500 ETF", 10, 465.2, 510.75),
-      createHolding("투자자 A", "전술 계좌", "brokerage", "S&P500", "SSO", "ProShares Ultra S&P500", 35, 58.4, 64.1),
+      // Alpha — ISA + pension
+      createHolding("Alpha", "ISA 계좌", "isa", "인덱스", "SPY", "SPDR S&P 500 ETF", 10, 480.0, 510.0, "USD"),
+      createHolding("Alpha", "ISA 계좌", "isa", "인덱스", "QQQ", "Invesco QQQ Trust", 10, 420.0, 445.0, "USD"),
+      createHolding("Alpha", "연금 계좌", "pension", "배당", "SCHD", "Schwab US Dividend Equity ETF", 20, 76.0, 82.0, "USD"),
+      // Beta — overseas brokerage
+      createHolding("Beta", "해외주식 계좌", "brokerage", "성장", "AAPL", "Apple", 15, 170.0, 195.0, "USD"),
+      createHolding("Beta", "해외주식 계좌", "brokerage", "성장", "MSFT", "Microsoft", 10, 380.0, 415.0, "USD"),
+      createHolding("Beta", "해외주식 계좌", "brokerage", "성장", "GOOGL", "Alphabet", 12, 155.0, 175.0, "USD"),
+      // Gamma — Korean stocks
+      createHolding("Gamma", "국내주식 계좌", "brokerage", "인덱스", "069500", "KODEX 200", 50, 32000, 34500, "KRW"),
+      createHolding("Gamma", "국내주식 계좌", "brokerage", "배당", "361580", "TIGER 미국배당다우존스", 40, 11500, 12200, "KRW"),
+      createHolding("Gamma", "연금 계좌", "pension", "인덱스", "379800", "KODEX 미국S&P500TR", 30, 15800, 17200, "KRW"),
     ],
     cashFlows: [
-      createCashFlow("2026-05-10", "투자자 A", "연금 계좌", "deposit", 1200000, "월 납입"),
-      createCashFlow("2026-05-12", "투자자 B", "일반 계좌", "deposit", 800000, "추가입금"),
+      createCashFlow("2026-04-01", "Alpha", "ISA 계좌", "deposit", 1000000, "월 납입"),
+      createCashFlow("2026-04-01", "Beta", "해외주식 계좌", "deposit", 1000000, "월 납입"),
+      createCashFlow("2026-04-01", "Gamma", "국내주식 계좌", "deposit", 1000000, "월 납입"),
+      createCashFlow("2026-05-01", "Alpha", "ISA 계좌", "deposit", 1000000, "월 납입"),
+      createCashFlow("2026-05-01", "Beta", "해외주식 계좌", "deposit", 1000000, "월 납입"),
+      createCashFlow("2026-05-01", "Gamma", "국내주식 계좌", "deposit", 1000000, "월 납입"),
     ],
-    cashBalances: [],
+    cashBalances: [
+      { id: makeId(), investor: "Alpha", account: "ISA 계좌", currency: "USD", amount: 500, source: "샘플" },
+      { id: makeId(), investor: "Beta", account: "해외주식 계좌", currency: "USD", amount: 500, source: "샘플" },
+      { id: makeId(), investor: "Gamma", account: "국내주식 계좌", currency: "KRW", amount: 500000, source: "샘플" },
+    ],
     accounts: [],
     dashboardLayout: createDefaultDashboardLayout(),
     accountSnapshots: [],
     priceUpdateLogs: [],
+    lastPriceRefreshImpact: null,
     portfolioSnapshots: [
-      createSnapshot("2026-05-10", 24850, 33547500, 23400, 1450, 1350, 1200000),
-      createSnapshot("2026-05-11", 25140, 33939000, 23400, 1740, 1350, 0),
-      createSnapshot("2026-05-12", 26010, 35113500, 23990, 2020, 1350, 800000),
-      createSnapshot("2026-05-13", 25920, 34992000, 23990, 1930, 1350, 0),
-      createSnapshot("2026-05-14", 26420, 35667000, 23990, 2430, 1350, 0),
+      createSnapshot("2026-04-07", 28000, 38640000, 27000, 1000, 1380, 3000000),
+      createSnapshot("2026-04-14", 28400, 39192000, 27000, 1400, 1380, 0),
+      createSnapshot("2026-04-21", 29100, 40158000, 27000, 2100, 1380, 0),
+      createSnapshot("2026-04-28", 28800, 39744000, 27000, 1800, 1380, 0),
+      createSnapshot("2026-05-06", 30000, 41400000, 30000, 0, 1380, 3000000),
+      createSnapshot("2026-05-13", 30800, 42504000, 30000, 800, 1380, 0),
+      createSnapshot("2026-05-20", 31500, 43470000, 30000, 1500, 1380, 0),
     ],
     automation: {
       lastRunAt: null,
@@ -729,7 +750,7 @@ function createDefaultDashboardLayout() {
   return DEFAULT_DASHBOARD_LAYOUT.map((item) => ({ ...item }));
 }
 
-function createHolding(investor, account, accountType, strategy, ticker, name, quantity, averageCost, price) {
+function createHolding(investor, account, accountType, strategy, ticker, name, quantity, averageCost, price, currency = "USD") {
   return {
     id: makeId(),
     investor,
@@ -741,7 +762,7 @@ function createHolding(investor, account, accountType, strategy, ticker, name, q
     quantity,
     averageCost,
     price,
-    currency: "USD",
+    currency,
     priceSource: "샘플",
     priceAsOf: "샘플",
   };
