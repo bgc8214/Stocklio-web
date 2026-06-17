@@ -1011,7 +1011,8 @@ async function initialize() {
     getUnclassifiedCashBalances,
     getKnownAccounts,
     isAccountInUse,
-    groupByAccount,
+    groupByAccount: calculateGroupByAccount,
+    groupByValue,
     unique,
     normalizeStrategy,
     strategyBuckets,
@@ -1031,16 +1032,47 @@ async function initialize() {
     getSyncState: () => syncState,
     setSyncState: (s) => { syncState = s; },
     startEditAccount,
-    getHoldingDailyMove,
-    getDailyMoveRows,
-    getCurrentMarketContext,
-    getSnapshotRows,
-    getFilteredSnapshotRows,
-    buildAccountSnapshots,
+    getHoldingDailyMove: selectHoldingDailyMove,
+    getDailyMoveRows: selectDailyMoveRows,
+    getCurrentMarketContext: () => getUsMarketContextForSeoulDate(),
+    getSnapshotRows: selectSnapshotRows,
+    getFilteredSnapshotRows: filterSnapshotRows,
+    buildAccountSnapshots: createAccountSnapshots,
     getRecentPriceRefreshImpact,
     getAccountStats,
     renderAccountSelectors,
     clamp,
+    // sort helpers
+    parseSortValue,
+    cycleSortValue,
+    DEFAULT_HOLDING_SORT,
+    DEFAULT_CASH_FLOW_SORT,
+    get holdingHeaderSort() { return holdingHeaderSort; },
+    set holdingHeaderSort(v) { holdingHeaderSort = v; },
+    get cashFlowHeaderSort() { return cashFlowHeaderSort; },
+    set cashFlowHeaderSort(v) { cashFlowHeaderSort = v; },
+    // allocation view state
+    get activeAllocationView() { return activeAllocationView; },
+    get allocationViewLabels() { return allocationViewLabels; },
+    // labels/formatters
+    accountTypeLabels,
+    formatAccountType,
+    formatShortDate,
+    // account helpers
+    isUnclassifiedCash,
+    parseAccountKey,
+    normalizeAccountType,
+    // auth state direct access
+    get authState() { return authState; },
+    // state management
+    setState: (s) => { state = s; },
+    loadState,
+    normalizeState,
+    // cancel edit
+    cancelEdit,
+    // accounts-view helpers
+    renderCashSelectedPreview,
+    rowActionMenu,
   };
   initHoldingsView(ctx);
   initPerformanceView(ctx);
@@ -1184,6 +1216,8 @@ function renderAuth() {
     els.googleLoginButton.disabled = true;
     els.emailLoginButton.disabled = true;
     els.logoutButton.hidden = true;
+    const banner = document.getElementById("sampleDataBanner");
+    if (banner) banner.hidden = false;
     renderDashboardStatus();
     return;
   }
@@ -1445,6 +1479,16 @@ function isAccountInUse(account) {
 
 function getHoldingValues(holding) {
   return calculateHoldingValues(holding, state.fxRate.rate);
+}
+
+function groupByValue(holdings, key) {
+  const map = new Map();
+  for (const holding of holdings) {
+    map.set(holding[key], (map.get(holding[key]) || 0) + getHoldingValues(holding).valueKrw);
+  }
+  return [...map.entries()]
+    .map(([label, value]) => ({ label, value }))
+    .sort((a, b) => b.value - a.value);
 }
 
 function unique(values) {
