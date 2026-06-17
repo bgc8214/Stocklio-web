@@ -6,7 +6,7 @@ export const AUTO_PRICE_REFRESH_TTL_MS = 10 * 60 * 1000;
 export const DATA_VERSION = 6;
 export const AUTH_READY_TIMEOUT_MS = 1800;
 
-export const palette = ["#1f7a5b", "#3366a8", "#a97819", "#7b5aa6", "#b94343"];
+export const palette = ["#1F4431", "#3366a8", "#a97819", "#7b5aa6", "#b94343"];
 
 export const dashboardCardLabels = {
   "total-value": "총자산",

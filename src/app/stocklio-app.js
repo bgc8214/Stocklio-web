@@ -1123,11 +1123,14 @@ function renderAuth() {
   if (!configured) {
     els.authStatus.textContent = "브라우저 저장";
     setSyncState("idle", "");
-    els.openLoginButton.hidden = true;
-    els.naverLoginButton.disabled = true;
-    els.googleLoginButton.disabled = true;
-    els.emailLoginButton.disabled = true;
+    els.openLoginButton.disabled = false;
+    els.openLoginButton.hidden = false;
+    els.naverLoginButton.disabled = false;
+    els.googleLoginButton.disabled = false;
+    els.emailLoginButton.disabled = false;
     els.logoutButton.hidden = true;
+    const banner = document.getElementById("sampleDataBanner");
+    if (banner) banner.hidden = false;
     renderDashboardStatus();
     return;
   }
@@ -1210,7 +1213,7 @@ async function sendEmailLoginLink() {
     await window.StocklioAuth?.signInWithEmail?.(email);
     closeEmailLoginDialog();
     setStatus("이메일 확인", `${email}로 로그인 링크를 보냈습니다`);
-    showOperationToast("로그인 링크 전송", "메일함에서 Stocklio 로그인 링크를 열어주세요", "success");
+    showOperationToast("로그인 링크 전송", "메일함에서 투자일지 로그인 링크를 열어주세요", "success");
   } catch (error) {
     setStatus("이메일 로그인 실패", error.message);
     showOperationToast("이메일 로그인 실패", error.message, "error");
@@ -2700,7 +2703,7 @@ function exportVisibleHoldings() {
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
-  link.download = `stocklio-holdings-${todayKey()}.csv`;
+  link.download = `tuja-ilji-holdings-${todayKey()}.csv`;
   link.click();
   URL.revokeObjectURL(url);
   showOperationToast("보유 종목 내보내기 완료", `${rows.length}개 종목 CSV`, "success");
@@ -2729,7 +2732,7 @@ function exportPerformanceCsv() {
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
-  link.download = `stocklio-performance-${todayKey()}.csv`;
+  link.download = `tuja-ilji-performance-${todayKey()}.csv`;
   link.click();
   URL.revokeObjectURL(url);
   showOperationToast("성과 내보내기 완료", `${rows.length}개 일자 CSV`, "success");

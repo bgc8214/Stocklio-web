@@ -1,0 +1,508 @@
+/* Tuja Ilji brand layer.
+   Loaded after styles.css so identity changes stay isolated from layout code. */
+
+:root {
+  --bg: #F4F5F7;
+  --surface: #ffffff;
+  --surface-soft: #eef5f0;
+  --ink: #132018;
+  --value: #0f1712;
+  --muted: #657168;
+  --subtle: #879189;
+  --line: #d9dfda;
+  --accent: #1F4431;
+  --accent-dark: #163225;
+  --accent-light: #58D68D;
+  --control-bg: #F4F5F7;
+  --nav-active-bg: rgba(88, 214, 141, 0.16);
+  --nav-active-color: #1F4431;
+  --nav-active-indicator: #58D68D;
+  --nav-icon-active-bg: rgba(88, 214, 141, 0.18);
+  --focus-ring: 0 0 0 3px rgba(88, 214, 141, 0.34);
+}
+
+[data-theme="dark"] {
+  --bg: #0f1813;
+  --surface: #121f18;
+  --surface-soft: #17271e;
+  --ink: #F4F5F7;
+  --value: #ffffff;
+  --muted: rgba(244, 245, 247, 0.62);
+  --subtle: rgba(244, 245, 247, 0.42);
+  --line: rgba(244, 245, 247, 0.1);
+  --accent: #58D68D;
+  --accent-dark: #39b873;
+  --accent-light: #7ee6aa;
+  --control-bg: #17271e;
+  --nav-active-bg: rgba(88, 214, 141, 0.14);
+  --nav-active-color: #7ee6aa;
+  --nav-active-indicator: #58D68D;
+  --nav-icon-active-bg: rgba(88, 214, 141, 0.16);
+  --focus-ring: 0 0 0 3px rgba(88, 214, 141, 0.28);
+}
+
+body {
+  background: var(--bg);
+}
+
+.brand-mark {
+  background: transparent !important;
+  border-radius: 10px !important;
+  box-shadow: none !important;
+  color: transparent !important;
+  display: block !important;
+  flex: 0 0 auto !important;
+  height: 42px !important;
+  object-fit: contain !important;
+  padding: 0 !important;
+  width: 42px !important;
+}
+
+.sidebar-brand {
+  gap: 11px;
+}
+
+.brand-lockup h1,
+.page-heading strong {
+  color: var(--ink);
+}
+
+.view-tabs button.active {
+  background: var(--accent) !important;
+  color: #ffffff !important;
+}
+
+.view-tabs button:not(.active) {
+  background: transparent !important;
+  color: var(--muted) !important;
+}
+
+.view-tabs button:hover,
+.view-tabs button:focus-visible {
+  background: var(--surface-soft) !important;
+  color: var(--accent);
+}
+
+.view-tabs button.active:hover,
+.view-tabs button.active:focus-visible {
+  background: var(--accent-dark) !important;
+  color: #ffffff !important;
+}
+
+.primary-action,
+.sim-run-btn,
+#dashboardAddHoldingButton,
+#addHoldingButton,
+.drawer-actions button:first-child {
+  background-color: var(--accent);
+  color: #ffffff !important;
+}
+
+.primary-action:hover,
+.sim-run-btn:hover,
+#dashboardAddHoldingButton:hover,
+#addHoldingButton:hover,
+.drawer-actions button:first-child:hover {
+  background-color: var(--accent-dark);
+}
+
+.primary-action *,
+.sim-run-btn *,
+#dashboardAddHoldingButton *,
+#addHoldingButton *,
+.drawer-actions button:first-child * {
+  color: inherit !important;
+}
+
+.login-provider-button {
+  color: var(--ink);
+}
+
+.login-provider-button strong {
+  color: inherit !important;
+}
+
+.login-provider-naver {
+  background: #03c75a !important;
+  border-color: #03c75a !important;
+  color: #ffffff !important;
+}
+
+.login-provider-naver:hover,
+.login-provider-naver:focus-visible {
+  background: #02b350 !important;
+  border-color: #02b350 !important;
+}
+
+.login-provider-naver span {
+  background: rgba(255, 255, 255, 0.18) !important;
+  color: #ffffff !important;
+}
+
+.login-provider-google,
+.login-provider-email {
+  background: #ffffff !important;
+  color: var(--ink) !important;
+}
+
+[data-theme="dark"] .login-provider-google,
+[data-theme="dark"] .login-provider-email {
+  background: var(--surface-soft) !important;
+  color: var(--ink) !important;
+}
+
+.login-provider-google span {
+  background: #ffffff !important;
+  border: 1px solid var(--line) !important;
+  color: #4285f4 !important;
+}
+
+.login-provider-email {
+  border-color: var(--line) !important;
+}
+
+.login-provider-email span {
+  background: var(--surface-soft) !important;
+  border: 1px solid var(--line) !important;
+  color: var(--accent) !important;
+}
+
+#addHoldingButton,
+#dashboardAddHoldingButton {
+  border-color: var(--accent) !important;
+  text-shadow: none !important;
+}
+
+#addHoldingButton:hover,
+#addHoldingButton:focus-visible,
+#dashboardAddHoldingButton:hover,
+#dashboardAddHoldingButton:focus-visible {
+  border-color: var(--accent-dark) !important;
+  color: #ffffff !important;
+}
+
+.metric,
+.panel,
+.dashboard-card,
+.detail-card,
+.account-overview-card,
+.portfolio-card {
+  border-color: var(--line);
+}
+
+.dashboard-board.craft-dashboard-board {
+  align-items: stretch;
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+}
+
+.craft-dashboard-board .dashboard-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  grid-column: span var(--card-span, 3);
+  min-height: var(--card-min-height, 168px);
+  min-width: 0;
+  overflow: hidden;
+  padding: 24px;
+  position: relative;
+}
+
+.craft-dashboard-board .dashboard-card.metric {
+  justify-content: space-between;
+}
+
+.craft-dashboard-board .dashboard-card.panel {
+  gap: 18px;
+}
+
+.craft-dashboard-board .dashboard-card > span,
+.craft-dashboard-board .dashboard-card > small {
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.craft-dashboard-board .dashboard-card > strong {
+  color: var(--value);
+  font-size: clamp(22px, 1.7vw, 34px);
+  font-weight: 900;
+  letter-spacing: 0;
+  line-height: 1.08;
+  overflow-wrap: normal;
+  white-space: nowrap;
+}
+
+.craft-dashboard-board .dashboard-card > strong.positive,
+.craft-dashboard-board .dashboard-card > small.positive {
+  color: var(--gain);
+}
+
+.craft-dashboard-board .dashboard-card > strong.negative,
+.craft-dashboard-board .dashboard-card > small.negative {
+  color: var(--loss);
+}
+
+.craft-dashboard-board .metric-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.craft-dashboard-board .metric-badge {
+  background: var(--surface-soft);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+  padding: 3px 8px;
+}
+
+@media (max-width: 980px) {
+  .app-shell {
+    display: block;
+  }
+
+  .sidebar {
+    background: var(--surface);
+    border-bottom: 1px solid var(--line);
+    border-right: 0;
+    height: auto;
+    position: static;
+    width: 100%;
+  }
+
+  .sidebar-inner {
+    display: block;
+    height: auto;
+  }
+
+  .sidebar-brand {
+    min-height: 72px;
+    padding: 14px 18px;
+  }
+
+  .brand-mark {
+    height: 52px !important;
+    width: 52px !important;
+  }
+
+  .brand-lockup h1 {
+    font-size: 32px;
+  }
+
+  .sidebar-foot {
+    display: none !important;
+  }
+
+  .view-tabs {
+    background: rgba(255, 255, 255, 0.96);
+    border-top: 1px solid var(--line);
+    bottom: 0;
+    box-shadow: 0 -8px 24px rgba(19, 32, 24, 0.08);
+    display: grid;
+    gap: 2px;
+    grid-auto-rows: 50px;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    left: 0;
+    min-height: calc(62px + env(safe-area-inset-bottom));
+    overflow: hidden;
+    padding: 6px 8px calc(6px + env(safe-area-inset-bottom));
+    position: fixed;
+    right: 0;
+    z-index: 50;
+  }
+
+  .view-tabs button {
+    border-radius: 8px;
+    align-content: center;
+    display: grid;
+    font-size: 0 !important;
+    gap: 2px;
+    height: 50px !important;
+    justify-items: center;
+    line-height: 1;
+    max-height: 50px !important;
+    min-height: 50px !important;
+    min-width: 0;
+    padding: 0 3px;
+  }
+
+  .view-tabs button::before {
+    height: 22px !important;
+    margin-right: 0 !important;
+    width: 22px !important;
+  }
+
+  .view-tabs button::after {
+    background: transparent !important;
+    border-radius: 0 !important;
+    bottom: auto !important;
+    color: currentColor !important;
+    content: attr(data-mobile-label);
+    display: block;
+    font-size: 10px !important;
+    font-weight: 800;
+    height: auto !important;
+    left: auto !important;
+    line-height: 1.1;
+    max-width: 100%;
+    overflow: hidden;
+    position: static !important;
+    right: auto !important;
+    text-overflow: ellipsis;
+    top: auto !important;
+    white-space: nowrap;
+    width: auto !important;
+  }
+
+  .view-tabs button[data-view-tab="simulator"],
+  .view-tabs .nav-more-btn {
+    display: none;
+  }
+
+  .content {
+    padding: 0 14px calc(92px + env(safe-area-inset-bottom));
+  }
+
+  .toolbar {
+    margin: 0 -14px 14px;
+    padding-left: 14px;
+    padding-right: 14px;
+    position: static;
+  }
+
+  .dashboard-board.craft-dashboard-board {
+    gap: 10px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .craft-dashboard-board .dashboard-card {
+    grid-column: span 1;
+    min-height: 128px;
+    padding: 16px;
+  }
+
+  .craft-dashboard-board .dashboard-card[data-dashboard-card="total-value"],
+  .craft-dashboard-board .dashboard-card.panel {
+    grid-column: 1 / -1;
+  }
+
+  .craft-dashboard-board .dashboard-card > strong {
+    font-size: clamp(24px, 7vw, 32px);
+    white-space: normal;
+  }
+}
+
+@media (max-width: 700px) {
+  .dashboard-board.craft-dashboard-board {
+    grid-template-columns: 1fr;
+  }
+
+  .craft-dashboard-board .dashboard-card {
+    grid-column: 1 / -1;
+  }
+}
+
+.sidebar-foot {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.sidebar-foot .theme-toggle {
+  justify-content: center;
+  width: 100%;
+}
+
+.sidebar-foot span,
+.sidebar-foot strong {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Sidebar nav: dashboard should read as one icon, not a 4-tile grid. */
+.view-tabs button[data-view-tab="dashboard"]::before {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%23657168' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 19V5'/%3E%3Cpath d='M4 19h16'/%3E%3Cpath d='m7 15 3.5-4 3 2.5L19 7'/%3E%3C/svg%3E") !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+  background-size: 18px 18px !important;
+}
+
+.view-tabs button.active[data-view-tab="dashboard"]::before,
+.view-tabs button[data-view-tab="dashboard"]:hover::before,
+.view-tabs button[data-view-tab="dashboard"]:focus-visible::before {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 19V5'/%3E%3Cpath d='M4 19h16'/%3E%3Cpath d='m7 15 3.5-4 3 2.5L19 7'/%3E%3C/svg%3E") !important;
+}
+
+/* Sidebar nav: use one solid mask per item so icons never read as multiple tiles. */
+.view-tabs button[data-view-tab="dashboard"] {
+  --nav-icon-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 11.5 12 4l9 7.5'/%3E%3Cpath d='M5.5 10.5V20h13v-9.5'/%3E%3Cpath d='M9 20v-5h6v5'/%3E%3C/svg%3E");
+}
+
+.view-tabs button[data-view-tab="holdings"] {
+  --nav-icon-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m4 16 5-5 4 4 7-8'/%3E%3Cpath d='M16 7h4v4'/%3E%3C/svg%3E");
+}
+
+.view-tabs button[data-view-tab="accounts"] {
+  --nav-icon-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 7.5h16v11H4z'/%3E%3Cpath d='M7 7.5V5h10v2.5'/%3E%3Cpath d='M16.5 13h.01'/%3E%3C/svg%3E");
+}
+
+.view-tabs button[data-view-tab="performance"] {
+  --nav-icon-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 19h16'/%3E%3Cpath d='M7 16V9'/%3E%3Cpath d='M12 16V5'/%3E%3Cpath d='M17 16v-4'/%3E%3C/svg%3E");
+}
+
+.view-tabs button[data-view-tab="cashflows"] {
+  --nav-icon-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M8 5v14'/%3E%3Cpath d='m5 8 3-3 3 3'/%3E%3Cpath d='M16 19V5'/%3E%3Cpath d='m13 16 3 3 3-3'/%3E%3C/svg%3E");
+}
+
+.view-tabs button[data-view-tab="automation"] {
+  --nav-icon-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M18 9a6 6 0 0 0-12 0c0 6-2 7-2 7h16s-2-1-2-7'/%3E%3Cpath d='M10 20h4'/%3E%3C/svg%3E");
+}
+
+.view-tabs button[data-view-tab="simulator"] {
+  --nav-icon-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='black'%3E%3Cpath d='M8 5.8v12.4c0 .8.9 1.3 1.6.8l9-6.2c.6-.4.6-1.2 0-1.6l-9-6.2c-.7-.5-1.6 0-1.6.8Z'/%3E%3C/svg%3E");
+}
+
+.view-tabs .nav-more-btn {
+  --nav-icon-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='black'%3E%3Ccircle cx='5' cy='12' r='2'/%3E%3Ccircle cx='12' cy='12' r='2'/%3E%3Ccircle cx='19' cy='12' r='2'/%3E%3C/svg%3E");
+}
+
+.view-tabs button[data-view-tab]::before,
+.view-tabs button.active[data-view-tab]::before,
+.view-tabs button[data-view-tab]:hover::before,
+.view-tabs button[data-view-tab]:focus-visible::before,
+.view-tabs .nav-more-btn::before {
+  background-color: currentColor !important;
+  background-image: none !important;
+  border-radius: 0 !important;
+  content: "" !important;
+  flex: 0 0 auto !important;
+  height: 20px !important;
+  margin-right: 10px !important;
+  -webkit-mask-image: var(--nav-icon-mask) !important;
+  mask-image: var(--nav-icon-mask) !important;
+  -webkit-mask-position: center !important;
+  mask-position: center !important;
+  -webkit-mask-repeat: no-repeat !important;
+  mask-repeat: no-repeat !important;
+  -webkit-mask-size: contain !important;
+  mask-size: contain !important;
+  width: 20px !important;
+}
+
+@media (max-width: 980px) {
+  .view-tabs button::before {
+    height: 21px !important;
+    margin-right: 0 !important;
+    width: 21px !important;
+  }
+}

@@ -11908,7 +11908,7 @@ var Ra = /* @__PURE__ */ o(((e) => {
 	"performance-flow": "성과 흐름",
 	breakdown: "오늘 변동 원인"
 }, Va = [
-	"#1f7a5b",
+	"#1F4431",
 	"#3366a8",
 	"#a97819",
 	"#7b5aa6",
@@ -12289,10 +12289,10 @@ function Xa({ state: e }) {
 						y2: "1",
 						children: [/* @__PURE__ */ (0, B.jsx)("stop", {
 							offset: "0%",
-							stopColor: "rgba(31, 122, 91, 0.24)"
+							stopColor: "rgba(31, 68, 49, 0.24)"
 						}), /* @__PURE__ */ (0, B.jsx)("stop", {
 							offset: "100%",
-							stopColor: "rgba(31, 122, 91, 0.05)"
+							stopColor: "rgba(31, 68, 49, 0.05)"
 						})]
 					}) }),
 					v.map((e) => /* @__PURE__ */ (0, B.jsxs)("g", { children: [/* @__PURE__ */ (0, B.jsx)("line", {

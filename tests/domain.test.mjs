@@ -371,6 +371,60 @@ test("daily digest explains when fx offsets stock price losses", () => {
   assert.match(digest.text, /TQQQ: \+₩52,000 · -1.00% · 가격 -₩148,000, 환율 \+₩200,000/);
 });
 
+test("daily digest groups duplicate tickers across accounts", () => {
+  const snapshot = { date: "2026-05-20", totalValueKrw: 1_122_237_022, netInflowKrw: 0 };
+  const previousSnapshot = { date: "2026-05-19", totalValueKrw: 1_121_398_489 };
+  const state = {
+    ...sample,
+    cashBalances: [],
+    fxRate: { rate: 1500, previousClose: 1480 },
+    holdings: [
+      {
+        id: "h1",
+        name: "TQQQ",
+        ticker: "TQQQ",
+        account: "미래에셋",
+        quantity: 100,
+        currency: "USD",
+        price: 100,
+        priceChange: -1,
+        priceChangePercent: -0.01,
+      },
+      {
+        id: "h2",
+        name: "TQQQ",
+        ticker: "TQQQ",
+        account: "토스",
+        quantity: 50,
+        currency: "USD",
+        price: 100,
+        priceChange: -1,
+        priceChangePercent: -0.01,
+      },
+      {
+        id: "h3",
+        name: "현대차",
+        ticker: "005380.KS",
+        quantity: 10,
+        currency: "KRW",
+        price: 250000,
+        priceChange: -5000,
+        priceChangePercent: -0.02,
+      },
+    ],
+  };
+
+  const digest = buildDailyDigest({ state, snapshot, previousSnapshot, date: "2026-05-20" });
+
+  assert.equal(digest.topMovers.length, 2);
+  assert.equal(digest.topMovers[0].ticker, "TQQQ");
+  assert.equal(digest.topMovers[0].valueKrw, 78_000);
+  assert.equal(digest.topMovers[0].priceEffectKrw, -222_000);
+  assert.equal(digest.topMovers[0].fxEffectKrw, 300_000);
+  assert.equal((digest.text.match(/^- TQQQ:/gm) || []).length, 1);
+  assert.match(digest.text, /TQQQ: \+₩78,000 · -1.00% · 가격 -₩222,000, 환율 \+₩300,000/);
+});
+
 test("market calendar marks Seoul Sunday and Monday morning as US market closed context", () => {
   const sunday = getUsMarketContextForSeoulDate("2026-05-17");
   const mondayMorning = getUsMarketContextForSeoulDate("2026-05-18");

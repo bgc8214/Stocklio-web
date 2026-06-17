@@ -3,10 +3,13 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>주식 포트폴리오 랩</title>
+    <title>투자일지</title>
+    <link rel="icon" type="image/png" href="assets/favicon.png">
+    <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
     <link rel="preconnect" href="https://cdn.jsdelivr.net">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="styles-brand.css">
     <script>(function(){var t=localStorage.getItem("stocklio-theme");if(t){document.documentElement.dataset.theme=t;}else if(window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches){document.documentElement.dataset.theme="dark";}})();</script>
     <script>window.STOCKLIO_USE_CRAFT = true;</script>
     <script>
@@ -19,12 +22,12 @@
   </head>
   <body>
     <div class="app-shell">
-      <aside class="sidebar" aria-label="Stocklio 메뉴">
+      <aside class="sidebar" aria-label="투자일지 메뉴">
         <div class="sidebar-inner">
           <div class="sidebar-brand">
-            <span class="brand-mark" aria-hidden="true">St</span>
+            <img class="brand-mark" src="assets/tuja-ilji-icon-192.png" alt="" aria-hidden="true">
             <div class="brand-lockup">
-              <h1>Stocklio</h1>
+              <h1>투자일지</h1>
             </div>
           </div>
           <nav class="view-tabs" aria-label="메뉴">
@@ -97,7 +100,7 @@
         <div class="login-card">
           <div class="login-dialog-heading">
             <div>
-              <strong id="loginDialogTitle">Stocklio 로그인</strong>
+              <strong id="loginDialogTitle">투자일지 로그인</strong>
               <span>포트폴리오를 클라우드에 저장하고 자동 알림을 받을 수 있습니다.</span>
             </div>
             <button id="loginDialogCloseButton" class="ghost small-button" type="button" aria-label="로그인 창 닫기">닫기</button>
@@ -124,7 +127,7 @@
         <form id="emailLoginForm" method="dialog">
           <div>
             <strong id="emailLoginTitle">이메일로 로그인</strong>
-            <span>메일로 받은 링크를 열면 Stocklio에 로그인됩니다.</span>
+            <span>메일로 받은 링크를 열면 투자일지에 로그인됩니다.</span>
           </div>
           <label>
             이메일
