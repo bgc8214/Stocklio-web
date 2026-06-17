@@ -22,6 +22,8 @@ let holdingHeaderSort = { key: "value", dir: "desc" };
 let editingHoldingId = null;
 let tickerSearchTimer = null;
 let tickerSearchSeq = 0;
+// "investor|||account" 키, null = 전체
+let selectedAccountChip = null;
 
 const HOLDINGS_PAGE_SIZE = window.innerWidth <= 980 ? 100 : 10;
 
@@ -109,14 +111,82 @@ export function tickerLogoHtml(ticker, name, size = 36) {
   </span>`;
 }
 
+export function renderAccountChips() {
+  const els = _ctx.els;
+  const state = _ctx.getState();
+  if (!els.accountChipsBar) return;
+
+  // 고유 계좌 목록 추출 (investor|||account 키 기준)
+  const seen = new Map();
+  for (const h of state.holdings) {
+    const key = `${h.investor}|||${h.account}`;
+    if (!seen.has(key)) seen.set(key, { investor: h.investor, account: h.account, key });
+  }
+  const accounts = [...seen.values()];
+
+  // 칩이 5개 초과면 오버플로우 처리
+  const VISIBLE_MAX = 5;
+  const visible = accounts.slice(0, VISIBLE_MAX);
+  const overflow = accounts.slice(VISIBLE_MAX);
+
+  const chipHtml = (key, label) => {
+    const active = selectedAccountChip === key;
+    return `<button class="account-chip${active ? " is-active" : ""}" type="button" data-account-chip="${escapeHtml(key ?? "")}">${escapeHtml(label)}</button>`;
+  };
+
+  let html = chipHtml(null, "전체");
+  for (const acc of visible) {
+    const label = acc.investor !== accounts[0]?.investor || accounts.filter(a => a.investor === acc.investor).length > 1
+      ? `${acc.investor} · ${acc.account}`
+      : acc.account;
+    html += chipHtml(acc.key, label);
+  }
+  if (overflow.length) {
+    html += `<div class="account-chip-overflow-wrap">
+      <button class="account-chip account-chip-more" type="button" data-account-chip-more>+${overflow.length}개 ▾</button>
+      <div class="account-chip-overflow" hidden>
+        ${overflow.map(acc => chipHtml(acc.key, `${acc.investor} · ${acc.account}`)).join("")}
+      </div>
+    </div>`;
+  }
+  els.accountChipsBar.innerHTML = html;
+
+  els.accountChipsBar.querySelectorAll("[data-account-chip]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const key = btn.dataset.accountChip || null;
+      selectedAccountChip = key === "" ? null : key;
+      holdingPage = 1;
+      renderAccountChips();
+      renderHoldings();
+    });
+  });
+
+  const moreBtn = els.accountChipsBar.querySelector("[data-account-chip-more]");
+  if (moreBtn) {
+    moreBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const overflow = moreBtn.nextElementSibling;
+      const open = !overflow.hidden;
+      overflow.hidden = open;
+      moreBtn.setAttribute("aria-expanded", String(!open));
+    });
+    document.addEventListener("click", () => {
+      const overflow = moreBtn.nextElementSibling;
+      if (overflow) overflow.hidden = true;
+    }, { once: true });
+  }
+}
+
 export function filteredHoldings() {
   const state = _ctx.getState();
   const els = _ctx.els;
   const query = (els.holdingSearch?.value || "").trim().toLowerCase();
   const rows = state.holdings.filter((holding) => {
+    const chipKey = `${holding.investor}|||${holding.account}`;
     const haystack = [holding.name, holding.ticker, holding.account, holding.investor, holding.strategy].join(" ").toLowerCase();
     const values = _ctx.getHoldingValues(holding);
     return (
+      (!selectedAccountChip || chipKey === selectedAccountChip) &&
       (!els.investorFilter.value || holding.investor === els.investorFilter.value) &&
       (!els.strategyFilter.value || holding.strategy === els.strategyFilter.value) &&
       (!els.accountTypeFilter.value || normalizeAccountType(holding.accountType) === els.accountTypeFilter.value) &&
@@ -150,9 +220,11 @@ export function filteredHoldings() {
 
 export function renderHoldings() {
   const els = _ctx.els;
+  renderAccountChips();
   const rows = filteredHoldings();
   renderHoldingsSummary(rows);
   renderHoldingsViewToggle();
+  renderFilterBadge();
 
   const isSummary = holdingsViewMode === "summary";
   if (els.holdingsSummaryView) els.holdingsSummaryView.hidden = !isSummary;
@@ -343,6 +415,14 @@ function renderHoldingsSummary(rows) {
   if (els.holdingsSummaryTopNames) {
     els.holdingsSummaryTopNames.textContent = topNames;
   }
+}
+
+function renderFilterBadge() {
+  const els = _ctx.els;
+  if (!els.filterActiveBadge) return;
+  const count = [els.investorFilter?.value, els.strategyFilter?.value, els.accountTypeFilter?.value].filter(Boolean).length;
+  els.filterActiveBadge.textContent = String(count);
+  els.filterActiveBadge.hidden = count === 0;
 }
 
 function renderHoldingsViewToggle() {
