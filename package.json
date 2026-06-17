@@ -13,7 +13,7 @@
     "check": "node scripts/check-js.mjs && node --test tests/domain.test.mjs && npm run build",
     "test:product": "node scripts/product-smoke.mjs",
     "verify": "npm run check && npm run test:migration && npm run test:product",
-    "test:migration": "/Users/boss.back/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3 -m unittest tests/test_migration.py"
+    "test:migration": "${PYTHON_BIN:-python3} -m unittest tests/test_migration.py"
   },
   "dependencies": {
     "@craftjs/core": "^0.2.12",
