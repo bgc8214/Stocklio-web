@@ -25,7 +25,7 @@ const LABELS = {
   breakdown: "오늘 변동 원인",
 };
 
-const palette = ["#1f7a5b", "#3366a8", "#a97819", "#7b5aa6", "#b94343"];
+const palette = ["#1F4431", "#3366a8", "#a97819", "#7b5aa6", "#b94343"];
 const accountTypeLabels = {
   direct_investment: "직접투자 계좌",
   pension: "연금 계좌",
@@ -416,8 +416,8 @@ function PerformancePanel({ state }) {
         <svg viewBox={`0 0 ${chartWidth} ${chartHeight}`} role="img" aria-label="총자산 추이 차트">
           <defs>
             <linearGradient id="dashboardAreaGradient" x1="0" x2="0" y1="0" y2="1">
-              <stop offset="0%" stopColor="rgba(31, 122, 91, 0.24)" />
-              <stop offset="100%" stopColor="rgba(31, 122, 91, 0.05)" />
+              <stop offset="0%" stopColor="rgba(31, 68, 49, 0.24)" />
+              <stop offset="100%" stopColor="rgba(31, 68, 49, 0.05)" />
             </linearGradient>
           </defs>
           {gridLines.map((line) => (

@@ -16,7 +16,7 @@ export function buildDailyDigest({ state, snapshot, previousSnapshot, date, site
   const topMovers = shouldExplainMovers ? getTopMovers(state, 3) : [];
   const titlePrefix = marketContext?.isMarketClosed ? "휴장일 기준 요약" : "마감 요약";
   const lines = [
-    `Stocklio ${date} ${titlePrefix}`,
+    `투자일지 ${date} ${titlePrefix}`,
     "",
     `총자산: ${formatKrw(snapshot.totalValueKrw)}`,
     `${marketContext?.isMarketClosed ? "스냅샷 전일 대비" : "전일 대비"}: ${formatSignedKrw(dayChangeKrw)}`,
@@ -58,7 +58,7 @@ export function buildDailyDigest({ state, snapshot, previousSnapshot, date, site
   }
 
   return {
-    title: `${date} Stocklio ${titlePrefix}`,
+    title: `${date} 투자일지 ${titlePrefix}`,
     text: lines.join("\n"),
     metrics: {
       totalValueKrw: Number(snapshot.totalValueKrw || 0),
@@ -117,28 +117,47 @@ export function getMoveBreakdown(state) {
 function getHoldingMoveRows(state) {
   const fxRate = Number(state.fxRate?.rate || state.fxRate || 1);
   const previousFx = Number(state.fxRate?.previousClose || state.fxRate?.rate || fxRate);
-  return (state.holdings || [])
-    .map((holding) => {
-      const quantity = Number(holding.quantity || 0);
-      const priceChange = Number(holding.priceChange);
-      const price = Number(holding.price || 0);
-      if (!Number.isFinite(priceChange) || !quantity) {
-        return null;
+  const rowsByTicker = new Map();
+  for (const holding of state.holdings || []) {
+    const quantity = Number(holding.quantity || 0);
+    const priceChange = Number(holding.priceChange);
+    const price = Number(holding.price || 0);
+    if (!Number.isFinite(priceChange) || !quantity) {
+      continue;
+    }
+
+    const ticker = String(holding.ticker || holding.name || "").trim();
+    const key = ticker ? ticker.toUpperCase() : String(holding.id);
+    const isUsd = holding.currency === "USD";
+    const priceEffectKrw = quantity * priceChange * (isUsd ? previousFx : 1);
+    const fxEffectKrw = isUsd ? quantity * price * (fxRate - previousFx) : 0;
+    const changePercent = Number(holding.priceChangePercent || 0);
+    const existing = rowsByTicker.get(key);
+
+    if (existing) {
+      existing.quantity += quantity;
+      existing.valueKrw += priceEffectKrw + fxEffectKrw;
+      existing.priceEffectKrw += priceEffectKrw;
+      existing.fxEffectKrw += fxEffectKrw;
+      if (Number.isFinite(changePercent) && !Number.isFinite(existing.changePercent)) {
+        existing.changePercent = changePercent;
       }
-      const isUsd = holding.currency === "USD";
-      const priceEffectKrw = quantity * priceChange * (isUsd ? previousFx : 1);
-      const fxEffectKrw = isUsd ? quantity * price * (fxRate - previousFx) : 0;
-      return {
-        id: holding.id,
-        name: holding.name || holding.ticker,
-        ticker: holding.ticker,
-        valueKrw: priceEffectKrw + fxEffectKrw,
-        priceEffectKrw,
-        fxEffectKrw,
-        changePercent: Number(holding.priceChangePercent || 0),
-      };
-    })
-    .filter(Boolean);
+      continue;
+    }
+
+    rowsByTicker.set(key, {
+      id: ticker || holding.id,
+      name: holding.name || ticker,
+      ticker,
+      quantity,
+      valueKrw: priceEffectKrw + fxEffectKrw,
+      priceEffectKrw,
+      fxEffectKrw,
+      changePercent: Number.isFinite(changePercent) ? changePercent : 0,
+    });
+  }
+
+  return [...rowsByTicker.values()];
 }
 
 function createEmptyMoveBreakdown() {

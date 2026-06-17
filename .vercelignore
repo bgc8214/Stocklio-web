@@ -1,0 +1,13 @@
+_workspace/
+.idea/
+data/
+exports/
+imports/private/
+*.numbers
+*.xlsx
+*.xls
+*.csv
+*.tsv
+node_modules/
+.env
+.env.*

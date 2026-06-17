@@ -599,10 +599,26 @@ async function serveStatic(pathname, response) {
     return;
   }
 
+  if (cleanPath === "/index.html") {
+    const html = await readFile(absolutePath, "utf8");
+    response.writeHead(200, {
+      "content-type": mimeTypes[".html"],
+    });
+    response.end(applyClientEnv(html));
+    return;
+  }
+
   response.writeHead(200, {
     "content-type": mimeTypes[extname(absolutePath)] || "application/octet-stream",
   });
   createReadStream(absolutePath).pipe(response);
+}
+
+function applyClientEnv(html) {
+  return html
+    .replaceAll("%VITE_SUPABASE_URL%", process.env.VITE_SUPABASE_URL || "")
+    .replaceAll("%VITE_SUPABASE_ANON_KEY%", process.env.VITE_SUPABASE_ANON_KEY || "")
+    .replaceAll("%VITE_PUBLIC_SITE_URL%", process.env.VITE_PUBLIC_SITE_URL || "");
 }
 
 async function sendImportSummary(response) {

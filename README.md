@@ -1,4 +1,4 @@
-# Stock Portfolio Lab
+# 투자일지
 
 Numbers로 관리하던 개인 주식 포트폴리오를 웹 서비스로 옮기기 위한 프로젝트다.
 
