@@ -478,23 +478,33 @@ async function supabaseFetch(path, options = {}) {
 }
 
 async function getYahooQuote(ticker) {
-  const data = await fetchYahooChartData(ticker);
-  const meta = data?.chart?.result?.[0]?.meta;
-  const price = Number(meta?.regularMarketPrice);
-  if (!Number.isFinite(price) || price <= 0) {
-    throw new Error(`${ticker} 가격 응답이 없습니다`);
+  // 한국 종목(6자리 숫자)은 .KS suffix 자동 시도
+  const isKrTicker = /^\d{6}$/.test(ticker);
+  const symbols = isKrTicker ? [`${ticker}.KS`, ticker] : [ticker];
+
+  let lastError;
+  for (const symbol of symbols) {
+    try {
+      const data = await fetchYahooChartData(symbol);
+      const meta = data?.chart?.result?.[0]?.meta;
+      const price = Number(meta?.regularMarketPrice);
+      if (!Number.isFinite(price) || price <= 0) continue;
+      const previousClose = Number(meta?.previousClose ?? meta?.chartPreviousClose ?? price);
+      const timestamp = Number(meta?.regularMarketTime);
+      return {
+        price,
+        previousClose,
+        priceChange: price - previousClose,
+        priceChangePercent: previousClose ? (price - previousClose) / previousClose : 0,
+        source: "Yahoo Finance",
+        asOf: timestamp ? new Date(timestamp * 1000).toISOString() : new Date().toISOString(),
+        priceDate: timestamp ? getPriceDateInUsMarket(new Date(timestamp * 1000).toISOString()) : "",
+      };
+    } catch (err) {
+      lastError = err;
+    }
   }
-  const previousClose = Number(meta?.previousClose ?? meta?.chartPreviousClose ?? price);
-  const timestamp = Number(meta?.regularMarketTime);
-  return {
-    price,
-    previousClose,
-    priceChange: price - previousClose,
-    priceChangePercent: previousClose ? (price - previousClose) / previousClose : 0,
-    source: "Yahoo Finance",
-    asOf: timestamp ? new Date(timestamp * 1000).toISOString() : new Date().toISOString(),
-    priceDate: timestamp ? getPriceDateInUsMarket(new Date(timestamp * 1000).toISOString()) : "",
-  };
+  throw lastError ?? new Error(`${ticker} 가격 응답이 없습니다`);
 }
 
 async function getYahooFxRate() {
