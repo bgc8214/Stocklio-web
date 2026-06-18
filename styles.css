@@ -1076,8 +1076,20 @@ main {
 .account-overview-grid {
   display: grid;
   gap: 12px;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
 }
+.account-overview-card--alert {
+  border-color: #e6a817;
+  background: #fff8ec;
+}
+[data-theme="dark"] .account-overview-card--alert {
+  border-color: #b07c10;
+  background: #2a2010;
+}
+.account-overview-card--alert strong { color: #b07c10; }
+
+/* 보유종목 테이블: chip 단일 선택 시 투자자/계좌/전략 컬럼 숨김 */
+.holdings-table.cols-context-hidden .col-context { display: none; }
 
 .account-overview-card {
   background: var(--surface);
@@ -2447,24 +2459,7 @@ main {
   background: var(--surface-soft);
 }
 
-.holdings-view-bar {
-  align-items: center;
-  display: flex;
-  justify-content: flex-end;
-  margin-bottom: 10px;
-  margin-top: 12px;
-}
-
-.holding-view-toggle {
-  display: flex;
-  gap: 4px;
-}
-
-.holding-view-toggle button.is-active {
-  background: var(--ink);
-  border-color: var(--ink);
-  color: var(--bg);
-}
+/* .holdings-view-bar — HTML에서 제거됨. 토글은 .filters-row1 내부로 통합 */
 
 /* 요약 뷰 */
 /* 종목 로고 */
@@ -7814,11 +7809,6 @@ details.row-menu .row-menu-popover .row-menu-danger:focus-visible {
     display: none !important;
   }
 
-  /* 계좌별/종목별 토글 + 내보내기 줄 → 숨김 */
-  .holdings-view-bar {
-    display: none !important;
-  }
-
   /* 툴바: 종목 수 + 가격 갱신 시간 + 종목 추가 버튼
      한 줄로 compact하게 */
   .holding-toolbar {
@@ -8329,54 +8319,82 @@ button.secondary:hover:not(:disabled),
 
 /* == 계좌 칩 필터 바 == */
 .filters[aria-label="보유 종목 필터"] {
+  display: flex;          /* grid 상속을 flex로 재정의 */
   flex-direction: column;
+  align-items: stretch;   /* grid의 align-items:center 상속 차단 */
   gap: 8px;
   padding: 0;
+  margin-bottom: 14px;
 }
+
+/* Row 1: chip bar(왼쪽, 스크롤) + 검색·필터·정렬·토글(오른쪽, 고정) */
+.filters-row1 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
 .account-chips-bar {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  flex: 1;               /* 남은 가로 공간 모두 차지 */
+  min-width: 0;
   gap: 6px;
   align-items: center;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  /* 오른쪽 끝에서 컨트롤과 구분되도록 미묘한 fade 마스크 */
+  mask-image: linear-gradient(to right, black calc(100% - 24px), transparent 100%);
+  -webkit-mask-image: linear-gradient(to right, black calc(100% - 24px), transparent 100%);
 }
+.account-chips-bar::-webkit-scrollbar { display: none; }
+
+.filters-row1-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;         /* 우측 컨트롤 그룹은 절대 줄어들지 않음 */
+}
+
+.filters-row1-controls input[type="search"] {
+  width: 180px;
+}
+
+.holding-view-toggle {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+  margin-left: 4px;        /* 정렬 드롭다운과 약간 간격 */
+  padding-left: 8px;
+  border-left: 1px solid var(--line); /* 시각적 구분선 */
+}
+
+.holding-view-toggle button.is-active {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--bg);
+}
+
 .account-chip {
   display: inline-flex;
   align-items: center;
   height: 30px;
   padding: 0 12px;
   border-radius: 15px;
-  border: 1px solid var(--border);
-  background: var(--surface);
-  color: var(--text);
+  border: 1px solid var(--line);
+  background: var(--surface-soft);
+  color: var(--ink);
   font-size: 13px;
   cursor: pointer;
   white-space: nowrap;
   transition: background 0.12s, border-color 0.12s, color 0.12s;
 }
-.account-chip:hover { border-color: var(--accent); color: var(--accent); }
+.account-chip:hover { background: var(--surface); border-color: var(--accent); color: var(--accent); }
 .account-chip.is-active { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
-.account-chip-overflow-wrap { position: relative; }
-.account-chip-overflow {
-  position: absolute;
-  top: calc(100% + 6px);
-  left: 0;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  box-shadow: 0 4px 16px rgba(0,0,0,.12);
-  padding: 6px;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  z-index: 200;
-  min-width: 160px;
-}
-.account-chip-overflow .account-chip {
-  width: 100%;
-  justify-content: flex-start;
-  border-radius: 6px;
-  border-color: transparent;
-}
+
+/* filters-row2는 더 이상 사용하지 않으나 혹시 남아있을 경우를 대비 */
 .filters-row2 {
   display: flex;
   align-items: center;

@@ -45,6 +45,7 @@ export function getDomElements() {
   dashboardSnapshotButton: document.querySelector("#dashboardSnapshotButton"),
   dashboardAddHoldingButton: document.querySelector("#dashboardAddHoldingButton"),
   allocationDimensionButtons: document.querySelectorAll("[data-allocation-view]"),
+  allocationDimensionSelect: document.querySelector("#allocationDimensionSelect"),
   allocationDonut: document.querySelector("#allocationDonut"),
   allocationLegend: document.querySelector("#allocationLegend"),
   strategyAllocationDonut: document.querySelector("#strategyAllocationDonut"),

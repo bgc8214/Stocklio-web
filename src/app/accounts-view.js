@@ -66,16 +66,21 @@ export function renderAccountOverview() {
   const els = _ctx.els;
   const stats = getAccountStats();
   const accounts = _ctx.getKnownAccounts();
-  const totalStock = [...stats.values()].reduce((sum, item) => sum + item.stockValueKrw, 0);
   const totalCash = [...stats.values()].reduce((sum, item) => sum + item.cashKrw, 0);
-  if (els.accountOverviewTotal) els.accountOverviewTotal.textContent = formatKrw(totalStock + totalCash);
-  if (els.accountOverviewStocks) els.accountOverviewStocks.textContent = formatKrw(totalStock);
   if (els.accountOverviewCash) els.accountOverviewCash.textContent = formatKrw(totalCash);
   if (els.accountOverviewCount) els.accountOverviewCount.textContent = String(accounts.length);
   if (els.accountOverviewCountDetail) {
     const krw = accounts.filter((a) => a.baseCurrency === "KRW").length;
     const usd = accounts.filter((a) => a.baseCurrency === "USD").length;
     els.accountOverviewCountDetail.textContent = `KRW ${krw}개 · USD ${usd}개 포함`;
+  }
+  // 예수금 미입력 계좌 경고 카드
+  const missingCard = document.getElementById("accountCashMissingCard");
+  const missingCount = document.getElementById("accountCashMissingCount");
+  if (missingCard && missingCount) {
+    const missing = accounts.filter((a) => (stats.get(a.key)?.cashKrw ?? 0) === 0).length;
+    missingCard.hidden = missing === 0;
+    missingCount.textContent = `${missing}개`;
   }
 }
 
@@ -253,6 +258,6 @@ export function startEditAccount(id) {
   els.accountForm.elements.accountType.value = normalizeAccountType(account.accountType);
   els.accountForm.elements.baseCurrency.value = account.baseCurrency || "KRW";
   _ctx.updateEditControls();
-  _ctx.setView("accounts");
+  _ctx.setView("automation");
   els.accountForm.scrollIntoView({ block: "center" });
 }

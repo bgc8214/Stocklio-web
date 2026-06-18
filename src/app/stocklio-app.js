@@ -323,8 +323,13 @@ els.dashboardAddHoldingButton?.addEventListener("click", () => {
 els.allocationDimensionButtons.forEach((button) => {
   button.addEventListener("click", () => {
     activeAllocationView = button.dataset.allocationView || "strategy";
+    if (els.allocationDimensionSelect) els.allocationDimensionSelect.value = activeAllocationView;
     renderAllocation();
   });
+});
+els.allocationDimensionSelect?.addEventListener("change", () => {
+  activeAllocationView = els.allocationDimensionSelect.value || "strategy";
+  renderAllocation();
 });
 
 els.openLoginButton?.addEventListener("click", () => {
@@ -384,6 +389,8 @@ els.addAccountButton?.addEventListener("click", () => {
   els.accountForm.reset();
   els.accountForm.hidden = false;
   updateEditControls();
+  setView("automation");
+  els.accountForm.scrollIntoView({ block: "center", behavior: "smooth" });
   els.accountForm.querySelector("input")?.focus();
 });
 
@@ -1209,7 +1216,7 @@ function renderAuth() {
   const configured = window.StocklioAuth?.isConfigured?.() || false;
   authState = window.StocklioAuth?.getState?.() || authState;
   if (!configured) {
-    els.authStatus.textContent = "브라우저 저장";
+    els.authStatus.textContent = "기기에 저장됨";
     setSyncState("idle", "");
     els.openLoginButton.hidden = true;
     els.naverLoginButton.disabled = true;
@@ -1405,6 +1412,16 @@ function setView(view) {
   if (view === "simulator" && !simulatorInitialized) {
     simulatorInitialized = true;
     initSimulatorView();
+  }
+  // 배너는 대시보드에서만 표시 (다른 탭에선 authStatus 링크로 충분)
+  const banner = document.getElementById("sampleDataBanner");
+  if (banner && !banner.hidden !== undefined) {
+    const shouldShowBanner = view === "dashboard";
+    // 로그인 상태면 항상 숨김, 비로그인이면 대시보드에서만 표시
+    const isLoggedIn = window.StocklioAuth?.getState?.()?.signedIn;
+    if (!isLoggedIn && !window.StocklioAuth?.isConfigured?.()) {
+      banner.hidden = view !== "dashboard";
+    }
   }
   renderEmptyPortfolioNotice();
 }

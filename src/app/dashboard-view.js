@@ -99,6 +99,9 @@ export function renderAllocation() {
   els.allocationDimensionButtons.forEach((button) => {
     button.classList.toggle("is-active", button.dataset.allocationView === activeAllocationView);
   });
+  if (els.allocationDimensionSelect && els.allocationDimensionSelect.value !== activeAllocationView) {
+    els.allocationDimensionSelect.value = activeAllocationView;
+  }
   const grouped = getAllocationItems(activeAllocationView);
   renderDonut(els.allocationDonut, grouped, allocationViewLabels[activeAllocationView] || "구성");
   renderAllocationLegend(els.allocationLegend, grouped);

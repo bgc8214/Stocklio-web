@@ -98,7 +98,6 @@ function renderPerformanceDetails(rows) {
 
   const stats = getPerformanceStats(rows);
   els.performanceDetailStats.innerHTML = `
-    <div><span>최근 총자산</span><strong>${formatKrw(stats.latest.totalValueKrw)}</strong><small>${escapeHtml(stats.latest.date)}</small></div>
     <div><span>기간 증감</span><strong class="${stats.periodChangeKrw >= 0 ? "positive" : "negative"}">${formatKrw(stats.periodChangeKrw)}</strong><small>${formatPercent(stats.periodReturn)}</small></div>
     <div><span>입출금</span><strong>${formatKrw(stats.netInflowKrw)}</strong><small>외부 현금흐름</small></div>
     <div><span>투자손익</span><strong class="${stats.investmentGainKrw >= 0 ? "positive" : "negative"}">${formatKrw(stats.investmentGainKrw)}</strong><small>증감 - 입출금</small></div>

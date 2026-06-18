@@ -124,30 +124,17 @@ export function renderAccountChips() {
   }
   const accounts = [...seen.values()];
 
-  // 칩이 5개 초과면 오버플로우 처리
-  const VISIBLE_MAX = 5;
-  const visible = accounts.slice(0, VISIBLE_MAX);
-  const overflow = accounts.slice(VISIBLE_MAX);
-
   const chipHtml = (key, label) => {
     const active = selectedAccountChip === key;
     return `<button class="account-chip${active ? " is-active" : ""}" type="button" data-account-chip="${escapeHtml(key ?? "")}">${escapeHtml(label)}</button>`;
   };
 
   let html = chipHtml(null, "전체");
-  for (const acc of visible) {
+  for (const acc of accounts) {
     const label = acc.investor !== accounts[0]?.investor || accounts.filter(a => a.investor === acc.investor).length > 1
       ? `${acc.investor} · ${acc.account}`
       : acc.account;
     html += chipHtml(acc.key, label);
-  }
-  if (overflow.length) {
-    html += `<div class="account-chip-overflow-wrap">
-      <button class="account-chip account-chip-more" type="button" data-account-chip-more>+${overflow.length}개 ▾</button>
-      <div class="account-chip-overflow" hidden>
-        ${overflow.map(acc => chipHtml(acc.key, `${acc.investor} · ${acc.account}`)).join("")}
-      </div>
-    </div>`;
   }
   els.accountChipsBar.innerHTML = html;
 
@@ -160,21 +147,6 @@ export function renderAccountChips() {
       renderHoldings();
     });
   });
-
-  const moreBtn = els.accountChipsBar.querySelector("[data-account-chip-more]");
-  if (moreBtn) {
-    moreBtn.addEventListener("click", (e) => {
-      e.stopPropagation();
-      const overflow = moreBtn.nextElementSibling;
-      const open = !overflow.hidden;
-      overflow.hidden = open;
-      moreBtn.setAttribute("aria-expanded", String(!open));
-    });
-    document.addEventListener("click", () => {
-      const overflow = moreBtn.nextElementSibling;
-      if (overflow) overflow.hidden = true;
-    }, { once: true });
-  }
 }
 
 export function filteredHoldings() {
@@ -248,6 +220,12 @@ export function renderHoldings() {
   const pageRows = rows.slice((holdingPage - 1) * HOLDINGS_PAGE_SIZE, holdingPage * HOLDINGS_PAGE_SIZE);
   renderHoldingScopeControls();
   renderHoldingPagination(rows.length, totalPages);
+
+  // chip으로 단일 계좌 선택 시 투자자/계좌/전략 컬럼 숨김
+  const table = document.querySelector(".holdings-table");
+  const colsHidden = !!selectedAccountChip;
+  if (table) table.classList.toggle("cols-context-hidden", colsHidden);
+
   els.holdingsBody.innerHTML = pageRows.length
     ? pageRows
     .map((holding) => {
@@ -258,9 +236,9 @@ export function renderHoldings() {
       const returnRate = cost ? gain / cost : 0;
       const dailyMove = _ctx.getHoldingDailyMove(holding);
       return `<tr>
-        <td data-label="투자자">${escapeHtml(holding.investor)}</td>
-        <td data-label="계좌"><span class="name-cell">${escapeHtml(holding.account)}</span></td>
-        <td data-label="전략"><span class="name-cell">${escapeHtml(holding.strategy)}</span></td>
+        <td data-label="투자자" class="col-context">${escapeHtml(holding.investor)}</td>
+        <td data-label="계좌" class="col-context"><span class="name-cell">${escapeHtml(holding.account)}</span></td>
+        <td data-label="전략" class="col-context"><span class="name-cell">${escapeHtml(holding.strategy)}</span></td>
         <td data-label="종목"><span class="name-cell-logo">${tickerLogoHtml(holding.ticker, holding.name, 28)}<span><strong class="name-cell">${escapeHtml(holding.name || holding.ticker)}</strong>${holding.ticker && holding.ticker !== holding.name ? `<small class="name-cell">${escapeHtml(holding.ticker)}</small>` : ""}</span></span></td>
         <td data-label="수량"><span class="amount-cell">${formatNumber(holding.quantity, 4)}</span></td>
         <td data-label="현재가"><span class="money-value">${formatMoney(holding.price, holding.currency)}</span></td>
