@@ -324,13 +324,15 @@ function AllocationPanel({ state }) {
           <span className="section-badge">{items.length}개 {allocationViewLabels[view] || "항목"}</span>
         </div>
         <span>현재 평가가격 기준</span>
-        <div className="segmented-control compact-segmented" role="group" aria-label="자산 비중 기준">
+        <select
+          aria-label="자산 비중 기준"
+          value={view}
+          onChange={(e) => setView(e.target.value)}
+        >
           {Object.entries(allocationViewLabels).map(([key, label]) => (
-            <button className={view === key ? "is-active" : ""} type="button" key={key} onClick={() => setView(key)}>
-              {label}
-            </button>
+            <option key={key} value={key}>{label}별</option>
           ))}
-        </div>
+        </select>
       </div>
       <div className="donut-wrap">
         <svg viewBox="0 0 220 220" role="img" aria-label="자산 비중 차트">

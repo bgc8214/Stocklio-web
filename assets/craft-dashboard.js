@@ -12164,15 +12164,13 @@ function Ya({ state: e }) {
 				})]
 			}),
 			/* @__PURE__ */ (0, B.jsx)("span", { children: "현재 평가가격 기준" }),
-			/* @__PURE__ */ (0, B.jsx)("div", {
-				className: "segmented-control compact-segmented",
-				role: "group",
+			/* @__PURE__ */ (0, B.jsx)("select", {
 				"aria-label": "자산 비중 기준",
-				children: Object.entries(Ua).map(([e, r]) => /* @__PURE__ */ (0, B.jsx)("button", {
-					className: t === e ? "is-active" : "",
-					type: "button",
-					onClick: () => n(e),
-					children: r
+				value: t,
+				onChange: (e) => n(e.target.value),
+				children: Object.entries(Ua).map(([e, t]) => /* @__PURE__ */ (0, B.jsxs)("option", {
+					value: e,
+					children: [t, "별"]
 				}, e))
 			})
 		]
