@@ -26,13 +26,7 @@ export function buildDailyDigest({ state, snapshot, previousSnapshot, date, site
   ];
 
   if (shouldExplainMovers && moveBreakdown.hasData) {
-    const breakdownLine = `변동 분해: 가격 ${formatSignedKrw(moveBreakdown.priceEffectKrw)} · 환율 ${formatSignedKrw(moveBreakdown.fxEffectKrw)}`;
-    const explainedTotal = moveBreakdown.totalExplainedKrw;
-    const unexplained = dayChangeKrw - explainedTotal;
-    const missingNote = moveBreakdown.missingCount > 0
-      ? ` (${moveBreakdown.missingCount}개 종목 가격 미반영, 미설명 ${formatSignedKrw(unexplained)})`
-      : "";
-    lines.push(breakdownLine + missingNote);
+    lines.push(`변동 분해: 가격 ${formatSignedKrw(moveBreakdown.priceEffectKrw)} · 환율 ${formatSignedKrw(moveBreakdown.fxEffectKrw)}`);
     const insight = getFxInsight({ investmentChangeKrw, priceEffectKrw: moveBreakdown.priceEffectKrw, fxEffectKrw: moveBreakdown.fxEffectKrw });
     if (insight) {
       lines.push(`해석: ${insight}`);
@@ -110,14 +104,6 @@ export function getMoveBreakdown(state) {
   const priceEffectKrw = holdingRows.reduce((sum, item) => sum + item.priceEffectKrw, 0);
   const holdingFxEffectKrw = holdingRows.reduce((sum, item) => sum + item.fxEffectKrw, 0);
   const fxEffectKrw = holdingFxEffectKrw + cashFxEffectKrw;
-  // priceChange가 없어서 계산에서 빠진 종목 수 (가격 갱신 실패)
-  const missingCount = (state.holdings || []).filter((h) => {
-    const q = Number(h.quantity || 0);
-    if (!q) return false;
-    // null / undefined / "" / NaN 은 모두 "미반영"으로 간주
-    const pc = h.priceChange;
-    return pc === null || pc === undefined || pc === "" || !Number.isFinite(Number(pc));
-  }).length;
   return {
     hasData: holdingRows.length > 0 || cashFxEffectKrw !== 0,
     priceEffectKrw,
@@ -125,7 +111,6 @@ export function getMoveBreakdown(state) {
     cashFxEffectKrw,
     fxEffectKrw,
     totalExplainedKrw: priceEffectKrw + fxEffectKrw,
-    missingCount,
   };
 }
 
@@ -135,11 +120,19 @@ function getHoldingMoveRows(state) {
   const rowsByTicker = new Map();
   for (const holding of state.holdings || []) {
     const quantity = Number(holding.quantity || 0);
-    const pc = holding.priceChange;
-    const priceChange = Number(pc);
+    if (!quantity) continue;
     const price = Number(holding.price || 0);
-    if (!quantity || pc === null || pc === undefined || pc === "" || !Number.isFinite(priceChange)) {
-      continue;
+    // priceChange 우선, 없으면 price - previousClose로 직접 계산
+    const pc = holding.priceChange;
+    const prevClose = Number(holding.previousClose || 0);
+    let priceChange;
+    if (pc !== null && pc !== undefined && pc !== "" && Number.isFinite(Number(pc))) {
+      priceChange = Number(pc);
+    } else if (prevClose > 0 && price > 0) {
+      priceChange = price - prevClose;
+    } else {
+      // 이전 종가도 없으면 가격 효과는 0으로 처리 (FX 효과는 여전히 계산)
+      priceChange = 0;
     }
 
     const ticker = String(holding.ticker || holding.name || "").trim();
