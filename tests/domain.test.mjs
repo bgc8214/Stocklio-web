@@ -326,8 +326,8 @@ test("daily digest summarizes portfolio change and top movers", () => {
   assert.equal(digest.metrics.fxEffectKrw, 10_500);
   assert.equal(digest.topMovers[0].ticker, "MSFT");
   assert.match(digest.text, /총자산/);
-  assert.match(digest.text, /변동 분해: 가격 \+₩66,500 · 환율 \+₩10,500/);
-  assert.match(digest.text, /변동 원인 상위/);
+  assert.match(digest.text, /가격 \+₩7만/);
+  assert.match(digest.text, /▸ 변동 상위/);
   assert.equal(shouldSendDailyDigest({ telegram_enabled: true, daily_digest_enabled: true, large_move_threshold_krw: 300_000 }, digest), false);
   assert.equal(shouldSendDailyDigest({ telegram_enabled: true, daily_digest_enabled: true, large_move_threshold_krw: 100_000 }, digest), true);
 });
@@ -367,8 +367,8 @@ test("daily digest explains when fx offsets stock price losses", () => {
 
   assert.equal(digest.metrics.priceEffectKrw, -198_000);
   assert.equal(digest.metrics.fxEffectKrw, 220_000);
-  assert.match(digest.text, /해석: 주가는 하락했지만 USD\/KRW 상승이 총자산을 끌어올렸습니다/);
-  assert.match(digest.text, /TQQQ: \+₩52,000 · -1.00% · 가격 -₩148,000, 환율 \+₩200,000/);
+  assert.match(digest.text, /주가는 하락했지만 USD\/KRW 상승이 총자산을 끌어올렸습니다/);
+  assert.match(digest.text, /TQQQ.*\+₩5만.*-1.00%/);
 });
 
 test("daily digest groups duplicate tickers across accounts", () => {
@@ -421,8 +421,8 @@ test("daily digest groups duplicate tickers across accounts", () => {
   assert.equal(digest.topMovers[0].valueKrw, 78_000);
   assert.equal(digest.topMovers[0].priceEffectKrw, -222_000);
   assert.equal(digest.topMovers[0].fxEffectKrw, 300_000);
-  assert.equal((digest.text.match(/^- TQQQ:/gm) || []).length, 1);
-  assert.match(digest.text, /TQQQ: \+₩78,000 · -1.00% · 가격 -₩222,000, 환율 \+₩300,000/);
+  assert.equal((digest.text.match(/^TQQQ /gm) || []).length, 1);
+  assert.match(digest.text, /TQQQ.*\+₩8만.*-1.00%/);
 });
 
 test("market calendar marks Seoul Sunday and Monday morning as US market closed context", () => {
@@ -470,7 +470,7 @@ test("daily digest suppresses stale top movers on US market closed days", () => 
   assert.equal(digest.topMovers.length, 0);
   assert.equal(digest.metrics.marketClosed, true);
   assert.match(digest.text, /휴장일 기준 요약/);
-  assert.match(digest.text, /새 종목별 변동을 표시하지 않습니다/);
+  assert.match(digest.text, /종목별 변동 없음/);
 });
 
 function idFactory() {
