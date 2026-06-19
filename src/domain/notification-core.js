@@ -16,45 +16,44 @@ export function buildDailyDigest({ state, snapshot, previousSnapshot, date, site
   const topMovers = shouldExplainMovers ? getTopMovers(state, 3) : [];
   const titlePrefix = marketContext?.isMarketClosed ? "휴장일 기준 요약" : "마감 요약";
   const lines = [
-    `투자일지 ${date} ${titlePrefix}`,
+    `📊 투자일지 ${date} ${titlePrefix}`,
     "",
-    `총자산: ${formatKrw(snapshot.totalValueKrw)}`,
-    `${marketContext?.isMarketClosed ? "스냅샷 전일 대비" : "전일 대비"}: ${formatSignedKrw(dayChangeKrw)}`,
-    `투자손익 추정: ${formatSignedKrw(investmentChangeKrw)}`,
-    `입출금 영향: ${formatSignedKrw(netInflowKrw)}`,
-    `주식: ${formatKrw(totals.stockValueKrw)} · 예수금: ${formatKrw(totals.cashKrw)}`,
+    `총자산  ${formatCompact(snapshot.totalValueKrw)}`,
+    `전일 대비  ${formatSignedCompact(dayChangeKrw)}`,
   ];
 
-  if (shouldExplainMovers && moveBreakdown.hasData) {
-    lines.push(`변동 분해: 가격 ${formatSignedKrw(moveBreakdown.priceEffectKrw)} · 환율 ${formatSignedKrw(moveBreakdown.fxEffectKrw)}`);
-    const insight = getFxInsight({ investmentChangeKrw, priceEffectKrw: moveBreakdown.priceEffectKrw, fxEffectKrw: moveBreakdown.fxEffectKrw });
-    if (insight) {
-      lines.push(`해석: ${insight}`);
-    }
+  // 입출금이 있을 때만 분리 표시, 없으면 한 줄로
+  if (netInflowKrw !== 0) {
+    lines.push(`투자손익  ${formatSignedCompact(investmentChangeKrw)}`);
+    lines.push(`입출금  ${formatSignedCompact(netInflowKrw)}`);
   }
 
-  if (marketContext?.label) {
-    lines.push(`가격 기준: ${marketContext.label}`);
+  lines.push(`주식 ${formatCompact(totals.stockValueKrw)} · 예수금 ${formatCompact(totals.cashKrw)}`);
+
+  if (shouldExplainMovers && moveBreakdown.hasData) {
+    const fxPart = Math.abs(moveBreakdown.fxEffectKrw) >= 1000000
+      ? ` · 환율 ${formatSignedCompact(moveBreakdown.fxEffectKrw)}`
+      : "";
+    lines.push(`가격 ${formatSignedCompact(moveBreakdown.priceEffectKrw)}${fxPart}`);
+    const insight = getFxInsight({ investmentChangeKrw, priceEffectKrw: moveBreakdown.priceEffectKrw, fxEffectKrw: moveBreakdown.fxEffectKrw });
+    if (insight) lines.push(`💬 ${insight}`);
   }
 
   if (topMovers.length) {
-    lines.push("", "변동 원인 상위");
+    lines.push("", "▸ 변동 상위");
     for (const mover of topMovers) {
-      const details = [
-        formatSignedKrw(mover.valueKrw),
-        Number.isFinite(mover.changePercent) ? formatPercent(mover.changePercent) : "",
-        formatMoverBreakdown(mover),
-      ].filter(Boolean);
-      lines.push(`- ${mover.name}: ${details.join(" · ")}`);
+      const pct = Number.isFinite(mover.changePercent) ? ` ${formatPercent(mover.changePercent)}` : "";
+      const fx = Math.abs(mover.fxEffectKrw) >= 1000000
+        ? ` (환율 ${formatSignedCompact(mover.fxEffectKrw)})`
+        : "";
+      lines.push(`${mover.name}  ${formatSignedCompact(mover.valueKrw)}${pct}${fx}`);
     }
   } else if (marketContext?.isMarketClosed) {
-    lines.push("", `변동 원인: 미국장 ${marketContext.closedReason || "휴장"}으로 새 종목별 변동을 표시하지 않습니다`);
-  } else {
-    lines.push("", "변동 원인: 가격 변동 데이터가 아직 없습니다");
+    lines.push("", `미국장 ${marketContext.closedReason || "휴장"} · 종목별 변동 없음`);
   }
 
   if (siteUrl) {
-    lines.push("", `자세히 보기: ${siteUrl.replace(/\/$/, "")}`);
+    lines.push("", siteUrl.replace(/\/$/, ""));
   }
 
   return {
@@ -215,6 +214,23 @@ export function formatKrw(value) {
 export function formatSignedKrw(value) {
   const number = Number(value || 0);
   return `${number >= 0 ? "+" : "-"}${formatKrw(Math.abs(number))}`;
+}
+
+// 억/만 단위 compact 표시 (텔레그램용)
+export function formatCompact(value) {
+  const n = Math.abs(Number(value || 0));
+  if (n >= 1e8) return `₩${(n / 1e8).toFixed(2)}억`;
+  if (n >= 1e4) return `₩${Math.round(n / 1e4).toLocaleString("ko-KR")}만`;
+  return formatKrw(value);
+}
+
+export function formatSignedCompact(value) {
+  const n = Number(value || 0);
+  const sign = n >= 0 ? "+" : "-";
+  const abs = Math.abs(n);
+  if (abs >= 1e8) return `${sign}₩${(abs / 1e8).toFixed(2)}억`;
+  if (abs >= 1e4) return `${sign}₩${Math.round(abs / 1e4).toLocaleString("ko-KR")}만`;
+  return formatSignedKrw(value);
 }
 
 export function formatPercent(value) {
