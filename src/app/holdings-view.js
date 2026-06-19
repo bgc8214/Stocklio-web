@@ -14,6 +14,16 @@ import { searchSymbols } from "./services/market-data-service.js";
 
 let _ctx;
 
+// 내부 priceSource 문자열 → 사용자 친화적 레이블
+function normalizeSource(source) {
+  if (!source) return "사용자 입력";
+  const s = String(source).toLowerCase();
+  if (s.includes("yahoo")) return "Yahoo Finance";
+  if (s.includes("numbers") || s.includes("import") || s.includes("export")) return "수동 입력";
+  if (s.includes("샘플") || s.includes("sample")) return "예시";
+  return source;
+}
+
 // 모듈 내부 상태
 let holdingPage = 1;
 let holdingScope = "all";
@@ -348,7 +358,8 @@ function renderHoldingsSummary(rows) {
     .map((holding) => new Date(holding.priceAsOf || 0).getTime())
     .filter(Number.isFinite)
     .sort((a, b) => b - a)[0];
-  const source = state.holdings.find((holding) => new Date(holding.priceAsOf || 0).getTime() === latestPriceTime)?.priceSource || "가격 데이터";
+  const rawSource = state.holdings.find((holding) => new Date(holding.priceAsOf || 0).getTime() === latestPriceTime)?.priceSource || "가격 데이터";
+  const source = normalizeSource(rawSource);
   const values = rows.map((holding) => ({ holding, values: _ctx.getHoldingValues(holding), dailyMove: _ctx.getHoldingDailyMove(holding) }));
   const totalValue = values.reduce((sum, row) => sum + row.values.valueKrw, 0);
   const totalCost = values.reduce((sum, row) => sum + row.values.costKrw, 0);
@@ -540,7 +551,7 @@ export function renderHoldingEditRow(holding) {
       </div>
     </td>
     <td data-label="수량"><input data-inline-holding-field="quantity" type="number" step="0.0001" min="0" value="${escapeHtml(holding.quantity ?? "")}" aria-label="수량"></td>
-    <td data-label="현재가">${formatMoney(holding.price, holding.currency)}<small>${escapeHtml(holding.priceSource || "사용자 입력")} · ${formatAsOf(holding.priceAsOf)}</small></td>
+    <td data-label="현재가">${formatMoney(holding.price, holding.currency)}<small>${escapeHtml(normalizeSource(holding.priceSource || "사용자 입력"))} · ${formatAsOf(holding.priceAsOf)}</small></td>
     <td data-label="평단가"><input data-inline-holding-field="averageCost" type="number" step="0.01" min="0" value="${escapeHtml(holding.averageCost ?? "")}" aria-label="평단가"></td>
     <td data-label="평가금액">${formatMoney(values.valueNative, holding.currency)}</td>
     <td data-label="일 영향">가격 갱신 기준</td>
