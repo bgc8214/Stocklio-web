@@ -13,7 +13,7 @@ const DEFAULT_LAYOUT = [
   { id: "performance-flow", widthPct: 100, span: 12, minHeight: 360, visible: true },
   { id: "breakdown", widthPct: 50, span: 6, minHeight: 320, visible: true },
   { id: "top-mover", widthPct: 50, span: 6, minHeight: 160, visible: true },
-  { id: "rebalance", widthPct: 50, span: 6, minHeight: 200, visible: true },
+
 ];
 
 const LABELS = {
@@ -26,7 +26,7 @@ const LABELS = {
   "performance-flow": "성과 흐름",
   breakdown: "오늘 변동 원인",
   "top-mover": "오늘의 주인공",
-  "rebalance": "리밸런싱",
+
 };
 
 const palette = ["#1F4431", "#3366a8", "#a97819", "#7b5aa6", "#b94343"];
@@ -308,9 +308,7 @@ function CardContent({ id, state }) {
   if (id === "top-mover") {
     return <TopMoverPanel state={state} />;
   }
-  if (id === "rebalance") {
-    return <RebalancePanel state={state} />;
-  }
+
 
   return <BreakdownPanel state={state} />;
 }
@@ -976,62 +974,6 @@ function TopMoverPanel({ state }) {
   );
 }
 
-function RebalancePanel({ state }) {
-  const targets = state.automation?.targetAllocation || {};
-  if (!Object.keys(targets).some(k => targets[k] > 0)) {
-    return (
-      <>
-        <div className="section-heading"><h2>리밸런싱</h2><span>목표 배분 기준</span></div>
-        <div className="empty-state"><span className="empty-icon">⚖️</span><strong>목표 배분을 설정하세요</strong><span>설정 탭에서 전략별 목표 비중을 입력하세요</span></div>
-      </>
-    );
-  }
-  const totals = getTotals(state);
-  const totalValue = totals.valueKrw;
-  const fxRate = state.fxRate?.rate || 1;
-  const currentByStrategy = {};
-  for (const h of state.holdings || []) {
-    const val = getHoldingValues(h, fxRate);
-    currentByStrategy[h.strategy] = (currentByStrategy[h.strategy] || 0) + val.valueKrw;
-  }
-  const totalTarget = Object.values(targets).reduce((s, v) => s + v, 0);
-  if (!totalTarget || !totalValue) {
-    return (
-      <>
-        <div className="section-heading"><h2>리밸런싱</h2><span>목표 배분 기준</span></div>
-        <div className="empty-state"><span>종목과 목표 비중을 먼저 입력하세요</span></div>
-      </>
-    );
-  }
-  const rows = Object.entries(targets)
-    .filter(([, t]) => t > 0)
-    .map(([strategy, targetPct]) => {
-      const targetValue = totalValue * (targetPct / totalTarget);
-      const currentValue = currentByStrategy[strategy] || 0;
-      const diff = targetValue - currentValue;
-      const currentPct = (currentValue / totalValue * 100).toFixed(1);
-      return { strategy, targetPct, currentPct, diff };
-    })
-    .sort((a, b) => Math.abs(b.diff) - Math.abs(a.diff));
-  return (
-    <>
-      <div className="section-heading"><h2>리밸런싱</h2><span>목표 배분 기준</span></div>
-      <div className="rebalance-content">
-        {rows.map(r => (
-          <div key={r.strategy} className="rebalance-row">
-            <span className="rebalance-strategy">{r.strategy}</span>
-            <span className="rebalance-current">{r.currentPct}%</span>
-            <span className="rebalance-arrow">→</span>
-            <span className="rebalance-target">{r.targetPct}%</span>
-            <span className={`rebalance-diff ${r.diff >= 0 ? "positive" : "negative"}`}>
-              {r.diff >= 0 ? "+" : ""}{formatKrw(r.diff)}
-            </span>
-          </div>
-        ))}
-      </div>
-    </>
-  );
-}
 
 const root = document.querySelector("#dashboardBoard");
 if (root) {
