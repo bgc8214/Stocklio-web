@@ -11897,6 +11897,13 @@ var Ra = /* @__PURE__ */ o(((e) => {
 		span: 6,
 		minHeight: 320,
 		visible: !0
+	},
+	{
+		id: "top-mover",
+		widthPct: 50,
+		span: 6,
+		minHeight: 160,
+		visible: !0
 	}
 ], Ba = {
 	"total-value": "총자산",
@@ -11906,7 +11913,8 @@ var Ra = /* @__PURE__ */ o(((e) => {
 	"fx-rate": "USD/KRW",
 	allocation: "자산 비중",
 	"performance-flow": "성과 흐름",
-	breakdown: "오늘 변동 원인"
+	breakdown: "오늘 변동 원인",
+	"top-mover": "오늘의 주인공"
 }, Va = [
 	"#1F4431",
 	"#3366a8",
@@ -12097,17 +12105,20 @@ function qa({ id: e, state: t }) {
 			r ? `${To(r.slice(0, 10))} 종가` : e.isMarketClosed ? e.label : "",
 			t.fxRate?.rate ? `USD/KRW ${So(t.fxRate.rate, 2)}` : "",
 			e.isMarketClosed ? e.closedReason || "미국장 휴장" : ""
-		].filter(Boolean);
+		].filter(Boolean), a = n.gainKrw >= 0 ? "+" : "", o = n.gainKrw >= 0 ? "positive" : "negative";
 		return /* @__PURE__ */ (0, B.jsxs)(B.Fragment, { children: [
 			/* @__PURE__ */ (0, B.jsx)("span", { children: "총자산" }),
 			/* @__PURE__ */ (0, B.jsx)("strong", { children: U(n.valueKrw) }),
 			/* @__PURE__ */ (0, B.jsx)("small", { children: `주식 ${U(n.stockValueKrw)} · 예수금 ${U(n.cashKrw)}` }),
-			i.length > 0 && /* @__PURE__ */ (0, B.jsx)("div", {
+			/* @__PURE__ */ (0, B.jsxs)("div", {
 				className: "metric-badges",
-				children: i.map((e) => /* @__PURE__ */ (0, B.jsx)("span", {
+				children: [i.map((e) => /* @__PURE__ */ (0, B.jsx)("span", {
 					className: "metric-badge",
 					children: e
-				}, e))
+				}, e)), /* @__PURE__ */ (0, B.jsxs)("span", {
+					className: `metric-return-badge ${o}`,
+					children: [a, wo(n.returnRate)]
+				})]
 			})
 		] });
 	}
@@ -12132,7 +12143,7 @@ function qa({ id: e, state: t }) {
 		label: "USD/KRW",
 		value: So(t.fxRate?.rate || 0, 2),
 		hint: `${t.fxRate?.source || "환율 기준"} · ${Do(t.fxRate?.asOf)}`
-	}) : e === "allocation" ? /* @__PURE__ */ (0, B.jsx)(Ya, { state: t }) : e === "performance-flow" ? /* @__PURE__ */ (0, B.jsx)(Xa, { state: t }) : /* @__PURE__ */ (0, B.jsx)(Qa, { state: t });
+	}) : e === "allocation" ? /* @__PURE__ */ (0, B.jsx)(Ya, { state: t }) : e === "performance-flow" ? /* @__PURE__ */ (0, B.jsx)(Xa, { state: t }) : e === "top-mover" ? /* @__PURE__ */ (0, B.jsx)(Ao, { state: t }) : /* @__PURE__ */ (0, B.jsx)(Qa, { state: t });
 }
 function Ja({ label: e, value: t, hint: n, tone: r }) {
 	return /* @__PURE__ */ (0, B.jsxs)(B.Fragment, { children: [
@@ -12789,6 +12800,83 @@ function Oo(e, t, n) {
 function ko(e, t) {
 	return Math.round(e / t) * t;
 }
-var Ao = document.querySelector("#dashboardBoard");
-Ao && (Ao.classList.add("craft-dashboard-board"), (0, v.createRoot)(Ao).render(/* @__PURE__ */ (0, B.jsx)(Wa, {})));
+function Ao({ state: e }) {
+	let t = to();
+	if (t.isMarketClosed) return /* @__PURE__ */ (0, B.jsxs)(B.Fragment, { children: [/* @__PURE__ */ (0, B.jsxs)("div", {
+		className: "section-heading",
+		children: [/* @__PURE__ */ (0, B.jsx)("h2", { children: "오늘의 주인공" }), /* @__PURE__ */ (0, B.jsx)("span", { children: "가격 갱신 기준" })]
+	}), /* @__PURE__ */ (0, B.jsxs)("div", {
+		className: "empty-state",
+		children: ["미국장 ", t.closedReason || "휴장"]
+	})] });
+	let n = (e.holdings || []).map((t) => ({
+		holding: t,
+		dailyMove: eo(e, t)
+	})).filter((e) => e.dailyMove.hasData);
+	if (!n.length) return /* @__PURE__ */ (0, B.jsxs)(B.Fragment, { children: [/* @__PURE__ */ (0, B.jsxs)("div", {
+		className: "section-heading",
+		children: [/* @__PURE__ */ (0, B.jsx)("h2", { children: "오늘의 주인공" }), /* @__PURE__ */ (0, B.jsx)("span", { children: "가격 갱신 기준" })]
+	}), /* @__PURE__ */ (0, B.jsx)("div", {
+		className: "empty-state",
+		children: "가격 변동 데이터가 없습니다"
+	})] });
+	n.sort((e, t) => Math.abs(t.dailyMove.valueKrw) - Math.abs(e.dailyMove.valueKrw));
+	let r = n[0], i = r.holding, a = r.dailyMove, o = a.valueKrw >= 0, s = (i.ticker || i.name || "?").replace(/[^A-Za-z0-9가-힣]/g, "")[0]?.toUpperCase() || "?";
+	return /* @__PURE__ */ (0, B.jsxs)(B.Fragment, { children: [/* @__PURE__ */ (0, B.jsxs)("div", {
+		className: "section-heading",
+		children: [/* @__PURE__ */ (0, B.jsx)("h2", { children: "오늘의 주인공" }), /* @__PURE__ */ (0, B.jsx)("span", { children: "가격 갱신 기준" })]
+	}), /* @__PURE__ */ (0, B.jsxs)("div", {
+		className: "top-mover-row",
+		children: [
+			/* @__PURE__ */ (0, B.jsxs)("span", {
+				className: "ticker-logo",
+				style: {
+					width: 40,
+					height: 40
+				},
+				children: [/* @__PURE__ */ (0, B.jsx)("img", {
+					src: `https://assets.parqet.com/logos/symbol/${encodeURIComponent(i.ticker)}?format=svg`,
+					alt: i.ticker,
+					width: "40",
+					height: "40",
+					onError: (e) => {
+						e.target.style.display = "none", e.target.nextSibling.style.display = "flex";
+					}
+				}), /* @__PURE__ */ (0, B.jsx)("span", {
+					className: "ticker-logo-fallback",
+					style: {
+						display: "none",
+						width: 40,
+						height: 40,
+						fontSize: 16
+					},
+					children: s
+				})]
+			}),
+			/* @__PURE__ */ (0, B.jsxs)("div", {
+				className: "top-mover-info",
+				children: [/* @__PURE__ */ (0, B.jsx)("strong", { children: i.name || i.ticker }), /* @__PURE__ */ (0, B.jsxs)("span", {
+					className: "top-mover-meta",
+					children: [
+						i.ticker,
+						" · ",
+						i.account
+					]
+				})]
+			}),
+			/* @__PURE__ */ (0, B.jsxs)("div", {
+				className: "top-mover-values",
+				children: [/* @__PURE__ */ (0, B.jsxs)("span", {
+					className: `top-mover-change ${o ? "positive" : "negative"}`,
+					children: [o ? "+" : "", U(a.valueKrw)]
+				}), /* @__PURE__ */ (0, B.jsx)("span", {
+					className: `top-mover-pct ${o ? "positive" : "negative"}`,
+					children: wo(a.changePercent)
+				})]
+			})
+		]
+	})] });
+}
+var jo = document.querySelector("#dashboardBoard");
+jo && (jo.classList.add("craft-dashboard-board"), (0, v.createRoot)(jo).render(/* @__PURE__ */ (0, B.jsx)(Wa, {})));
 //#endregion

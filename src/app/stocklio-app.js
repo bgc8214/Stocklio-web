@@ -83,7 +83,7 @@ import {
   renderPerformance,
   renderBreakdown,
   renderTopMover,
-  renderQuote,
+
   renderSnapshots,
   renderMonthlySummary,
   exportPerformanceCsv,
@@ -1193,7 +1193,7 @@ function render() {
   renderPerformance();
   renderBreakdown();
   renderTopMover();
-  renderQuote();
+
   renderAccounts();
   renderAccountSummary();
   renderAccountDetail();

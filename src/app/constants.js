@@ -18,7 +18,6 @@ export const dashboardCardLabels = {
   "performance-flow": "성과 흐름",
   breakdown: "오늘 변동 원인",
   "top-mover": "오늘의 주인공",
-  quote: "투자 명언",
 };
 
 export const DEFAULT_HOLDING_SORT = "value-desc";
@@ -51,5 +50,4 @@ export const defaultDashboardLayout = [
   { id: "performance-flow", widthPct: 100, span: 12, minHeight: 360, visible: true },
   { id: "breakdown", widthPct: 50, span: 6, minHeight: 320, visible: true },
   { id: "top-mover", widthPct: 50, span: 6, minHeight: 160, visible: true },
-  { id: "quote", widthPct: 50, span: 6, minHeight: 120, visible: true },
 ];
