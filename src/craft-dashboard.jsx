@@ -267,7 +267,8 @@ function CardContent({ id, state }) {
     const latestPriceAsOf = [...state.holdings]
       .filter((h) => h.priceAsOf)
       .sort((a, b) => String(b.priceAsOf).localeCompare(String(a.priceAsOf)))[0]?.priceAsOf || state.fxRate?.asOf;
-    const dateText = latestPriceAsOf ? `${formatShortDate(latestPriceAsOf.slice(0, 10))} 종가` : (marketContext.isMarketClosed ? marketContext.label : "");
+    const isRealDate = latestPriceAsOf && /^\d{4}-\d{2}-\d{2}/.test(latestPriceAsOf);
+    const dateText = isRealDate ? `${formatShortDate(latestPriceAsOf.slice(0, 10))} 종가` : (marketContext.isMarketClosed ? marketContext.label : "");
     const fxText = state.fxRate?.rate ? `USD/KRW ${formatNumber(state.fxRate.rate, 2)}` : "";
     const marketText = marketContext.isMarketClosed ? marketContext.closedReason || "미국장 휴장" : "";
     const badges = [dateText, fxText, marketText].filter(Boolean);

@@ -106,7 +106,9 @@ export function renderDashboardStatus() {
       totalValueCard.appendChild(badgesEl);
     }
     const { formatShortDate } = _ctx;
-    const dateText = priceAsOf
+    // priceAsOf가 실제 날짜 형식(YYYY-MM-DD)인지 확인
+    const isRealDate = priceAsOf && /^\d{4}-\d{2}-\d{2}/.test(priceAsOf);
+    const dateText = isRealDate
       ? `${formatShortDate(priceAsOf.slice(0, 10))} 종가`
       : (marketContext.isMarketClosed ? marketContext.label : "");
     const fxText = state.fxRate?.rate ? `USD/KRW ${formatNumber(state.fxRate.rate, 2)}` : "";
