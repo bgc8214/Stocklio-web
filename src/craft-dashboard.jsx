@@ -12,6 +12,8 @@ const DEFAULT_LAYOUT = [
   { id: "allocation", widthPct: 50, span: 6, minHeight: 320, visible: true },
   { id: "performance-flow", widthPct: 100, span: 12, minHeight: 360, visible: true },
   { id: "breakdown", widthPct: 50, span: 6, minHeight: 320, visible: true },
+  { id: "top-mover", widthPct: 50, span: 6, minHeight: 160, visible: true },
+  { id: "quote", widthPct: 50, span: 6, minHeight: 120, visible: true },
 ];
 
 const LABELS = {
@@ -23,6 +25,8 @@ const LABELS = {
   allocation: "자산 비중",
   "performance-flow": "성과 흐름",
   breakdown: "오늘 변동 원인",
+  "top-mover": "오늘의 주인공",
+  quote: "투자 명언",
 };
 
 const palette = ["#1F4431", "#3366a8", "#a97819", "#7b5aa6", "#b94343"];
@@ -267,16 +271,17 @@ function CardContent({ id, state }) {
     const fxText = state.fxRate?.rate ? `USD/KRW ${formatNumber(state.fxRate.rate, 2)}` : "";
     const marketText = marketContext.isMarketClosed ? marketContext.closedReason || "미국장 휴장" : "";
     const badges = [dateText, fxText, marketText].filter(Boolean);
+    const returnSign = totals.gainKrw >= 0 ? "+" : "";
+    const returnCls = totals.gainKrw >= 0 ? "positive" : "negative";
     return (
       <>
         <span>총자산</span>
         <strong>{formatKrw(totals.valueKrw)}</strong>
         <small>{`주식 ${formatKrw(totals.stockValueKrw)} · 예수금 ${formatKrw(totals.cashKrw)}`}</small>
-        {badges.length > 0 && (
-          <div className="metric-badges">
-            {badges.map((b) => <span key={b} className="metric-badge">{b}</span>)}
-          </div>
-        )}
+        <div className="metric-badges">
+          {badges.map((b) => <span key={b} className="metric-badge">{b}</span>)}
+          <span className={`metric-return-badge ${returnCls}`}>{returnSign}{formatPercent(totals.returnRate)}</span>
+        </div>
       </>
     );
   }
@@ -298,6 +303,12 @@ function CardContent({ id, state }) {
   }
   if (id === "performance-flow") {
     return <PerformancePanel state={state} />;
+  }
+  if (id === "top-mover") {
+    return <TopMoverPanel state={state} />;
+  }
+  if (id === "quote") {
+    return <QuotePanel />;
   }
   return <BreakdownPanel state={state} />;
 }
@@ -907,6 +918,82 @@ function clamp(value, min, max) {
 
 function roundTo(value, step) {
   return Math.round(value / step) * step;
+}
+
+const INVESTMENT_QUOTES = [
+  "10년 보유할 자신이 없다면 10분도 보유하지 마라. — 워런 버핏",
+  "시장에서 인내심이 가장 희귀한 자원이다. — 짐 로저스",
+  "분산투자는 무지에 대한 보호책이다. — 워런 버핏",
+  "최고의 투자는 자기 자신에 대한 투자다. — 워런 버핏",
+  "주식 시장은 조급한 사람에게서 인내심 있는 사람에게로 돈을 이전한다. — 워런 버핏",
+  "리스크는 자신이 무엇을 하는지 모를 때 생긴다. — 워런 버핏",
+  "강세장은 비관론 속에서 태어나 회의론 속에서 성장한다. — 존 템플턴",
+  "모든 사람이 탐욕스러울 때 두려워하고, 두려워할 때 탐욕스러워라. — 워런 버핏",
+  "시장은 단기적으로 투표기계이지만 장기적으로 체중계다. — 벤저민 그레이엄",
+  "좋은 기업을 적정 가격에 사는 것이 적정 기업을 좋은 가격에 사는 것보다 낫다. — 워런 버핏",
+];
+
+function QuotePanel() {
+  const idx = new Date().getDate() % INVESTMENT_QUOTES.length;
+  return (
+    <div className="quote-panel-inner">
+      <span className="quote-icon">💡</span>
+      <p className="quote-text">{INVESTMENT_QUOTES[idx]}</p>
+    </div>
+  );
+}
+
+function TopMoverPanel({ state }) {
+  const marketContext = getCurrentMarketContext();
+  if (marketContext.isMarketClosed) {
+    return (
+      <>
+        <div className="section-heading"><h2>오늘의 주인공</h2><span>가격 갱신 기준</span></div>
+        <div className="empty-state">미국장 {marketContext.closedReason || "휴장"}</div>
+      </>
+    );
+  }
+  const rows = (state.holdings || []).map((h) => ({
+    holding: h,
+    dailyMove: getHoldingDailyMove(state, h),
+  })).filter((r) => r.dailyMove.hasData);
+  if (!rows.length) {
+    return (
+      <>
+        <div className="section-heading"><h2>오늘의 주인공</h2><span>가격 갱신 기준</span></div>
+        <div className="empty-state">가격 변동 데이터가 없습니다</div>
+      </>
+    );
+  }
+  rows.sort((a, b) => Math.abs(b.dailyMove.valueKrw) - Math.abs(a.dailyMove.valueKrw));
+  const top = rows[0];
+  const h = top.holding;
+  const m = top.dailyMove;
+  const positive = m.valueKrw >= 0;
+  const fallbackLetter = (h.ticker || h.name || "?").replace(/[^A-Za-z0-9가-힣]/g, "")[0]?.toUpperCase() || "?";
+  return (
+    <>
+      <div className="section-heading"><h2>오늘의 주인공</h2><span>가격 갱신 기준</span></div>
+      <div className="top-mover-row">
+        <span className="ticker-logo" style={{ width: 40, height: 40 }}>
+          <img
+            src={`https://assets.parqet.com/logos/symbol/${encodeURIComponent(h.ticker)}?format=svg`}
+            alt={h.ticker} width="40" height="40"
+            onError={(e) => { e.target.style.display = "none"; e.target.nextSibling.style.display = "flex"; }}
+          />
+          <span className="ticker-logo-fallback" style={{ display: "none", width: 40, height: 40, fontSize: 16 }}>{fallbackLetter}</span>
+        </span>
+        <div className="top-mover-info">
+          <strong>{h.name || h.ticker}</strong>
+          <span className="top-mover-meta">{h.ticker} · {h.account}</span>
+        </div>
+        <div className="top-mover-values">
+          <span className={`top-mover-change ${positive ? "positive" : "negative"}`}>{positive ? "+" : ""}{formatKrw(m.valueKrw)}</span>
+          <span className={`top-mover-pct ${positive ? "positive" : "negative"}`}>{formatPercent(m.changePercent)}</span>
+        </div>
+      </div>
+    </>
+  );
 }
 
 const root = document.querySelector("#dashboardBoard");

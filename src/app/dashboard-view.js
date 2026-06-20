@@ -88,11 +88,25 @@ export function renderSummary() {
   els.totalGain.className = totals.gainKrw >= 0 ? "positive" : "negative";
   els.totalReturn.textContent = formatPercent(totals.returnRate);
   els.totalReturn.className = totals.gainKrw >= 0 ? "positive" : "negative";
-  const badgesEl = document.querySelector("#totalValueBadges");
-  if (badgesEl) {
+  // #totalValueBadges는 Craft.js 재구성 후 사라질 수 있으므로 카드 직접 탐색
+  const totalValueCard = document.querySelector('[data-dashboard-card="total-value"]');
+  if (totalValueCard) {
+    let badgesEl = totalValueCard.querySelector(".metric-badges");
+    if (!badgesEl) {
+      badgesEl = document.getElementById("totalValueBadges") || document.createElement("div");
+      badgesEl.className = "metric-badges";
+      totalValueCard.appendChild(badgesEl);
+    }
+    // 기존 날짜/FX 배지는 유지하고 수익률 배지만 upsert
+    let returnBadge = badgesEl.querySelector(".metric-return-badge");
+    if (!returnBadge) {
+      returnBadge = document.createElement("span");
+      badgesEl.appendChild(returnBadge);
+    }
     const sign = totals.gainKrw >= 0 ? "+" : "";
     const cls = totals.gainKrw >= 0 ? "positive" : "negative";
-    badgesEl.innerHTML = `<span class="metric-return-badge ${cls}">${sign}${formatPercent(totals.returnRate)}</span>`;
+    returnBadge.className = `metric-return-badge ${cls}`;
+    returnBadge.textContent = `${sign}${formatPercent(totals.returnRate)}`;
   }
   els.cashTotal.textContent = formatKrw(totals.cashKrw);
   els.fxRate.textContent = formatNumber(state.fxRate.rate, 2);
