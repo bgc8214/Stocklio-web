@@ -13,7 +13,6 @@ const DEFAULT_LAYOUT = [
   { id: "performance-flow", widthPct: 100, span: 12, minHeight: 360, visible: true },
   { id: "breakdown", widthPct: 50, span: 6, minHeight: 320, visible: true },
   { id: "top-mover", widthPct: 50, span: 6, minHeight: 160, visible: true },
-  { id: "quote", widthPct: 50, span: 6, minHeight: 120, visible: true },
 ];
 
 const LABELS = {
@@ -26,7 +25,7 @@ const LABELS = {
   "performance-flow": "성과 흐름",
   breakdown: "오늘 변동 원인",
   "top-mover": "오늘의 주인공",
-  quote: "투자 명언",
+
 };
 
 const palette = ["#1F4431", "#3366a8", "#a97819", "#7b5aa6", "#b94343"];
@@ -307,9 +306,7 @@ function CardContent({ id, state }) {
   if (id === "top-mover") {
     return <TopMoverPanel state={state} />;
   }
-  if (id === "quote") {
-    return <QuotePanel />;
-  }
+
   return <BreakdownPanel state={state} />;
 }
 
@@ -920,28 +917,6 @@ function roundTo(value, step) {
   return Math.round(value / step) * step;
 }
 
-const INVESTMENT_QUOTES = [
-  "10년 보유할 자신이 없다면 10분도 보유하지 마라. — 워런 버핏",
-  "시장에서 인내심이 가장 희귀한 자원이다. — 짐 로저스",
-  "분산투자는 무지에 대한 보호책이다. — 워런 버핏",
-  "최고의 투자는 자기 자신에 대한 투자다. — 워런 버핏",
-  "주식 시장은 조급한 사람에게서 인내심 있는 사람에게로 돈을 이전한다. — 워런 버핏",
-  "리스크는 자신이 무엇을 하는지 모를 때 생긴다. — 워런 버핏",
-  "강세장은 비관론 속에서 태어나 회의론 속에서 성장한다. — 존 템플턴",
-  "모든 사람이 탐욕스러울 때 두려워하고, 두려워할 때 탐욕스러워라. — 워런 버핏",
-  "시장은 단기적으로 투표기계이지만 장기적으로 체중계다. — 벤저민 그레이엄",
-  "좋은 기업을 적정 가격에 사는 것이 적정 기업을 좋은 가격에 사는 것보다 낫다. — 워런 버핏",
-];
-
-function QuotePanel() {
-  const idx = new Date().getDate() % INVESTMENT_QUOTES.length;
-  return (
-    <div className="quote-panel-inner">
-      <span className="quote-icon">💡</span>
-      <p className="quote-text">{INVESTMENT_QUOTES[idx]}</p>
-    </div>
-  );
-}
 
 function TopMoverPanel({ state }) {
   const marketContext = getCurrentMarketContext();
