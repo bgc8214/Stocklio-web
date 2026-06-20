@@ -8631,3 +8631,27 @@ td.empty-td {
   transition: height 0.3s;
 }
 .dividend-bar-label { font-size: 10px; color: var(--muted); white-space: nowrap; }
+
+/* ── 목표 배분 폼 ────────────────────────────── */
+.target-allocation-form { display: flex; flex-direction: column; gap: 10px; margin-bottom: 12px; }
+.target-alloc-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.target-alloc-row > span:first-child { font-size: 13px; font-weight: 500; }
+.target-alloc-input-wrap { display: flex; align-items: center; gap: 4px; }
+.target-alloc-input { width: 64px; text-align: right; }
+
+/* ── 리밸런싱 카드 ───────────────────────────── */
+.rebalance-content { display: flex; flex-direction: column; }
+.rebalance-row {
+  display: grid;
+  grid-template-columns: 1fr 44px 18px 36px auto;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--line);
+}
+.rebalance-row:last-child { border-bottom: none; }
+.rebalance-strategy { font-weight: 600; }
+.rebalance-current, .rebalance-target { color: var(--muted); font-size: 12px; text-align: right; }
+.rebalance-arrow { color: var(--muted); text-align: center; }
+.rebalance-diff { font-weight: 700; text-align: right; }

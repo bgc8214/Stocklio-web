@@ -51,6 +51,40 @@ export function renderAutomation() {
   els.automationResult.textContent = automation.lastRunAt
     ? `${automation.lastResult || "자동화 실행 완료"} · ${formatAsOf(automation.lastRunAt)}`
     : automation.lastResult || "자동 기록 대기 중";
+
+  // 목표 배분 폼
+  const targetForm = document.getElementById("targetAllocationForm");
+  const saveTargetBtn = document.getElementById("saveTargetAllocation");
+  if (targetForm) {
+    const strategies = [...new Set((state.holdings || []).map(h => h.strategy).filter(Boolean))];
+    const targets = state.automation?.targetAllocation || {};
+    targetForm.innerHTML = strategies.length
+      ? strategies.map(s => `
+          <label class="target-alloc-row">
+            <span>${escapeHtml(s)}</span>
+            <div class="target-alloc-input-wrap">
+              <input type="number" min="0" max="100" step="1"
+                data-target-strategy="${escapeHtml(s)}"
+                value="${Number(targets[s] || 0)}"
+                class="target-alloc-input">
+              <span>%</span>
+            </div>
+          </label>`).join("")
+      : `<p style="font-size:13px;color:var(--muted)">보유 종목을 추가하면 전략 목록이 나타납니다</p>`;
+  }
+  if (saveTargetBtn && !saveTargetBtn.dataset.bound) {
+    saveTargetBtn.dataset.bound = "1";
+    saveTargetBtn.onclick = () => {
+      const currentState = _ctx.getState();
+      const inputs = document.querySelectorAll("[data-target-strategy]");
+      const newTargets = {};
+      inputs.forEach(input => { newTargets[input.dataset.targetStrategy] = Number(input.value) || 0; });
+      if (!currentState.automation) currentState.automation = {};
+      currentState.automation.targetAllocation = newTargets;
+      _ctx.saveState();
+      _ctx.showOperationToast("목표 배분 저장됨", "대시보드 리밸런싱 카드에 반영됩니다");
+    };
+  }
 }
 
 export function renderDashboardStatus() {

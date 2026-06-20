@@ -11904,6 +11904,13 @@ var Ra = /* @__PURE__ */ o(((e) => {
 		span: 6,
 		minHeight: 160,
 		visible: !0
+	},
+	{
+		id: "rebalance",
+		widthPct: 50,
+		span: 6,
+		minHeight: 200,
+		visible: !0
 	}
 ], Ba = {
 	"total-value": "총자산",
@@ -11914,7 +11921,8 @@ var Ra = /* @__PURE__ */ o(((e) => {
 	allocation: "자산 비중",
 	"performance-flow": "성과 흐름",
 	breakdown: "오늘 변동 원인",
-	"top-mover": "오늘의 주인공"
+	"top-mover": "오늘의 주인공",
+	rebalance: "리밸런싱"
 }, Va = [
 	"#1F4431",
 	"#3366a8",
@@ -12143,7 +12151,7 @@ function qa({ id: e, state: t }) {
 		label: "USD/KRW",
 		value: So(t.fxRate?.rate || 0, 2),
 		hint: `${t.fxRate?.source || "환율 기준"} · ${Do(t.fxRate?.asOf)}`
-	}) : e === "allocation" ? /* @__PURE__ */ (0, B.jsx)(Ya, { state: t }) : e === "performance-flow" ? /* @__PURE__ */ (0, B.jsx)(Xa, { state: t }) : e === "top-mover" ? /* @__PURE__ */ (0, B.jsx)(Ao, { state: t }) : /* @__PURE__ */ (0, B.jsx)(Qa, { state: t });
+	}) : e === "allocation" ? /* @__PURE__ */ (0, B.jsx)(Ya, { state: t }) : e === "performance-flow" ? /* @__PURE__ */ (0, B.jsx)(Xa, { state: t }) : e === "top-mover" ? /* @__PURE__ */ (0, B.jsx)(Ao, { state: t }) : e === "rebalance" ? /* @__PURE__ */ (0, B.jsx)(jo, { state: t }) : /* @__PURE__ */ (0, B.jsx)(Qa, { state: t });
 }
 function Ja({ label: e, value: t, hint: n, tone: r }) {
 	return /* @__PURE__ */ (0, B.jsxs)(B.Fragment, { children: [
@@ -12877,6 +12885,76 @@ function Ao({ state: e }) {
 		]
 	})] });
 }
-var jo = document.querySelector("#dashboardBoard");
-jo && (jo.classList.add("craft-dashboard-board"), (0, v.createRoot)(jo).render(/* @__PURE__ */ (0, B.jsx)(Wa, {})));
+function jo({ state: e }) {
+	let t = e.automation?.targetAllocation || {};
+	if (!Object.keys(t).some((e) => t[e] > 0)) return /* @__PURE__ */ (0, B.jsxs)(B.Fragment, { children: [/* @__PURE__ */ (0, B.jsxs)("div", {
+		className: "section-heading",
+		children: [/* @__PURE__ */ (0, B.jsx)("h2", { children: "리밸런싱" }), /* @__PURE__ */ (0, B.jsx)("span", { children: "목표 배분 기준" })]
+	}), /* @__PURE__ */ (0, B.jsxs)("div", {
+		className: "empty-state",
+		children: [
+			/* @__PURE__ */ (0, B.jsx)("span", {
+				className: "empty-icon",
+				children: "⚖️"
+			}),
+			/* @__PURE__ */ (0, B.jsx)("strong", { children: "목표 배분을 설정하세요" }),
+			/* @__PURE__ */ (0, B.jsx)("span", { children: "설정 탭에서 전략별 목표 비중을 입력하세요" })
+		]
+	})] });
+	let n = po(e).valueKrw, r = e.fxRate?.rate || 1, i = {};
+	for (let t of e.holdings || []) {
+		let e = mo(t, r);
+		i[t.strategy] = (i[t.strategy] || 0) + e.valueKrw;
+	}
+	let a = Object.values(t).reduce((e, t) => e + t, 0);
+	if (!a || !n) return /* @__PURE__ */ (0, B.jsxs)(B.Fragment, { children: [/* @__PURE__ */ (0, B.jsxs)("div", {
+		className: "section-heading",
+		children: [/* @__PURE__ */ (0, B.jsx)("h2", { children: "리밸런싱" }), /* @__PURE__ */ (0, B.jsx)("span", { children: "목표 배분 기준" })]
+	}), /* @__PURE__ */ (0, B.jsx)("div", {
+		className: "empty-state",
+		children: /* @__PURE__ */ (0, B.jsx)("span", { children: "종목과 목표 비중을 먼저 입력하세요" })
+	})] });
+	let o = Object.entries(t).filter(([, e]) => e > 0).map(([e, t]) => {
+		let r = t / a * n, o = i[e] || 0, s = r - o;
+		return {
+			strategy: e,
+			targetPct: t,
+			currentPct: (o / n * 100).toFixed(1),
+			diff: s
+		};
+	}).sort((e, t) => Math.abs(t.diff) - Math.abs(e.diff));
+	return /* @__PURE__ */ (0, B.jsxs)(B.Fragment, { children: [/* @__PURE__ */ (0, B.jsxs)("div", {
+		className: "section-heading",
+		children: [/* @__PURE__ */ (0, B.jsx)("h2", { children: "리밸런싱" }), /* @__PURE__ */ (0, B.jsx)("span", { children: "목표 배분 기준" })]
+	}), /* @__PURE__ */ (0, B.jsx)("div", {
+		className: "rebalance-content",
+		children: o.map((e) => /* @__PURE__ */ (0, B.jsxs)("div", {
+			className: "rebalance-row",
+			children: [
+				/* @__PURE__ */ (0, B.jsx)("span", {
+					className: "rebalance-strategy",
+					children: e.strategy
+				}),
+				/* @__PURE__ */ (0, B.jsxs)("span", {
+					className: "rebalance-current",
+					children: [e.currentPct, "%"]
+				}),
+				/* @__PURE__ */ (0, B.jsx)("span", {
+					className: "rebalance-arrow",
+					children: "→"
+				}),
+				/* @__PURE__ */ (0, B.jsxs)("span", {
+					className: "rebalance-target",
+					children: [e.targetPct, "%"]
+				}),
+				/* @__PURE__ */ (0, B.jsxs)("span", {
+					className: `rebalance-diff ${e.diff >= 0 ? "positive" : "negative"}`,
+					children: [e.diff >= 0 ? "+" : "", U(e.diff)]
+				})
+			]
+		}, e.strategy))
+	})] });
+}
+var Mo = document.querySelector("#dashboardBoard");
+Mo && (Mo.classList.add("craft-dashboard-board"), (0, v.createRoot)(Mo).render(/* @__PURE__ */ (0, B.jsx)(Wa, {})));
 //#endregion
