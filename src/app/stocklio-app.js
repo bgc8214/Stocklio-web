@@ -81,6 +81,8 @@ import {
   init as initPerformanceView,
   renderPerformance,
   renderBreakdown,
+  renderTopMover,
+  renderQuote,
   renderSnapshots,
   renderMonthlySummary,
   exportPerformanceCsv,
@@ -1189,6 +1191,8 @@ function render() {
   renderAllocation();
   renderPerformance();
   renderBreakdown();
+  renderTopMover();
+  renderQuote();
   renderAccounts();
   renderAccountSummary();
   renderAccountDetail();

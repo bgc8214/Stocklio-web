@@ -12,9 +12,16 @@ export default async function handler(request, response) {
     return;
   }
 
+  const rangeParam = searchParams.get("range") || "1d";
+  const intervalParam = searchParams.get("interval") || "1d";
+  const ALLOWED_RANGES = ["1d", "5d", "1mo", "3mo", "6mo", "1y"];
+  const ALLOWED_INTERVALS = ["1m", "5m", "15m", "1h", "1d", "1wk"];
+  const range = ALLOWED_RANGES.includes(rangeParam) ? rangeParam : "1d";
+  const interval = ALLOWED_INTERVALS.includes(intervalParam) ? intervalParam : "1d";
+
   const yahooUrl = new URL(`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}`);
-  yahooUrl.searchParams.set("interval", "1d");
-  yahooUrl.searchParams.set("range", "1d");
+  yahooUrl.searchParams.set("interval", interval);
+  yahooUrl.searchParams.set("range", range);
 
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 5000);
@@ -32,7 +39,8 @@ export default async function handler(request, response) {
       return;
     }
     const data = await yahooResponse.json();
-    response.setHeader("Cache-Control", "s-maxage=300, stale-while-revalidate=600");
+    const cacheSeconds = range === "1d" ? 300 : 3600;
+    response.setHeader("Cache-Control", `s-maxage=${cacheSeconds}, stale-while-revalidate=${cacheSeconds * 2}`);
     response.status(yahooResponse.status).json(data);
   } catch (error) {
     response.status(error.name === "AbortError" ? 504 : 502).json({ error: "price provider unavailable" });

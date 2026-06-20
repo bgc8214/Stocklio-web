@@ -8433,3 +8433,118 @@ button.secondary:hover:not(:disabled),
   margin-left: 4px;
   vertical-align: middle;
 }
+
+/* ── Nav 활성 메뉴 개선 ────────────────────────── */
+.view-tabs button.active {
+  box-shadow: inset 3px 0 0 var(--accent);
+  font-weight: 600;
+}
+@media (min-width: 981px) {
+  .view-tabs button:hover,
+  .view-tabs button:focus-visible {
+    font-weight: 500;
+  }
+}
+
+/* ── 총자산 수익률 배지 ───────────────────────── */
+.metric-badges { margin-top: 4px; }
+.metric-return-badge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 20px;
+  letter-spacing: 0.01em;
+}
+.metric-return-badge.positive {
+  background: rgba(180, 30, 30, 0.1);
+  color: var(--positive, #b41e1e);
+}
+.metric-return-badge.negative {
+  background: rgba(30, 80, 180, 0.1);
+  color: var(--negative, #1e50b4);
+}
+
+/* ── 오늘의 주인공 카드 ───────────────────────── */
+.top-mover-content { padding: 4px 0; }
+.top-mover-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0;
+}
+.top-mover-info { flex: 1; min-width: 0; }
+.top-mover-info strong { display: block; font-size: 14px; font-weight: 700; }
+.top-mover-meta { font-size: 12px; color: var(--muted); }
+.top-mover-values { text-align: right; flex-shrink: 0; }
+.top-mover-change { display: block; font-size: 16px; font-weight: 800; }
+.top-mover-pct { font-size: 12px; font-weight: 600; }
+
+/* ── 투자 명언 위젯 ──────────────────────────── */
+.investment-quote-widget {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 10px;
+  padding: 24px 20px;
+  background: var(--accent-light);
+}
+.quote-icon { font-size: 22px; line-height: 1; }
+.quote-text {
+  font-size: 13px;
+  line-height: 1.65;
+  color: var(--ink);
+  font-style: italic;
+  margin: 0;
+  max-width: 320px;
+}
+
+/* ── Holdings 카드 슬라이더 (종목별 뷰) ──────── */
+.holdings-card-slider {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  padding-bottom: 4px;
+}
+.holdings-card-slider::-webkit-scrollbar { display: none; }
+.holdings-summary-card {
+  flex: 0 0 160px;
+  scroll-snap-align: start;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: box-shadow 0.15s;
+}
+.holdings-summary-card:hover { box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
+.hsc-header { display: flex; align-items: center; gap: 6px; }
+.hsc-name-wrap { flex: 1; min-width: 0; }
+.hsc-name {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.hsc-ticker { font-size: 11px; color: var(--muted); }
+.hsc-change { font-size: 11px; font-weight: 700; flex-shrink: 0; }
+.hsc-value { font-size: 15px; font-weight: 800; color: var(--ink); }
+.hsc-meta { display: flex; justify-content: space-between; font-size: 11px; }
+.hsc-day { font-weight: 600; }
+.hsc-weight { color: var(--muted); }
+
+/* ── 스파크라인 ──────────────────────────────── */
+.sparkline-wrap {
+  display: inline-block;
+  vertical-align: middle;
+  margin-left: 6px;
+}
+.sparkline { display: block; opacity: 0.85; }

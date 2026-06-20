@@ -88,6 +88,12 @@ export function renderSummary() {
   els.totalGain.className = totals.gainKrw >= 0 ? "positive" : "negative";
   els.totalReturn.textContent = formatPercent(totals.returnRate);
   els.totalReturn.className = totals.gainKrw >= 0 ? "positive" : "negative";
+  const badgesEl = document.querySelector("#totalValueBadges");
+  if (badgesEl) {
+    const sign = totals.gainKrw >= 0 ? "+" : "";
+    const cls = totals.gainKrw >= 0 ? "positive" : "negative";
+    badgesEl.innerHTML = `<span class="metric-return-badge ${cls}">${sign}${formatPercent(totals.returnRate)}</span>`;
+  }
   els.cashTotal.textContent = formatKrw(totals.cashKrw);
   els.fxRate.textContent = formatNumber(state.fxRate.rate, 2);
   els.fxSource.textContent = `${state.fxRate.source} · ${formatAsOf(state.fxRate.asOf)}`;
