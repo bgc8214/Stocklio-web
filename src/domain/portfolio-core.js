@@ -9,6 +9,8 @@ export const DEFAULT_DASHBOARD_LAYOUT = [
   { id: "allocation", widthPct: 50, span: 6, minHeight: 320, visible: true },
   { id: "performance-flow", widthPct: 100, span: 12, minHeight: 360, visible: true },
   { id: "breakdown", widthPct: 50, span: 6, minHeight: 320, visible: true },
+  { id: "top-mover", widthPct: 50, span: 6, minHeight: 160, visible: true },
+  { id: "quote", widthPct: 50, span: 6, minHeight: 120, visible: true },
 ];
 
 export function normalizeDashboardLayout(layout) {

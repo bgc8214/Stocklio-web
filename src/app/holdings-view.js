@@ -14,6 +14,41 @@ import { searchSymbols } from "./services/market-data-service.js";
 
 let _ctx;
 
+// 스파크라인 캐시 (ticker → {data, ts})
+const sparklineCache = new Map();
+const SPARKLINE_TTL = 3600_000;
+
+function buildSparklineSvg(prices, positive) {
+  if (!prices || prices.length < 2) return "";
+  const min = Math.min(...prices);
+  const max = Math.max(...prices);
+  const range = max - min || 1;
+  const W = 64, H = 24, PAD = 2;
+  const pts = prices.map((p, i) => {
+    const x = PAD + (i / (prices.length - 1)) * (W - PAD * 2);
+    const y = PAD + (1 - (p - min) / range) * (H - PAD * 2);
+    return `${x.toFixed(1)},${y.toFixed(1)}`;
+  }).join(" ");
+  const color = positive ? "var(--positive, #b41e1e)" : "var(--negative, #1e50b4)";
+  return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" aria-hidden="true" class="sparkline"><polyline points="${pts}" fill="none" stroke="${color}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+}
+
+async function fetchSparkline(ticker) {
+  if (!ticker || ticker.length > 20) return null;
+  const cached = sparklineCache.get(ticker);
+  if (cached && Date.now() - cached.ts < SPARKLINE_TTL) return cached.data;
+  try {
+    const symbol = /^\d{6}$/.test(ticker) ? `${ticker}.KS` : ticker;
+    const res = await fetch(`/api/yahoo/chart?symbol=${encodeURIComponent(symbol)}&range=5d&interval=1d`);
+    if (!res.ok) return null;
+    const json = await res.json();
+    const closes = json?.chart?.result?.[0]?.indicators?.quote?.[0]?.close?.filter(Number.isFinite);
+    if (!closes || closes.length < 2) return null;
+    sparklineCache.set(ticker, { data: closes, ts: Date.now() });
+    return closes;
+  } catch { return null; }
+}
+
 // 내부 priceSource 문자열 → 사용자 친화적 레이블
 function normalizeSource(source) {
   if (!source) return "사용자 입력";
@@ -251,7 +286,7 @@ export function renderHoldings() {
         <td data-label="전략" class="col-context"><span class="name-cell">${escapeHtml(holding.strategy)}</span></td>
         <td data-label="종목"><span class="name-cell-logo">${tickerLogoHtml(holding.ticker, holding.name, 28)}<span><strong class="name-cell">${escapeHtml(holding.name || holding.ticker)}</strong>${holding.ticker && holding.ticker !== holding.name ? `<small class="name-cell">${escapeHtml(holding.ticker)}</small>` : ""}</span></span></td>
         <td data-label="수량"><span class="amount-cell">${formatNumber(holding.quantity, 4)}</span></td>
-        <td data-label="현재가"><span class="money-value">${formatMoney(holding.price, holding.currency)}</span></td>
+        <td data-label="현재가"><span class="money-value">${formatMoney(holding.price, holding.currency)}</span><span class="sparkline-wrap" data-sparkline-ticker="${escapeHtml(holding.ticker || "")}" data-sparkline-positive="${(holding.priceChange ?? 0) >= 0 ? "1" : "0"}"></span></td>
         <td data-label="평단가"><span class="money-value">${formatMoney(holding.averageCost, holding.currency)}</span></td>
         <td data-label="평가금액"><span class="money-value">${formatMoney(value, holding.currency)}</span></td>
         <td data-label="일 영향" class="${dailyMove.valueKrw >= 0 ? "positive" : "negative"}">
@@ -294,6 +329,26 @@ export function renderHoldings() {
       _ctx.render();
     });
   });
+
+  // 스파크라인: 뷰포트 진입 시 로드
+  if ("IntersectionObserver" in window) {
+    const observer = new IntersectionObserver((entries) => {
+      for (const entry of entries) {
+        if (!entry.isIntersecting) continue;
+        observer.unobserve(entry.target);
+        const el = entry.target;
+        if (el.dataset.sparklineLoaded) continue;
+        el.dataset.sparklineLoaded = "1";
+        const ticker = el.dataset.sparklineTicker;
+        const positive = el.dataset.sparklinePositive === "1";
+        if (!ticker) continue;
+        fetchSparkline(ticker).then((prices) => {
+          if (prices) el.innerHTML = buildSparklineSvg(prices, positive);
+        });
+      }
+    }, { rootMargin: "100px" });
+    document.querySelectorAll("[data-sparkline-ticker]").forEach((el) => observer.observe(el));
+  }
 }
 
 function renderHoldingScopeControls() {
@@ -466,30 +521,28 @@ function renderHoldingsSummaryView(rows) {
     return;
   }
 
-  els.holdingsSummaryView.innerHTML = merged.map((item) => {
-    const returnRate = item.costKrw ? item.gainKrw / item.costKrw : 0;
-    const weight = totalValue ? item.valueKrw / totalValue : 0;
-    const gainPositive = item.gainKrw >= 0;
-    const dayPositive = item.dayMoveKrw >= 0;
-    const weightPct = Math.max(4, Math.round(weight * 100));
-    return `<div class="holdings-overview-row">
-      <div class="holdings-overview-bar" style="width:${weightPct}%"></div>
-      <div class="holdings-overview-main">
-        <div class="holdings-overview-left">
-          ${tickerLogoHtml(item.ticker, item.name, 36)}
-          <div class="holdings-overview-text">
-            <strong class="holdings-overview-name">${escapeHtml(item.name)}</strong>
-            <span class="holdings-overview-meta">${escapeHtml(item.ticker)} · ${formatNumber(item.quantity, 4)}주 · ${formatPercent(weight)}</span>
+  els.holdingsSummaryView.innerHTML = `<div class="holdings-card-slider" role="list" aria-label="보유 종목 카드">` +
+    merged.map((item) => {
+      const returnRate = item.costKrw ? item.gainKrw / item.costKrw : 0;
+      const weight = totalValue ? item.valueKrw / totalValue : 0;
+      const gainPositive = item.gainKrw >= 0;
+      const dayPositive = item.dayMoveKrw >= 0;
+      return `<div class="holdings-summary-card" role="listitem">
+        <div class="hsc-header">
+          ${tickerLogoHtml(item.ticker, item.name, 32)}
+          <div class="hsc-name-wrap">
+            <strong class="hsc-name">${escapeHtml(item.name)}</strong>
+            <span class="hsc-ticker">${escapeHtml(item.ticker)}</span>
           </div>
+          <span class="hsc-change ${gainPositive ? "positive" : "negative"}">${gainPositive ? "+" : ""}${formatPercent(returnRate)}</span>
         </div>
-        <div class="holdings-overview-right">
-          <strong class="holdings-overview-value">${formatKrw(item.valueKrw)}</strong>
-          <span class="holdings-overview-gain ${gainPositive ? "positive" : "negative"}">${gainPositive ? "+" : ""}${formatKrw(item.gainKrw)} (${gainPositive ? "+" : ""}${formatPercent(returnRate)})</span>
-          ${item.hasDayData ? `<span class="holdings-overview-day ${dayPositive ? "positive" : "negative"}">${dayPositive ? "▲" : "▼"} ${formatKrw(Math.abs(item.dayMoveKrw))}</span>` : ""}
+        <div class="hsc-value">${formatKrw(item.valueKrw)}</div>
+        <div class="hsc-meta">
+          ${item.hasDayData ? `<span class="hsc-day ${dayPositive ? "positive" : "negative"}">${dayPositive ? "+" : ""}${formatKrw(item.dayMoveKrw)}</span>` : ""}
+          <span class="hsc-weight">${formatPercent(weight)}</span>
         </div>
-      </div>
-    </div>`;
-  }).join("");
+      </div>`;
+    }).join("") + `</div>`;
 }
 
 export function exportVisibleHoldings() {
