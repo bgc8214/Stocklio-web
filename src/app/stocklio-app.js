@@ -894,7 +894,7 @@ function loadState() {
       .then((remoteState) => {
         const normalized = remoteState ? normalizeState(remoteState) : createEmptyState();
         localStorage.setItem(STORAGE_KEY, JSON.stringify(normalized));
-        syncState = remoteState ? { status: "synced", message: "저장됨" } : { status: "idle", message: "" };
+        syncState = { status: "idle", message: "" };
         return normalized;
       })
       .catch((error) => {
