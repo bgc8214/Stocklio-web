@@ -96,6 +96,7 @@ import {
 import {
   init as initCashflowsView,
   renderCashFlows,
+  renderDividendChart,
   renderCashBalances,
   allocateUnclassifiedCash,
   startEditCashFlow,
@@ -384,7 +385,7 @@ els.emptyPortfolioButton.addEventListener("click", () => {
   setIsLayoutEditing(false);
   saveState();
   render();
-  setStatus("빈 포트폴리오로 전환했습니다", "보유 종목, 계좌, 예수금을 새로 입력하세요");
+  showOperationToast("포트폴리오 초기화", "보유 종목과 계좌를 새로 입력하세요");
 });
 
 els.addAccountButton?.addEventListener("click", () => {
@@ -455,7 +456,7 @@ window.addEventListener("stocklio:auth", (event) => {
   Promise.all([loadState(), loadNotificationState()]).then(([nextState]) => {
     state = nextState;
     render();
-    setStatus(authState.signedIn ? "포트폴리오 불러옴" : "브라우저 저장", authState.user?.email || "현재 기기에 저장됩니다");
+    if (authState.signedIn) setStatus("포트폴리오 동기화됨", authState.user?.email || "");
     queueAutomaticPriceRefresh();
   });
 });
@@ -465,7 +466,7 @@ els.resetButton.addEventListener("click", () => {
   setIsLayoutEditing(false);
   saveState();
   render();
-  setStatus("샘플 데이터를 불러왔습니다", "실제 포트폴리오는 보유 종목과 계좌에서 직접 입력하세요");
+  showOperationToast("예시 데이터 로드됨", "보유 종목과 계좌에서 직접 입력하세요");
 });
 
 els.layoutEditButton.addEventListener("click", () => {
@@ -484,7 +485,7 @@ els.layoutResetButton.addEventListener("click", () => {
   setIsLayoutEditing(false);
   saveState();
   renderDashboardLayout();
-  setStatus("대시보드 레이아웃 복원", "기본 카드 배치로 되돌렸습니다");
+  showOperationToast("레이아웃 초기화", "기본 배치로 되돌렸습니다");
 });
 
 els.dashboardBoard.addEventListener("click", (event) => {
@@ -741,7 +742,7 @@ els.accountForm.addEventListener("submit", (event) => {
   updateEditControls();
   saveState();
   render();
-  setStatus("계좌 저장", `${nextAccount.investor} · ${nextAccount.account}`);
+  // 계좌 저장 — UI에 반영되므로 별도 알림 불필요
 });
 
 els.holdingForm.addEventListener("submit", (event) => {
@@ -769,6 +770,8 @@ els.holdingForm.addEventListener("submit", (event) => {
     priceSource: existingHolding?.priceSource || "사용자 입력",
     priceAsOf: existingHolding?.priceAsOf || new Date().toISOString(),
     autoPrice: existingHolding?.autoPrice ?? true,
+    targetPrice: Number(form.get("targetPrice")) || null,
+    stopLoss: Number(form.get("stopLoss")) || null,
   };
   if (editingHoldingId) {
     state.holdings = state.holdings.map((holding) => (holding.id === editingHoldingId ? { ...holding, ...nextHolding } : holding));
@@ -782,7 +785,7 @@ els.holdingForm.addEventListener("submit", (event) => {
   updateEditControls();
   saveState();
   render();
-  setStatus("보유 종목 저장", `${nextHolding.name} · ${nextHolding.account}`);
+  // 보유 종목 저장 — UI에 반영
 });
 
 els.cashFlowForm.date.value = todayKey();
@@ -811,7 +814,7 @@ els.cashFlowForm.addEventListener("submit", (event) => {
   updateEditControls();
   saveState();
   render();
-  setStatus("입출금 기록 저장", "다음 스냅샷부터 투자손익 계산에 반영");
+  // 입출금 저장 상태 알림 제거
 });
 
 els.cashBalanceForm.addEventListener("submit", (event) => {
@@ -837,7 +840,7 @@ els.cashBalanceForm.addEventListener("submit", (event) => {
   updateEditControls();
   saveState();
   render();
-  setStatus("예수금 저장", "총자산과 다음 스냅샷에 반영");
+  // 예수금 저장 상태 알림 제거
 });
 
 els.holdingCancel.addEventListener("click", () => cancelEdit("holding"));
@@ -895,7 +898,7 @@ function loadState() {
         return normalized;
       })
       .catch((error) => {
-        setStatus("Supabase 불러오기 실패", error.message);
+        setStatus("데이터 불러오기 실패", error.message);
         syncState = { status: "failed", message: "동기화 실패" };
         if (stored) {
           try {
@@ -1097,7 +1100,7 @@ async function initialize() {
     render();
     setView(activeView);
     renderAuth();
-    setStatus(authState.signedIn ? "Supabase 데이터 불러옴" : "데이터 불러옴", authState.user?.email || state.automation?.lastResult || "저장소와 연결됨");
+    if (authState.signedIn) setStatus("포트폴리오 불러옴", authState.user?.email || "");
     queueAutomaticPriceRefresh();
   } catch {
     state = structuredClone(sampleState);
@@ -1202,6 +1205,7 @@ function render() {
   renderAllocationOverview();
   renderHoldings();
   renderCashFlows();
+  renderDividendChart();
   renderCashBalances();
   renderAutomation();
   renderDashboardStatus();
@@ -1221,7 +1225,7 @@ function renderAuth() {
   const configured = window.StocklioAuth?.isConfigured?.() || false;
   authState = window.StocklioAuth?.getState?.() || authState;
   if (!configured) {
-    els.authStatus.textContent = "기기에 저장됨";
+    els.authStatus.textContent = "";
     setSyncState("idle", "");
     els.openLoginButton.hidden = true;
     els.naverLoginButton.disabled = true;

@@ -52,6 +52,22 @@ export function buildDailyDigest({ state, snapshot, previousSnapshot, date, site
     lines.push("", `미국장 ${marketContext.closedReason || "휴장"} · 종목별 변동 없음`);
   }
 
+  // 목표가/손절가 알림
+  const priceAlerts = [];
+  for (const h of state.holdings || []) {
+    const price = Number(h.price || 0);
+    if (h.targetPrice && price >= Number(h.targetPrice)) {
+      priceAlerts.push(`🎯 ${h.name || h.ticker}: 목표가 도달 (${formatCompact(price)})`);
+    }
+    if (h.stopLoss && price > 0 && price <= Number(h.stopLoss)) {
+      priceAlerts.push(`⚠️ ${h.name || h.ticker}: 손절가 이하 (${formatCompact(price)})`);
+    }
+  }
+  if (priceAlerts.length) {
+    lines.push("", "▸ 알림");
+    lines.push(...priceAlerts);
+  }
+
   if (siteUrl) {
     lines.push("", siteUrl.replace(/\/$/, ""));
   }

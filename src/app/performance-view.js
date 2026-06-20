@@ -21,6 +21,32 @@ import {
 
 let _ctx;
 
+// 벤치마크 캐시
+const benchmarkCache = new Map();
+const BENCHMARK_TTL = 3600_000;
+
+async function fetchBenchmarkData(symbol, startDate) {
+  const cacheKey = `${symbol}:${startDate}`;
+  const cached = benchmarkCache.get(cacheKey);
+  if (cached && Date.now() - cached.ts < BENCHMARK_TTL) return cached.data;
+  try {
+    const diffDays = (Date.now() - new Date(startDate).getTime()) / 86400000;
+    const range = diffDays <= 35 ? "1mo" : diffDays <= 100 ? "3mo" : diffDays <= 200 ? "6mo" : "1y";
+    const res = await fetch(`/api/yahoo/chart?symbol=${encodeURIComponent(symbol)}&range=${range}&interval=1d`);
+    if (!res.ok) return null;
+    const json = await res.json();
+    const timestamps = json?.chart?.result?.[0]?.timestamp || [];
+    const closes = json?.chart?.result?.[0]?.indicators?.quote?.[0]?.close || [];
+    if (!timestamps.length) return null;
+    const map = new Map();
+    timestamps.forEach((ts, i) => {
+      if (Number.isFinite(closes[i])) map.set(new Date(ts * 1000).toISOString().slice(0, 10), closes[i]);
+    });
+    benchmarkCache.set(cacheKey, { data: map, ts: Date.now() });
+    return map;
+  } catch { return null; }
+}
+
 // 모듈 내부 상태
 let numbersPerformanceChart = null;
 let selectedNumbersMonth = null; // "YYYY-MM" or null (= latest)
@@ -51,7 +77,7 @@ export function renderPerformance() {
   const points = getFilteredSnapshotRows().slice(-8);
   if (!points.length) {
     els.performanceStats.innerHTML = "";
-    els.performanceChart.innerHTML = `<div class="empty-state">저장된 성과 스냅샷이 없습니다</div>`;
+    els.performanceChart.innerHTML = `<div class="empty-state">성과 기록이 아직 없습니다</div>`;
     renderPerformanceDetails([]);
     return;
   }
@@ -88,8 +114,8 @@ function renderPerformanceDetails(rows) {
   const els = _ctx.els;
   if (!rows.length) {
     els.performanceDetailStats.innerHTML = "";
-    els.performanceTrendChart.innerHTML = `<div class="empty-state">저장된 성과 스냅샷이 없습니다</div>`;
-    els.performanceWaterfall.innerHTML = `<div class="empty-state">성과를 계산할 스냅샷이 없습니다</div>`;
+    els.performanceTrendChart.innerHTML = `<div class="empty-state">성과 기록이 아직 없습니다</div>`;
+    els.performanceWaterfall.innerHTML = `<div class="empty-state">분석할 데이터가 없습니다</div>`;
     els.performanceInsight.innerHTML = "";
     els.accountPerformanceBody.innerHTML = `<tr><td colspan="7">계좌별 스냅샷이 없습니다</td></tr>`;
     els.strategyPerformanceBody.innerHTML = `<tr><td colspan="6">보유 종목이 없습니다</td></tr>`;
@@ -350,7 +376,7 @@ export function renderSnapshots() {
       <td data-label="일 수익률" class="${row.dailyReturn >= 0 ? "positive" : "negative"}">${formatPercent(row.dailyReturn)}</td>
       <td data-label="월 누적" class="${row.monthToDateInvestmentGainKrw >= 0 ? "positive" : "negative"}">${formatKrw(row.monthToDateInvestmentGainKrw)}</td>
     </tr>`)
-    .join("") || `<tr><td colspan="6">저장된 성과 스냅샷이 없습니다</td></tr>`;
+    .join("") || `<tr><td colspan="6">성과 기록이 아직 없습니다</td></tr>`;
 }
 
 export function renderMonthlySummary() {
@@ -363,7 +389,7 @@ export function renderMonthlySummary() {
       <td data-label="월말 총자산">${formatKrw(row.endValueKrw)}</td>
       <td data-label="월 증감" class="${row.changeKrw >= 0 ? "positive" : "negative"}">${formatKrw(row.changeKrw)}</td>
     </tr>`)
-    .join("") || `<tr><td colspan="4">월별로 집계할 스냅샷이 없습니다</td></tr>`;
+    .join("") || `<tr><td colspan="4">한 달치 기록이 쌓이면 월별 분석이 시작됩니다</td></tr>`;
 }
 
 function renderAccountPerformance(rows) {
@@ -380,7 +406,7 @@ function renderAccountPerformance(rows) {
       <td data-label="예수금">${formatKrw(row.cashKrw)}</td>
       <td data-label="수익률" class="${row.returnRate >= 0 ? "positive" : "negative"}">${formatPercent(row.returnRate)}</td>
     </tr>`)
-    .join("") || `<tr><td colspan="7">계좌별 스냅샷이 없습니다. 오늘 성과 저장 또는 자동 기록 후 표시됩니다.</td></tr>`;
+    .join("") || `<tr><td colspan="7">계좌별 성과 기록이 없습니다</td></tr>`;
 }
 
 function renderStrategyPerformance() {
@@ -423,7 +449,7 @@ function dailyMoveRow(item) {
 function dailyMoveInsight(movers, netMove, priceEffect, fxEffect) {
   const top = movers.slice(0, 2).map((item) => item.name).filter(Boolean);
   if (!top.length || Math.abs(netMove) < 1000) {
-    return "오늘은 뚜렷하게 총자산을 움직인 종목이 없습니다.";
+    return "오늘 가격 변동 데이터가 없습니다.";
   }
   const direction = netMove >= 0 ? "증가" : "하락";
   const main = top.join(", ");
@@ -511,8 +537,21 @@ export function copyPerformanceSummary() {
 export function renderTrendChart(rows) {
   const chartRows = rows.slice(-30);
   if (chartRows.length < 2) {
-    return `<div class="empty-state">추이를 그리려면 스냅샷이 2개 이상 필요합니다</div>`;
+    return `<div class="empty-state">하루만 더 지나면 추이 차트가 그려집니다</div>`;
   }
+  // 비동기로 벤치마크 로드 후 차트 업데이트
+  const startDate = chartRows[0].date;
+  Promise.all([
+    fetchBenchmarkData("^GSPC", startDate),
+    fetchBenchmarkData("^KS11", startDate),
+  ]).then(([sp500, kospi]) => {
+    const el = document.getElementById("performanceTrendChart");
+    if (el && (sp500 || kospi)) el.innerHTML = buildTrendChartSvg(chartRows, sp500, kospi);
+  }).catch(() => {});
+  return buildTrendChartSvg(chartRows, null, null);
+}
+
+function buildTrendChartSvg(chartRows, sp500Map, kospiMap) {
   const width = 720;
   const height = 230;
   const padding = { top: 22, right: 38, bottom: 34, left: 78 };
@@ -556,14 +595,46 @@ export function renderTrendChart(rows) {
       </g>`;
     })
     .join("");
+  // MDD 구간
+  let mddStart = 0, mddEnd = 0, peak = values[0], peakIdx = 0, maxDrop = 0;
+  values.forEach((v, i) => {
+    if (v > peak) { peak = v; peakIdx = i; }
+    const drop = peak > 0 ? (peak - v) / peak : 0;
+    if (drop > maxDrop) { maxDrop = drop; mddStart = peakIdx; mddEnd = i; }
+  });
+  const mddRect = maxDrop > 0.005 && mddEnd > mddStart
+    ? `<rect class="mdd-zone" x="${xFor(mddStart)}" y="${padding.top}" width="${xFor(mddEnd) - xFor(mddStart)}" height="${height - padding.top - padding.bottom}"/>`
+    : "";
+
+  // 벤치마크 선 (첫 날 기준 정규화)
+  const buildBenchmarkLine = (map, cssClass) => {
+    if (!map) return "";
+    const pts = chartRows.map((row) => map.get(row.date) ?? null);
+    const firstValid = pts.find((p) => p != null);
+    if (!firstValid || !values[0]) return "";
+    const norm = pts.map((p, i) => p != null ? `${xFor(i)},${yFor(values[0] * (p / firstValid))}` : null).filter(Boolean);
+    return norm.length >= 2 ? `<polyline class="${cssClass}" points="${norm.join(" ")}"/>` : "";
+  };
+
+  // 범례
+  const legendItems = [
+    sp500Map ? `<line class="benchmark-sp500" x1="0" y1="6" x2="18" y2="6"/><text class="legend-label" x="22" y="10">S&amp;P500</text>` : "",
+    kospiMap ? `<line class="benchmark-kospi" x1="${sp500Map ? 72 : 0}" y1="6" x2="${sp500Map ? 90 : 18}" y2="6"/><text class="legend-label" x="${sp500Map ? 94 : 22}" y="10">KOSPI</text>` : "",
+  ].filter(Boolean).join("");
+  const legend = legendItems ? `<g class="benchmark-legend" transform="translate(${padding.left + 6},${padding.top + 4})">${legendItems}</g>` : "";
+
   return `
     <svg viewBox="0 0 ${width} ${height}" role="img" aria-label="총자산 추이">
       ${valueLabels
         .map((value) => `<polyline class="trend-grid" points="${padding.left},${yFor(value)} ${width - padding.right},${yFor(value)}"></polyline>`)
         .join("")}
+      ${mddRect}
+      ${buildBenchmarkLine(sp500Map, "benchmark-sp500")}
+      ${buildBenchmarkLine(kospiMap, "benchmark-kospi")}
       <polygon class="trend-area" points="${area}"></polygon>
       <polyline class="trend-line" points="${line}"></polyline>
       ${pointGroups}
+      ${legend}
       <text class="trend-last-label" x="${Math.min(width - padding.right - 4, lastX + 8)}" y="${Math.max(16, lastY - 10)}" text-anchor="end">${formatCompactKrw(lastRow.totalValueKrw)}</text>
       ${labels
         .map((row, index) => `<text class="trend-label" x="${xFor(index === 0 ? 0 : index === 1 ? Math.floor((chartRows.length - 1) / 2) : chartRows.length - 1)}" y="${height - 10}" text-anchor="${index === 0 ? "start" : index === 1 ? "middle" : "end"}">${formatShortDate(row.date)}</text>`)

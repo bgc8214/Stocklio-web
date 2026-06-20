@@ -431,7 +431,7 @@ function renderHoldingsSummary(rows) {
     els.holdingsMeta.textContent = `${visibleCount}/${allCount}개 종목`;
   }
   if (els.holdingsPriceMeta) {
-    els.holdingsPriceMeta.textContent = latestPriceTime ? `마지막 가격 갱신 ${formatAsOf(new Date(latestPriceTime).toISOString())} · ${source}` : "가격 기준 없음";
+    els.holdingsPriceMeta.textContent = latestPriceTime ? `마지막 가격 갱신 ${formatAsOf(new Date(latestPriceTime).toISOString())} · ${source}` : "가격 미조회";
   }
   if (els.holdingsSummaryValue) {
     els.holdingsSummaryValue.textContent = formatKrw(totalValue);

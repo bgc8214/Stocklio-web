@@ -8560,3 +8560,74 @@ button.secondary:hover:not(:disabled),
   height: 100%;
   padding: 8px 4px;
 }
+
+/* ── Empty state 개선 ────────────────────────── */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 32px 20px;
+  text-align: center;
+  color: var(--muted);
+}
+.empty-state .empty-icon { font-size: 28px; line-height: 1; }
+.empty-state strong { font-size: 14px; color: var(--ink); font-weight: 600; }
+.empty-state span { font-size: 13px; line-height: 1.5; max-width: 260px; }
+td.empty-td {
+  text-align: center;
+  color: var(--muted);
+  font-size: 13px;
+  padding: 24px !important;
+}
+
+/* ── 벤치마크 + MDD ──────────────────────────── */
+.mdd-zone { fill: rgba(180, 30, 30, 0.06); }
+.benchmark-sp500 {
+  fill: none;
+  stroke: #3366a8;
+  stroke-width: 1.5;
+  stroke-dasharray: 4 3;
+  opacity: 0.7;
+}
+.benchmark-kospi {
+  fill: none;
+  stroke: #a97819;
+  stroke-width: 1.5;
+  stroke-dasharray: 4 3;
+  opacity: 0.7;
+}
+.legend-label { font-size: 10px; fill: var(--muted); }
+
+/* ── 배당 인컴 차트 ──────────────────────────── */
+.dividend-chart { padding: 8px 0; }
+.dividend-summary {
+  display: flex;
+  gap: 16px;
+  font-size: 13px;
+  color: var(--muted);
+  margin-bottom: 12px;
+}
+.dividend-summary strong { color: var(--ink); }
+.dividend-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  height: 100px;
+}
+.dividend-bar-wrap {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+.dividend-bar {
+  width: 100%;
+  background: var(--accent);
+  border-radius: 3px 3px 0 0;
+  min-height: 4px;
+  transition: height 0.3s;
+}
+.dividend-bar-label { font-size: 10px; color: var(--muted); white-space: nowrap; }

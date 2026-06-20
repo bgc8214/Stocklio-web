@@ -184,6 +184,40 @@ export function allocateUnclassifiedCash({ investor, account, amount }) {
   return allocated;
 }
 
+export function renderDividendChart() {
+  const el = document.getElementById("dividendChartContent");
+  if (!el) return;
+  const state = _ctx.getState();
+  const dividends = (state.cashFlows || []).filter(f => f.type === "dividend");
+  if (!dividends.length) {
+    el.innerHTML = `<div class="empty-state"><span class="empty-icon">🌱</span><strong>배당 기록이 없습니다</strong><span>입출금 탭에서 배당 수령을 기록하면 차트가 채워집니다</span></div>`;
+    return;
+  }
+  // 월별 집계
+  const byMonth = {};
+  for (const f of dividends) {
+    const ym = f.date?.slice(0, 7) || "unknown";
+    byMonth[ym] = (byMonth[ym] || 0) + Number(f.amountKrw || 0);
+  }
+  const sorted = Object.entries(byMonth).sort(([a], [b]) => a.localeCompare(b)).slice(-12);
+  if (!sorted.length) { el.innerHTML = `<div class="empty-state"><span>집계할 배당 데이터가 없습니다</span></div>`; return; }
+  const maxVal = Math.max(...sorted.map(([, v]) => v));
+  const totalAnnual = sorted.reduce((s, [, v]) => s + v, 0);
+  const avgMonthly = Math.round(totalAnnual / sorted.length);
+  el.innerHTML = `
+    <div class="dividend-summary">
+      <span>최근 ${sorted.length}개월 합계 <strong>${formatKrw(totalAnnual)}</strong></span>
+      <span>월 평균 <strong>${formatKrw(avgMonthly)}</strong></span>
+    </div>
+    <div class="dividend-bars">
+      ${sorted.map(([ym, val]) => `
+        <div class="dividend-bar-wrap">
+          <div class="dividend-bar" style="height:${Math.max(4, Math.round((val / maxVal) * 80))}px" title="${formatKrw(val)}"></div>
+          <span class="dividend-bar-label">${ym.slice(5)}</span>
+        </div>`).join("")}
+    </div>`;
+}
+
 export function renderCashFlows() {
   const state = _ctx.getState();
   const els = _ctx.els;
