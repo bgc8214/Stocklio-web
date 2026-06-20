@@ -238,6 +238,13 @@
           <div id="topMoverContent" class="top-mover-content"></div>
         </div>
 
+        <div class="panel dashboard-card" data-dashboard-card="rebalance">
+          <div class="section-heading">
+            <h2>리밸런싱</h2>
+            <span>목표 배분 기준</span>
+          </div>
+          <div id="rebalanceContent" class="rebalance-content"></div>
+        </div>
 
       </section>
 
@@ -791,6 +798,16 @@
       </section>
 
       <section class="detail-grid automation-view" data-view="automation" hidden>
+
+        <!-- 목표 배분 -->
+        <div class="panel">
+          <div class="section-heading">
+            <h2>목표 배분</h2>
+            <span>전략별 목표 비중 설정 · 대시보드에서 현재와 비교</span>
+          </div>
+          <div id="targetAllocationForm" class="target-allocation-form"></div>
+          <button id="saveTargetAllocation" class="secondary small-button" type="button">저장</button>
+        </div>
 
         <!-- 계좌 관리 (추가/수정/삭제) -->
         <div class="panel account-form-panel">

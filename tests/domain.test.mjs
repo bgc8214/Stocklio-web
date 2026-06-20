@@ -116,7 +116,7 @@ test("dashboard layout normalization migrates old preset sizes", () => {
     { id: "total-value", widthPct: 8, span: 1, minHeight: 40 },
   ]);
 
-  assert.equal(layout.length, 9);
+  assert.equal(layout.length, 10);
   assert.deepEqual(layout[0], {
     id: "performance-flow",
     widthPct: 100,

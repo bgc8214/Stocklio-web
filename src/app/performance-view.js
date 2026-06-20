@@ -694,3 +694,47 @@ export function getStrategyPerformanceRows() {
     })
     .sort((a, b) => b.valueKrw - a.valueKrw);
 }
+
+export function renderRebalance() {
+  const el = document.getElementById("rebalanceContent");
+  if (!el) return;
+  const state = _ctx.getState();
+  const targets = state.automation?.targetAllocation || {};
+  if (!Object.keys(targets).some(k => targets[k] > 0)) {
+    el.innerHTML = `<div class="empty-state"><span class="empty-icon">⚖️</span><strong>목표 배분을 설정하세요</strong><span>설정 탭에서 전략별 목표 비중을 입력하면 리밸런싱 가이드가 표시됩니다</span></div>`;
+    return;
+  }
+  const totals = _ctx.getTotals(state.holdings);
+  const totalValue = totals.valueKrw;
+  const currentByStrategy = {};
+  for (const h of state.holdings || []) {
+    const val = _ctx.getHoldingValues(h).valueKrw;
+    currentByStrategy[h.strategy] = (currentByStrategy[h.strategy] || 0) + val;
+  }
+  const totalTarget = Object.values(targets).reduce((s, v) => s + v, 0);
+  if (!totalTarget || !totalValue) {
+    el.innerHTML = `<div class="empty-state"><span>종목과 목표 비중을 먼저 입력하세요</span></div>`;
+    return;
+  }
+  const rows = Object.entries(targets)
+    .filter(([, t]) => t > 0)
+    .map(([strategy, targetPct]) => {
+      const targetValue = totalValue * (targetPct / totalTarget);
+      const currentValue = currentByStrategy[strategy] || 0;
+      const diff = targetValue - currentValue;
+      const currentPct = (currentValue / totalValue * 100).toFixed(1);
+      return { strategy, targetPct, currentPct, diff };
+    })
+    .sort((a, b) => Math.abs(b.diff) - Math.abs(a.diff));
+  el.innerHTML = rows.map(r => {
+    const positive = r.diff >= 0;
+    const cls = positive ? "positive" : "negative";
+    return `<div class="rebalance-row">
+      <span class="rebalance-strategy">${escapeHtml(r.strategy)}</span>
+      <span class="rebalance-current">${r.currentPct}%</span>
+      <span class="rebalance-arrow">→</span>
+      <span class="rebalance-target">${r.targetPct}%</span>
+      <span class="rebalance-diff ${cls}">${positive ? "+" : ""}${formatKrw(r.diff)}</span>
+    </div>`;
+  }).join("");
+}
