@@ -45,7 +45,7 @@ export function renderAutomation() {
   const state = _ctx.getState();
   const els = _ctx.els;
   const automation = state.automation || {};
-  const storageLabel = _ctx.authState.signedIn ? "클라우드 저장" : "브라우저 저장";
+  const storageLabel = _ctx.authState.signedIn ? "클라우드 저장" : "로컬 저장";
   els.automationCurrent.textContent = `${storageLabel} · 스냅샷 ${state.portfolioSnapshots.length}개 · 보유 ${state.holdings.length}개 · 예수금 ${(state.cashBalances || []).length}개`;
   els.automationSchedule.textContent = `매일 ${automation.snapshotTime || "09:10"} ${automation.timezone || "Asia/Seoul"}`;
   els.automationResult.textContent = automation.lastRunAt
