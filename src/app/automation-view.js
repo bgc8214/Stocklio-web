@@ -50,7 +50,7 @@ export function renderAutomation() {
   els.automationSchedule.textContent = `매일 ${automation.snapshotTime || "09:10"} ${automation.timezone || "Asia/Seoul"}`;
   els.automationResult.textContent = automation.lastRunAt
     ? `${automation.lastResult || "자동화 실행 완료"} · ${formatAsOf(automation.lastRunAt)}`
-    : automation.lastResult || "아직 자동 실행 없음";
+    : automation.lastResult || "자동 기록 대기 중";
 }
 
 export function renderDashboardStatus() {
