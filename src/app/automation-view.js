@@ -77,10 +77,13 @@ export function renderDashboardStatus() {
       : (marketContext.isMarketClosed ? marketContext.label : "");
     const fxText = state.fxRate?.rate ? `USD/KRW ${formatNumber(state.fxRate.rate, 2)}` : "";
     const marketText = marketContext.isMarketClosed ? marketContext.closedReason || "미국장 휴장" : "";
+    // 수익률 배지는 renderSummary가 별도 span으로 주입 — 덮어쓰지 않고 유지
+    const returnBadge = badgesEl.querySelector(".metric-return-badge");
+    const returnBadgeHtml = returnBadge ? returnBadge.outerHTML : "";
     badgesEl.innerHTML = [dateText, fxText, marketText]
       .filter(Boolean)
       .map((t) => `<span class="metric-badge">${escapeHtml(t)}</span>`)
-      .join("");
+      .join("") + returnBadgeHtml;
   }
 
   // 변동 요약 패널 레이블
