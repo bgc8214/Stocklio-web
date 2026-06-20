@@ -1331,9 +1331,18 @@ function isEmbeddedBrowser() {
   return /NAVER|KAKAOTALK|KAKAOSTORY|Instagram|FBAN|FBAV|Line\//i.test(userAgent);
 }
 
+let syncClearTimer = null;
 function setSyncState(status, message) {
   syncState = { status, message };
   renderSyncStatus();
+  // synced 상태는 1.5초 후 자동으로 숨김
+  if (syncClearTimer) clearTimeout(syncClearTimer);
+  if (status === "synced") {
+    syncClearTimer = setTimeout(() => {
+      syncState = { status: "idle", message: "" };
+      renderSyncStatus();
+    }, 1500);
+  }
 }
 
 function renderSyncStatus() {

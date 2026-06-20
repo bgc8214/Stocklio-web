@@ -12110,7 +12110,7 @@ function qa({ id: e, state: t }) {
 	let n = po(t);
 	if (e === "total-value") {
 		let e = to(), r = [...t.holdings].filter((e) => e.priceAsOf).sort((e, t) => String(t.priceAsOf).localeCompare(String(e.priceAsOf)))[0]?.priceAsOf || t.fxRate?.asOf, i = [
-			r ? `${To(r.slice(0, 10))} 종가` : e.isMarketClosed ? e.label : "",
+			r && /^\d{4}-\d{2}-\d{2}/.test(r) ? `${To(r.slice(0, 10))} 종가` : e.isMarketClosed ? e.label : "",
 			t.fxRate?.rate ? `USD/KRW ${So(t.fxRate.rate, 2)}` : "",
 			e.isMarketClosed ? e.closedReason || "미국장 휴장" : ""
 		].filter(Boolean), a = n.gainKrw >= 0 ? "+" : "", o = n.gainKrw >= 0 ? "positive" : "negative";
