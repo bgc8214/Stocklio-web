@@ -76,6 +76,7 @@ import {
   queueTickerSearch,
   selectTickerSuggestion,
   saveInlineHoldingEdit,
+  setHoldingsViewMode,
 } from "./holdings-view.js";
 import {
   init as initPerformanceView,
@@ -621,11 +622,11 @@ for (const [button, scope] of [
 }
 
 els.holdingsViewDetail?.addEventListener("click", () => {
-  holdingsViewMode = "detail";
+  setHoldingsViewMode("detail");
   renderHoldings();
 });
 els.holdingsViewSummary?.addEventListener("click", () => {
-  holdingsViewMode = "summary";
+  setHoldingsViewMode("summary");
   renderHoldings();
 });
 
