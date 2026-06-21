@@ -361,8 +361,7 @@ body {
     width: auto !important;
   }
 
-  .view-tabs button[data-view-tab="simulator"],
-  .view-tabs .nav-more-btn {
+  .view-tabs button[data-view-tab="simulator"] {
     display: none;
   }
 
