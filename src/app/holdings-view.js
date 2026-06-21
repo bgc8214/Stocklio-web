@@ -289,8 +289,8 @@ export function renderHoldings() {
         <td data-label="현재가"><span class="money-value">${formatMoney(holding.price, holding.currency)}</span><span class="sparkline-wrap" data-sparkline-ticker="${escapeHtml(holding.ticker || "")}" data-sparkline-positive="${(holding.priceChange ?? 0) >= 0 ? "1" : "0"}"></span></td>
         <td data-label="평단가"><span class="money-value">${formatMoney(holding.averageCost, holding.currency)}</span></td>
         <td data-label="평가금액"><span class="money-value">${formatMoney(value, holding.currency)}</span></td>
-        <td data-label="일 영향" class="${dailyMove.valueKrw >= 0 ? "positive" : "negative"}">
-          <span class="money-value">${dailyMove.hasData ? `${dailyMove.valueKrw >= 0 ? "+" : ""}${formatKrw(dailyMove.valueKrw)}` : "-"}</span>
+        <td data-label="일 영향" class="${dailyMove.hasData ? (dailyMove.valueKrw >= 0 ? "positive" : "negative") : "no-data"}">
+          <span class="money-value">${dailyMove.hasData ? `${dailyMove.valueKrw >= 0 ? "+" : ""}${formatKrw(dailyMove.valueKrw)}` : ""}</span>
           ${dailyMove.hasData ? `<small>${formatPercent(dailyMove.changePercent)}</small>` : ""}
         </td>
         <td data-label="손익" class="${gain >= 0 ? "positive" : "negative"}"><span class="money-value">${formatMoney(gain, holding.currency)}</span></td>
@@ -425,13 +425,14 @@ function renderHoldingsSummary(rows) {
   const topRows = sortedByValue.slice(0, 3);
   const topValue = topRows.reduce((sum, row) => sum + row.values.valueKrw, 0);
   const concentration = totalValue ? topValue / totalValue : 0;
-  const topNames = topRows.map((row) => row.holding.name || row.holding.ticker).join(" · ") || "-";
+  const truncateName = (s, max = 10) => s.length > max ? s.slice(0, max) + "…" : s;
+  const topNames = topRows.map((row) => truncateName(row.holding.name || row.holding.ticker)).join(" · ") || "-";
 
   if (els.holdingsMeta) {
     els.holdingsMeta.textContent = `${visibleCount}/${allCount}개 종목`;
   }
   if (els.holdingsPriceMeta) {
-    els.holdingsPriceMeta.textContent = latestPriceTime ? `마지막 가격 갱신 ${formatAsOf(new Date(latestPriceTime).toISOString())} · ${source}` : "가격 미조회";
+    els.holdingsPriceMeta.textContent = latestPriceTime ? `${formatAsOf(new Date(latestPriceTime).toISOString())} 기준` : "가격 미조회";
   }
   if (els.holdingsSummaryValue) {
     els.holdingsSummaryValue.textContent = formatKrw(totalValue);
