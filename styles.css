@@ -3647,26 +3647,11 @@ td:nth-child(4) {
     display: none;
   }
 
-  /* 더보기 버튼 표시 — view-tabs button과 동일한 flex 레이아웃 */
+  /* 더보기 버튼 표시 */
   .nav-more-btn {
-    display: flex;
+    display: grid;
     flex: 1 1 0;
-    flex-direction: column;
-    font-size: 0;
-    gap: 2px;
-    justify-content: center;
-    min-height: 48px;
-    min-width: 0;
-    padding: 0 2px;
     color: var(--muted);
-  }
-  .nav-more-btn::after {
-    content: attr(data-mobile-label);
-    display: block;
-    font-size: 10px;
-    font-weight: 800;
-    line-height: 1.1;
-    text-align: center;
   }
 
   .operation-toast {
