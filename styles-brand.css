@@ -308,7 +308,7 @@ body {
     display: grid;
     gap: 2px;
     grid-auto-rows: 50px;
-    grid-template-columns: repeat(6, minmax(0, 1fr));
+    grid-template-columns: repeat(5, minmax(0, 1fr));
     left: 0;
     min-height: calc(62px + env(safe-area-inset-bottom));
     overflow: hidden;
