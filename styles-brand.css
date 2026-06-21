@@ -361,6 +361,48 @@ body {
     width: auto !important;
   }
 
+  /* 더보기 버튼 — view-tabs button과 동일한 레이아웃 */
+  .view-tabs .nav-more-btn {
+    align-content: center;
+    border-radius: 8px;
+    display: grid;
+    font-size: 0 !important;
+    gap: 2px;
+    height: 50px !important;
+    justify-items: center;
+    line-height: 1;
+    max-height: 50px !important;
+    min-height: 50px !important;
+    min-width: 0;
+    padding: 0 3px;
+  }
+  .view-tabs .nav-more-btn::before {
+    height: 22px !important;
+    margin-right: 0 !important;
+    width: 22px !important;
+  }
+  .view-tabs .nav-more-btn::after {
+    background: transparent !important;
+    border-radius: 0 !important;
+    bottom: auto !important;
+    color: currentColor !important;
+    content: attr(data-mobile-label);
+    display: block;
+    font-size: 10px !important;
+    font-weight: 800;
+    height: auto !important;
+    left: auto !important;
+    line-height: 1.1;
+    max-width: 100%;
+    overflow: hidden;
+    position: static !important;
+    right: auto !important;
+    text-overflow: ellipsis;
+    top: auto !important;
+    white-space: nowrap;
+    width: auto !important;
+  }
+
   .view-tabs button[data-view-tab="simulator"] {
     display: none;
   }
