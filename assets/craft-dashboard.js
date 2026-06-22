@@ -8252,6 +8252,29 @@ function pe({ item: e, appState: t, editing: n, layout: r, saveLayout: i }) {
 			};
 			o(null), s.current = !1, i(r.map((t) => t.id === e.id ? c : t));
 		}, { once: !0 });
+	}, d = (0, _.useRef)(!1), f = (t) => {
+		if (!n || t.target.closest(".layout-resize-handle, button, select, input, .layout-visibility-button") || s.current) return;
+		t.preventDefault(), d.current = !0;
+		let a = t.currentTarget;
+		a.classList.add("is-dragging");
+		let o = t.type === "mousedown" ? "mousemove" : "pointermove", c = t.type === "mousedown" ? "mouseup" : "pointerup", l = (e) => {
+			if (!d.current) return;
+			a.style.pointerEvents = "none";
+			let t = document.elementFromPoint(e.clientX, e.clientY);
+			a.style.pointerEvents = "";
+			let n = t?.closest("[data-dashboard-card]");
+			document.querySelectorAll(".is-drag-over").forEach((e) => e.classList.remove("is-drag-over", "is-drop-after")), n && n !== a && (n.classList.add("is-drag-over"), Ae(e, n) && n.classList.add("is-drop-after"));
+		};
+		window.addEventListener(o, l), window.addEventListener(c, (t) => {
+			window.removeEventListener(o, l), d.current = !1, a.classList.remove("is-dragging"), a.style.pointerEvents = "none";
+			let n = document.elementFromPoint(t.clientX, t.clientY);
+			a.style.pointerEvents = "";
+			let s = n?.closest("[data-dashboard-card]");
+			if (document.querySelectorAll(".is-drag-over, .is-drop-after").forEach((e) => e.classList.remove("is-drag-over", "is-drop-after")), s && s !== a) {
+				let n = e.id, a = s.dataset.dashboardCard;
+				n && a && n !== a && i(ke(r, n, a, Ae(t, s)));
+			}
+		}, { once: !0 });
 	};
 	return /* @__PURE__ */ (0, T.jsxs)("article", {
 		className: [
@@ -8261,33 +8284,8 @@ function pe({ item: e, appState: t, editing: n, layout: r, saveLayout: i }) {
 			e.visible === !1 && n ? "is-hidden-card" : ""
 		].filter(Boolean).join(" "),
 		"data-dashboard-card": e.id,
-		draggable: n,
-		onDragStart: (t) => {
-			if (t.target.closest(".layout-resize-handle, button, select, input")) {
-				t.preventDefault();
-				return;
-			}
-			t.dataTransfer.effectAllowed = "move", t.dataTransfer.setData("text/plain", e.id), requestAnimationFrame(() => {
-				t.currentTarget?.classList.add("is-dragging");
-			});
-		},
-		onDragEnd: () => {
-			document.querySelectorAll(".is-dragging, .is-drag-over, .is-drop-after").forEach((e) => {
-				e.classList.remove("is-dragging", "is-drag-over", "is-drop-after");
-			});
-		},
-		onDragOver: (e) => {
-			n && (e.preventDefault(), e.dataTransfer.dropEffect = "move", document.querySelectorAll(".is-drag-over").forEach((e) => e.classList.remove("is-drag-over", "is-drop-after")), e.currentTarget.classList.add("is-drag-over"), Ae(e, e.currentTarget) && e.currentTarget.classList.add("is-drop-after"));
-		},
-		onDragLeave: (e) => {
-			e.currentTarget.contains(e.relatedTarget) || e.currentTarget.classList.remove("is-drag-over", "is-drop-after");
-		},
-		onDrop: (t) => {
-			if (!n) return;
-			t.preventDefault(), t.stopPropagation();
-			let a = t.dataTransfer.getData("text/plain");
-			document.querySelectorAll(".is-dragging, .is-drag-over, .is-drop-after").forEach((e) => e.classList.remove("is-dragging", "is-drag-over", "is-drop-after")), !(!a || a === e.id) && i(ke(r, a, e.id, Ae(t, t.currentTarget)));
-		},
+		onMouseDown: f,
+		onPointerDown: f,
 		style: l,
 		children: [
 			n ? /* @__PURE__ */ (0, T.jsxs)("div", {
