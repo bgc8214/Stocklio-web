@@ -911,13 +911,13 @@ var e = Object.create, t = Object.defineProperty, n = Object.getOwnPropertyDescr
 			return "\nError generating stack: " + e.message + "\n" + e.stack;
 		}
 	}
-	var ke = Object.prototype.hasOwnProperty, Ae = t.unstable_scheduleCallback, je = t.unstable_cancelCallback, Me = t.unstable_shouldYield, Ne = t.unstable_requestPaint, Pe = t.unstable_now, Fe = t.unstable_getCurrentPriorityLevel, Ie = t.unstable_ImmediatePriority, Le = t.unstable_UserBlockingPriority, Re = t.unstable_NormalPriority, ze = t.unstable_LowPriority, A = t.unstable_IdlePriority, Be = t.log, Ve = t.unstable_setDisableYieldValue, He = null, Ue = null;
-	function We(e) {
-		if (typeof Be == "function" && Ve(e), Ue && typeof Ue.setStrictMode == "function") try {
-			Ue.setStrictMode(He, e);
+	var ke = Object.prototype.hasOwnProperty, Ae = t.unstable_scheduleCallback, je = t.unstable_cancelCallback, Me = t.unstable_shouldYield, Ne = t.unstable_requestPaint, Pe = t.unstable_now, Fe = t.unstable_getCurrentPriorityLevel, Ie = t.unstable_ImmediatePriority, Le = t.unstable_UserBlockingPriority, Re = t.unstable_NormalPriority, ze = t.unstable_LowPriority, Be = t.unstable_IdlePriority, Ve = t.log, He = t.unstable_setDisableYieldValue, Ue = null, We = null;
+	function Ge(e) {
+		if (typeof Ve == "function" && He(e), We && typeof We.setStrictMode == "function") try {
+			We.setStrictMode(Ue, e);
 		} catch {}
 	}
-	var Ge = Math.clz32 ? Math.clz32 : Je, Ke = Math.log, qe = Math.LN2;
+	var A = Math.clz32 ? Math.clz32 : Je, Ke = Math.log, qe = Math.LN2;
 	function Je(e) {
 		return e >>>= 0, e === 0 ? 32 : 31 - (Ke(e) / qe | 0) | 0;
 	}
@@ -1023,7 +1023,7 @@ var e = Object.create, t = Object.defineProperty, n = Object.getOwnPropertyDescr
 		e.pendingLanes = n, e.suspendedLanes = 0, e.pingedLanes = 0, e.warmLanes = 0, e.expiredLanes &= n, e.entangledLanes &= n, e.errorRecoveryDisabledLanes &= n, e.shellSuspendCounter = 0;
 		var s = e.entanglements, c = e.expirationTimes, l = e.hiddenUpdates;
 		for (n = o & ~n; 0 < n;) {
-			var u = 31 - Ge(n), d = 1 << u;
+			var u = 31 - A(n), d = 1 << u;
 			s[u] = 0, c[u] = -1;
 			var f = l[u];
 			if (f !== null) for (l[u] = null, u = 0; u < f.length; u++) {
@@ -1036,13 +1036,13 @@ var e = Object.create, t = Object.defineProperty, n = Object.getOwnPropertyDescr
 	}
 	function ot(e, t, n) {
 		e.pendingLanes |= t, e.suspendedLanes &= ~t;
-		var r = 31 - Ge(t);
+		var r = 31 - A(t);
 		e.entangledLanes |= t, e.entanglements[r] = e.entanglements[r] | 1073741824 | n & 261930;
 	}
 	function st(e, t) {
 		var n = e.entangledLanes |= t;
 		for (e = e.entanglements; n;) {
-			var r = 31 - Ge(n), i = 1 << r;
+			var r = 31 - A(n), i = 1 << r;
 			i & t | e[r] & t && (e[r] |= t), n &= ~i;
 		}
 	}
@@ -1988,7 +1988,7 @@ var e = Object.create, t = Object.defineProperty, n = Object.getOwnPropertyDescr
 		var r = e.alternate;
 		r !== null && (r.lanes |= n);
 		for (var i = !1, a = e.return; a !== null;) a.childLanes |= n, r = a.alternate, r !== null && (r.childLanes |= n), a.tag === 22 && (e = a.stateNode, e === null || e._visibility & 1 || (i = !0)), e = a, a = a.return;
-		return e.tag === 3 ? (a = e.stateNode, i && t !== null && (i = 31 - Ge(n), e = a.hiddenUpdates, r = e[i], r === null ? e[i] = [t] : r.push(t), t.lane = n | 536870912), a) : null;
+		return e.tag === 3 ? (a = e.stateNode, i && t !== null && (i = 31 - A(n), e = a.hiddenUpdates, r = e[i], r === null ? e[i] = [t] : r.push(t), t.lane = n | 536870912), a) : null;
 	}
 	function pi(e) {
 		if (50 < du) throw du = 0, fu = null, Error(i(185));
@@ -2096,12 +2096,12 @@ var e = Object.create, t = Object.defineProperty, n = Object.getOwnPropertyDescr
 		ji[Mi++] = Pi, ji[Mi++] = Fi, ji[Mi++] = Ni, Ni = e;
 		var r = Pi;
 		e = Fi;
-		var i = 32 - Ge(r) - 1;
+		var i = 32 - A(r) - 1;
 		r &= ~(1 << i), n += 1;
-		var a = 32 - Ge(t) + i;
+		var a = 32 - A(t) + i;
 		if (30 < a) {
 			var o = i - i % 5;
-			a = (r & (1 << o) - 1).toString(32), r >>= o, i -= o, Pi = 1 << 32 - Ge(t) + i | n << i | r, Fi = a + e;
+			a = (r & (1 << o) - 1).toString(32), r >>= o, i -= o, Pi = 1 << 32 - A(t) + i | n << i | r, Fi = a + e;
 		} else Pi = 1 << a | n << i | r, Fi = e;
 	}
 	function Ri(e) {
@@ -3072,11 +3072,11 @@ var e = Object.create, t = Object.defineProperty, n = Object.getOwnPropertyDescr
 		if (typeof e == "function") {
 			var n = e;
 			if (e = n(), xo) {
-				We(!0);
+				Ge(!0);
 				try {
 					n();
 				} finally {
-					We(!1);
+					Ge(!1);
 				}
 			}
 		}
@@ -3319,11 +3319,11 @@ var e = Object.create, t = Object.defineProperty, n = Object.getOwnPropertyDescr
 		var r = n.memoizedState;
 		if (t !== null && Eo(t, r[1])) return r[0];
 		if (r = e(), xo) {
-			We(!0);
+			Ge(!0);
 			try {
 				e();
 			} finally {
-				We(!1);
+				Ge(!1);
 			}
 		}
 		return n.memoizedState = [r, t], r;
@@ -3530,11 +3530,11 @@ var e = Object.create, t = Object.defineProperty, n = Object.getOwnPropertyDescr
 			t = t === void 0 ? null : t;
 			var r = e();
 			if (xo) {
-				We(!0);
+				Ge(!0);
 				try {
 					e();
 				} finally {
-					We(!1);
+					Ge(!1);
 				}
 			}
 			return n.memoizedState = [r, t], r;
@@ -3544,11 +3544,11 @@ var e = Object.create, t = Object.defineProperty, n = Object.getOwnPropertyDescr
 			if (n !== void 0) {
 				var i = n(t);
 				if (xo) {
-					We(!0);
+					Ge(!0);
 					try {
 						n(t);
 					} finally {
-						We(!1);
+						Ge(!1);
 					}
 				}
 			} else i = t;
@@ -3597,7 +3597,7 @@ var e = Object.create, t = Object.defineProperty, n = Object.getOwnPropertyDescr
 			var e = Po(), t = G.identifierPrefix;
 			if (M) {
 				var n = Fi, r = Pi;
-				n = (r & ~(1 << 32 - Ge(r) - 1)).toString(32) + n, t = "_" + t + "R_" + n, n = So++, 0 < n && (t += "H" + n.toString(32)), t += "_";
+				n = (r & ~(1 << 32 - A(r) - 1)).toString(32) + n, t = "_" + t + "R_" + n, n = So++, 0 < n && (t += "H" + n.toString(32)), t += "_";
 			} else n = To++, t = "_" + t + "r_" + n.toString(32) + "_";
 			return e.memoizedState = t;
 		},
@@ -4839,8 +4839,8 @@ var e = Object.create, t = Object.defineProperty, n = Object.getOwnPropertyDescr
 		for (n = n.child; n !== null;) fl(e, t, n), n = n.sibling;
 	}
 	function fl(e, t, n) {
-		if (Ue && typeof Ue.onCommitFiberUnmount == "function") try {
-			Ue.onCommitFiberUnmount(He, n);
+		if (We && typeof We.onCommitFiberUnmount == "function") try {
+			We.onCommitFiberUnmount(Ue, n);
 		} catch {}
 		switch (n.tag) {
 			case 26:
@@ -5575,7 +5575,7 @@ var e = Object.create, t = Object.defineProperty, n = Object.getOwnPropertyDescr
 	function yu(e, t, n, r) {
 		t &= ~Jl, t &= ~ql, e.suspendedLanes |= t, e.pingedLanes &= ~t, r && (e.warmLanes |= t), r = e.expirationTimes;
 		for (var i = t; 0 < i;) {
-			var a = 31 - Ge(i), o = 1 << a;
+			var a = 31 - A(i), o = 1 << a;
 			r[a] = -1, i &= ~o;
 		}
 		n !== 0 && ot(e, n, t);
@@ -5596,7 +5596,7 @@ var e = Object.create, t = Object.defineProperty, n = Object.getOwnPropertyDescr
 		n !== -1 && (e.timeoutHandle = -1, qd(n)), n = e.cancelPendingCommit, n !== null && (e.cancelPendingCommit = null, n()), su = 0, xu(), G = e, K = n = vi(e.current, null), q = t, J = 0, Vl = null, Hl = !1, Ul = et(e, t), Wl = !1, Xl = Yl = Jl = ql = Kl = Y = 0, Ql = Zl = null, $l = !1, t & 8 && (t |= t & 32);
 		var r = e.entangledLanes;
 		if (r !== 0) for (e = e.entanglements, r &= t; 0 < r;) {
-			var i = 31 - Ge(r), a = 1 << i;
+			var i = 31 - A(r), a = 1 << i;
 			t |= e[i], r &= ~a;
 		}
 		return Gl = t, ci(), n;
@@ -5895,8 +5895,8 @@ var e = Object.create, t = Object.defineProperty, n = Object.getOwnPropertyDescr
 			var e = au, t = ou, n = su, r = uu;
 			t.subtreeFlags & 10256 || t.flags & 10256 ? X = 5 : (X = 0, ou = au = null, Vu(e, e.pendingLanes));
 			var i = e.pendingLanes;
-			if (i === 0 && (iu = null), ut(n), t = t.stateNode, Ue && typeof Ue.onCommitFiberRoot == "function") try {
-				Ue.onCommitFiberRoot(He, t, void 0, (t.current.flags & 128) == 128);
+			if (i === 0 && (iu = null), ut(n), t = t.stateNode, We && typeof We.onCommitFiberRoot == "function") try {
+				We.onCommitFiberRoot(Ue, t, void 0, (t.current.flags & 128) == 128);
 			} catch {}
 			if (r !== null) {
 				t = E.T, i = D.p, D.p = 2, E.T = null;
@@ -5928,8 +5928,8 @@ var e = Object.create, t = Object.defineProperty, n = Object.getOwnPropertyDescr
 			var o = au, s = su;
 			if (X = 0, ou = au = null, su = 0, W & 6) throw Error(i(331));
 			var c = W;
-			if (W |= 4, Il(o.current), Ol(o, o.current, s, n), W = c, id(0, !1), Ue && typeof Ue.onPostCommitFiberRoot == "function") try {
-				Ue.onPostCommitFiberRoot(He, o);
+			if (W |= 4, Il(o.current), Ol(o, o.current, s, n), W = c, id(0, !1), We && typeof We.onPostCommitFiberRoot == "function") try {
+				We.onPostCommitFiberRoot(Ue, o);
 			} catch {}
 			return !0;
 		} finally {
@@ -6010,7 +6010,7 @@ var e = Object.create, t = Object.defineProperty, n = Object.getOwnPropertyDescr
 						if (i === 0) var a = 0;
 						else {
 							var o = r.suspendedLanes, s = r.pingedLanes;
-							a = (1 << 31 - Ge(42 | e) + 1) - 1, a &= i & ~(o & ~s), a = a & 201326741 ? a & 201326741 | 1 : a ? a | 2 : 0;
+							a = (1 << 31 - A(42 | e) + 1) - 1, a &= i & ~(o & ~s), a = a & 201326741 ? a & 201326741 | 1 : a ? a | 2 : 0;
 						}
 						a !== 0 && (n = !0, ld(r, a));
 					} else a = q, a = $e(r, r === G ? a : 0, r.cancelPendingCommit !== null || r.timeoutHandle !== -1), !(a & 3) || et(r, a) || (n = !0, ld(r, a));
@@ -6035,7 +6035,7 @@ var e = Object.create, t = Object.defineProperty, n = Object.getOwnPropertyDescr
 	}
 	function sd(e, t) {
 		for (var n = e.suspendedLanes, r = e.pingedLanes, i = e.expirationTimes, a = e.pendingLanes & -62914561; 0 < a;) {
-			var o = 31 - Ge(a), s = 1 << o, c = i[o];
+			var o = 31 - A(a), s = 1 << o, c = i[o];
 			c === -1 ? ((s & n) === 0 || (s & r) !== 0) && (i[o] = tt(s, t)) : c <= t && (e.expiredLanes |= s), a &= ~s;
 		}
 		if (t = G, n = q, n = $e(e, e === t ? n : 0, e.cancelPendingCommit !== null || e.timeoutHandle !== -1), r = e.callbackNode, n === 0 || e === t && (J === 2 || J === 9) || e.cancelPendingCommit !== null) return r !== null && r !== null && je(r), e.callbackNode = null, e.callbackPriority = 0;
@@ -6050,7 +6050,7 @@ var e = Object.create, t = Object.defineProperty, n = Object.getOwnPropertyDescr
 					n = Re;
 					break;
 				case 268435456:
-					n = A;
+					n = Be;
 					break;
 				default: n = Re;
 			}
@@ -7644,7 +7644,7 @@ var e = Object.create, t = Object.defineProperty, n = Object.getOwnPropertyDescr
 								if (o !== 0) {
 									var s = a;
 									for (s.pendingLanes |= 2, s.entangledLanes |= 2; o;) {
-										var c = 1 << 31 - Ge(o);
+										var c = 1 << 31 - A(o);
 										s.entanglements[1] |= c, o &= ~c;
 									}
 									rd(a), !(W & 6) && (nu = Pe() + 500, id(0, !1));
@@ -7763,7 +7763,7 @@ var e = Object.create, t = Object.defineProperty, n = Object.getOwnPropertyDescr
 				case Le: return 8;
 				case Re:
 				case ze: return 32;
-				case A: return 268435456;
+				case Be: return 268435456;
 				default: return 32;
 			}
 			default: return 32;
@@ -7985,7 +7985,7 @@ var e = Object.create, t = Object.defineProperty, n = Object.getOwnPropertyDescr
 	if (typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ < "u") {
 		var zp = __REACT_DEVTOOLS_GLOBAL_HOOK__;
 		if (!zp.isDisabled && zp.supportsFiber) try {
-			He = zp.inject(Rp), Ue = zp;
+			Ue = zp.inject(Rp), We = zp;
 		} catch {}
 	}
 	e.createRoot = function(e, t) {
@@ -8234,21 +8234,21 @@ function pe({ item: e, appState: t, editing: n, layout: r, saveLayout: i }) {
 			widthPct: e.widthPct,
 			height: n.getBoundingClientRect().height
 		}, c = document.querySelector("#dashboardBoard"), l = Math.max(1, c?.clientWidth || n.parentElement?.clientWidth || 1), u = t.type === "mousedown" ? "mousemove" : "pointermove", d = t.type === "mousedown" ? "mouseup" : "pointerup", f = (t) => {
-			let n = Ke(a.widthPct + (t.clientX - a.x) / l * 100, 18, 100);
+			let n = Ye(a.widthPct + (t.clientX - a.x) / l * 100, 18, 100);
 			o({
 				...e,
 				widthPct: n,
-				span: Ke(Math.round(n / 100 * 12), 2, 12),
-				minHeight: Ke(Math.round(a.height + t.clientY - a.y), 112, 720)
+				span: Ye(Math.round(n / 100 * 12), 2, 12),
+				minHeight: Ye(Math.round(a.height + t.clientY - a.y), 112, 720)
 			});
 		};
 		window.addEventListener(u, f), window.addEventListener(d, (t) => {
 			window.removeEventListener(u, f);
-			let n = Ke(a.widthPct + (t.clientX - a.x) / l * 100, 18, 100), c = {
+			let n = Ye(a.widthPct + (t.clientX - a.x) / l * 100, 18, 100), c = {
 				...e,
-				widthPct: qe(n, .1),
-				span: Ke(Math.round(n / 100 * 12), 2, 12),
-				minHeight: Ke(Math.round(a.height + t.clientY - a.y), 112, 720)
+				widthPct: Xe(n, .1),
+				span: Ye(Math.round(n / 100 * 12), 2, 12),
+				minHeight: Ye(Math.round(a.height + t.clientY - a.y), 112, 720)
 			};
 			o(null), s.current = !1, i(r.map((t) => t.id === e.id ? c : t));
 		}, { once: !0 });
@@ -8335,25 +8335,25 @@ function pe({ item: e, appState: t, editing: n, layout: r, saveLayout: i }) {
 	});
 }
 function O({ id: e, state: t }) {
-	let n = je(t);
+	let n = je(t), r = Ue(He(), t.fxRate);
 	if (e === "total-value") {
-		let e = be(), r = [...t.holdings].filter((e) => e.priceAsOf).sort((e, t) => String(t.priceAsOf).localeCompare(String(e.priceAsOf)))[0]?.priceAsOf || t.fxRate?.asOf, i = [
-			r && /^\d{4}-\d{2}-\d{2}/.test(r) ? `${Ue(r.slice(0, 10))} 종가` : e.isMarketClosed ? e.label : "",
-			t.fxRate?.rate ? `USD/KRW ${Be(t.fxRate.rate, 2)}` : "",
+		let e = be(), i = [...t.holdings].filter((e) => e.priceAsOf).sort((e, t) => String(t.priceAsOf).localeCompare(String(e.priceAsOf)))[0]?.priceAsOf || t.fxRate?.asOf, a = [
+			i && /^\d{4}-\d{2}-\d{2}/.test(i) ? `${Ke(i.slice(0, 10))} 종가` : e.isMarketClosed ? e.label : "",
+			t.fxRate?.rate ? `USD/KRW ${We(t.fxRate.rate, 2)}` : "",
 			e.isMarketClosed ? e.closedReason || "미국장 휴장" : ""
-		].filter(Boolean), a = n.gainKrw >= 0 ? "+" : "", o = n.gainKrw >= 0 ? "positive" : "negative";
+		].filter(Boolean), o = n.gainKrw >= 0 ? "+" : "", s = n.gainKrw >= 0 ? "positive" : "negative";
 		return /* @__PURE__ */ (0, T.jsxs)(T.Fragment, { children: [
 			/* @__PURE__ */ (0, T.jsx)("span", { children: "총자산" }),
-			/* @__PURE__ */ (0, T.jsx)("strong", { children: A(n.valueKrw) }),
-			/* @__PURE__ */ (0, T.jsx)("small", { children: `주식 ${A(n.stockValueKrw)} · 예수금 ${A(n.cashKrw)}` }),
+			/* @__PURE__ */ (0, T.jsx)("strong", { children: r(n.valueKrw) }),
+			/* @__PURE__ */ (0, T.jsx)("small", { children: `주식 ${r(n.stockValueKrw)} · 예수금 ${r(n.cashKrw)}` }),
 			/* @__PURE__ */ (0, T.jsxs)("div", {
 				className: "metric-badges",
-				children: [i.map((e) => /* @__PURE__ */ (0, T.jsx)("span", {
+				children: [a.map((e) => /* @__PURE__ */ (0, T.jsx)("span", {
 					className: "metric-badge",
 					children: e
 				}, e)), /* @__PURE__ */ (0, T.jsxs)("span", {
-					className: `metric-return-badge ${o}`,
-					children: [a, He(n.returnRate)]
+					className: `metric-return-badge ${s}`,
+					children: [o, A(n.returnRate)]
 				})]
 			})
 		] });
@@ -8362,24 +8362,24 @@ function O({ id: e, state: t }) {
 		let e = t.holdings.filter((e) => e.type !== "cash").length;
 		return /* @__PURE__ */ (0, T.jsx)(k, {
 			label: "주식 매입금액",
-			value: A(n.costKrw),
+			value: r(n.costKrw),
 			hint: `${e}개 종목 · 평단 기준`
 		});
 	}
 	return e === "total-gain" ? /* @__PURE__ */ (0, T.jsx)(k, {
 		label: "주식 평가순익",
-		value: A(n.gainKrw),
-		hint: He(n.returnRate),
+		value: r(n.gainKrw),
+		hint: A(n.returnRate),
 		tone: n.gainKrw >= 0 ? "positive" : "negative"
 	}) : e === "cash-total" ? /* @__PURE__ */ (0, T.jsx)(k, {
 		label: "예수금",
-		value: A(n.cashKrw),
+		value: r(n.cashKrw),
 		hint: "총자산에 포함"
 	}) : e === "fx-rate" ? /* @__PURE__ */ (0, T.jsx)(k, {
 		label: "USD/KRW",
-		value: Be(t.fxRate?.rate || 0, 2),
-		hint: `${t.fxRate?.source || "환율 기준"} · ${Ge(t.fxRate?.asOf)}`
-	}) : e === "allocation" ? /* @__PURE__ */ (0, T.jsx)(me, { state: t }) : e === "performance-flow" ? /* @__PURE__ */ (0, T.jsx)(he, { state: t }) : e === "top-mover" ? /* @__PURE__ */ (0, T.jsx)(Je, { state: t }) : /* @__PURE__ */ (0, T.jsx)(_e, { state: t });
+		value: We(t.fxRate?.rate || 0, 2),
+		hint: `${t.fxRate?.source || "환율 기준"} · ${Je(t.fxRate?.asOf)}`
+	}) : e === "allocation" ? /* @__PURE__ */ (0, T.jsx)(me, { state: t }) : e === "performance-flow" ? /* @__PURE__ */ (0, T.jsx)(he, { state: t }) : e === "top-mover" ? /* @__PURE__ */ (0, T.jsx)(Ze, { state: t }) : /* @__PURE__ */ (0, T.jsx)(_e, { state: t });
 }
 function k({ label: e, value: t, hint: n, tone: r }) {
 	return /* @__PURE__ */ (0, T.jsxs)(T.Fragment, { children: [
@@ -8465,7 +8465,7 @@ function me({ state: e }) {
 						style: { background: D[t % D.length] }
 					}),
 					/* @__PURE__ */ (0, T.jsx)("span", { children: e.label }),
-					/* @__PURE__ */ (0, T.jsxs)("strong", { children: [He(i ? e.value / i : 0), /* @__PURE__ */ (0, T.jsx)("small", { children: A(e.value) })] })
+					/* @__PURE__ */ (0, T.jsxs)("strong", { children: [A(i ? e.value / i : 0), /* @__PURE__ */ (0, T.jsx)("small", { children: Be(e.value) })] })
 				]
 			}, e.label))
 		})]
@@ -8503,18 +8503,18 @@ function he({ state: e }) {
 		/* @__PURE__ */ (0, T.jsxs)("div", {
 			className: "performance-stats",
 			children: [
-				/* @__PURE__ */ (0, T.jsxs)("div", { children: [/* @__PURE__ */ (0, T.jsx)("span", { children: "최근 총자산" }), /* @__PURE__ */ (0, T.jsx)("strong", { children: A(n.totalValueKrw) })] }),
+				/* @__PURE__ */ (0, T.jsxs)("div", { children: [/* @__PURE__ */ (0, T.jsx)("span", { children: "최근 총자산" }), /* @__PURE__ */ (0, T.jsx)("strong", { children: Be(n.totalValueKrw) })] }),
 				/* @__PURE__ */ (0, T.jsxs)("div", { children: [/* @__PURE__ */ (0, T.jsx)("span", { children: "최근 일 증감" }), /* @__PURE__ */ (0, T.jsx)("strong", {
 					className: a >= 0 ? "positive" : "negative",
-					children: A(a)
+					children: Be(a)
 				})] }),
 				/* @__PURE__ */ (0, T.jsxs)("div", { children: [/* @__PURE__ */ (0, T.jsx)("span", { children: "표시기간 증감" }), /* @__PURE__ */ (0, T.jsx)("strong", {
 					className: o >= 0 ? "positive" : "negative",
-					children: A(o)
+					children: Be(o)
 				})] }),
 				/* @__PURE__ */ (0, T.jsxs)("div", { children: [/* @__PURE__ */ (0, T.jsx)("span", { children: "최대 낙폭" }), /* @__PURE__ */ (0, T.jsx)("strong", {
 					className: "negative",
-					children: A(s)
+					children: Be(s)
 				})] })
 			]
 		}),
@@ -8551,7 +8551,7 @@ function he({ state: e }) {
 						x: f.left - 14,
 						y: e.y + 5,
 						textAnchor: "end",
-						children: Ve(e.value)
+						children: Ge(e.value)
 					})] }, e.y)),
 					/* @__PURE__ */ (0, T.jsx)("path", {
 						className: "trend-area",
@@ -8566,7 +8566,7 @@ function he({ state: e }) {
 						return /* @__PURE__ */ (0, T.jsxs)("g", {
 							className: "trend-point-group",
 							tabIndex: 0,
-							"aria-label": `${n.date} 총자산 ${A(n.totalValueKrw)}, 일 증감 ${o ? "+" : ""}${A(a)}`,
+							"aria-label": `${n.date} 총자산 ${Be(n.totalValueKrw)}, 일 증감 ${o ? "+" : ""}${Be(a)}`,
 							children: [
 								/* @__PURE__ */ (0, T.jsx)("circle", {
 									className: "trend-hit",
@@ -8593,13 +8593,13 @@ function he({ state: e }) {
 											className: "tooltip-date",
 											x: "12",
 											y: "19",
-											children: We(n.date)
+											children: qe(n.date)
 										}),
 										/* @__PURE__ */ (0, T.jsx)("text", {
 											className: "tooltip-value",
 											x: "12",
 											y: "38",
-											children: A(n.totalValueKrw)
+											children: Be(n.totalValueKrw)
 										}),
 										/* @__PURE__ */ (0, T.jsxs)("text", {
 											className: c,
@@ -8608,7 +8608,7 @@ function he({ state: e }) {
 											children: [
 												s,
 												" ",
-												A(Math.abs(a))
+												Be(Math.abs(a))
 											]
 										})
 									]
@@ -8625,14 +8625,14 @@ function he({ state: e }) {
 						x: e,
 						y: 266,
 						textAnchor: n === 0 ? "start" : n === 2 ? "end" : "middle",
-						children: Ue(t.date)
+						children: Ke(t.date)
 					}, `${t.date}-${n}`)),
 					/* @__PURE__ */ (0, T.jsx)("text", {
 						className: "trend-last-label",
 						x: h[h.length - 1].x - 6,
 						y: Math.max(16, h[h.length - 1].y - 10),
 						textAnchor: "end",
-						children: Ve(n.totalValueKrw)
+						children: Ge(n.totalValueKrw)
 					})
 				]
 			})
@@ -8664,15 +8664,15 @@ function _e({ state: e }) {
 					/* @__PURE__ */ (0, T.jsx)("span", { children: "오늘 추정 변동" }),
 					/* @__PURE__ */ (0, T.jsx)("strong", {
 						className: o >= 0 ? "positive" : "negative",
-						children: A(o)
+						children: Be(o)
 					}),
 					/* @__PURE__ */ (0, T.jsxs)("small", { children: [
 						"가격 ",
 						s >= 0 ? "+" : "",
-						Ve(s),
+						Ge(s),
 						" · 환율 ",
 						c >= 0 ? "+" : "",
-						Ve(c)
+						Ge(c)
 					] })
 				]
 			}),
@@ -8687,10 +8687,10 @@ function _e({ state: e }) {
 					" · ",
 					we(e),
 					" · 영향 ",
-					He(Math.abs(e.contributionShare || 0))
+					A(Math.abs(e.contributionShare || 0))
 				] })] }), /* @__PURE__ */ (0, T.jsxs)("span", {
 					className: e.value >= 0 ? "positive" : "negative",
-					children: [e.value >= 0 ? "+" : "", A(e.value)]
+					children: [e.value >= 0 ? "+" : "", Be(e.value)]
 				})]
 			}, e.id || e.ticker)),
 			r && Math.abs(r.totalDeltaKrw) > Math.max(1e5, Math.abs(o) * 3) ? /* @__PURE__ */ (0, T.jsx)(xe, {
@@ -8718,7 +8718,7 @@ function _e({ state: e }) {
 						style: { background: D[t % D.length] }
 					}),
 					/* @__PURE__ */ (0, T.jsx)("span", { children: e.label }),
-					/* @__PURE__ */ (0, T.jsx)("strong", { children: A(e.value) })
+					/* @__PURE__ */ (0, T.jsx)("strong", { children: Be(e.value) })
 				]
 			}, `${e.label}-${t}`))
 		] }) : r?.rows?.length ? /* @__PURE__ */ (0, T.jsx)(xe, { impact: r }) : /* @__PURE__ */ (0, T.jsxs)(T.Fragment, { children: [
@@ -8738,7 +8738,7 @@ function _e({ state: e }) {
 						style: { background: D[t % D.length] }
 					}),
 					/* @__PURE__ */ (0, T.jsx)("span", { children: e.label }),
-					/* @__PURE__ */ (0, T.jsx)("strong", { children: A(e.value) })
+					/* @__PURE__ */ (0, T.jsx)("strong", { children: Be(e.value) })
 				]
 			}, `${e.label}-${t}`))
 		] }) })
@@ -8802,14 +8802,14 @@ function xe({ impact: e, compact: t = !1 }) {
 				/* @__PURE__ */ (0, T.jsx)("span", { children: t ? "이번 가격 갱신 전후" : "최근 가격 갱신 영향" }),
 				/* @__PURE__ */ (0, T.jsxs)("strong", {
 					className: e.totalDeltaKrw >= 0 ? "positive" : "negative",
-					children: [e.totalDeltaKrw >= 0 ? "+" : "", A(e.totalDeltaKrw)]
+					children: [e.totalDeltaKrw >= 0 ? "+" : "", Be(e.totalDeltaKrw)]
 				}),
 				/* @__PURE__ */ (0, T.jsxs)("small", { children: [
-					Ge(e.at),
+					Je(e.at),
 					" · 갱신 전 ",
-					Ve(e.previousTotalKrw),
+					Ge(e.previousTotalKrw),
 					" → 갱신 후 ",
-					Ve(e.nextTotalKrw)
+					Ge(e.nextTotalKrw)
 				] })
 			]
 		}),
@@ -8822,12 +8822,12 @@ function xe({ impact: e, compact: t = !1 }) {
 			children: [/* @__PURE__ */ (0, T.jsxs)("div", { children: [/* @__PURE__ */ (0, T.jsx)("strong", { children: e.name }), /* @__PURE__ */ (0, T.jsxs)("small", { children: [
 				e.ticker,
 				" · ",
-				Ve(e.beforeValueKrw),
+				Ge(e.beforeValueKrw),
 				" → ",
-				Ve(e.afterValueKrw)
+				Ge(e.afterValueKrw)
 			] })] }), /* @__PURE__ */ (0, T.jsxs)("span", {
 				className: e.deltaKrw >= 0 ? "positive" : "negative",
-				children: [e.deltaKrw >= 0 ? "+" : "", A(e.deltaKrw)]
+				children: [e.deltaKrw >= 0 ? "+" : "", Be(e.deltaKrw)]
 			})]
 		}, `${e.id || e.ticker}-refresh-impact`))
 	] });
@@ -8843,7 +8843,7 @@ function Ce(e) {
 	return !t || Math.abs(e.totalDeltaKrw) < 1e3 ? "이번 가격 갱신으로 평가금액 변화가 거의 없었습니다." : `이번 ${e.totalDeltaKrw >= 0 ? "증가" : "감소"}는 ${t.name} 등 Yahoo 가격으로 바뀐 종목 영향이 큽니다.`;
 }
 function we(e) {
-	return Math.abs(e.fxEffectKrw) >= 1e3 ? `가격 ${e.priceEffectKrw >= 0 ? "+" : ""}${Ve(e.priceEffectKrw)} · 환율 ${e.fxEffectKrw >= 0 ? "+" : ""}${Ve(e.fxEffectKrw)}` : `${Be(e.quantity, 4)}주 · ${He(e.changePercent)}`;
+	return Math.abs(e.fxEffectKrw) >= 1e3 ? `가격 ${e.priceEffectKrw >= 0 ? "+" : ""}${Ge(e.priceEffectKrw)} · 환율 ${e.fxEffectKrw >= 0 ? "+" : ""}${Ge(e.fxEffectKrw)}` : `${We(e.quantity, 4)}주 · ${A(e.changePercent)}`;
 }
 function Te(e, t, n, r) {
 	let i = e.slice(0, 2).map((e) => e.name).filter(Boolean);
@@ -8870,12 +8870,12 @@ function Oe(e) {
 	}, r = /* @__PURE__ */ new Set(), i = [];
 	for (let a of Array.isArray(e) ? e : []) {
 		if (!t.has(a.id) || r.has(a.id)) continue;
-		let e = t.get(a.id), o = Ke(Math.round(Number(a.span ?? n[a.size] ?? e.span)), 2, 12), s = Number(a.widthPct ?? o / 12 * 100);
+		let e = t.get(a.id), o = Ye(Math.round(Number(a.span ?? n[a.size] ?? e.span)), 2, 12), s = Number(a.widthPct ?? o / 12 * 100);
 		i.push({
 			id: a.id,
-			widthPct: Ke(qe(s, .1), 18, 100),
+			widthPct: Ye(Xe(s, .1), 18, 100),
 			span: o,
-			minHeight: Ke(Math.round(Number(a.minHeight ?? e.minHeight)), 112, 720),
+			minHeight: Ye(Math.round(Number(a.minHeight ?? e.minHeight)), 112, 720),
 			visible: a.visible !== !1
 		}), r.add(a.id);
 	}
@@ -8979,41 +8979,56 @@ function ze(e) {
 		return r += a, o;
 	});
 }
-function A(e) {
-	return new Intl.NumberFormat("ko-KR", {
-		style: "currency",
-		currency: "KRW",
-		maximumFractionDigits: 0
-	}).format(e || 0);
-}
-function Be(e, t = 2) {
-	return new Intl.NumberFormat("ko-KR", { maximumFractionDigits: t }).format(e || 0);
+function Be(e) {
+	return `${new Intl.NumberFormat("ko-KR", { maximumFractionDigits: 0 }).format(e || 0)}원`;
 }
 function Ve(e) {
+	return new Intl.NumberFormat("en-US", {
+		style: "currency",
+		currency: "USD",
+		maximumFractionDigits: 2
+	}).format(e || 0);
+}
+function He() {
+	let [e, t] = (0, _.useState)(() => localStorage.getItem("currencyMode") || "usd");
+	return (0, _.useEffect)(() => {
+		let e = (e) => t(e.detail);
+		return window.addEventListener("currencyModeChange", e), () => window.removeEventListener("currencyModeChange", e);
+	}, []), e;
+}
+function Ue(e, t) {
+	if (e === "krw") return (e) => Be(e);
+	let n = t?.rate || 1;
+	return (e) => Ve(e / n);
+}
+function We(e, t = 2) {
+	return new Intl.NumberFormat("ko-KR", { maximumFractionDigits: t }).format(e || 0);
+}
+function Ge(e) {
 	return new Intl.NumberFormat("ko-KR", {
 		notation: "compact",
 		maximumFractionDigits: 1
 	}).format(e || 0);
 }
-function He(e) {
+function A(e) {
 	return new Intl.NumberFormat("en-US", {
 		style: "percent",
 		minimumFractionDigits: 2,
 		maximumFractionDigits: 2
 	}).format(e || 0);
 }
-function Ue(e) {
+function Ke(e) {
 	let t = /* @__PURE__ */ new Date(`${e}T00:00:00`);
 	return Number.isNaN(t.getTime()) ? e : t.toLocaleDateString("ko-KR", {
 		month: "numeric",
 		day: "numeric"
 	});
 }
-function We(e) {
+function qe(e) {
 	let t = /* @__PURE__ */ new Date(`${e}T00:00:00`);
 	return Number.isNaN(t.getTime()) ? e : `${t.getMonth() + 1}/${t.getDate()}`;
 }
-function Ge(e) {
+function Je(e) {
 	if (!e || e === "샘플" || e === "Sample") return "샘플";
 	let t = new Date(e);
 	return Number.isNaN(t.getTime()) ? e : t.toLocaleString("ko-KR", {
@@ -9023,13 +9038,13 @@ function Ge(e) {
 		minute: "2-digit"
 	});
 }
-function Ke(e, t, n) {
+function Ye(e, t, n) {
 	return Math.min(n, Math.max(t, e));
 }
-function qe(e, t) {
+function Xe(e, t) {
 	return Math.round(e / t) * t;
 }
-function Je({ state: e }) {
+function Ze({ state: e }) {
 	let t = be();
 	if (t.isMarketClosed) return /* @__PURE__ */ (0, T.jsxs)(T.Fragment, { children: [/* @__PURE__ */ (0, T.jsxs)("div", {
 		className: "section-heading",
@@ -9097,15 +9112,15 @@ function Je({ state: e }) {
 				className: "top-mover-values",
 				children: [/* @__PURE__ */ (0, T.jsxs)("span", {
 					className: `top-mover-change ${o ? "positive" : "negative"}`,
-					children: [o ? "+" : "", A(a.valueKrw)]
+					children: [o ? "+" : "", Be(a.valueKrw)]
 				}), /* @__PURE__ */ (0, T.jsx)("span", {
 					className: `top-mover-pct ${o ? "positive" : "negative"}`,
-					children: He(a.changePercent)
+					children: A(a.changePercent)
 				})]
 			})
 		]
 	})] });
 }
-var Ye = document.querySelector("#dashboardBoard");
-Ye && (Ye.classList.add("craft-dashboard-board"), (0, v.createRoot)(Ye).render(/* @__PURE__ */ (0, T.jsx)(fe, {})));
+var Qe = document.querySelector("#dashboardBoard");
+Qe && (Qe.classList.add("craft-dashboard-board"), (0, v.createRoot)(Qe).render(/* @__PURE__ */ (0, T.jsx)(fe, {})));
 //#endregion

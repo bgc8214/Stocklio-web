@@ -153,7 +153,7 @@ test("table sort helpers cycle through asc, desc, and fallback", () => {
 });
 
 test("shared formatters keep display conventions stable", () => {
-  assert.equal(formatKrw(1234567), "₩1,234,567");
+  assert.equal(formatKrw(1234567), "1,234,567원");
   assert.equal(formatPercent(0.1234), "12.34%");
 });
 

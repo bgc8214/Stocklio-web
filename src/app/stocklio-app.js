@@ -587,6 +587,8 @@ document.querySelectorAll("[data-currency-mode]").forEach((btn) => {
     localStorage.setItem("currencyMode", currencyMode);
     updateCurrencyToggleUI();
     renderHoldings();
+    renderSummary();
+    window.dispatchEvent(new CustomEvent("currencyModeChange", { detail: currencyMode }));
   });
 });
 updateCurrencyToggleUI();
