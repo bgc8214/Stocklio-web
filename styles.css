@@ -4164,6 +4164,11 @@ button.secondary:hover,
   padding: 16px 20px 20px;
 }
 
+.sidebar-foot .currency-toggle {
+  margin-bottom: 8px;
+  width: fit-content;
+}
+
 .sidebar-foot span {
   font-size: 12px;
   font-weight: 800;

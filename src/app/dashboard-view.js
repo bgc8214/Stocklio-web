@@ -2,6 +2,7 @@ import { formatAccountType, normalizeAccountType } from "./account-types.js";
 import {
   escapeHtml,
   formatKrw,
+  formatUsd,
   formatNumber,
   formatPercent,
   formatAsOf,
@@ -79,12 +80,18 @@ export function renderSummary() {
   const els = _ctx.els;
   const totals = _ctx.getTotals(state.holdings);
   const stockCount = state.holdings.filter((h) => h.type !== "cash").length;
-  els.totalValue.textContent = formatKrw(totals.valueKrw);
-  els.totalValueKrw.textContent = `주식 ${formatKrw(totals.stockValueKrw)} · 예수금 ${formatKrw(totals.cashKrw)}`;
-  els.totalCost.textContent = formatKrw(totals.costKrw);
+  const cm = _ctx.currencyMode;
+  const fx = _ctx.getFxRate();
+  const fmt = cm === "krw"
+    ? (v) => formatKrw(v)
+    : (v) => formatUsd(v / (fx || 1));
+
+  els.totalValue.textContent = fmt(totals.valueKrw);
+  els.totalValueKrw.textContent = `주식 ${fmt(totals.stockValueKrw)} · 예수금 ${fmt(totals.cashKrw)}`;
+  els.totalCost.textContent = fmt(totals.costKrw);
   const costMeta = document.getElementById("totalCostMeta");
   if (costMeta) costMeta.textContent = `${stockCount}개 종목 · 평단 기준`;
-  els.totalGain.textContent = formatKrw(totals.gainKrw);
+  els.totalGain.textContent = fmt(totals.gainKrw);
   els.totalGain.className = totals.gainKrw >= 0 ? "positive" : "negative";
   els.totalReturn.textContent = formatPercent(totals.returnRate);
   els.totalReturn.className = totals.gainKrw >= 0 ? "positive" : "negative";
@@ -108,7 +115,7 @@ export function renderSummary() {
     returnBadge.className = `metric-return-badge ${cls}`;
     returnBadge.textContent = `${sign}${formatPercent(totals.returnRate)}`;
   }
-  els.cashTotal.textContent = formatKrw(totals.cashKrw);
+  els.cashTotal.textContent = fmt(totals.cashKrw);
   els.fxRate.textContent = formatNumber(state.fxRate.rate, 2);
   els.fxSource.textContent = `${state.fxRate.source} · ${formatAsOf(state.fxRate.asOf)}`;
 }

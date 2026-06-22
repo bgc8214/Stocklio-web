@@ -7,11 +7,7 @@ export function formatUsd(value) {
 }
 
 export function formatKrw(value) {
-  return new Intl.NumberFormat("ko-KR", {
-    style: "currency",
-    currency: "KRW",
-    maximumFractionDigits: 0,
-  }).format(value || 0);
+  return `${new Intl.NumberFormat("ko-KR", { maximumFractionDigits: 0 }).format(value || 0)}원`;
 }
 
 export function formatMoney(value, currency = "USD") {

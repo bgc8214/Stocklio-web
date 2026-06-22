@@ -278,6 +278,8 @@ function DashboardCard({ item, appState, editing, layout, saveLayout }) {
 
 function CardContent({ id, state }) {
   const totals = getTotals(state);
+  const cm = useCurrencyMode();
+  const fmt = makeFmt(cm, state.fxRate);
   if (id === "total-value") {
     const marketContext = getCurrentMarketContext();
     const latestPriceAsOf = [...state.holdings]
@@ -293,8 +295,8 @@ function CardContent({ id, state }) {
     return (
       <>
         <span>총자산</span>
-        <strong>{formatKrw(totals.valueKrw)}</strong>
-        <small>{`주식 ${formatKrw(totals.stockValueKrw)} · 예수금 ${formatKrw(totals.cashKrw)}`}</small>
+        <strong>{fmt(totals.valueKrw)}</strong>
+        <small>{`주식 ${fmt(totals.stockValueKrw)} · 예수금 ${fmt(totals.cashKrw)}`}</small>
         <div className="metric-badges">
           {badges.map((b) => <span key={b} className="metric-badge">{b}</span>)}
           <span className={`metric-return-badge ${returnCls}`}>{returnSign}{formatPercent(totals.returnRate)}</span>
@@ -304,13 +306,13 @@ function CardContent({ id, state }) {
   }
   if (id === "total-cost") {
     const stockCount = state.holdings.filter((h) => h.type !== "cash").length;
-    return <Metric label="주식 매입금액" value={formatKrw(totals.costKrw)} hint={`${stockCount}개 종목 · 평단 기준`} />;
+    return <Metric label="주식 매입금액" value={fmt(totals.costKrw)} hint={`${stockCount}개 종목 · 평단 기준`} />;
   }
   if (id === "total-gain") {
-    return <Metric label="주식 평가순익" value={formatKrw(totals.gainKrw)} hint={formatPercent(totals.returnRate)} tone={totals.gainKrw >= 0 ? "positive" : "negative"} />;
+    return <Metric label="주식 평가순익" value={fmt(totals.gainKrw)} hint={formatPercent(totals.returnRate)} tone={totals.gainKrw >= 0 ? "positive" : "negative"} />;
   }
   if (id === "cash-total") {
-    return <Metric label="예수금" value={formatKrw(totals.cashKrw)} hint="총자산에 포함" />;
+    return <Metric label="예수금" value={fmt(totals.cashKrw)} hint="총자산에 포함" />;
   }
   if (id === "fx-rate") {
     return <Metric label="USD/KRW" value={formatNumber(state.fxRate?.rate || 0, 2)} hint={`${state.fxRate?.source || "환율 기준"} · ${formatAsOf(state.fxRate?.asOf)}`} />;
@@ -894,7 +896,27 @@ function donutRings(items) {
 }
 
 function formatKrw(value) {
-  return new Intl.NumberFormat("ko-KR", { style: "currency", currency: "KRW", maximumFractionDigits: 0 }).format(value || 0);
+  return `${new Intl.NumberFormat("ko-KR", { maximumFractionDigits: 0 }).format(value || 0)}원`;
+}
+
+function formatUsd(value) {
+  return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 2 }).format(value || 0);
+}
+
+function useCurrencyMode() {
+  const [mode, setMode] = useState(() => localStorage.getItem("currencyMode") || "usd");
+  useEffect(() => {
+    const handler = (e) => setMode(e.detail);
+    window.addEventListener("currencyModeChange", handler);
+    return () => window.removeEventListener("currencyModeChange", handler);
+  }, []);
+  return mode;
+}
+
+function makeFmt(mode, fxRate) {
+  if (mode === "krw") return (v) => formatKrw(v);
+  const fx = fxRate?.rate || 1;
+  return (v) => formatUsd(v / fx);
 }
 
 function formatNumber(value, digits = 2) {

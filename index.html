@@ -56,6 +56,10 @@
             </div>
           </div>
           <div class="sidebar-foot">
+            <div class="currency-toggle" id="currencyToggle" role="group" aria-label="통화 표시 선택">
+              <button type="button" class="currency-toggle-btn" data-currency-mode="usd">$</button>
+              <button type="button" class="currency-toggle-btn" data-currency-mode="krw">원</button>
+            </div>
             <button class="theme-toggle" id="themeToggle" type="button" aria-label="테마 전환">
               <span class="theme-toggle-icon" id="themeToggleIcon">🌙</span>
               <span id="themeToggleLabel">다크 모드</span>
@@ -493,12 +497,6 @@
             </div>
           </form>
         </aside>
-        <div class="holdings-table-toolbar">
-          <div class="currency-toggle" id="currencyToggle" role="group" aria-label="통화 표시 선택">
-            <button type="button" class="currency-toggle-btn" data-currency-mode="usd">$</button>
-            <button type="button" class="currency-toggle-btn" data-currency-mode="krw">원</button>
-          </div>
-        </div>
         <div class="table-wrap holdings-table-wrap">
           <table class="holdings-table">
             <thead>
