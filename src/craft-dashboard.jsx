@@ -216,8 +216,11 @@ function DashboardCard({ item, appState, editing, layout, saveLayout }) {
         const sourceId = item.id;
         const targetId = targetCard.dataset.dashboardCard;
         if (sourceId && targetId && sourceId !== targetId) {
-          // 항상 타깃 카드 앞으로 이동 (insertAfter=false)
-          saveLayout(reorderLayout(layout, sourceId, targetId, false));
+          // 소스가 타깃보다 앞에 있으면 타깃 뒤에, 뒤에 있으면 타깃 앞에 삽입
+          const sourceIndex = layout.findIndex(l => l.id === sourceId);
+          const targetIndex = layout.findIndex(l => l.id === targetId);
+          const insertAfter = sourceIndex < targetIndex;
+          saveLayout(reorderLayout(layout, sourceId, targetId, insertAfter));
         }
       }
     };

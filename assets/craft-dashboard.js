@@ -8272,7 +8272,7 @@ function pe({ item: e, appState: t, editing: n, layout: r, saveLayout: i }) {
 			let s = n?.closest("[data-dashboard-card]");
 			if (document.querySelectorAll(".is-drag-over").forEach((e) => e.classList.remove("is-drag-over")), s && s !== a) {
 				let t = e.id, n = s.dataset.dashboardCard;
-				t && n && t !== n && i(ke(r, t, n, !1));
+				t && n && t !== n && i(ke(r, t, n, r.findIndex((e) => e.id === t) < r.findIndex((e) => e.id === n)));
 			}
 		}, { once: !0 });
 	};
