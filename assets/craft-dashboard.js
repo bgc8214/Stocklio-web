@@ -9045,27 +9045,27 @@ function Xe(e, t) {
 	return Math.round(e / t) * t;
 }
 function Ze({ state: e }) {
-	let t = be();
-	if (t.isMarketClosed) return /* @__PURE__ */ (0, T.jsxs)(T.Fragment, { children: [/* @__PURE__ */ (0, T.jsxs)("div", {
+	let t = Ue(He(), e.fxRate), n = be();
+	if (n.isMarketClosed) return /* @__PURE__ */ (0, T.jsxs)(T.Fragment, { children: [/* @__PURE__ */ (0, T.jsxs)("div", {
 		className: "section-heading",
 		children: [/* @__PURE__ */ (0, T.jsx)("h2", { children: "오늘의 주인공" }), /* @__PURE__ */ (0, T.jsx)("span", { children: "가격 갱신 기준" })]
 	}), /* @__PURE__ */ (0, T.jsxs)("div", {
 		className: "empty-state",
-		children: ["미국장 ", t.closedReason || "휴장"]
+		children: ["미국장 ", n.closedReason || "휴장"]
 	})] });
-	let n = (e.holdings || []).map((t) => ({
+	let r = (e.holdings || []).map((t) => ({
 		holding: t,
 		dailyMove: ye(e, t)
 	})).filter((e) => e.dailyMove.hasData);
-	if (!n.length) return /* @__PURE__ */ (0, T.jsxs)(T.Fragment, { children: [/* @__PURE__ */ (0, T.jsxs)("div", {
+	if (!r.length) return /* @__PURE__ */ (0, T.jsxs)(T.Fragment, { children: [/* @__PURE__ */ (0, T.jsxs)("div", {
 		className: "section-heading",
 		children: [/* @__PURE__ */ (0, T.jsx)("h2", { children: "오늘의 주인공" }), /* @__PURE__ */ (0, T.jsx)("span", { children: "가격 갱신 기준" })]
 	}), /* @__PURE__ */ (0, T.jsx)("div", {
 		className: "empty-state",
 		children: "가격 변동 데이터가 없습니다"
 	})] });
-	n.sort((e, t) => Math.abs(t.dailyMove.valueKrw) - Math.abs(e.dailyMove.valueKrw));
-	let r = n[0], i = r.holding, a = r.dailyMove, o = a.valueKrw >= 0, s = (i.ticker || i.name || "?").replace(/[^A-Za-z0-9가-힣]/g, "")[0]?.toUpperCase() || "?";
+	r.sort((e, t) => Math.abs(t.dailyMove.valueKrw) - Math.abs(e.dailyMove.valueKrw));
+	let i = r[0], a = i.holding, o = i.dailyMove, s = o.valueKrw >= 0, c = (a.ticker || a.name || "?").replace(/[^A-Za-z0-9가-힣]/g, "")[0]?.toUpperCase() || "?";
 	return /* @__PURE__ */ (0, T.jsxs)(T.Fragment, { children: [/* @__PURE__ */ (0, T.jsxs)("div", {
 		className: "section-heading",
 		children: [/* @__PURE__ */ (0, T.jsx)("h2", { children: "오늘의 주인공" }), /* @__PURE__ */ (0, T.jsx)("span", { children: "가격 갱신 기준" })]
@@ -9079,8 +9079,8 @@ function Ze({ state: e }) {
 					height: 40
 				},
 				children: [/* @__PURE__ */ (0, T.jsx)("img", {
-					src: `https://assets.parqet.com/logos/symbol/${encodeURIComponent(i.ticker)}?format=svg`,
-					alt: i.ticker,
+					src: `https://assets.parqet.com/logos/symbol/${encodeURIComponent(a.ticker)}?format=svg`,
+					alt: a.ticker,
 					width: "40",
 					height: "40",
 					onError: (e) => {
@@ -9094,28 +9094,28 @@ function Ze({ state: e }) {
 						height: 40,
 						fontSize: 16
 					},
-					children: s
+					children: c
 				})]
 			}),
 			/* @__PURE__ */ (0, T.jsxs)("div", {
 				className: "top-mover-info",
-				children: [/* @__PURE__ */ (0, T.jsx)("strong", { children: i.name || i.ticker }), /* @__PURE__ */ (0, T.jsxs)("span", {
+				children: [/* @__PURE__ */ (0, T.jsx)("strong", { children: a.name || a.ticker }), /* @__PURE__ */ (0, T.jsxs)("span", {
 					className: "top-mover-meta",
 					children: [
-						i.ticker,
+						a.ticker,
 						" · ",
-						i.account
+						a.account
 					]
 				})]
 			}),
 			/* @__PURE__ */ (0, T.jsxs)("div", {
 				className: "top-mover-values",
 				children: [/* @__PURE__ */ (0, T.jsxs)("span", {
-					className: `top-mover-change ${o ? "positive" : "negative"}`,
-					children: [o ? "+" : "", Be(a.valueKrw)]
+					className: `top-mover-change ${s ? "positive" : "negative"}`,
+					children: [s ? "+" : "", t(o.valueKrw)]
 				}), /* @__PURE__ */ (0, T.jsx)("span", {
-					className: `top-mover-pct ${o ? "positive" : "negative"}`,
-					children: A(a.changePercent)
+					className: `top-mover-pct ${s ? "positive" : "negative"}`,
+					children: A(o.changePercent)
 				})]
 			})
 		]
