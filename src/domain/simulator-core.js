@@ -145,8 +145,11 @@ export function simulateDCA({ priceRows, monthlyAmount, start, end, frequency = 
   }
 
   // principal을 정확하게 누적 투자금으로 보정
+  // 원금은 실제 납입금(monthlyAmount)의 누적합으로 계산.
+  // adjClose 기반 주가로 나눈 shares * price가 아닌, 실제로 넣은 금액이 원금이다.
   let runningPrincipal = 0;
   let runningShares = 0;
+  let runningBuyCount = 0;
   const correctedPoints = [];
   const buyDatesSorted = [...buys.entries()].sort((a, b) => (a[0] < b[0] ? -1 : 1));
   let buyIdx = 0;
@@ -155,9 +158,10 @@ export function simulateDCA({ priceRows, monthlyAmount, start, end, frequency = 
     const price = row.adjClose ?? row.close;
     while (buyIdx < buyDatesSorted.length && buyDatesSorted[buyIdx][0] <= row.date) {
       const [, addedShares] = buyDatesSorted[buyIdx];
-      const actualBuyPrice = priceByDate.get(buyDatesSorted[buyIdx][0]);
       runningShares += addedShares;
-      runningPrincipal += addedShares * actualBuyPrice;
+      runningBuyCount++;
+      // 원금 = 매수 횟수 × 회당 납입금 (실제 납입금 누적)
+      runningPrincipal = runningBuyCount * monthlyAmount;
       buyIdx++;
     }
     correctedPoints.push({

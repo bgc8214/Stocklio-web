@@ -496,25 +496,17 @@ function renderChart(root, seriesList, title, actualStart, finalResult) {
         const curFinal = row.querySelector(".sim-stat:nth-child(2) .sim-stat-value");
         const curGainEl = row.querySelector(".sim-stat:nth-child(3) .sim-stat-value");
         const curReturnEl = row.querySelector(".sim-stat:nth-child(4) .sim-stat-value");
-        const gain = sv.value - principal;
-        const ret = principal > 0 ? gain / principal : 0;
+        // 평가금액만 현재 시점으로 업데이트, 수익/수익률은 최종값 고정
         if (curFinal) curFinal.textContent = formatKrw(sv.value);
-        if (curGainEl) {
-          curGainEl.textContent = formatKrw(gain);
-          curGainEl.className = `sim-stat-value sim-stat-value--${gain >= 0 ? "positive" : "negative"}`;
-        }
-        if (curReturnEl) {
-          curReturnEl.textContent = formatPercent(ret);
-          curReturnEl.className = `sim-stat-value sim-stat-value--${ret >= 0 ? "positive" : "negative"}`;
-        }
       });
     } else {
       const cur = nonPrincipal.reduce((a, b) => (a.value > b.value ? a : b));
-      const curGain = cur.value - principal;
-      const curReturn = principal > 0 ? curGain / principal : 0;
+      // 평가금액만 현재 시점으로 업데이트, 수익/수익률은 최종값 고정
       setCard(root, "simValFinal", formatKrw(cur.value));
-      setCard(root, "simValGain", formatKrw(curGain), curGain >= 0 ? "positive" : "negative");
-      setCard(root, "simValReturn", formatPercent(curReturn), curReturn >= 0 ? "positive" : "negative");
+      if (finalResult) {
+        setCard(root, "simValGain", formatKrw(finalResult.gain), finalResult.gain >= 0 ? "positive" : "negative");
+        setCard(root, "simValReturn", formatPercent(finalResult.returnRate), finalResult.returnRate >= 0 ? "positive" : "negative");
+      }
     }
   };
 
