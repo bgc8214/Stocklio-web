@@ -930,31 +930,33 @@ main {
 
 .layout-resize-handle {
   background: var(--accent);
-  border: 3px solid var(--surface);
-  border-radius: 999px;
-  bottom: 10px;
-  box-shadow: 0 4px 12px rgba(23, 33, 27, 0.18);
+  border: 2px solid var(--surface);
+  border-radius: 4px;
+  bottom: 6px;
+  box-shadow: 0 2px 8px rgba(23, 33, 27, 0.2);
   cursor: nwse-resize;
-  height: 20px;
+  height: 16px;
   position: absolute;
-  right: 10px;
+  right: 6px;
   touch-action: none;
-  transform: translate(35%, 35%);
-  width: 20px;
-  width: 22px;
+  width: 16px;
   z-index: 4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .layout-resize-handle::before {
-  background: var(--accent);
-  border-radius: 999px;
-  bottom: 7px;
   content: "";
-  height: 3px;
-  position: absolute;
-  right: 6px;
-  transform: rotate(-45deg);
-  width: 16px;
+  display: block;
+  width: 6px;
+  height: 6px;
+  border-right: 2px solid var(--surface);
+  border-bottom: 2px solid var(--surface);
+  position: static;
+  transform: none;
+  background: none;
+  border-radius: 0;
 }
 
 .metric,
