@@ -7,8 +7,8 @@
     "node": ">=20.19"
   },
   "scripts": {
-    "dev": "node server.mjs",
-    "start": "node server.mjs",
+    "dev": "PORT=4173 node server.mjs",
+    "start": "PORT=4173 node server.mjs",
     "build": "node scripts/build-static.mjs",
     "check": "node scripts/check-js.mjs && node --test tests/domain.test.mjs && npm run build",
     "test:product": "node scripts/product-smoke.mjs",
