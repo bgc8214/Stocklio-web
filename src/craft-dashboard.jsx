@@ -512,15 +512,19 @@ function getMaxDrawdown(points) {
 }
 
 function BreakdownPanel({ state }) {
+  const [showAll, setShowAll] = useState(false);
   const marketContext = getCurrentMarketContext();
-  const movers = getDailyMoveRows(state, marketContext).slice(0, 5);
+  const cm = useCurrencyMode();
+  const fmt = makeFmt(cm, state.fxRate);
+  const allMovers = getDailyMoveRows(state, marketContext);
+  const movers = showAll ? allMovers : allMovers.slice(0, 5);
   const refreshImpact = getRecentPriceRefreshImpact(state);
   const accountTypeRows = (state.holdings || []).map((holding) => ({ ...holding, accountType: formatAccountType(holding.accountType) }));
   const fallbackRows = [...groupByValue(state.holdings || [], state, "investor"), ...groupByValue(accountTypeRows, state, "accountType")];
-  const netMove = movers.reduce((sum, item) => sum + item.value, 0);
-  const priceEffect = movers.reduce((sum, item) => sum + item.priceEffectKrw, 0);
-  const fxEffect = movers.reduce((sum, item) => sum + item.fxEffectKrw, 0);
-  const insight = dailyMoveInsight(movers, netMove, priceEffect, fxEffect);
+  const netMove = allMovers.reduce((sum, item) => sum + item.value, 0);
+  const priceEffect = allMovers.reduce((sum, item) => sum + item.priceEffectKrw, 0);
+  const fxEffect = allMovers.reduce((sum, item) => sum + item.fxEffectKrw, 0);
+  const insight = dailyMoveInsight(allMovers, netMove, priceEffect, fxEffect);
   return (
     <>
       <div className="section-heading">
@@ -532,7 +536,7 @@ function BreakdownPanel({ state }) {
           <>
             <div className="daily-move-summary">
               <span>오늘 추정 변동</span>
-              <strong className={netMove >= 0 ? "positive" : "negative"}>{formatKrw(netMove)}</strong>
+              <strong className={netMove >= 0 ? "positive" : "negative"}>{fmt(netMove)}</strong>
               <small>가격 {priceEffect >= 0 ? "+" : ""}{formatCompactKrw(priceEffect)} · 환율 {fxEffect >= 0 ? "+" : ""}{formatCompactKrw(fxEffect)}</small>
             </div>
             <div className="daily-move-insight">{insight}</div>
@@ -542,9 +546,14 @@ function BreakdownPanel({ state }) {
                   <strong>{item.name}</strong>
                   <small>{item.ticker} · {dailyMoveDetail(item)} · 영향 {formatPercent(Math.abs(item.contributionShare || 0))}</small>
                 </div>
-                <span className={item.value >= 0 ? "positive" : "negative"}>{item.value >= 0 ? "+" : ""}{formatKrw(item.value)}</span>
+                <span className={item.value >= 0 ? "positive" : "negative"}>{item.value >= 0 ? "+" : ""}{fmt(item.value)}</span>
               </div>
             ))}
+            {allMovers.length > 5 && (
+              <button type="button" className="breakdown-show-all" onClick={() => setShowAll(v => !v)}>
+                {showAll ? "접기" : `전체 보기 (${allMovers.length}개)`}
+              </button>
+            )}
             {refreshImpact && Math.abs(refreshImpact.totalDeltaKrw) > Math.max(100000, Math.abs(netMove) * 3) ? <PriceRefreshImpact impact={refreshImpact} compact /> : null}
           </>
         ) : (
