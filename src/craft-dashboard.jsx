@@ -1,6 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
-import { Editor, Frame, Element, useNode } from "@craftjs/core";
 import { dateKeyInTimeZone, getUsMarketContextForSeoulDate } from "./domain/market-calendar.js";
 
 const DEFAULT_LAYOUT = [
@@ -99,35 +98,24 @@ function CraftDashboardApp() {
   }
 
   return (
-    <Editor enabled={editing} resolver={{ CraftCard, CraftCanvas }}>
-      <Frame key={`${layoutKey(layout)}:${editing}:${stateRevision}`}>
-        <Element is={CraftCanvas} canvas>
-          {layout.map((item) =>
-            item.visible === false && !editing ? null : (
-              <Element
-                key={item.id}
-                is={CraftCard}
-                canvas={false}
-                item={item}
-                appState={state}
-                editing={editing}
-                layout={layout}
-                saveLayout={saveLayout}
-              />
-            ),
-          )}
-        </Element>
-      </Frame>
-    </Editor>
+    <React.Fragment>
+      {layout.map((item) =>
+        item.visible === false && !editing ? null : (
+          <DashboardCard
+            key={item.id}
+            item={item}
+            appState={state}
+            editing={editing}
+            layout={layout}
+            saveLayout={saveLayout}
+          />
+        ),
+      )}
+    </React.Fragment>
   );
 }
 
-function CraftCanvas({ children }) {
-  return <>{children}</>;
-}
-
-function CraftCard({ item, appState, editing, layout, saveLayout }) {
-  useNode(); // Craft.js 노드 등록 (connectors 미사용)
+function DashboardCard({ item, appState, editing, layout, saveLayout }) {
   const [draft, setDraft] = useState(null);
   const resizeActiveRef = useRef(false);
 
@@ -200,34 +188,6 @@ function CraftCard({ item, appState, editing, layout, saveLayout }) {
     });
   };
 
-  const handleDragOver = (event) => {
-    if (!editing) return;
-    event.preventDefault();
-    event.dataTransfer.dropEffect = "move";
-    const card = event.currentTarget;
-    document.querySelectorAll(".is-drag-over").forEach(el => el.classList.remove("is-drag-over", "is-drop-after"));
-    card.classList.add("is-drag-over");
-    if (shouldDropAfter(event, card)) card.classList.add("is-drop-after");
-  };
-
-  const handleDragLeave = (event) => {
-    const card = event.currentTarget;
-    if (!card.contains(event.relatedTarget)) {
-      card.classList.remove("is-drag-over", "is-drop-after");
-    }
-  };
-
-  const handleDrop = (event) => {
-    if (!editing) return;
-    event.preventDefault();
-    const sourceId = event.dataTransfer.getData("text/plain");
-    document.querySelectorAll(".is-dragging, .is-drag-over, .is-drop-after").forEach(el => {
-      el.classList.remove("is-dragging", "is-drag-over", "is-drop-after");
-    });
-    if (!sourceId || sourceId === item.id) return;
-    saveLayout(reorderLayout(layout, sourceId, item.id, shouldDropAfter(event, event.currentTarget)));
-  };
-
   const handleToggle = (event) => {
     event.stopPropagation();
     saveLayout(layout.map((layoutItem) => (layoutItem.id === item.id ? { ...layoutItem, visible: layoutItem.visible === false } : layoutItem)));
@@ -246,9 +206,29 @@ function CraftCard({ item, appState, editing, layout, saveLayout }) {
     <article
       className={className}
       data-dashboard-card={item.id}
-      onDragOver={handleDragOver}
-      onDragLeave={handleDragLeave}
-      onDrop={handleDrop}
+      onDragOver={(e) => {
+        if (!editing) return;
+        e.preventDefault();
+        e.dataTransfer.dropEffect = "move";
+        document.querySelectorAll(".is-drag-over").forEach(x => x.classList.remove("is-drag-over", "is-drop-after"));
+        e.currentTarget.classList.add("is-drag-over");
+        if (shouldDropAfter(e, e.currentTarget)) e.currentTarget.classList.add("is-drop-after");
+      }}
+      onDragLeave={(e) => {
+        if (!e.currentTarget.contains(e.relatedTarget))
+          e.currentTarget.classList.remove("is-drag-over", "is-drop-after");
+      }}
+      onDrop={(e) => {
+        if (!editing) return;
+        e.preventDefault();
+        e.stopPropagation();
+        const sourceId = e.dataTransfer.getData("text/plain");
+        document.querySelectorAll(".is-dragging, .is-drag-over, .is-drop-after").forEach(x =>
+          x.classList.remove("is-dragging", "is-drag-over", "is-drop-after")
+        );
+        if (!sourceId || sourceId === item.id) return;
+        saveLayout(reorderLayout(layout, sourceId, item.id, shouldDropAfter(e, e.currentTarget)));
+      }}
       style={style}
     >
       {editing ? (
