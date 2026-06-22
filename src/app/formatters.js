@@ -29,6 +29,35 @@ export function formatCompactKrw(value) {
   return formatKrw(value);
 }
 
+// 통화 모드에 따라 금액 표시: "usd" → 달러 원본, "krw" → 원화 환산
+export function formatMoneyByMode(value, holdingCurrency, displayMode, fxRate) {
+  if (displayMode === "krw") {
+    const krwValue = holdingCurrency === "USD" ? (value || 0) * (fxRate || 1) : (value || 0);
+    return formatKrw(krwValue);
+  }
+  return formatMoney(value, holdingCurrency);
+}
+
+// 변동금액 표시: 토스 스타일 — 부호 포함, 통화 기호 없이 숫자만
+// valueKrw/valueUsd 중 displayMode에 맞게 이미 변환된 값을 받는다
+export function formatChangePrefixed(value, isKrw) {
+  const n = value || 0;
+  const sign = n >= 0 ? "+" : "";
+  if (isKrw) {
+    return `${sign}${new Intl.NumberFormat("ko-KR").format(Math.round(n))}`;
+  }
+  return `${sign}${new Intl.NumberFormat("en-US", { maximumFractionDigits: 2, minimumFractionDigits: 2 }).format(n)}`;
+}
+
+// 손익처럼 holdingCurrency 기준 값을 받아 displayMode에 맞게 환산 후 부호 포함 포맷
+export function formatChangeByMode(value, holdingCurrency, displayMode, fxRate) {
+  if (displayMode === "krw") {
+    const krwValue = holdingCurrency === "USD" ? (value || 0) * (fxRate || 1) : (value || 0);
+    return formatChangePrefixed(krwValue, true);
+  }
+  return formatChangePrefixed(value, holdingCurrency === "KRW");
+}
+
 export function formatChartLabel(value) {
   return Number(value || 0) === 0 ? "0" : formatNumber(value, 0);
 }
