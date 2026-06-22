@@ -195,10 +195,9 @@ function DashboardCard({ item, appState, editing, layout, saveLayout }) {
       const el = document.elementFromPoint(e.clientX, e.clientY);
       card.style.pointerEvents = "";
       const targetCard = el?.closest("[data-dashboard-card]");
-      document.querySelectorAll(".is-drag-over").forEach(x => x.classList.remove("is-drag-over", "is-drop-after"));
+      document.querySelectorAll(".is-drag-over").forEach(x => x.classList.remove("is-drag-over"));
       if (targetCard && targetCard !== card) {
         targetCard.classList.add("is-drag-over");
-        if (shouldDropAfter(e, targetCard)) targetCard.classList.add("is-drop-after");
       }
     };
 
@@ -211,13 +210,14 @@ function DashboardCard({ item, appState, editing, layout, saveLayout }) {
       const el = document.elementFromPoint(e.clientX, e.clientY);
       card.style.pointerEvents = "";
       const targetCard = el?.closest("[data-dashboard-card]");
-      document.querySelectorAll(".is-drag-over, .is-drop-after").forEach(x => x.classList.remove("is-drag-over", "is-drop-after"));
+      document.querySelectorAll(".is-drag-over").forEach(x => x.classList.remove("is-drag-over"));
 
       if (targetCard && targetCard !== card) {
         const sourceId = item.id;
         const targetId = targetCard.dataset.dashboardCard;
         if (sourceId && targetId && sourceId !== targetId) {
-          saveLayout(reorderLayout(layout, sourceId, targetId, shouldDropAfter(e, targetCard)));
+          // 항상 타깃 카드 앞으로 이동 (insertAfter=false)
+          saveLayout(reorderLayout(layout, sourceId, targetId, false));
         }
       }
     };
