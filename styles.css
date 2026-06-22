@@ -1610,6 +1610,23 @@ main {
   border-bottom: 0;
 }
 
+.breakdown-show-all {
+  background: none;
+  border: none;
+  color: var(--accent, #2a6e4a);
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-weight: 600;
+  margin-top: 8px;
+  padding: 6px 0;
+  text-align: left;
+  width: 100%;
+}
+
+.breakdown-show-all:hover {
+  opacity: 0.75;
+}
+
 .daily-move-row strong {
   color: var(--value);
   display: block;

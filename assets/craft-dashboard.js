@@ -8641,39 +8641,39 @@ function ge(e) {
 	return n;
 }
 function _e({ state: e }) {
-	let t = be(), n = ve(e, t).slice(0, 5), r = Se(e), i = (e.holdings || []).map((e) => ({
+	let [t, n] = (0, _.useState)(!1), r = be(), i = Ue(He(), e.fxRate), a = ve(e, r), o = t ? a : a.slice(0, 5), s = Se(e), c = (e.holdings || []).map((e) => ({
 		...e,
 		accountType: De(e.accountType)
-	})), a = [...Re(e.holdings || [], e, "investor"), ...Re(i, e, "accountType")], o = n.reduce((e, t) => e + t.value, 0), s = n.reduce((e, t) => e + t.priceEffectKrw, 0), c = n.reduce((e, t) => e + t.fxEffectKrw, 0), l = Te(n, o, s, c);
+	})), l = [...Re(e.holdings || [], e, "investor"), ...Re(c, e, "accountType")], u = a.reduce((e, t) => e + t.value, 0), d = a.reduce((e, t) => e + t.priceEffectKrw, 0), f = a.reduce((e, t) => e + t.fxEffectKrw, 0), p = Te(a, u, d, f);
 	return /* @__PURE__ */ (0, T.jsxs)(T.Fragment, { children: [/* @__PURE__ */ (0, T.jsxs)("div", {
 		className: "section-heading",
 		children: [/* @__PURE__ */ (0, T.jsx)("h2", { children: "오늘 변동 원인" }), /* @__PURE__ */ (0, T.jsx)("span", { children: "종목 기여도" })]
 	}), /* @__PURE__ */ (0, T.jsx)("div", {
 		className: "breakdown-list",
-		children: n.length ? /* @__PURE__ */ (0, T.jsxs)(T.Fragment, { children: [
+		children: o.length ? /* @__PURE__ */ (0, T.jsxs)(T.Fragment, { children: [
 			/* @__PURE__ */ (0, T.jsxs)("div", {
 				className: "daily-move-summary",
 				children: [
 					/* @__PURE__ */ (0, T.jsx)("span", { children: "오늘 추정 변동" }),
 					/* @__PURE__ */ (0, T.jsx)("strong", {
-						className: o >= 0 ? "positive" : "negative",
-						children: Be(o)
+						className: u >= 0 ? "positive" : "negative",
+						children: i(u)
 					}),
 					/* @__PURE__ */ (0, T.jsxs)("small", { children: [
 						"가격 ",
-						s >= 0 ? "+" : "",
-						Ge(s),
+						d >= 0 ? "+" : "",
+						Ge(d),
 						" · 환율 ",
-						c >= 0 ? "+" : "",
-						Ge(c)
+						f >= 0 ? "+" : "",
+						Ge(f)
 					] })
 				]
 			}),
 			/* @__PURE__ */ (0, T.jsx)("div", {
 				className: "daily-move-insight",
-				children: l
+				children: p
 			}),
-			n.map((e) => /* @__PURE__ */ (0, T.jsxs)("div", {
+			o.map((e) => /* @__PURE__ */ (0, T.jsxs)("div", {
 				className: "daily-move-row",
 				children: [/* @__PURE__ */ (0, T.jsxs)("div", { children: [/* @__PURE__ */ (0, T.jsx)("strong", { children: e.name }), /* @__PURE__ */ (0, T.jsxs)("small", { children: [
 					e.ticker,
@@ -8683,27 +8683,33 @@ function _e({ state: e }) {
 					A(Math.abs(e.contributionShare || 0))
 				] })] }), /* @__PURE__ */ (0, T.jsxs)("span", {
 					className: e.value >= 0 ? "positive" : "negative",
-					children: [e.value >= 0 ? "+" : "", Be(e.value)]
+					children: [e.value >= 0 ? "+" : "", i(e.value)]
 				})]
 			}, e.id || e.ticker)),
-			r && Math.abs(r.totalDeltaKrw) > Math.max(1e5, Math.abs(o) * 3) ? /* @__PURE__ */ (0, T.jsx)(xe, {
-				impact: r,
+			a.length > 5 && /* @__PURE__ */ (0, T.jsx)("button", {
+				type: "button",
+				className: "breakdown-show-all",
+				onClick: () => n((e) => !e),
+				children: t ? "접기" : `전체 보기 (${a.length}개)`
+			}),
+			s && Math.abs(s.totalDeltaKrw) > Math.max(1e5, Math.abs(u) * 3) ? /* @__PURE__ */ (0, T.jsx)(xe, {
+				impact: s,
 				compact: !0
 			}) : null
-		] }) : /* @__PURE__ */ (0, T.jsx)(T.Fragment, { children: t.isMarketClosed ? /* @__PURE__ */ (0, T.jsxs)(T.Fragment, { children: [
+		] }) : /* @__PURE__ */ (0, T.jsx)(T.Fragment, { children: r.isMarketClosed ? /* @__PURE__ */ (0, T.jsxs)(T.Fragment, { children: [
 			/* @__PURE__ */ (0, T.jsxs)("div", {
 				className: "daily-move-empty",
 				children: [/* @__PURE__ */ (0, T.jsxs)("strong", { children: [
 					"미국장 ",
-					t.closedReason || "휴장",
+					r.closedReason || "휴장",
 					"에는 새 종목별 변동을 표시하지 않습니다"
-				] }), /* @__PURE__ */ (0, T.jsxs)("span", { children: [t.label, "입니다. 총자산 변화가 있다면 입출금 또는 환율/현금 변화일 수 있습니다."] })]
+				] }), /* @__PURE__ */ (0, T.jsxs)("span", { children: [r.label, "입니다. 총자산 변화가 있다면 입출금 또는 환율/현금 변화일 수 있습니다."] })]
 			}),
 			/* @__PURE__ */ (0, T.jsx)("div", {
 				className: "breakdown-subtitle",
 				children: "구성 참고"
 			}),
-			a.map((e, t) => /* @__PURE__ */ (0, T.jsxs)("div", {
+			l.map((e, t) => /* @__PURE__ */ (0, T.jsxs)("div", {
 				className: "breakdown-row",
 				children: [
 					/* @__PURE__ */ (0, T.jsx)("span", {
@@ -8714,7 +8720,7 @@ function _e({ state: e }) {
 					/* @__PURE__ */ (0, T.jsx)("strong", { children: Be(e.value) })
 				]
 			}, `${e.label}-${t}`))
-		] }) : r?.rows?.length ? /* @__PURE__ */ (0, T.jsx)(xe, { impact: r }) : /* @__PURE__ */ (0, T.jsxs)(T.Fragment, { children: [
+		] }) : s?.rows?.length ? /* @__PURE__ */ (0, T.jsx)(xe, { impact: s }) : /* @__PURE__ */ (0, T.jsxs)(T.Fragment, { children: [
 			/* @__PURE__ */ (0, T.jsxs)("div", {
 				className: "daily-move-empty",
 				children: [/* @__PURE__ */ (0, T.jsx)("strong", { children: "가격 갱신 후 원인을 분석할 수 있습니다" }), /* @__PURE__ */ (0, T.jsx)("span", { children: "전일 대비 가격 데이터가 없는 캐시나 일부 종목 실패가 있으면 원인 분석이 제한됩니다. 가격을 다시 가져오면 새 데이터로 분석합니다." })]
@@ -8723,7 +8729,7 @@ function _e({ state: e }) {
 				className: "breakdown-subtitle",
 				children: "구성 참고"
 			}),
-			a.map((e, t) => /* @__PURE__ */ (0, T.jsxs)("div", {
+			l.map((e, t) => /* @__PURE__ */ (0, T.jsxs)("div", {
 				className: "breakdown-row",
 				children: [
 					/* @__PURE__ */ (0, T.jsx)("span", {
