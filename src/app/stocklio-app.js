@@ -179,7 +179,7 @@ import {
 
 let holdingHeaderSort = { key: "value", dir: "desc" };
 let cashFlowHeaderSort = { key: "date", dir: "desc" };
-let currencyMode = localStorage.getItem("currencyMode") === "krw" ? "krw" : "usd";
+let currencyMode = localStorage.getItem("currencyMode") === "usd" ? "usd" : "krw";
 const HOLDINGS_PAGE_SIZE = window.innerWidth <= 980 ? 100 : 10;
 
 const sampleState = createSampleState(makeId);

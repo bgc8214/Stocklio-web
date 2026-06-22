@@ -8140,16 +8140,9 @@ var ce = /* @__PURE__ */ o(((e) => {
 	},
 	{
 		id: "breakdown",
-		widthPct: 50,
-		span: 6,
+		widthPct: 100,
+		span: 12,
 		minHeight: 320,
-		visible: !0
-	},
-	{
-		id: "top-mover",
-		widthPct: 50,
-		span: 6,
-		minHeight: 160,
 		visible: !0
 	}
 ], E = {
@@ -8990,7 +8983,7 @@ function Ve(e) {
 	}).format(e || 0);
 }
 function He() {
-	let [e, t] = (0, _.useState)(() => localStorage.getItem("currencyMode") || "usd");
+	let [e, t] = (0, _.useState)(() => localStorage.getItem("currencyMode") === "usd" ? "usd" : "krw");
 	return (0, _.useEffect)(() => {
 		let e = (e) => t(e.detail);
 		return window.addEventListener("currencyModeChange", e), () => window.removeEventListener("currencyModeChange", e);

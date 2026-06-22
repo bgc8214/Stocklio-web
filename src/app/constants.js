@@ -49,7 +49,6 @@ export const defaultDashboardLayout = [
   { id: "fx-rate", widthPct: 25, span: 3, minHeight: 128, visible: true },
   { id: "allocation", widthPct: 50, span: 6, minHeight: 320, visible: true },
   { id: "performance-flow", widthPct: 100, span: 12, minHeight: 360, visible: true },
-  { id: "breakdown", widthPct: 50, span: 6, minHeight: 320, visible: true },
-  { id: "top-mover", widthPct: 50, span: 6, minHeight: 160, visible: true },
+  { id: "breakdown", widthPct: 100, span: 12, minHeight: 320, visible: true },
 
 ];
