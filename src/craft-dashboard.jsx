@@ -172,23 +172,58 @@ function DashboardCard({ item, appState, editing, layout, saveLayout }) {
     window.addEventListener(upEventName, handleUp, { once: true });
   };
 
-  const handleDragStart = (event) => {
-    // resize handle이나 버튼 위에서 시작된 drag는 무시
-    if (event.target.closest(".layout-resize-handle, button, select, input")) {
-      event.preventDefault();
-      return;
-    }
-    event.dataTransfer.effectAllowed = "move";
-    event.dataTransfer.setData("text/plain", item.id);
-    requestAnimationFrame(() => {
-      event.currentTarget?.classList.add("is-dragging");
-    });
-  };
+  // mousedown 기반 drag (HTML5 drag API 대신 — 브라우저 호환성 완벽)
+  const dragActiveRef = useRef(false);
 
-  const handleDragEnd = () => {
-    document.querySelectorAll(".is-dragging, .is-drag-over, .is-drop-after").forEach(el => {
-      el.classList.remove("is-dragging", "is-drag-over", "is-drop-after");
-    });
+  const handleMoveStart = (event) => {
+    if (!editing) return;
+    if (event.target.closest(".layout-resize-handle, button, select, input, .layout-visibility-button")) return;
+    if (resizeActiveRef.current) return;
+
+    event.preventDefault();
+    dragActiveRef.current = true;
+    const card = event.currentTarget;
+    card.classList.add("is-dragging");
+
+    const moveEvent = event.type === "mousedown" ? "mousemove" : "pointermove";
+    const upEvent = event.type === "mousedown" ? "mouseup" : "pointerup";
+
+    const handleMove = (e) => {
+      if (!dragActiveRef.current) return;
+      // 현재 마우스 위치 아래의 카드 찾기
+      card.style.pointerEvents = "none"; // 자기 자신 무시
+      const el = document.elementFromPoint(e.clientX, e.clientY);
+      card.style.pointerEvents = "";
+      const targetCard = el?.closest("[data-dashboard-card]");
+      document.querySelectorAll(".is-drag-over").forEach(x => x.classList.remove("is-drag-over", "is-drop-after"));
+      if (targetCard && targetCard !== card) {
+        targetCard.classList.add("is-drag-over");
+        if (shouldDropAfter(e, targetCard)) targetCard.classList.add("is-drop-after");
+      }
+    };
+
+    const handleUp = (e) => {
+      window.removeEventListener(moveEvent, handleMove);
+      dragActiveRef.current = false;
+      card.classList.remove("is-dragging");
+
+      card.style.pointerEvents = "none";
+      const el = document.elementFromPoint(e.clientX, e.clientY);
+      card.style.pointerEvents = "";
+      const targetCard = el?.closest("[data-dashboard-card]");
+      document.querySelectorAll(".is-drag-over, .is-drop-after").forEach(x => x.classList.remove("is-drag-over", "is-drop-after"));
+
+      if (targetCard && targetCard !== card) {
+        const sourceId = item.id;
+        const targetId = targetCard.dataset.dashboardCard;
+        if (sourceId && targetId && sourceId !== targetId) {
+          saveLayout(reorderLayout(layout, sourceId, targetId, shouldDropAfter(e, targetCard)));
+        }
+      }
+    };
+
+    window.addEventListener(moveEvent, handleMove);
+    window.addEventListener(upEvent, handleUp, { once: true });
   };
 
   const handleToggle = (event) => {
@@ -209,32 +244,8 @@ function DashboardCard({ item, appState, editing, layout, saveLayout }) {
     <article
       className={className}
       data-dashboard-card={item.id}
-      draggable={editing}
-      onDragStart={handleDragStart}
-      onDragEnd={handleDragEnd}
-      onDragOver={(e) => {
-        if (!editing) return;
-        e.preventDefault();
-        e.dataTransfer.dropEffect = "move";
-        document.querySelectorAll(".is-drag-over").forEach(x => x.classList.remove("is-drag-over", "is-drop-after"));
-        e.currentTarget.classList.add("is-drag-over");
-        if (shouldDropAfter(e, e.currentTarget)) e.currentTarget.classList.add("is-drop-after");
-      }}
-      onDragLeave={(e) => {
-        if (!e.currentTarget.contains(e.relatedTarget))
-          e.currentTarget.classList.remove("is-drag-over", "is-drop-after");
-      }}
-      onDrop={(e) => {
-        if (!editing) return;
-        e.preventDefault();
-        e.stopPropagation();
-        const sourceId = e.dataTransfer.getData("text/plain");
-        document.querySelectorAll(".is-dragging, .is-drag-over, .is-drop-after").forEach(x =>
-          x.classList.remove("is-dragging", "is-drag-over", "is-drop-after")
-        );
-        if (!sourceId || sourceId === item.id) return;
-        saveLayout(reorderLayout(layout, sourceId, item.id, shouldDropAfter(e, e.currentTarget)));
-      }}
+      onMouseDown={handleMoveStart}
+      onPointerDown={handleMoveStart}
       style={style}
     >
       {editing ? (
