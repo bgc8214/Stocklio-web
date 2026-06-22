@@ -832,24 +832,9 @@ main {
 }
 
 .dashboard-card.is-drag-over {
-  outline-color: var(--accent);
-}
-
-.dashboard-card.is-drag-over::before {
-  background: var(--accent);
-  border-radius: 999px;
-  content: "";
-  height: 4px;
-  left: 12px;
-  position: absolute;
-  right: 12px;
-  top: 6px;
-  z-index: 3;
-}
-
-.dashboard-card.is-drag-over.is-drop-after::before {
-  bottom: 6px;
-  top: auto;
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  background: color-mix(in srgb, var(--accent) 8%, var(--surface));
 }
 
 .layout-controls {
