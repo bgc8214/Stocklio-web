@@ -8261,6 +8261,21 @@ function pe({ item: e, appState: t, editing: n, layout: r, saveLayout: i }) {
 			e.visible === !1 && n ? "is-hidden-card" : ""
 		].filter(Boolean).join(" "),
 		"data-dashboard-card": e.id,
+		draggable: n,
+		onDragStart: (t) => {
+			if (t.target.closest(".layout-resize-handle, button, select, input")) {
+				t.preventDefault();
+				return;
+			}
+			t.dataTransfer.effectAllowed = "move", t.dataTransfer.setData("text/plain", e.id), requestAnimationFrame(() => {
+				t.currentTarget?.classList.add("is-dragging");
+			});
+		},
+		onDragEnd: () => {
+			document.querySelectorAll(".is-dragging, .is-drag-over, .is-drop-after").forEach((e) => {
+				e.classList.remove("is-dragging", "is-drag-over", "is-drop-after");
+			});
+		},
 		onDragOver: (e) => {
 			n && (e.preventDefault(), e.dataTransfer.dropEffect = "move", document.querySelectorAll(".is-drag-over").forEach((e) => e.classList.remove("is-drag-over", "is-drop-after")), e.currentTarget.classList.add("is-drag-over"), Ae(e, e.currentTarget) && e.currentTarget.classList.add("is-drop-after"));
 		},
@@ -8280,17 +8295,6 @@ function pe({ item: e, appState: t, editing: n, layout: r, saveLayout: i }) {
 				children: [
 					/* @__PURE__ */ (0, T.jsx)("span", {
 						className: "layout-drag-handle",
-						draggable: !0,
-						onDragStart: (t) => {
-							t.stopPropagation(), t.dataTransfer.effectAllowed = "move", t.dataTransfer.setData("text/plain", e.id), requestAnimationFrame(() => {
-								t.target.closest("[data-dashboard-card]")?.classList.add("is-dragging");
-							});
-						},
-						onDragEnd: () => {
-							document.querySelectorAll(".is-dragging, .is-drag-over, .is-drop-after").forEach((e) => {
-								e.classList.remove("is-dragging", "is-drag-over", "is-drop-after");
-							});
-						},
 						children: "이동"
 					}),
 					/* @__PURE__ */ (0, T.jsx)("span", {
