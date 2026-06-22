@@ -960,6 +960,8 @@ function roundTo(value, step) {
 
 
 function TopMoverPanel({ state }) {
+  const cm = useCurrencyMode();
+  const fmt = makeFmt(cm, state.fxRate);
   const marketContext = getCurrentMarketContext();
   if (marketContext.isMarketClosed) {
     return (
@@ -1004,7 +1006,7 @@ function TopMoverPanel({ state }) {
           <span className="top-mover-meta">{h.ticker} · {h.account}</span>
         </div>
         <div className="top-mover-values">
-          <span className={`top-mover-change ${positive ? "positive" : "negative"}`}>{positive ? "+" : ""}{formatKrw(m.valueKrw)}</span>
+          <span className={`top-mover-change ${positive ? "positive" : "negative"}`}>{positive ? "+" : ""}{fmt(m.valueKrw)}</span>
           <span className={`top-mover-pct ${positive ? "positive" : "negative"}`}>{formatPercent(m.changePercent)}</span>
         </div>
       </div>
