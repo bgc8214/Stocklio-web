@@ -179,6 +179,7 @@ import {
 
 let holdingHeaderSort = { key: "value", dir: "desc" };
 let cashFlowHeaderSort = { key: "date", dir: "desc" };
+let currencyMode = localStorage.getItem("currencyMode") === "krw" ? "krw" : "usd";
 const HOLDINGS_PAGE_SIZE = window.innerWidth <= 980 ? 100 : 10;
 
 const sampleState = createSampleState(makeId);
@@ -573,6 +574,22 @@ document.addEventListener("click", (e) => {
     els.filterPopoverBtn?.setAttribute("aria-expanded", "false");
   }
 });
+
+// 통화 모드 토글
+function updateCurrencyToggleUI() {
+  document.querySelectorAll("[data-currency-mode]").forEach((btn) => {
+    btn.classList.toggle("active", btn.dataset.currencyMode === currencyMode);
+  });
+}
+document.querySelectorAll("[data-currency-mode]").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    currencyMode = btn.dataset.currencyMode;
+    localStorage.setItem("currencyMode", currencyMode);
+    updateCurrencyToggleUI();
+    renderHoldings();
+  });
+});
+updateCurrencyToggleUI();
 
 // 필터 초기화
 els.filterResetBtn?.addEventListener("click", () => {
@@ -1077,6 +1094,13 @@ async function initialize() {
     normalizeAccountType,
     // auth state direct access
     get authState() { return authState; },
+    // currency display mode
+    get currencyMode() { return currencyMode; },
+    setCurrencyMode(mode) {
+      currencyMode = mode;
+      localStorage.setItem("currencyMode", mode);
+    },
+    getFxRate: () => state.fxRate.rate,
     // state management
     setState: (s) => { state = s; },
     loadState,

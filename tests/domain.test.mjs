@@ -254,6 +254,7 @@ test("daily move selectors explain which holdings moved portfolio value", () => 
   assert.deepEqual(getHoldingDailyMove(holdings[0], 1400), {
     hasData: true,
     valueKrw: 28_000,
+    valueUsd: 20,
     priceEffectKrw: 28_000,
     fxEffectKrw: 0,
     changePercent: 0.01,

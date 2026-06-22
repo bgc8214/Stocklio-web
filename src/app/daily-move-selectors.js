@@ -66,9 +66,12 @@ export function getHoldingDailyMove(holding, fxRate = 1, marketContext = null) {
     ? quantity * currentPrice * (currentFx - previousFx)
     : 0;
 
+  const valueKrw = priceEffectKrw + fxEffectKrw;
+  const valueUsd = isUsd ? quantity * priceChange : valueKrw;
   return {
     hasData: true,
-    valueKrw: priceEffectKrw + fxEffectKrw,
+    valueKrw,
+    valueUsd,
     priceEffectKrw,
     fxEffectKrw,
     changePercent,

@@ -2427,6 +2427,44 @@ main {
   scrollbar-gutter: stable;
 }
 
+.holdings-table-toolbar {
+  align-items: center;
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 8px;
+}
+
+.currency-toggle {
+  background: var(--surface2, #f0f0f0);
+  border-radius: 20px;
+  display: flex;
+  gap: 2px;
+  padding: 3px;
+}
+
+.currency-toggle-btn {
+  background: transparent;
+  border: none;
+  border-radius: 16px;
+  color: var(--text-muted, #888);
+  cursor: pointer;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  padding: 3px 12px;
+  transition: background 0.15s, color 0.15s;
+}
+
+.currency-toggle-btn.active {
+  background: var(--surface, #fff);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+  color: var(--text, #111);
+}
+
+.currency-toggle-btn:hover:not(.active) {
+  color: var(--text, #111);
+}
+
 .filters {
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   margin-bottom: 14px;
