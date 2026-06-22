@@ -12023,7 +12023,7 @@ function Ka({ item: e, appState: t, editing: n, layout: r, saveLayout: i }) {
 		}, { once: !0 });
 	};
 	return /* @__PURE__ */ (0, B.jsxs)("article", {
-		ref: (e) => e && a(o(e)),
+		ref: (e) => e && a(e),
 		className: [
 			V(e.id),
 			"dashboard-card",
@@ -12031,20 +12031,6 @@ function Ka({ item: e, appState: t, editing: n, layout: r, saveLayout: i }) {
 			e.visible === !1 && n ? "is-hidden-card" : ""
 		].filter(Boolean).join(" "),
 		"data-dashboard-card": e.id,
-		draggable: n,
-		onDragStart: (t) => {
-			if (!n || t.target.closest(".layout-resize-handle, button")) {
-				t.preventDefault();
-				return;
-			}
-			t.dataTransfer.effectAllowed = "move", t.dataTransfer.setData("text/plain", e.id);
-		},
-		onMouseDownCapture: (e) => {
-			e.target.closest(".layout-resize-handle") && f(e);
-		},
-		onPointerDownCapture: (e) => {
-			e.target.closest(".layout-resize-handle") && f(e);
-		},
 		onDragOver: (e) => n && e.preventDefault(),
 		onDrop: (t) => {
 			if (!n) return;
@@ -12059,6 +12045,15 @@ function Ka({ item: e, appState: t, editing: n, layout: r, saveLayout: i }) {
 				children: [
 					/* @__PURE__ */ (0, B.jsx)("span", {
 						className: "layout-drag-handle",
+						ref: (e) => e && o(e),
+						draggable: n,
+						onDragStart: (t) => {
+							if (!n || t.target.closest(".layout-resize-handle, button")) {
+								t.preventDefault();
+								return;
+							}
+							t.dataTransfer.effectAllowed = "move", t.dataTransfer.setData("text/plain", e.id);
+						},
 						children: "이동"
 					}),
 					/* @__PURE__ */ (0, B.jsx)("span", {
@@ -12089,7 +12084,9 @@ function Ka({ item: e, appState: t, editing: n, layout: r, saveLayout: i }) {
 			}) : null,
 			n ? /* @__PURE__ */ (0, B.jsx)("span", {
 				className: "layout-resize-handle",
-				"aria-label": "카드 크기 조절"
+				"aria-label": "카드 크기 조절",
+				onMouseDown: f,
+				onPointerDown: f
 			}) : null,
 			/* @__PURE__ */ (0, B.jsx)(qa, {
 				id: e.id,

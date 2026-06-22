@@ -223,28 +223,21 @@ function CraftCard({ item, appState, editing, layout, saveLayout }) {
 
   return (
     <article
-      ref={(node) => node && connect(drag(node))}
+      ref={(node) => node && connect(node)}
       className={className}
       data-dashboard-card={item.id}
-      draggable={editing}
-      onDragStart={handleDragStart}
-      onMouseDownCapture={(event) => {
-        if (event.target.closest(".layout-resize-handle")) {
-          handleResizeStart(event);
-        }
-      }}
-      onPointerDownCapture={(event) => {
-        if (event.target.closest(".layout-resize-handle")) {
-          handleResizeStart(event);
-        }
-      }}
       onDragOver={(event) => editing && event.preventDefault()}
       onDrop={handleDrop}
       style={style}
     >
       {editing ? (
         <div className="layout-controls">
-          <span className="layout-drag-handle">이동</span>
+          <span
+            className="layout-drag-handle"
+            ref={(node) => node && drag(node)}
+            draggable={editing}
+            onDragStart={handleDragStart}
+          >이동</span>
           <span className="layout-card-label">{LABELS[item.id] || item.id}</span>
           <span className="layout-size-readout">
             {Math.round(activeItem.widthPct)}% · {Math.round(activeItem.minHeight)}px
@@ -254,7 +247,14 @@ function CraftCard({ item, appState, editing, layout, saveLayout }) {
           </button>
         </div>
       ) : null}
-      {editing ? <span className="layout-resize-handle" aria-label="카드 크기 조절" /> : null}
+      {editing ? (
+        <span
+          className="layout-resize-handle"
+          aria-label="카드 크기 조절"
+          onMouseDown={handleResizeStart}
+          onPointerDown={handleResizeStart}
+        />
+      ) : null}
       <CardContent id={item.id} state={appState} />
     </article>
   );
