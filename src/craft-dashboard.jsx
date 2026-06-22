@@ -173,12 +173,15 @@ function DashboardCard({ item, appState, editing, layout, saveLayout }) {
   };
 
   const handleDragStart = (event) => {
-    event.stopPropagation();
+    // resize handle이나 버튼 위에서 시작된 drag는 무시
+    if (event.target.closest(".layout-resize-handle, button, select, input")) {
+      event.preventDefault();
+      return;
+    }
     event.dataTransfer.effectAllowed = "move";
     event.dataTransfer.setData("text/plain", item.id);
-    // 드래그 중 시각 피드백
     requestAnimationFrame(() => {
-      event.target.closest("[data-dashboard-card]")?.classList.add("is-dragging");
+      event.currentTarget?.classList.add("is-dragging");
     });
   };
 
@@ -206,6 +209,9 @@ function DashboardCard({ item, appState, editing, layout, saveLayout }) {
     <article
       className={className}
       data-dashboard-card={item.id}
+      draggable={editing}
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
       onDragOver={(e) => {
         if (!editing) return;
         e.preventDefault();
@@ -233,12 +239,7 @@ function DashboardCard({ item, appState, editing, layout, saveLayout }) {
     >
       {editing ? (
         <div className="layout-controls">
-          <span
-            className="layout-drag-handle"
-            draggable={true}
-            onDragStart={handleDragStart}
-            onDragEnd={handleDragEnd}
-          >이동</span>
+          <span className="layout-drag-handle">이동</span>
           <span className="layout-card-label">{LABELS[item.id] || item.id}</span>
           <span className="layout-size-readout">
             {Math.round(activeItem.widthPct)}% · {Math.round(activeItem.minHeight)}px
