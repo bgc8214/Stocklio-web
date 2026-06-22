@@ -127,9 +127,7 @@ function CraftCanvas({ children }) {
 }
 
 function CraftCard({ item, appState, editing, layout, saveLayout }) {
-  const {
-    connectors: { connect, drag },
-  } = useNode();
+  useNode(); // Craft.js 노드 등록 (connectors 미사용)
   const [draft, setDraft] = useState(null);
   const resizeActiveRef = useRef(false);
 
@@ -187,23 +185,46 @@ function CraftCard({ item, appState, editing, layout, saveLayout }) {
   };
 
   const handleDragStart = (event) => {
-    if (!editing || event.target.closest(".layout-resize-handle, button")) {
-      event.preventDefault();
-      return;
-    }
+    event.stopPropagation();
     event.dataTransfer.effectAllowed = "move";
     event.dataTransfer.setData("text/plain", item.id);
+    // 드래그 중 시각 피드백
+    requestAnimationFrame(() => {
+      event.target.closest("[data-dashboard-card]")?.classList.add("is-dragging");
+    });
+  };
+
+  const handleDragEnd = () => {
+    document.querySelectorAll(".is-dragging, .is-drag-over, .is-drop-after").forEach(el => {
+      el.classList.remove("is-dragging", "is-drag-over", "is-drop-after");
+    });
+  };
+
+  const handleDragOver = (event) => {
+    if (!editing) return;
+    event.preventDefault();
+    event.dataTransfer.dropEffect = "move";
+    const card = event.currentTarget;
+    document.querySelectorAll(".is-drag-over").forEach(el => el.classList.remove("is-drag-over", "is-drop-after"));
+    card.classList.add("is-drag-over");
+    if (shouldDropAfter(event, card)) card.classList.add("is-drop-after");
+  };
+
+  const handleDragLeave = (event) => {
+    const card = event.currentTarget;
+    if (!card.contains(event.relatedTarget)) {
+      card.classList.remove("is-drag-over", "is-drop-after");
+    }
   };
 
   const handleDrop = (event) => {
-    if (!editing) {
-      return;
-    }
+    if (!editing) return;
     event.preventDefault();
     const sourceId = event.dataTransfer.getData("text/plain");
-    if (!sourceId || sourceId === item.id) {
-      return;
-    }
+    document.querySelectorAll(".is-dragging, .is-drag-over, .is-drop-after").forEach(el => {
+      el.classList.remove("is-dragging", "is-drag-over", "is-drop-after");
+    });
+    if (!sourceId || sourceId === item.id) return;
     saveLayout(reorderLayout(layout, sourceId, item.id, shouldDropAfter(event, event.currentTarget)));
   };
 
@@ -223,10 +244,10 @@ function CraftCard({ item, appState, editing, layout, saveLayout }) {
 
   return (
     <article
-      ref={(node) => node && connect(node)}
       className={className}
       data-dashboard-card={item.id}
-      onDragOver={(event) => editing && event.preventDefault()}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
       onDrop={handleDrop}
       style={style}
     >
@@ -234,9 +255,9 @@ function CraftCard({ item, appState, editing, layout, saveLayout }) {
         <div className="layout-controls">
           <span
             className="layout-drag-handle"
-            ref={(node) => node && drag(node)}
-            draggable={editing}
+            draggable={true}
             onDragStart={handleDragStart}
+            onDragEnd={handleDragEnd}
           >이동</span>
           <span className="layout-card-label">{LABELS[item.id] || item.id}</span>
           <span className="layout-size-readout">

@@ -11989,22 +11989,23 @@ function Ga({ children: e }) {
 	return /* @__PURE__ */ (0, B.jsx)(B.Fragment, { children: e });
 }
 function Ka({ item: e, appState: t, editing: n, layout: r, saveLayout: i }) {
-	let { connectors: { connect: a, drag: o } } = Ii(), [s, c] = (0, _.useState)(null), l = (0, _.useRef)(!1), u = s || e, d = {
-		"--card-span": u.span,
-		"--card-width-pct": `${u.widthPct}%`,
-		"--card-min-height": `${u.minHeight}px`
-	}, f = (t) => {
-		if (l.current) return;
-		l.current = !0, t.preventDefault(), t.stopPropagation();
+	Ii();
+	let [a, o] = (0, _.useState)(null), s = (0, _.useRef)(!1), c = a || e, l = {
+		"--card-span": c.span,
+		"--card-width-pct": `${c.widthPct}%`,
+		"--card-min-height": `${c.minHeight}px`
+	}, u = (t) => {
+		if (s.current) return;
+		s.current = !0, t.preventDefault(), t.stopPropagation();
 		let n = t.target.closest("[data-dashboard-card]"), a = {
 			x: t.clientX,
 			y: t.clientY,
 			span: e.span,
 			widthPct: e.widthPct,
 			height: n.getBoundingClientRect().height
-		}, o = document.querySelector("#dashboardBoard"), s = Math.max(1, o?.clientWidth || n.parentElement?.clientWidth || 1), u = t.type === "mousedown" ? "mousemove" : "pointermove", d = t.type === "mousedown" ? "mouseup" : "pointerup", f = (t) => {
-			let n = Oo(a.widthPct + (t.clientX - a.x) / s * 100, 18, 100);
-			c({
+		}, c = document.querySelector("#dashboardBoard"), l = Math.max(1, c?.clientWidth || n.parentElement?.clientWidth || 1), u = t.type === "mousedown" ? "mousemove" : "pointermove", d = t.type === "mousedown" ? "mouseup" : "pointerup", f = (t) => {
+			let n = Oo(a.widthPct + (t.clientX - a.x) / l * 100, 18, 100);
+			o({
 				...e,
 				widthPct: n,
 				span: Oo(Math.round(n / 100 * 12), 2, 12),
@@ -12013,17 +12014,16 @@ function Ka({ item: e, appState: t, editing: n, layout: r, saveLayout: i }) {
 		};
 		window.addEventListener(u, f), window.addEventListener(d, (t) => {
 			window.removeEventListener(u, f);
-			let n = Oo(a.widthPct + (t.clientX - a.x) / s * 100, 18, 100), o = {
+			let n = Oo(a.widthPct + (t.clientX - a.x) / l * 100, 18, 100), c = {
 				...e,
 				widthPct: ko(n, .1),
 				span: Oo(Math.round(n / 100 * 12), 2, 12),
 				minHeight: Oo(Math.round(a.height + t.clientY - a.y), 112, 720)
 			};
-			c(null), l.current = !1, i(r.map((t) => t.id === e.id ? o : t));
+			o(null), s.current = !1, i(r.map((t) => t.id === e.id ? c : t));
 		}, { once: !0 });
 	};
 	return /* @__PURE__ */ (0, B.jsxs)("article", {
-		ref: (e) => e && a(e),
 		className: [
 			V(e.id),
 			"dashboard-card",
@@ -12031,28 +12031,41 @@ function Ka({ item: e, appState: t, editing: n, layout: r, saveLayout: i }) {
 			e.visible === !1 && n ? "is-hidden-card" : ""
 		].filter(Boolean).join(" "),
 		"data-dashboard-card": e.id,
-		onDragOver: (e) => n && e.preventDefault(),
+		onDragOver: (e) => {
+			if (!n) return;
+			e.preventDefault(), e.dataTransfer.dropEffect = "move";
+			let t = e.currentTarget;
+			document.querySelectorAll(".is-drag-over").forEach((e) => e.classList.remove("is-drag-over", "is-drop-after")), t.classList.add("is-drag-over"), fo(e, t) && t.classList.add("is-drop-after");
+		},
+		onDragLeave: (e) => {
+			let t = e.currentTarget;
+			t.contains(e.relatedTarget) || t.classList.remove("is-drag-over", "is-drop-after");
+		},
 		onDrop: (t) => {
 			if (!n) return;
 			t.preventDefault();
 			let a = t.dataTransfer.getData("text/plain");
-			!a || a === e.id || i(uo(r, a, e.id, fo(t, t.currentTarget)));
+			document.querySelectorAll(".is-dragging, .is-drag-over, .is-drop-after").forEach((e) => {
+				e.classList.remove("is-dragging", "is-drag-over", "is-drop-after");
+			}), !(!a || a === e.id) && i(uo(r, a, e.id, fo(t, t.currentTarget)));
 		},
-		style: d,
+		style: l,
 		children: [
 			n ? /* @__PURE__ */ (0, B.jsxs)("div", {
 				className: "layout-controls",
 				children: [
 					/* @__PURE__ */ (0, B.jsx)("span", {
 						className: "layout-drag-handle",
-						ref: (e) => e && o(e),
-						draggable: n,
+						draggable: !0,
 						onDragStart: (t) => {
-							if (!n || t.target.closest(".layout-resize-handle, button")) {
-								t.preventDefault();
-								return;
-							}
-							t.dataTransfer.effectAllowed = "move", t.dataTransfer.setData("text/plain", e.id);
+							t.stopPropagation(), t.dataTransfer.effectAllowed = "move", t.dataTransfer.setData("text/plain", e.id), requestAnimationFrame(() => {
+								t.target.closest("[data-dashboard-card]")?.classList.add("is-dragging");
+							});
+						},
+						onDragEnd: () => {
+							document.querySelectorAll(".is-dragging, .is-drag-over, .is-drop-after").forEach((e) => {
+								e.classList.remove("is-dragging", "is-drag-over", "is-drop-after");
+							});
 						},
 						children: "이동"
 					}),
@@ -12063,9 +12076,9 @@ function Ka({ item: e, appState: t, editing: n, layout: r, saveLayout: i }) {
 					/* @__PURE__ */ (0, B.jsxs)("span", {
 						className: "layout-size-readout",
 						children: [
-							Math.round(u.widthPct),
+							Math.round(c.widthPct),
 							"% · ",
-							Math.round(u.minHeight),
+							Math.round(c.minHeight),
 							"px"
 						]
 					}),
@@ -12085,8 +12098,8 @@ function Ka({ item: e, appState: t, editing: n, layout: r, saveLayout: i }) {
 			n ? /* @__PURE__ */ (0, B.jsx)("span", {
 				className: "layout-resize-handle",
 				"aria-label": "카드 크기 조절",
-				onMouseDown: f,
-				onPointerDown: f
+				onMouseDown: u,
+				onPointerDown: u
 			}) : null,
 			/* @__PURE__ */ (0, B.jsx)(qa, {
 				id: e.id,
