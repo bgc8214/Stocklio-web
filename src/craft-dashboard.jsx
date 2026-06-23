@@ -276,8 +276,9 @@ function DashboardCard({ item, appState, editing, layout, saveLayout }) {
 }
 
 function CardContent({ id, state }) {
-  const totals = getTotals(state);
   const cm = useCurrencyMode();
+  if (!state) return null;
+  const totals = getTotals(state);
   const fmt = makeFmt(cm, state.fxRate);
   if (id === "total-value") {
     const marketContext = getCurrentMarketContext();
@@ -1023,8 +1024,44 @@ function TopMoverPanel({ state }) {
 }
 
 
+class DashboardErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { error: null };
+  }
+  static getDerivedStateFromError(error) {
+    return { error };
+  }
+  componentDidCatch(error) {
+    console.error("[Dashboard] render error:", error);
+  }
+  componentDidMount() {
+    // 다음 stocklio:state 이벤트에서 자동 복구
+    this._recover = () => this.setState({ error: null });
+    window.addEventListener("stocklio:state", this._recover);
+  }
+  componentWillUnmount() {
+    window.removeEventListener("stocklio:state", this._recover);
+  }
+  render() {
+    if (this.state.error) {
+      return (
+        <div style={{ padding: "24px", color: "var(--muted)" }}>
+          <strong>대시보드 렌더링 오류</strong>
+          <p style={{ fontSize: "0.85rem", marginTop: 4 }}>가격이 갱신되면 자동으로 복구됩니다.</p>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 const root = document.querySelector("#dashboardBoard");
 if (root) {
   root.classList.add("craft-dashboard-board");
-  createRoot(root).render(<CraftDashboardApp />);
+  createRoot(root).render(
+    <DashboardErrorBoundary>
+      <CraftDashboardApp />
+    </DashboardErrorBoundary>
+  );
 }

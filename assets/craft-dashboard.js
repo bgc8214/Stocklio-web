@@ -8328,17 +8328,19 @@ function pe({ item: e, appState: t, editing: n, layout: r, saveLayout: i }) {
 	});
 }
 function O({ id: e, state: t }) {
-	let n = je(t), r = Ue(He(), t.fxRate);
+	let n = He();
+	if (!t) return null;
+	let r = je(t), i = Ue(n, t.fxRate);
 	if (e === "total-value") {
-		let e = be(), i = [...t.holdings].filter((e) => e.priceAsOf).sort((e, t) => String(t.priceAsOf).localeCompare(String(e.priceAsOf)))[0]?.priceAsOf || t.fxRate?.asOf, a = [
-			i && /^\d{4}-\d{2}-\d{2}/.test(i) ? `${Ke(i.slice(0, 10))} 종가` : e.isMarketClosed ? e.label : "",
+		let e = be(), n = [...t.holdings].filter((e) => e.priceAsOf).sort((e, t) => String(t.priceAsOf).localeCompare(String(e.priceAsOf)))[0]?.priceAsOf || t.fxRate?.asOf, a = [
+			n && /^\d{4}-\d{2}-\d{2}/.test(n) ? `${Ke(n.slice(0, 10))} 종가` : e.isMarketClosed ? e.label : "",
 			t.fxRate?.rate ? `USD/KRW ${We(t.fxRate.rate, 2)}` : "",
 			e.isMarketClosed ? e.closedReason || "미국장 휴장" : ""
-		].filter(Boolean), o = n.gainKrw >= 0 ? "+" : "", s = n.gainKrw >= 0 ? "positive" : "negative";
+		].filter(Boolean), o = r.gainKrw >= 0 ? "+" : "", s = r.gainKrw >= 0 ? "positive" : "negative";
 		return /* @__PURE__ */ (0, T.jsxs)(T.Fragment, { children: [
 			/* @__PURE__ */ (0, T.jsx)("span", { children: "총자산" }),
-			/* @__PURE__ */ (0, T.jsx)("strong", { children: r(n.valueKrw) }),
-			/* @__PURE__ */ (0, T.jsx)("small", { children: `주식 ${r(n.stockValueKrw)} · 예수금 ${r(n.cashKrw)}` }),
+			/* @__PURE__ */ (0, T.jsx)("strong", { children: i(r.valueKrw) }),
+			/* @__PURE__ */ (0, T.jsx)("small", { children: `주식 ${i(r.stockValueKrw)} · 예수금 ${i(r.cashKrw)}` }),
 			/* @__PURE__ */ (0, T.jsxs)("div", {
 				className: "metric-badges",
 				children: [a.map((e) => /* @__PURE__ */ (0, T.jsx)("span", {
@@ -8346,7 +8348,7 @@ function O({ id: e, state: t }) {
 					children: e
 				}, e)), /* @__PURE__ */ (0, T.jsxs)("span", {
 					className: `metric-return-badge ${s}`,
-					children: [o, A(n.returnRate)]
+					children: [o, A(r.returnRate)]
 				})]
 			})
 		] });
@@ -8355,18 +8357,18 @@ function O({ id: e, state: t }) {
 		let e = t.holdings.filter((e) => e.type !== "cash").length;
 		return /* @__PURE__ */ (0, T.jsx)(k, {
 			label: "주식 매입금액",
-			value: r(n.costKrw),
+			value: i(r.costKrw),
 			hint: `${e}개 종목 · 평단 기준`
 		});
 	}
 	return e === "total-gain" ? /* @__PURE__ */ (0, T.jsx)(k, {
 		label: "주식 평가순익",
-		value: r(n.gainKrw),
-		hint: A(n.returnRate),
-		tone: n.gainKrw >= 0 ? "positive" : "negative"
+		value: i(r.gainKrw),
+		hint: A(r.returnRate),
+		tone: r.gainKrw >= 0 ? "positive" : "negative"
 	}) : e === "cash-total" ? /* @__PURE__ */ (0, T.jsx)(k, {
 		label: "예수금",
-		value: r(n.cashKrw),
+		value: i(r.cashKrw),
 		hint: "총자산에 포함"
 	}) : e === "fx-rate" ? /* @__PURE__ */ (0, T.jsx)(k, {
 		label: "USD/KRW",
@@ -9120,6 +9122,37 @@ function Ze({ state: e }) {
 		]
 	})] });
 }
-var Qe = document.querySelector("#dashboardBoard");
-Qe && (Qe.classList.add("craft-dashboard-board"), (0, v.createRoot)(Qe).render(/* @__PURE__ */ (0, T.jsx)(fe, {})));
+var Qe = class extends _.Component {
+	constructor(e) {
+		super(e), this.state = { error: null };
+	}
+	static getDerivedStateFromError(e) {
+		return { error: e };
+	}
+	componentDidCatch(e) {
+		console.error("[Dashboard] render error:", e);
+	}
+	componentDidMount() {
+		this._recover = () => this.setState({ error: null }), window.addEventListener("stocklio:state", this._recover);
+	}
+	componentWillUnmount() {
+		window.removeEventListener("stocklio:state", this._recover);
+	}
+	render() {
+		return this.state.error ? /* @__PURE__ */ (0, T.jsxs)("div", {
+			style: {
+				padding: "24px",
+				color: "var(--muted)"
+			},
+			children: [/* @__PURE__ */ (0, T.jsx)("strong", { children: "대시보드 렌더링 오류" }), /* @__PURE__ */ (0, T.jsx)("p", {
+				style: {
+					fontSize: "0.85rem",
+					marginTop: 4
+				},
+				children: "가격이 갱신되면 자동으로 복구됩니다."
+			})]
+		}) : this.props.children;
+	}
+}, $e = document.querySelector("#dashboardBoard");
+$e && ($e.classList.add("craft-dashboard-board"), (0, v.createRoot)($e).render(/* @__PURE__ */ (0, T.jsx)(Qe, { children: /* @__PURE__ */ (0, T.jsx)(fe, {}) })));
 //#endregion
