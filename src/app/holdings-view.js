@@ -282,10 +282,13 @@ export function renderHoldings() {
       const cost = values.costNative;
       const gain = values.gainNative;
       const returnRate = cost ? gain / cost : 0;
-      const dailyMove = _ctx.getHoldingDailyMove(holding);
       const cm = _ctx.currencyMode;
       const fx = _ctx.getFxRate();
-      const dailyMoveSign = cm === "krw" ? dailyMove.valueKrw : dailyMove.valueUsd;
+      const fxObj = _ctx.getFxRateObj();
+      const dailyMove = _ctx.getHoldingDailyMove(holding, fxObj);
+      const isUsdHolding = holding.currency === "USD";
+      const dailyMoveValue = cm === "krw" ? dailyMove.valueKrw : dailyMove.valueUsd;
+      const dailyMoveIsKrw = cm === "krw" || !isUsdHolding;
       return `<tr>
         <td data-label="투자자" class="col-context">${escapeHtml(holding.investor)}</td>
         <td data-label="계좌" class="col-context"><span class="name-cell">${escapeHtml(holding.account)}</span></td>
@@ -295,8 +298,8 @@ export function renderHoldings() {
         <td data-label="현재가"><span class="money-value">${formatMoneyByMode(holding.price, holding.currency, cm, fx)}</span><span class="sparkline-wrap" data-sparkline-ticker="${escapeHtml(holding.ticker || "")}" data-sparkline-positive="${(holding.priceChange ?? 0) >= 0 ? "1" : "0"}"></span></td>
         <td data-label="평단가"><span class="money-value">${formatMoneyByMode(holding.averageCost, holding.currency, cm, fx)}</span></td>
         <td data-label="평가금액"><span class="money-value">${formatMoneyByMode(value, holding.currency, cm, fx)}</span></td>
-        <td data-label="일 영향" class="${dailyMove.hasData ? (dailyMoveSign >= 0 ? "positive" : "negative") : "no-data"}">
-          <span class="money-value">${dailyMove.hasData ? formatChangePrefixed(dailyMoveSign, cm === "krw") : ""}</span>
+        <td data-label="일 영향" class="${dailyMove.hasData ? (dailyMoveValue >= 0 ? "positive" : "negative") : "no-data"}">
+          <span class="money-value">${dailyMove.hasData ? formatChangePrefixed(dailyMoveValue, dailyMoveIsKrw) : ""}</span>
           ${dailyMove.hasData ? `<small>${formatPercent(dailyMove.changePercent)}</small>` : ""}
         </td>
         <td data-label="손익" class="${gain >= 0 ? "positive" : "negative"}"><span class="money-value">${formatChangeByMode(gain, holding.currency, cm, fx)}</span></td>
