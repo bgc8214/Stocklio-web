@@ -1103,6 +1103,7 @@ async function initialize() {
       localStorage.setItem("currencyMode", mode);
     },
     getFxRate: () => state.fxRate.rate,
+    getFxRateObj: () => state.fxRate,
     // state management
     setState: (s) => { state = s; },
     loadState,
