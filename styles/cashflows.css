@@ -1,0 +1,507 @@
+/* 입출금 탭
+   이 파일은 styles/ 소스 중 하나이며, scripts/build-css.mjs가 병합해 styles.css를 생성한다.
+   직접 styles.css를 수정하지 말 것. */
+@layer cashflows {
+.cash-form-row {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: minmax(120px, 0.9fr) minmax(0, 1fr);
+}
+
+.cash-flow-form {
+  align-items: end;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  margin-bottom: 14px;
+}
+
+.performance-detail-panel td,
+.performance-detail-panel th,
+[data-view="cashflows"] td,
+[data-view="cashflows"] th {
+  overflow-wrap: anywhere;
+}
+
+.cash-flow-form {
+  grid-template-columns: 160px 1fr 140px 180px 1fr auto;
+  gap: 10px;
+  align-items: end;
+  margin-bottom: 18px;
+}
+
+.cash-flow-form input:focus,
+.cash-flow-form select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 14%, transparent);
+  outline: none;
+}
+
+[data-view="cashflows"] thead th {
+  background: var(--surface-soft);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+[data-view="cashflows"] tbody:empty::after {
+  content: "입출금 기록이 없습니다. 위 폼에서 첫 기록을 추가해보세요.";
+}
+
+.cash-flow-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: flex-end;
+}
+
+.cash-flow-form > * {
+  flex: 1 1 140px;
+}
+
+.cash-flow-form input[type="date"],
+.cash-flow-form input[type="number"] {
+  flex: 1 1 120px;
+}
+
+.cash-flow-form > button[type="submit"],
+.cash-flow-form > [id*="cashSubmit"],
+.cash-flow-form > [id*="flowSubmit"],
+.cash-flow-form > button:last-child {
+  flex: 0 0 auto;
+  min-height: 44px;
+  font-weight: 700;
+  white-space: nowrap;
+  padding: 0 18px;
+}
+
+.dividend-chart { padding: 8px 0; }
+
+.dividend-summary {
+  display: flex;
+  gap: 16px;
+  font-size: 13px;
+  color: var(--muted);
+  margin-bottom: 12px;
+}
+
+.dividend-summary strong { color: var(--ink); }
+
+.dividend-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  height: 100px;
+}
+
+.dividend-bar-wrap {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.dividend-bar {
+  width: 100%;
+  background: var(--accent);
+  border-radius: 3px 3px 0 0;
+  min-height: 4px;
+  transition: height 0.3s;
+}
+
+.dividend-bar-label { font-size: 10px; color: var(--muted); white-space: nowrap; }
+
+}
+
+@layer responsive {
+  @media (max-width: 980px) {
+    .cash-flow-form {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+    .cash-flow-form > * {
+        flex: none;
+        width: 100%;
+      }
+
+  }
+
+  @media (max-width: 640px) {
+    .cash-flow-form {
+        grid-template-columns: 1fr;
+      }
+
+  }
+
+  @media (max-width: 700px) {
+    .cash-flow-form {
+        display: grid !important;
+        grid-template-columns: 1fr !important;
+        gap: 8px !important;
+        align-items: stretch !important;
+      }
+
+    .cash-flow-form > * {
+        flex: none !important;
+        width: 100% !important;
+      }
+
+    .cash-flow-form input,
+      .cash-flow-form select,
+      .cash-flow-form button {
+        min-height: 42px !important;
+        height: 42px !important;
+        max-height: 42px !important;
+        padding-block: 0 !important;
+        font-size: 14px !important;
+      }
+
+    .cash-flow-form button[type="submit"] {
+        min-height: 44px !important;
+        height: 44px !important;
+        max-height: 44px !important;
+      }
+
+    .performance-detail-panel table:not(.numbers-source-table),
+      [data-view="cashflows"] table {
+        min-width: 0 !important;
+        width: 100% !important;
+      }
+
+    .performance-detail-panel table:not(.numbers-source-table) thead,
+      [data-view="cashflows"] thead {
+        display: none !important;
+      }
+
+    .performance-detail-panel table:not(.numbers-source-table) tbody,
+      [data-view="cashflows"] tbody {
+        display: grid !important;
+        gap: 8px !important;
+      }
+
+    .performance-detail-panel table:not(.numbers-source-table) tbody tr,
+      [data-view="cashflows"] tbody tr {
+        display: grid !important;
+        gap: 7px !important;
+        padding: 12px !important;
+        border: 1px solid var(--line) !important;
+        border-radius: 8px !important;
+        background: var(--surface) !important;
+      }
+
+    .performance-detail-panel table:not(.numbers-source-table) tbody td,
+      [data-view="cashflows"] tbody td {
+        display: flex !important;
+        align-items: baseline !important;
+        justify-content: space-between !important;
+        gap: 16px !important;
+        min-width: 0 !important;
+        padding: 0 !important;
+        border: 0 !important;
+        text-align: right !important;
+        white-space: normal !important;
+      }
+
+    .performance-detail-panel table:not(.numbers-source-table) tbody td::before,
+      [data-view="cashflows"] tbody td::before {
+        content: attr(data-label);
+        flex: 0 0 auto;
+        color: var(--muted);
+        font-weight: 800;
+        text-align: left;
+      }
+
+    .performance-detail-panel table:not(.numbers-source-table) tbody td[colspan]::before,
+      [data-view="cashflows"] tbody td[colspan]::before {
+        content: none !important;
+      }
+
+    [data-view="cashflows"] tbody td input,
+      [data-view="cashflows"] tbody td select {
+        width: min(100%, 220px) !important;
+        min-height: 38px !important;
+        height: 38px !important;
+      }
+
+    .cash-flow-form {
+        display: grid !important;
+        grid-template-columns: 1fr !important;
+        gap: 8px !important;
+        align-items: stretch !important;
+      }
+
+    .cash-flow-form > * {
+        flex: none !important;
+        width: 100% !important;
+      }
+
+    .cash-flow-form input,
+      .cash-flow-form select,
+      .cash-flow-form button {
+        min-height: 42px !important;
+        height: 42px !important;
+        max-height: 42px !important;
+        padding-block: 0 !important;
+        font-size: 14px !important;
+      }
+
+    .cash-flow-form button[type="submit"] {
+        min-height: 44px !important;
+        height: 44px !important;
+        max-height: 44px !important;
+      }
+
+    .performance-detail-panel table:not(.numbers-source-table),
+      [data-view="cashflows"] table {
+        min-width: 0 !important;
+        width: 100% !important;
+      }
+
+    .performance-detail-panel table:not(.numbers-source-table) thead,
+      [data-view="cashflows"] thead {
+        display: none !important;
+      }
+
+    .performance-detail-panel table:not(.numbers-source-table) tbody,
+      [data-view="cashflows"] tbody {
+        display: grid !important;
+        gap: 8px !important;
+      }
+
+    .performance-detail-panel table:not(.numbers-source-table) tbody tr,
+      [data-view="cashflows"] tbody tr {
+        display: grid !important;
+        gap: 7px !important;
+        padding: 12px !important;
+        border: 1px solid var(--line) !important;
+        border-radius: 8px !important;
+        background: var(--surface) !important;
+      }
+
+    .performance-detail-panel table:not(.numbers-source-table) tbody td,
+      [data-view="cashflows"] tbody td {
+        display: flex !important;
+        align-items: baseline !important;
+        justify-content: space-between !important;
+        gap: 16px !important;
+        min-width: 0 !important;
+        padding: 0 !important;
+        border: 0 !important;
+        text-align: right !important;
+        white-space: normal !important;
+      }
+
+    .performance-detail-panel table:not(.numbers-source-table) tbody td::before,
+      [data-view="cashflows"] tbody td::before {
+        content: attr(data-label);
+        flex: 0 0 auto;
+        color: var(--muted);
+        font-weight: 800;
+        text-align: left;
+      }
+
+    .performance-detail-panel table:not(.numbers-source-table) tbody td[colspan]::before,
+      [data-view="cashflows"] tbody td[colspan]::before {
+        content: none !important;
+      }
+
+    [data-view="cashflows"] tbody td input,
+      [data-view="cashflows"] tbody td select {
+        width: min(100%, 220px) !important;
+        min-height: 38px !important;
+        height: 38px !important;
+      }
+
+    .cash-flow-form {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 8px;
+      }
+
+    .cash-flow-form > *,
+      .cash-flow-form input,
+      .cash-flow-form select,
+      .cash-flow-form button,
+      .notification-form input,
+      .notification-form button,
+      .sim-input,
+      .sim-select {
+        width: 100%;
+        min-height: 42px !important;
+        height: 42px;
+        padding: 0 12px;
+        font-size: 14px;
+      }
+
+    .cash-flow-form input[type="date"],
+      .cash-flow-form input[type="number"] {
+        min-height: 42px !important;
+        height: 42px !important;
+        flex: none;
+      }
+
+    .cash-flow-form > button[type="submit"],
+      .cash-flow-form > button:last-child {
+        height: 44px;
+        min-height: 44px !important;
+      }
+
+    .performance-detail-panel table:not(.numbers-source-table),
+      [data-view="cashflows"] table {
+        min-width: 0 !important;
+        width: 100%;
+      }
+
+    .performance-detail-panel table:not(.numbers-source-table) thead,
+      [data-view="cashflows"] thead {
+        display: none;
+      }
+
+    .performance-detail-panel table:not(.numbers-source-table) tbody,
+      [data-view="cashflows"] tbody {
+        display: grid;
+        gap: 8px;
+      }
+
+    .performance-detail-panel table:not(.numbers-source-table) tbody tr,
+      [data-view="cashflows"] tbody tr {
+        display: grid;
+        gap: 7px;
+        padding: 12px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--surface);
+      }
+
+    .performance-detail-panel table:not(.numbers-source-table) tbody td,
+      [data-view="cashflows"] tbody td {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 16px;
+        min-width: 0;
+        padding: 0;
+        border: 0;
+        text-align: right;
+        white-space: normal;
+      }
+
+    .performance-detail-panel table:not(.numbers-source-table) tbody td::before,
+      [data-view="cashflows"] tbody td::before {
+        content: attr(data-label);
+        flex: 0 0 auto;
+        color: var(--muted);
+        font-weight: 800;
+        text-align: left;
+      }
+
+    .performance-detail-panel table:not(.numbers-source-table) tbody td[colspan],
+      [data-view="cashflows"] tbody td[colspan] {
+        justify-content: center;
+        text-align: center;
+      }
+
+    .performance-detail-panel table:not(.numbers-source-table) tbody td[colspan]::before,
+      [data-view="cashflows"] tbody td[colspan]::before {
+        content: none;
+      }
+
+    [data-view="cashflows"] tbody td input,
+      [data-view="cashflows"] tbody td select {
+        width: min(100%, 220px);
+        min-height: 38px;
+      }
+
+    .cash-flow-form {
+        display: grid !important;
+        grid-template-columns: 1fr !important;
+        gap: 8px !important;
+        align-items: stretch !important;
+      }
+
+    .cash-flow-form > * {
+        flex: none !important;
+        width: 100% !important;
+      }
+
+    .cash-flow-form input,
+      .cash-flow-form select,
+      .cash-flow-form button {
+        min-height: 42px !important;
+        height: 42px !important;
+        max-height: 42px !important;
+        padding-block: 0 !important;
+        font-size: 14px !important;
+      }
+
+    .cash-flow-form button[type="submit"] {
+        min-height: 44px !important;
+        height: 44px !important;
+        max-height: 44px !important;
+      }
+
+    .performance-detail-panel table:not(.numbers-source-table),
+      [data-view="cashflows"] table {
+        min-width: 0 !important;
+        width: 100% !important;
+      }
+
+    .performance-detail-panel table:not(.numbers-source-table) thead,
+      [data-view="cashflows"] thead {
+        display: none !important;
+      }
+
+    .performance-detail-panel table:not(.numbers-source-table) tbody,
+      [data-view="cashflows"] tbody {
+        display: grid !important;
+        gap: 8px !important;
+      }
+
+    .performance-detail-panel table:not(.numbers-source-table) tbody tr,
+      [data-view="cashflows"] tbody tr {
+        display: grid !important;
+        gap: 7px !important;
+        padding: 12px !important;
+        border: 1px solid var(--line) !important;
+        border-radius: 8px !important;
+        background: var(--surface) !important;
+      }
+
+    .performance-detail-panel table:not(.numbers-source-table) tbody td,
+      [data-view="cashflows"] tbody td {
+        display: flex !important;
+        align-items: baseline !important;
+        justify-content: space-between !important;
+        gap: 16px !important;
+        min-width: 0 !important;
+        padding: 0 !important;
+        border: 0 !important;
+        text-align: right !important;
+        white-space: normal !important;
+      }
+
+    .performance-detail-panel table:not(.numbers-source-table) tbody td::before,
+      [data-view="cashflows"] tbody td::before {
+        content: attr(data-label);
+        flex: 0 0 auto;
+        color: var(--muted);
+        font-weight: 800;
+        text-align: left;
+      }
+
+    .performance-detail-panel table:not(.numbers-source-table) tbody td[colspan]::before,
+      [data-view="cashflows"] tbody td[colspan]::before {
+        content: none !important;
+      }
+
+    [data-view="cashflows"] tbody td input,
+      [data-view="cashflows"] tbody td select {
+        width: min(100%, 220px) !important;
+        min-height: 38px !important;
+        height: 38px !important;
+      }
+
+  }
+
+}

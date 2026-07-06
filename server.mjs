@@ -17,6 +17,11 @@ import {
 } from "./src/domain/portfolio-core.js";
 
 const rootDir = fileURLToPath(new URL(".", import.meta.url));
+try {
+  process.loadEnvFile(join(rootDir, ".env"));
+} catch {
+  // .env is optional; local demo mode works without it.
+}
 const port = Number(process.env.PORT || 4173);
 const host = process.env.HOST || "127.0.0.1";
 const dataDir = join(rootDir, "data");
@@ -124,9 +129,16 @@ async function proxyYahooChart(url, response) {
     return;
   }
 
+  const ALLOWED_RANGES = ["1d", "5d", "1mo", "3mo", "6mo", "1y"];
+  const ALLOWED_INTERVALS = ["1m", "5m", "15m", "1h", "1d", "1wk"];
+  const rangeParam = url.searchParams.get("range") || "1d";
+  const intervalParam = url.searchParams.get("interval") || "1d";
+  const range = ALLOWED_RANGES.includes(rangeParam) ? rangeParam : "1d";
+  const interval = ALLOWED_INTERVALS.includes(intervalParam) ? intervalParam : "1d";
+
   const yahooUrl = new URL(`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}`);
-  yahooUrl.searchParams.set("interval", "1d");
-  yahooUrl.searchParams.set("range", "1d");
+  yahooUrl.searchParams.set("interval", interval);
+  yahooUrl.searchParams.set("range", range);
 
   const yahooResponse = await fetch(yahooUrl, {
     headers: {
@@ -138,7 +150,7 @@ async function proxyYahooChart(url, response) {
   const body = await yahooResponse.text();
   response.writeHead(yahooResponse.status, {
     "content-type": yahooResponse.headers.get("content-type") || "application/json; charset=utf-8",
-    "cache-control": symbol === "KRW=X" ? "public, max-age=3600" : "public, max-age=300",
+    "cache-control": range === "1d" ? "public, max-age=300" : "public, max-age=3600",
   });
   response.end(body);
 }

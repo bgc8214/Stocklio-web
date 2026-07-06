@@ -552,9 +552,12 @@ export function renderTrendChart(rows) {
 }
 
 function buildTrendChartSvg(chartRows, sp500Map, kospiMap) {
-  const width = 720;
-  const height = 230;
-  const padding = { top: 22, right: 38, bottom: 34, left: 78 };
+  const isMobile = window.innerWidth <= 640;
+  const width = isMobile ? 380 : 720;
+  const height = isMobile ? 300 : 230;
+  const padding = isMobile
+    ? { top: 26, right: 16, bottom: 40, left: 60 }
+    : { top: 22, right: 38, bottom: 34, left: 78 };
   const values = chartRows.map((row) => row.totalValueKrw);
   const max = Math.max(...values);
   const min = Math.min(...values);
@@ -564,7 +567,7 @@ function buildTrendChartSvg(chartRows, sp500Map, kospiMap) {
   const line = chartRows.map((row, index) => `${xFor(index)},${yFor(row.totalValueKrw)}`).join(" ");
   const area = `${padding.left},${height - padding.bottom} ${line} ${width - padding.right},${height - padding.bottom}`;
   const labels = [chartRows[0], chartRows[Math.floor(chartRows.length / 2)], chartRows[chartRows.length - 1]];
-  const tickCount = 5;
+  const tickCount = isMobile ? 4 : 5;
   const valueLabels = Array.from({ length: tickCount }, (_, index) => max - (span / (tickCount - 1)) * index);
   const lastRow = chartRows[chartRows.length - 1];
   const lastX = xFor(chartRows.length - 1);
@@ -602,8 +605,15 @@ function buildTrendChartSvg(chartRows, sp500Map, kospiMap) {
     const drop = peak > 0 ? (peak - v) / peak : 0;
     if (drop > maxDrop) { maxDrop = drop; mddStart = peakIdx; mddEnd = i; }
   });
-  const mddRect = maxDrop > 0.005 && mddEnd > mddStart
-    ? `<rect class="mdd-zone" x="${xFor(mddStart)}" y="${padding.top}" width="${xFor(mddEnd) - xFor(mddStart)}" height="${height - padding.top - padding.bottom}"/>`
+  const showMdd = maxDrop > 0.005 && mddEnd > mddStart;
+  const mddX = xFor(mddStart);
+  const mddWidth = xFor(mddEnd) - mddX;
+  const mddRect = showMdd
+    ? `<rect class="mdd-zone" x="${mddX}" y="${padding.top}" width="${mddWidth}" height="${height - padding.top - padding.bottom}"/>`
+    : "";
+  const mddLabelX = Math.max(padding.left + 40, Math.min(width - padding.right - 40, mddX + mddWidth / 2));
+  const mddLabel = showMdd
+    ? `<text class="mdd-label" x="${mddLabelX}" y="${height - padding.bottom - 8}" text-anchor="middle">최대낙폭 -${formatPercent(maxDrop)}</text>`
     : "";
 
   // 벤치마크 선 (첫 날 기준 정규화)
@@ -621,7 +631,10 @@ function buildTrendChartSvg(chartRows, sp500Map, kospiMap) {
     sp500Map ? `<line class="benchmark-sp500" x1="0" y1="6" x2="18" y2="6"/><text class="legend-label" x="22" y="10">S&amp;P500</text>` : "",
     kospiMap ? `<line class="benchmark-kospi" x1="${sp500Map ? 72 : 0}" y1="6" x2="${sp500Map ? 90 : 18}" y2="6"/><text class="legend-label" x="${sp500Map ? 94 : 22}" y="10">KOSPI</text>` : "",
   ].filter(Boolean).join("");
-  const legend = legendItems ? `<g class="benchmark-legend" transform="translate(${padding.left + 6},${padding.top + 4})">${legendItems}</g>` : "";
+  const legendCaption = legendItems
+    ? `<text class="legend-caption" x="0" y="22">(시작일 총자산 기준으로 환산한 지수)</text>`
+    : "";
+  const legend = legendItems ? `<g class="benchmark-legend" transform="translate(${padding.left + 6},${padding.top + 4})">${legendItems}${legendCaption}</g>` : "";
 
   return `
     <svg viewBox="0 0 ${width} ${height}" role="img" aria-label="총자산 추이">
@@ -629,6 +642,7 @@ function buildTrendChartSvg(chartRows, sp500Map, kospiMap) {
         .map((value) => `<polyline class="trend-grid" points="${padding.left},${yFor(value)} ${width - padding.right},${yFor(value)}"></polyline>`)
         .join("")}
       ${mddRect}
+      ${mddLabel}
       ${buildBenchmarkLine(sp500Map, "benchmark-sp500")}
       ${buildBenchmarkLine(kospiMap, "benchmark-kospi")}
       <polygon class="trend-area" points="${area}"></polygon>

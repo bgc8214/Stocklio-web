@@ -2,6 +2,12 @@ import { cp, mkdir, readFile, rm, stat, writeFile } from "node:fs/promises";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 
+try {
+  process.loadEnvFile(new URL("../.env", import.meta.url));
+} catch {
+  // .env is optional; local demo mode works without it.
+}
+
 const execFileAsync = promisify(execFile);
 
 await execFileAsync("npx", ["vite", "build"], {

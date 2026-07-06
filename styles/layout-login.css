@@ -1,0 +1,259 @@
+/* 로그인 다이얼로그
+   이 파일은 styles/ 소스 중 하나이며, scripts/build-css.mjs가 병합해 styles.css를 생성한다.
+   직접 styles.css를 수정하지 말 것. */
+@layer layout {
+.login-dialog,
+.email-login-dialog {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  box-shadow: var(--shadow);
+  color: var(--ink);
+  padding: 0;
+}
+
+.login-dialog {
+  max-width: min(480px, calc(100vw - 32px));
+  width: 480px;
+}
+
+.email-login-dialog {
+  max-width: min(420px, calc(100vw - 32px));
+  width: 420px;
+}
+
+.login-dialog::backdrop,
+.email-login-dialog::backdrop {
+  background: rgba(17, 31, 25, 0.35);
+}
+
+.login-card {
+  display: grid;
+  gap: 20px;
+  padding: 26px;
+}
+
+.login-dialog-heading {
+  align-items: start;
+  display: flex;
+  gap: 14px;
+  justify-content: space-between;
+}
+
+.login-dialog-heading > div {
+  display: grid;
+  gap: 5px;
+}
+
+.login-dialog-heading strong {
+  font-size: 26px;
+  letter-spacing: 0;
+}
+
+.login-dialog-heading span,
+.login-dialog-note {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.45;
+  margin: 0;
+}
+
+.login-options {
+  display: grid;
+  gap: 10px;
+}
+
+.login-provider-button {
+  align-items: center;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  display: grid;
+  gap: 14px;
+  grid-template-columns: 44px 1fr;
+  justify-content: start;
+  min-height: 60px;
+  padding: 0 18px;
+  text-align: left;
+  width: 100%;
+}
+
+.login-provider-button span {
+  align-items: center;
+  border-radius: 7px;
+  display: inline-flex;
+  font-size: 22px;
+  font-weight: 900;
+  height: 34px;
+  justify-content: center;
+  width: 34px;
+}
+
+.login-provider-button strong {
+  font-size: 18px;
+  letter-spacing: 0;
+}
+
+.login-provider-naver {
+  background: #03c75a;
+  border-color: #03c75a;
+  color: white;
+}
+
+.login-provider-naver:hover {
+  background: #02b350;
+}
+
+.login-provider-naver span {
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.login-provider-google {
+  background: white;
+  color: var(--ink);
+}
+
+.login-provider-google:hover,
+.login-provider-email:hover {
+  background: var(--surface-soft);
+}
+
+.login-provider-google span {
+  background: #fff;
+  border: 1px solid var(--line);
+  color: #4285f4;
+}
+
+.login-provider-email {
+  background: #213b5b;
+  border-color: #213b5b;
+  color: white;
+}
+
+.login-provider-email:hover {
+  background: #182f4b;
+}
+
+.login-provider-email span {
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.email-login-dialog form {
+  display: grid;
+  gap: 16px;
+  padding: 22px;
+}
+
+.email-login-dialog form > div:first-child {
+  display: grid;
+  gap: 4px;
+}
+
+.email-login-dialog strong {
+  font-size: 20px;
+}
+
+.email-login-dialog span,
+.email-login-dialog label {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.email-login-dialog label {
+  display: grid;
+  gap: 8px;
+}
+
+.dialog-actions {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: 1fr 1.5fr;
+}
+
+[data-theme="dark"] .login-provider-google {
+  background: #1e1e1e;
+  border-color: rgba(255,255,255,0.18);
+  color: rgba(255,255,255,0.92);
+}
+
+[data-theme="dark"] .login-provider-google:hover {
+  background: #2a2a2a;
+  border-color: rgba(255,255,255,0.3);
+}
+
+[data-theme="dark"] .login-provider-google span {
+  background: #2e2e2e;
+  border-color: rgba(255,255,255,0.15);
+  color: #7baaf7;
+}
+
+.metric,
+.panel,
+.holding-summary-card,
+.account-overview-card,
+.empty-portfolio,
+.inline-create-panel,
+.side-drawer,
+.login-card,
+.status-pill,
+.segmented-control,
+.row-menu-popover,
+.ticker-suggestions,
+.account-card-row,
+.performance-header,
+.sim-panel,
+.sim-placeholder {
+  border-radius: var(--radius) !important;
+  box-shadow: none !important;
+}
+
+.login-dialog::backdrop,
+.email-login-dialog::backdrop {
+  background: rgba(17, 31, 25, 0.5);
+}
+
+.login-card {
+  gap: 18px;
+}
+
+.login-provider-button {
+  min-height: 56px;
+}
+
+.login-provider-button:disabled {
+  background: #f6f7f3;
+  border-color: var(--line);
+  color: var(--muted);
+  opacity: 1;
+}
+
+}
+
+@layer responsive {
+  @media (max-width: 640px) {
+    .login-card {
+        padding: 20px;
+      }
+
+    .login-dialog-heading {
+        align-items: stretch;
+        display: grid;
+      }
+
+    .login-dialog-heading button {
+        justify-self: end;
+      }
+
+    .login-provider-button {
+        grid-template-columns: 40px 1fr;
+        min-height: 56px;
+        padding: 0 14px;
+      }
+
+    .login-provider-button strong {
+        font-size: 16px;
+      }
+
+  }
+
+}

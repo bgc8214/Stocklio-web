@@ -1,0 +1,699 @@
+/* 보유 종목 탭
+   이 파일은 styles/ 소스 중 하나이며, scripts/build-css.mjs가 병합해 styles.css를 생성한다.
+   직접 styles.css를 수정하지 말 것. */
+@layer holdings {
+.holdings-table.cols-context-hidden .col-context { display: none; }
+
+.holdings-panel {
+  margin-bottom: 18px;
+}
+
+.holding-toolbar {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.holding-toolbar strong {
+  display: inline-flex;
+  font-size: 15px;
+  font-weight: 900;
+  margin-right: 8px;
+}
+
+.holding-toolbar span {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.holding-toolbar-actions {
+  align-items: center;
+  display: flex;
+  gap: 8px;
+}
+
+.holding-toolbar-meta {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 10px;
+  min-width: 0;
+  flex: 1;
+}
+
+.holding-toolbar-meta strong,
+.holding-toolbar-meta span {
+  flex-shrink: 0;
+}
+
+.holding-export-btn {
+  color: var(--muted);
+  font-size: 11px;
+  min-height: 24px;
+  padding: 0 7px;
+  flex-shrink: 0;
+}
+
+.holdings-summary-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin-bottom: 14px;
+}
+
+.holding-summary-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  min-width: 0;
+  padding: 18px 18px 16px;
+}
+
+.holding-summary-card span,
+.holding-summary-card small {
+  color: var(--muted);
+  display: block;
+  font-size: 13px;
+  font-weight: 800;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.holding-summary-card strong {
+  color: var(--value);
+  display: block;
+  font-size: clamp(18px, 1.8vw, 28px);
+  font-weight: 950;
+  line-height: 1.15;
+  margin: 10px 0 8px;
+  min-width: 0;
+  overflow-wrap: break-word;
+  word-break: keep-all;
+}
+
+.holdings-table-wrap {
+  scrollbar-gutter: stable;
+}
+
+.holdings-table-toolbar {
+  align-items: center;
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 8px;
+}
+
+.holding-list-tools {
+  align-items: center;
+  border-top: 1px solid var(--line);
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 2px 0 14px;
+  padding-top: 14px;
+}
+
+.holdings-summary-empty {
+  color: var(--muted);
+  padding: 24px 0;
+  text-align: center;
+}
+
+.pagination-bar {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding-top: 14px;
+}
+
+.pagination-bar span {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.pagination-bar div {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: flex-end;
+}
+
+.holdings-table {
+  min-width: 1100px;
+}
+
+tr.is-editing-row td {
+  background: rgba(31, 122, 91, 0.08);
+}
+
+.holding-form {
+  align-items: end;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+}
+
+.holding-form input,
+.holding-form select,
+.holding-form button,
+.account-form input,
+.account-form select,
+.account-form button,
+.cash-flow-form input,
+.cash-flow-form select,
+.cash-flow-form button,
+.cash-balance-form input,
+.cash-balance-form select,
+.cash-balance-form button,
+.cash-allocation-form input,
+.cash-allocation-form select,
+.cash-allocation-form button {
+  min-width: 0;
+  width: 100%;
+}
+
+.holdings-table th:last-child,
+.holdings-table td:last-child {
+  background: var(--surface);
+  box-shadow: -12px 0 18px rgba(246, 247, 243, 0.78);
+  position: sticky;
+  right: 0;
+  z-index: 3;
+}
+
+.holdings-table th:last-child {
+  z-index: 4;
+}
+
+[data-theme="dark"] .holding-toolbar {
+  background: #0a0a0a;
+}
+
+[data-theme="dark"] .holding-view-toggle button.is-active {
+  background: rgba(255,255,255,0.9);
+  border-color: rgba(255,255,255,0.9);
+  color: #111;
+}
+
+.holdings-table tbody tr {
+  cursor: pointer;
+}
+
+.holdings-table tbody tr:hover td {
+  background: transparent;
+}
+
+.account-overview-card strong,
+.holding-summary-card strong {
+  font-size: clamp(22px, 1.65vw, 30px);
+  line-height: 1.12;
+}
+
+.holdings-table tbody tr {
+  transition: background 0.12s;
+}
+
+.holdings-table tbody tr:hover {
+  background: color-mix(in srgb, var(--accent) 4%, var(--surface));
+}
+
+.holdings-table thead th {
+  background: var(--surface-soft);
+}
+
+#addHoldingButton {
+  flex-shrink: 0;
+  letter-spacing: -0.01em;
+}
+
+.holdings-table tbody tr td {
+  padding-top: 13px;
+  padding-bottom: 13px;
+}
+
+.holdings-table thead th {
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+  padding-top: 9px;
+  padding-bottom: 9px;
+  background: var(--surface-soft);
+}
+
+[data-theme="dark"] .holdings-table thead th {
+  background: var(--surface-soft);
+}
+
+[data-theme="dark"] .holdings-table tbody tr:hover {
+  background: color-mix(in srgb, var(--accent) 6%, var(--surface));
+}
+
+[data-theme="dark"] .holdings-summary-grid .holding-summary-card:first-child {
+  background: transparent;
+  border-bottom-color: var(--line);
+}
+
+[data-theme="dark"] .holdings-summary-grid .holding-summary-card:not(:first-child) {
+  background: transparent;
+  border-bottom-color: var(--line);
+}
+
+.holding-view-toggle {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+  margin-left: 4px;        /* 정렬 드롭다운과 약간 간격 */
+  padding-left: 8px;
+  border-left: 1px solid var(--line); /* 시각적 구분선 */
+}
+
+.holding-view-toggle button.is-active {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--bg);
+}
+
+.holdings-summary-card {
+  flex: 0 0 160px;
+  scroll-snap-align: start;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: box-shadow 0.15s;
+}
+
+.holdings-summary-card:hover { box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
+
+.sparkline-wrap {
+  display: inline-block;
+  vertical-align: middle;
+  margin-left: 6px;
+}
+
+.sparkline { display: block; opacity: 0.85; }
+
+}
+
+@layer responsive {
+  @media (max-width: 980px) {
+    .holdings-summary-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+    .holdings-summary-grid {
+        display: flex !important;
+        flex-direction: column;
+        gap: 0;
+        margin-bottom: 16px;
+      }
+
+    .holdings-summary-grid .holding-summary-card:first-child {
+        background: transparent;
+        border: none;
+        border-bottom: 1px solid var(--line);
+        border-radius: 0;
+        padding: 8px 0 14px;
+        box-shadow: none;
+      }
+
+    .holdings-summary-grid .holding-summary-card:first-child strong {
+        font-size: clamp(22px, 6vw, 36px) !important;
+        font-weight: 900;
+        letter-spacing: -0.03em;
+        margin: 4px 0 2px;
+        overflow-wrap: break-word;
+        word-break: break-all;
+        white-space: normal;
+      }
+
+    .holdings-summary-grid .holding-summary-card:first-child span,
+      .holdings-summary-grid .holding-summary-card:first-child small {
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+      }
+
+    .holdings-summary-grid .holding-summary-card:not(:first-child) {
+        background: transparent;
+        border: none;
+        border-radius: 0;
+        box-shadow: none;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        padding: 8px 0;
+        border-bottom: 1px solid var(--line);
+      }
+
+    .holdings-summary-grid .holding-summary-card:not(:first-child) > span {
+        font-size: 12px;
+        font-weight: 700;
+        margin: 0;
+        color: var(--muted);
+        white-space: nowrap;
+        flex-shrink: 0;
+      }
+
+    .holdings-summary-grid .holding-summary-card:not(:first-child) strong {
+        font-size: 15px !important;
+        font-weight: 800;
+        margin: 0;
+        text-align: right;
+        overflow-wrap: break-word;
+        word-break: break-all;
+        white-space: normal;
+        flex: 1;
+        min-width: 0;
+      }
+
+    .holdings-summary-grid .holding-summary-card:not(:first-child) small {
+        display: none !important;
+      }
+
+    .holdings-summary-grid .holding-summary-card:nth-child(4) {
+        flex-wrap: wrap;
+        row-gap: 0;
+      }
+
+    .holdings-summary-grid .holding-summary-card:nth-child(4) small {
+        display: block !important;
+        width: 100%;
+        font-size: 10px;
+        font-weight: 600;
+        color: var(--muted);
+        text-align: right;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        padding-top: 1px;
+        margin: 0;
+        order: 3;
+      }
+
+    .holdings-table thead {
+        display: none !important;
+      }
+
+    .holdings-table tbody tr {
+        display: grid !important;
+        grid-template-columns: 1fr minmax(0, 140px) 32px;
+        grid-template-rows: auto auto auto;
+        align-items: center;
+        column-gap: 8px;
+        row-gap: 0;
+        margin-bottom: 8px;
+        border-radius: 12px !important;
+        padding: 10px 12px !important;
+        background: var(--surface);
+        border: 1px solid var(--line) !important;
+      }
+
+    .holdings-table tbody tr td {
+        display: none !important;
+        border-bottom: 0;
+        padding: 0 !important;
+        white-space: normal;
+      }
+
+    .holdings-table tbody tr td::before {
+        display: none !important;
+      }
+
+    .holdings-table tbody tr td[data-label="종목"] {
+        display: flex !important;
+        grid-column: 1;
+        grid-row: 1 / 4;
+        align-items: center;
+        min-width: 0;
+      }
+
+    .holdings-table tbody tr td[data-label="평가금액"] {
+        display: block !important;
+        grid-column: 2;
+        grid-row: 1;
+        text-align: right;
+        min-width: 0;
+        overflow: hidden;
+      }
+
+    .holdings-table tbody tr td[data-label="수익률"] {
+        display: block !important;
+        grid-column: 2;
+        grid-row: 2;
+        text-align: right;
+        min-width: 0;
+      }
+
+    .holdings-table tbody tr td[data-label="수익률"] .amount-cell {
+        font-size: 12px;
+        font-weight: 700;
+        white-space: nowrap;
+      }
+
+    .holdings-table tbody tr td[data-label="일 영향"] {
+        display: block !important;
+        grid-column: 2;
+        grid-row: 3;
+        text-align: right;
+        min-width: 0;
+        overflow: hidden;
+      }
+
+    .holdings-table tbody tr td[data-label="일 영향"].no-data {
+        display: none !important;
+      }
+
+    .holdings-table tbody tr td[data-label="일 영향"] small {
+        display: none !important;
+      }
+
+    .holdings-table tbody tr td[data-label="작업"] {
+        display: flex !important;
+        grid-column: 3;
+        grid-row: 1 / 4;
+        align-items: center;
+        justify-content: center;
+        padding: 0 !important;
+      }
+
+    .holdings-table tbody tr[data-editing="true"] td,
+      .holdings-table tbody tr.editing td {
+        display: grid !important;
+        grid-column: 1 / -1;
+        grid-template-columns: 92px minmax(0, 1fr);
+        gap: 8px;
+        padding: 6px 0 !important;
+        align-items: start;
+      }
+
+    .holdings-table tbody tr[data-editing="true"] td::before,
+      .holdings-table tbody tr.editing td::before {
+        display: block !important;
+        content: attr(data-label);
+        font-size: 12px;
+        font-weight: 800;
+        color: var(--muted);
+      }
+
+    [data-theme="dark"] .holdings-table tbody tr {
+        background: var(--surface);
+        border-color: var(--line) !important;
+      }
+
+    .holding-list-tools {
+        display: none !important;
+      }
+
+    .holding-toolbar {
+        display: flex !important;
+        align-items: center;
+        justify-content: space-between;
+        flex-direction: row !important;
+        flex-wrap: nowrap;
+        gap: 8px;
+        margin-bottom: 4px;
+      }
+
+    .holding-toolbar-meta {
+        display: flex;
+        flex-direction: column;
+        gap: 1px;
+        min-width: 0;
+      }
+
+    .holding-toolbar-meta strong {
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--ink);
+      }
+
+    .holding-toolbar-meta span {
+        font-size: 11px;
+        color: var(--muted);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+    .holding-export-btn {
+        display: none !important;
+      }
+
+    .holdings-summary-grid {
+        margin-bottom: 12px !important;
+      }
+
+    .holdings-summary-grid .holding-summary-card:first-child > span {
+        display: none !important;
+      }
+
+    .holdings-summary-grid .holding-summary-card:nth-child(3) > span::before {
+        content: "오늘 ";
+      }
+
+    .holdings-table-wrap {
+        margin-top: 8px;
+      }
+
+    #holdingPagination {
+        display: none !important;
+      }
+
+  }
+
+  @media (max-width: 640px) {
+    .holding-list-tools,
+      .pagination-bar {
+        align-items: stretch;
+        flex-direction: column;
+      }
+
+    .pagination-bar div {
+        justify-content: stretch;
+      }
+
+    .pagination-bar button {
+        flex: 1 1 auto;
+      }
+
+    .holding-toolbar {
+        align-items: flex-start;
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+    .holdings-summary-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+
+    .holdings-table-wrap {
+        overflow: visible;
+      }
+
+    .holdings-table {
+        min-width: 0;
+      }
+
+    .holdings-table,
+      .holdings-table thead,
+      .holdings-table tbody,
+      .holdings-table tr,
+      .holdings-table th,
+      .holdings-table td {
+        display: block;
+      }
+
+    .holdings-table th:last-child,
+      .holdings-table td:last-child {
+        box-shadow: none;
+        position: static;
+      }
+
+    .holdings-table thead {
+        clip: rect(0 0 0 0);
+        height: 1px;
+        overflow: hidden;
+        position: absolute;
+        white-space: nowrap;
+        width: 1px;
+      }
+
+    .holdings-table tr {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        margin-bottom: 12px;
+        padding: 12px;
+      }
+
+    .holdings-table td {
+        align-items: start;
+        border-bottom: 0;
+        display: grid;
+        gap: 10px;
+        grid-template-columns: 92px minmax(0, 1fr);
+        padding: 7px 0;
+        text-align: left;
+        white-space: normal;
+      }
+
+    .holdings-table td::before {
+        color: var(--muted);
+        content: attr(data-label);
+        font-size: 12px;
+        font-weight: 800;
+      }
+
+    .holdings-table td > * {
+        min-width: 0;
+      }
+
+    .holdings-table td strong,
+      .holdings-table td span,
+      .holdings-table td small {
+        overflow-wrap: anywhere;
+        white-space: normal;
+      }
+
+    .holding-summary-card {
+        padding: 14px 16px 12px;
+      }
+
+    .holdings-summary-grid {
+        margin-bottom: 10px !important;
+      }
+
+    .holdings-summary-grid .holding-summary-card:first-child strong {
+        font-size: clamp(23px, 7vw, 32px) !important;
+      }
+
+    .holdings-summary-grid .holding-summary-card:not(:first-child) strong {
+        font-size: 14px !important;
+        max-width: 64%;
+      }
+
+    .account-overview-card strong,
+      .holding-summary-card strong {
+        font-size: clamp(18px, 5.5vw, 25px);
+      }
+
+    .holdings-summary-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+
+  }
+
+}
