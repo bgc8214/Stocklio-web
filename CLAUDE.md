@@ -32,6 +32,8 @@ node --test --test-name-pattern "getTotals" tests/domain.test.mjs
 
 **Frontend** is a single-file SPA (`index.html` + `src/app/stocklio-app.js`). There is no React router — the entire app lives in `stocklio-app.js` (~3300 lines). Two modules are compiled separately by Vite as ES library builds: `src/craft-dashboard.jsx` (Craft.js dashboard editor) and `src/supabase-auth.js` (auth integration), output to `assets/`.
 
+**Styling** — `styles.css` is generated. Edit the source files in `styles/*.css` (one per concern: `base`, `layout-nav`, `layout-login`, `layout-common`, `layout-drawer`, `dashboard`, `holdings`, `accounts`, `cashflows`, `performance`, `automation`, `simulator`, `theme`), then run `npm run build:css` (also runs automatically as part of `npm run dev` / `npm run build`). Each source file is wrapped in `@layer <name>`; `scripts/build-css.mjs` prepends the layer order declaration (`@layer base, layout, ..., responsive;`) so mobile/responsive overrides always win regardless of which file they live in.
+
 **API layer** (`api/`) contains Vercel serverless functions:
 - `yahoo/chart.js` — price/FX proxy with 5-min price / 1-hr FX caching (no API key needed)
 - `yahoo/search.js` — ticker search autocomplete

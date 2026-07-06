@@ -7,9 +7,10 @@
     "node": ">=20.19"
   },
   "scripts": {
-    "dev": "PORT=4173 node server.mjs",
-    "start": "PORT=4173 node server.mjs",
-    "build": "node scripts/build-static.mjs",
+    "build:css": "node scripts/build-css.mjs",
+    "dev": "npm run build:css && PORT=4173 node server.mjs",
+    "start": "npm run build:css && PORT=4173 node server.mjs",
+    "build": "npm run build:css && node scripts/build-static.mjs",
     "check": "node scripts/check-js.mjs && node --test tests/domain.test.mjs && npm run build",
     "test:product": "node scripts/product-smoke.mjs",
     "verify": "npm run check && npm run test:migration && npm run test:product",

@@ -1,0 +1,464 @@
+/* 드로어 / 행 메뉴 팝오버
+   이 파일은 styles/ 소스 중 하나이며, scripts/build-css.mjs가 병합해 styles.css를 생성한다.
+   직접 styles.css를 수정하지 말 것. */
+@layer layout {
+.drawer-backdrop {
+  background: rgba(17, 26, 21, 0.34);
+  inset: 0;
+  opacity: 0;
+  position: fixed;
+  transition: opacity 180ms ease;
+  z-index: 60;
+}
+
+.drawer-backdrop.is-open {
+  opacity: 1;
+}
+
+.side-drawer {
+  background: var(--surface);
+  border-left: 1px solid var(--line);
+  bottom: 0;
+  box-shadow: -24px 0 42px rgba(17, 26, 21, 0.16);
+  display: flex;
+  flex-direction: column;
+  max-width: min(420px, 100vw);
+  padding: 28px 22px;
+  position: fixed;
+  right: 0;
+  top: 0;
+  transform: translateX(100%);
+  transition: transform 220ms ease;
+  width: 400px;
+  z-index: 70;
+}
+
+.side-drawer.is-open {
+  transform: translateX(0);
+}
+
+.drawer-heading {
+  align-items: start;
+  display: flex;
+  gap: 14px;
+  justify-content: space-between;
+  margin-bottom: 28px;
+}
+
+.drawer-heading h2 {
+  font-size: 20px;
+  margin: 0 0 4px;
+}
+
+.drawer-heading span {
+  color: var(--muted);
+  display: block;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.holding-drawer .holding-form {
+  align-content: start;
+  display: grid;
+  flex: 1;
+  gap: 16px;
+  grid-template-columns: 1fr;
+}
+
+.holding-drawer label {
+  color: #4d5b54;
+  display: grid;
+  font-size: 13px;
+  font-weight: 900;
+  gap: 7px;
+}
+
+.holding-drawer input,
+.holding-drawer select {
+  min-height: 48px;
+}
+
+.drawer-actions {
+  align-items: end;
+  display: grid;
+  gap: 8px;
+  margin-top: auto;
+  padding-top: 18px;
+}
+
+.drawer-actions button {
+  min-height: 48px;
+}
+
+.row-actions {
+  display: inline-flex;
+  flex-shrink: 0;
+  flex-wrap: nowrap;
+  gap: 6px;
+  justify-content: flex-end;
+}
+
+.row-menu {
+  display: inline-flex;
+  justify-content: flex-end;
+  position: relative;
+}
+
+.row-menu summary {
+  align-items: center;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  cursor: pointer;
+  display: inline-flex;
+  font-size: 20px;
+  font-weight: 900;
+  height: 34px;
+  justify-content: center;
+  line-height: 1;
+  list-style: none;
+  width: 34px;
+}
+
+.row-menu summary::-webkit-details-marker {
+  display: none;
+}
+
+.row-menu summary:hover,
+.row-menu[open] summary {
+  border-color: var(--accent);
+  color: var(--accent-dark);
+}
+
+.row-menu-popover {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+  display: grid;
+  gap: 4px;
+  min-width: 118px;
+  padding: 6px;
+  position: absolute;
+  right: 0;
+  top: calc(100% + 6px);
+  z-index: 12;
+}
+
+.row-menu-popover button {
+  background: transparent;
+  border: 0;
+  color: var(--ink);
+  justify-content: flex-start;
+  min-height: 34px;
+  padding: 0 10px;
+  text-align: left;
+}
+
+.row-menu-popover button:hover,
+.row-menu-popover button:focus-visible {
+  background: var(--surface-soft);
+  outline: none;
+}
+
+.row-menu-popover button:disabled {
+  color: var(--muted);
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.row-menu-popover .row-menu-danger {
+  color: var(--red);
+}
+
+.side-drawer {
+  border-radius: 16px 0 0 16px;
+  box-shadow: -12px 0 48px rgba(17, 26, 21, 0.14);
+  transition: transform var(--transition-base);
+}
+
+.side-drawer {
+  overflow: hidden;
+}
+
+.holding-drawer .holding-form {
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--line) transparent;
+  padding-right: 4px;
+}
+
+.drawer-heading {
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 22px;
+  padding-bottom: 18px;
+}
+
+.drawer-heading h2 {
+  font-size: 18px;
+  letter-spacing: -0.02em;
+}
+
+.drawer-heading > button.ghost {
+  flex-shrink: 0;
+  font-size: 13px;
+  min-height: 32px;
+  padding: 0 10px;
+  color: var(--muted);
+}
+
+.holding-drawer label {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--subtle);
+  gap: 6px;
+}
+
+.holding-drawer input:focus,
+.holding-drawer select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 14%, transparent);
+  outline: none;
+}
+
+.drawer-actions {
+  border-top: 1px solid var(--line);
+  gap: 10px;
+  grid-template-columns: 1fr 1fr;
+  padding-top: 20px;
+}
+
+.drawer-actions button:first-child {
+  grid-column: 1 / -1;
+}
+
+.drawer-actions button:only-child {
+  grid-column: 1 / -1;
+}
+
+.row-menu-popover {
+  min-width: 128px;
+  box-shadow: 0 8px 24px rgba(17, 26, 21, 0.14), 0 2px 6px rgba(17, 26, 21, 0.06);
+  border-radius: 10px;
+  padding: 5px;
+  gap: 2px;
+}
+
+.row-menu-popover button {
+  border-radius: 7px;
+  font-size: 13.5px;
+  font-weight: 600;
+  min-height: 36px;
+  padding: 0 12px;
+}
+
+.row-menu-popover button:hover,
+.row-menu-popover button:focus-visible {
+  background: var(--surface-soft);
+  transform: none;
+}
+
+.row-menu-popover .row-menu-danger:hover,
+.row-menu-popover .row-menu-danger:focus-visible {
+  background: color-mix(in srgb, var(--red) 8%, transparent);
+  color: var(--red);
+}
+
+.row-menu-popover .row-menu-danger {
+  border-top: 1px solid var(--line);
+  margin-top: 2px;
+  padding-top: 4px;
+}
+
+.row-menu summary {
+  background: transparent;
+  border-color: transparent;
+  color: var(--muted);
+  font-size: 18px;
+  height: 32px;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+  width: 32px;
+}
+
+.row-menu summary:hover,
+.row-menu[open] summary {
+  background: var(--surface-soft);
+  border-color: var(--line);
+  color: var(--ink);
+}
+
+.account-row-menu summary,
+.account-card-row .row-menu summary {
+  height: 36px;
+  width: 36px;
+}
+
+details.row-menu > summary {
+  opacity: 0.38;
+  border-color: transparent;
+  background: transparent;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  font-size: 18px;
+  transition: opacity 0.15s ease, background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.holdings-table tbody tr:hover details.row-menu > summary,
+details.row-menu > summary:hover,
+details.row-menu[open] > summary {
+  opacity: 1;
+  background: var(--surface-soft);
+  border-color: var(--line);
+  color: var(--ink);
+}
+
+details.row-menu .row-menu-popover {
+  min-width: 160px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  box-shadow:
+    0 0 0 1px rgba(17, 26, 21, 0.04),
+    0 4px 12px rgba(17, 26, 21, 0.10),
+    0 16px 40px rgba(17, 26, 21, 0.12);
+  overflow: hidden;
+  padding: 4px;
+  gap: 2px;
+}
+
+details.row-menu .row-menu-popover button {
+  min-height: 40px;
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: 8px;
+  width: 100%;
+  text-align: left;
+  padding: 0 12px;
+  justify-content: flex-start;
+}
+
+details.row-menu .row-menu-popover .row-menu-danger {
+  margin-top: 4px;
+  border-top: 1px dashed var(--line);
+  padding-top: 4px;
+  color: var(--red);
+  font-weight: 700;
+}
+
+details.row-menu .row-menu-popover .row-menu-danger:hover,
+details.row-menu .row-menu-popover .row-menu-danger:focus-visible {
+  background: color-mix(in srgb, var(--red) 10%, transparent);
+  color: var(--red);
+}
+
+.holding-drawer .holding-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.holding-drawer input,
+.holding-drawer select {
+  min-height: 44px;
+  border-radius: 9px;
+  font-size: 14px;
+}
+
+.holding-drawer input:focus,
+.holding-drawer select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 12%, transparent);
+  outline: none;
+}
+
+.holding-drawer .drawer-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px 0 0;
+  border-top: 1px solid var(--line);
+  margin-top: 8px;
+}
+
+.holding-drawer .drawer-actions button[type="submit"],
+.holding-drawer .drawer-actions #holdingSubmit {
+  min-height: 48px;
+  font-size: 15px;
+  font-weight: 800;
+  border-radius: 10px;
+  letter-spacing: -0.01em;
+}
+
+.holding-drawer .drawer-actions .ghost,
+.holding-drawer .drawer-actions #holdingCancel {
+  min-height: 40px;
+  font-size: 14px;
+}
+
+[data-theme="dark"] details.row-menu .row-menu-popover {
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.06),
+    0 4px 12px rgba(0, 0, 0, 0.30),
+    0 16px 40px rgba(0, 0, 0, 0.40);
+}
+
+}
+
+@layer responsive {
+  @media (max-width: 640px) {
+    .side-drawer {
+        max-width: 100vw;
+        padding: 22px 16px calc(22px + env(safe-area-inset-bottom));
+        width: 100vw;
+      }
+
+    .holdings-table .row-menu {
+        justify-content: flex-start;
+      }
+
+    .side-drawer {
+        border-radius: 20px 20px 0 0;
+        bottom: 0;
+        box-shadow: 0 -12px 48px rgba(17, 26, 21, 0.14);
+        top: auto;
+        transform: translateY(100%);
+        width: 100vw;
+        max-width: none;
+        padding: 20px 16px calc(20px + env(safe-area-inset-bottom));
+      }
+
+    .side-drawer.is-open {
+        transform: translateY(0);
+      }
+
+    .drawer-actions {
+        grid-template-columns: 1fr;
+      }
+
+    .drawer-actions button:first-child {
+        grid-column: 1;
+      }
+
+    .row-menu-popover {
+        right: 0;
+        left: auto;
+      }
+
+  }
+
+  @media (max-width: 700px) {
+    [data-view="cashflows"] tbody td .row-actions {
+        justify-content: flex-end;
+        width: 100%;
+      }
+
+  }
+
+}

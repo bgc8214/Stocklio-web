@@ -8088,7 +8088,15 @@ var ce = /* @__PURE__ */ o(((e) => {
 	e.Fragment = n, e.jsx = r, e.jsxs = r;
 })), T = (/* @__PURE__ */ o(((e, t) => {
 	t.exports = ce();
-})))(), le = [
+})))();
+function le(e = 640) {
+	let [t, n] = (0, _.useState)(() => window.innerWidth <= e);
+	return (0, _.useEffect)(() => {
+		let t = () => n(window.innerWidth <= e);
+		return window.addEventListener("resize", t), () => window.removeEventListener("resize", t);
+	}, [e]), t;
+}
+var E = [
 	{
 		id: "total-value",
 		widthPct: 25,
@@ -8145,7 +8153,7 @@ var ce = /* @__PURE__ */ o(((e) => {
 		minHeight: 320,
 		visible: !0
 	}
-], E = {
+], D = {
 	"total-value": "총자산",
 	"total-cost": "주식 매입금액",
 	"total-gain": "주식 평가손익",
@@ -8155,23 +8163,23 @@ var ce = /* @__PURE__ */ o(((e) => {
 	"performance-flow": "성과 흐름",
 	breakdown: "오늘 변동 원인",
 	"top-mover": "오늘의 주인공"
-}, D = [
+}, ue = [
 	"#1F4431",
 	"#3366a8",
 	"#a97819",
 	"#7b5aa6",
 	"#b94343"
-], ue = {
+], de = {
 	direct_investment: "직접투자 계좌",
 	pension: "연금 계좌"
-}, de = {
+}, fe = {
 	strategy: "전략",
 	holding: "종목",
 	account: "계좌",
 	investor: "투자자",
 	accountType: "계좌 유형"
 };
-function fe() {
+function pe() {
 	let [e, t] = (0, _.useState)(null), [n, r] = (0, _.useState)(!1), [i, a] = (0, _.useState)(0);
 	(0, _.useEffect)(() => {
 		t(window.StocklioApp?.getState?.() || null);
@@ -8180,8 +8188,8 @@ function fe() {
 		};
 		return window.addEventListener("stocklio:state", e), () => window.removeEventListener("stocklio:state", e);
 	}, []);
-	let o = (0, _.useMemo)(() => Oe(e?.dashboardLayout), [e?.dashboardLayout]), s = o.filter((e) => e.visible !== !1).length, c = (0, _.useCallback)((e) => {
-		let n = Oe(e);
+	let o = (0, _.useMemo)(() => ke(e?.dashboardLayout), [e?.dashboardLayout]), s = o.filter((e) => e.visible !== !1).length, c = (0, _.useCallback)((e) => {
+		let n = ke(e);
 		t((e) => e && {
 			...e,
 			dashboardLayout: n
@@ -8191,7 +8199,7 @@ function fe() {
 		let e = document.querySelector("#layoutEditButton"), t = document.querySelector("#layoutResetButton"), i = document.querySelector("#layoutStatus");
 		if (!e || !t || !i) return;
 		let a = () => r((e) => !e), l = () => {
-			r(!1), c(le);
+			r(!1), c(E);
 		};
 		return e.textContent = n ? "완료" : "편집", t.hidden = !n, i.textContent = n ? `${s}/${o.length} 카드` : "", e.addEventListener("click", a), t.addEventListener("click", l), () => {
 			e.removeEventListener("click", a), t.removeEventListener("click", l);
@@ -8201,7 +8209,7 @@ function fe() {
 		o.length,
 		c,
 		s
-	]), e ? /* @__PURE__ */ (0, T.jsx)(_.Fragment, { children: o.map((t) => t.visible === !1 && !n ? null : /* @__PURE__ */ (0, T.jsx)(pe, {
+	]), e ? /* @__PURE__ */ (0, T.jsx)(_.Fragment, { children: o.map((t) => t.visible === !1 && !n ? null : /* @__PURE__ */ (0, T.jsx)(O, {
 		item: t,
 		appState: e,
 		editing: n,
@@ -8212,7 +8220,7 @@ function fe() {
 		children: "대시보드를 불러오는 중입니다"
 	});
 }
-function pe({ item: e, appState: t, editing: n, layout: r, saveLayout: i }) {
+function O({ item: e, appState: t, editing: n, layout: r, saveLayout: i }) {
 	let [a, o] = (0, _.useState)(null), s = (0, _.useRef)(!1), c = a || e, l = {
 		"--card-span": c.span,
 		"--card-width-pct": `${c.widthPct}%`,
@@ -8227,21 +8235,21 @@ function pe({ item: e, appState: t, editing: n, layout: r, saveLayout: i }) {
 			widthPct: e.widthPct,
 			height: n.getBoundingClientRect().height
 		}, c = document.querySelector("#dashboardBoard"), l = Math.max(1, c?.clientWidth || n.parentElement?.clientWidth || 1), u = t.type === "mousedown" ? "mousemove" : "pointermove", d = t.type === "mousedown" ? "mouseup" : "pointerup", f = (t) => {
-			let n = Ye(a.widthPct + (t.clientX - a.x) / l * 100, 18, 100);
+			let n = Xe(a.widthPct + (t.clientX - a.x) / l * 100, 18, 100);
 			o({
 				...e,
 				widthPct: n,
-				span: Ye(Math.round(n / 100 * 12), 2, 12),
-				minHeight: Ye(Math.round(a.height + t.clientY - a.y), 112, 720)
+				span: Xe(Math.round(n / 100 * 12), 2, 12),
+				minHeight: Xe(Math.round(a.height + t.clientY - a.y), 112, 720)
 			});
 		};
 		window.addEventListener(u, f), window.addEventListener(d, (t) => {
 			window.removeEventListener(u, f);
-			let n = Ye(a.widthPct + (t.clientX - a.x) / l * 100, 18, 100), c = {
+			let n = Xe(a.widthPct + (t.clientX - a.x) / l * 100, 18, 100), c = {
 				...e,
-				widthPct: Xe(n, .1),
-				span: Ye(Math.round(n / 100 * 12), 2, 12),
-				minHeight: Ye(Math.round(a.height + t.clientY - a.y), 112, 720)
+				widthPct: Ze(n, .1),
+				span: Xe(Math.round(n / 100 * 12), 2, 12),
+				minHeight: Xe(Math.round(a.height + t.clientY - a.y), 112, 720)
 			};
 			o(null), s.current = !1, i(r.map((t) => t.id === e.id ? c : t));
 		}, { once: !0 });
@@ -8265,13 +8273,13 @@ function pe({ item: e, appState: t, editing: n, layout: r, saveLayout: i }) {
 			let s = n?.closest("[data-dashboard-card]");
 			if (document.querySelectorAll(".is-drag-over").forEach((e) => e.classList.remove("is-drag-over")), s && s !== a) {
 				let t = e.id, n = s.dataset.dashboardCard;
-				t && n && t !== n && i(ke(r, t, n, r.findIndex((e) => e.id === t) < r.findIndex((e) => e.id === n)));
+				t && n && t !== n && i(Ae(r, t, n, r.findIndex((e) => e.id === t) < r.findIndex((e) => e.id === n)));
 			}
 		}, { once: !0 });
 	};
 	return /* @__PURE__ */ (0, T.jsxs)("article", {
 		className: [
-			Ae(e.id),
+			je(e.id),
 			"dashboard-card",
 			n ? "is-layout-editing" : "",
 			e.visible === !1 && n ? "is-hidden-card" : ""
@@ -8290,7 +8298,7 @@ function pe({ item: e, appState: t, editing: n, layout: r, saveLayout: i }) {
 					}),
 					/* @__PURE__ */ (0, T.jsx)("span", {
 						className: "layout-card-label",
-						children: E[e.id] || e.id
+						children: D[e.id] || e.id
 					}),
 					/* @__PURE__ */ (0, T.jsxs)("span", {
 						className: "layout-size-readout",
@@ -8320,21 +8328,21 @@ function pe({ item: e, appState: t, editing: n, layout: r, saveLayout: i }) {
 				onMouseDown: u,
 				onPointerDown: u
 			}) : null,
-			/* @__PURE__ */ (0, T.jsx)(O, {
+			/* @__PURE__ */ (0, T.jsx)(k, {
 				id: e.id,
 				state: t
 			})
 		]
 	});
 }
-function O({ id: e, state: t }) {
-	let n = He();
+function k({ id: e, state: t }) {
+	let n = Ue();
 	if (!t) return null;
-	let r = je(t), i = Ue(n, t.fxRate);
+	let r = Me(t), i = We(n, t.fxRate);
 	if (e === "total-value") {
-		let e = be(), n = [...t.holdings].filter((e) => e.priceAsOf).sort((e, t) => String(t.priceAsOf).localeCompare(String(e.priceAsOf)))[0]?.priceAsOf || t.fxRate?.asOf, a = [
-			n && /^\d{4}-\d{2}-\d{2}/.test(n) ? `${Ke(n.slice(0, 10))} 종가` : e.isMarketClosed ? e.label : "",
-			t.fxRate?.rate ? `USD/KRW ${We(t.fxRate.rate, 2)}` : "",
+		let e = xe(), n = [...t.holdings].filter((e) => e.priceAsOf).sort((e, t) => String(t.priceAsOf).localeCompare(String(e.priceAsOf)))[0]?.priceAsOf || t.fxRate?.asOf, a = [
+			n && /^\d{4}-\d{2}-\d{2}/.test(n) ? `${qe(n.slice(0, 10))} 종가` : e.isMarketClosed ? e.label : "",
+			t.fxRate?.rate ? `USD/KRW ${Ge(t.fxRate.rate, 2)}` : "",
 			e.isMarketClosed ? e.closedReason || "미국장 휴장" : ""
 		].filter(Boolean), o = r.gainKrw >= 0 ? "+" : "", s = r.gainKrw >= 0 ? "positive" : "negative";
 		return /* @__PURE__ */ (0, T.jsxs)(T.Fragment, { children: [
@@ -8348,35 +8356,35 @@ function O({ id: e, state: t }) {
 					children: e
 				}, e)), /* @__PURE__ */ (0, T.jsxs)("span", {
 					className: `metric-return-badge ${s}`,
-					children: [o, A(r.returnRate)]
+					children: [o, Ke(r.returnRate)]
 				})]
 			})
 		] });
 	}
 	if (e === "total-cost") {
 		let e = t.holdings.filter((e) => e.type !== "cash").length;
-		return /* @__PURE__ */ (0, T.jsx)(k, {
+		return /* @__PURE__ */ (0, T.jsx)(me, {
 			label: "주식 매입금액",
 			value: i(r.costKrw),
 			hint: `${e}개 종목 · 평단 기준`
 		});
 	}
-	return e === "total-gain" ? /* @__PURE__ */ (0, T.jsx)(k, {
+	return e === "total-gain" ? /* @__PURE__ */ (0, T.jsx)(me, {
 		label: "주식 평가순익",
 		value: i(r.gainKrw),
-		hint: A(r.returnRate),
+		hint: Ke(r.returnRate),
 		tone: r.gainKrw >= 0 ? "positive" : "negative"
-	}) : e === "cash-total" ? /* @__PURE__ */ (0, T.jsx)(k, {
+	}) : e === "cash-total" ? /* @__PURE__ */ (0, T.jsx)(me, {
 		label: "예수금",
 		value: i(r.cashKrw),
 		hint: "총자산에 포함"
-	}) : e === "fx-rate" ? /* @__PURE__ */ (0, T.jsx)(k, {
+	}) : e === "fx-rate" ? /* @__PURE__ */ (0, T.jsx)(me, {
 		label: "USD/KRW",
-		value: We(t.fxRate?.rate || 0, 2),
-		hint: `${t.fxRate?.source || "환율 기준"} · ${Je(t.fxRate?.asOf)}`
-	}) : e === "allocation" ? /* @__PURE__ */ (0, T.jsx)(me, { state: t }) : e === "performance-flow" ? /* @__PURE__ */ (0, T.jsx)(he, { state: t }) : e === "top-mover" ? /* @__PURE__ */ (0, T.jsx)(Ze, { state: t }) : /* @__PURE__ */ (0, T.jsx)(_e, { state: t });
+		value: Ge(t.fxRate?.rate || 0, 2),
+		hint: `${t.fxRate?.source || "환율 기준"} · ${Ye(t.fxRate?.asOf)}`
+	}) : e === "allocation" ? /* @__PURE__ */ (0, T.jsx)(he, { state: t }) : e === "performance-flow" ? /* @__PURE__ */ (0, T.jsx)(ge, { state: t }) : e === "top-mover" ? /* @__PURE__ */ (0, T.jsx)(Qe, { state: t }) : /* @__PURE__ */ (0, T.jsx)(ve, { state: t });
 }
-function k({ label: e, value: t, hint: n, tone: r }) {
+function me({ label: e, value: t, hint: n, tone: r }) {
 	return /* @__PURE__ */ (0, T.jsxs)(T.Fragment, { children: [
 		/* @__PURE__ */ (0, T.jsx)("span", { children: e }),
 		/* @__PURE__ */ (0, T.jsx)("strong", {
@@ -8389,8 +8397,8 @@ function k({ label: e, value: t, hint: n, tone: r }) {
 		})
 	] });
 }
-function me({ state: e }) {
-	let [t, n] = (0, _.useState)("strategy"), r = Pe(e, t), i = r.reduce((e, t) => e + t.value, 0);
+function he({ state: e }) {
+	let [t, n] = (0, _.useState)("strategy"), r = Fe(e, t), i = r.reduce((e, t) => e + t.value, 0);
 	return /* @__PURE__ */ (0, T.jsxs)(T.Fragment, { children: [/* @__PURE__ */ (0, T.jsxs)("div", {
 		className: "section-heading",
 		children: [
@@ -8401,7 +8409,7 @@ function me({ state: e }) {
 					children: [
 						r.length,
 						"개 ",
-						de[t] || "항목"
+						fe[t] || "항목"
 					]
 				})]
 			}),
@@ -8410,7 +8418,7 @@ function me({ state: e }) {
 				"aria-label": "자산 비중 기준",
 				value: t,
 				onChange: (e) => n(e.target.value),
-				children: Object.entries(de).map(([e, t]) => /* @__PURE__ */ (0, T.jsxs)("option", {
+				children: Object.entries(fe).map(([e, t]) => /* @__PURE__ */ (0, T.jsxs)("option", {
 					value: e,
 					children: [t, "별"]
 				}, e))
@@ -8431,7 +8439,7 @@ function me({ state: e }) {
 					stroke: "#e6ebe5",
 					strokeWidth: "28"
 				}),
-				ze(r),
+				Be(r),
 				/* @__PURE__ */ (0, T.jsx)("text", {
 					x: "110",
 					y: "106",
@@ -8447,7 +8455,7 @@ function me({ state: e }) {
 					textAnchor: "middle",
 					fontSize: "12",
 					fill: "#66736b",
-					children: de[t]
+					children: fe[t]
 				})
 			]
 		}), /* @__PURE__ */ (0, T.jsx)("div", {
@@ -8457,38 +8465,43 @@ function me({ state: e }) {
 				children: [
 					/* @__PURE__ */ (0, T.jsx)("span", {
 						className: "swatch",
-						style: { background: D[t % D.length] }
+						style: { background: ue[t % ue.length] }
 					}),
 					/* @__PURE__ */ (0, T.jsx)("span", { children: e.label }),
-					/* @__PURE__ */ (0, T.jsxs)("strong", { children: [A(i ? e.value / i : 0), /* @__PURE__ */ (0, T.jsx)("small", { children: Be(e.value) })] })
+					/* @__PURE__ */ (0, T.jsxs)("strong", { children: [Ke(i ? e.value / i : 0), /* @__PURE__ */ (0, T.jsx)("small", { children: Ve(e.value) })] })
 				]
 			}, e.label))
 		})]
 	})] });
 }
-function he({ state: e }) {
-	let t = [...e.portfolioSnapshots || []].slice(-20);
-	if (!t.length) return /* @__PURE__ */ (0, T.jsx)("div", {
+function ge({ state: e }) {
+	let t = le(), n = [...e.portfolioSnapshots || []].slice(-20);
+	if (!n.length) return /* @__PURE__ */ (0, T.jsx)("div", {
 		className: "empty-state",
 		children: "저장된 성과 스냅샷이 없습니다"
 	});
-	let n = t[t.length - 1], r = t[0], i = t[t.length - 2], a = i ? n.totalValueKrw - i.totalValueKrw : 0, o = n.totalValueKrw - r.totalValueKrw, s = ge(t), c = Math.max(...t.map((e) => e.totalValueKrw)), l = Math.min(...t.map((e) => e.totalValueKrw)), u = Math.max(1, c - l), d = 1e3, f = {
+	let r = n[n.length - 1], i = n[0], a = n[n.length - 2], o = a ? r.totalValueKrw - a.totalValueKrw : 0, s = r.totalValueKrw - i.totalValueKrw, c = _e(n), l = Math.max(...n.map((e) => e.totalValueKrw)), u = Math.min(...n.map((e) => e.totalValueKrw)), d = Math.max(1, l - u), f = t ? 380 : 1e3, p = t ? 320 : 280, m = t ? {
+		left: 58,
+		right: 16,
+		top: 26,
+		bottom: 42
+	} : {
 		left: 72,
 		right: 28,
 		top: 28,
 		bottom: 48
-	}, p = d - f.left - f.right, m = 280 - f.top - f.bottom, h = t.map((e, n) => ({
-		x: f.left + (t.length === 1 ? p : p * n / (t.length - 1)),
-		y: f.top + m - (Number(e.totalValueKrw || 0) - l) / u * m,
+	}, h = f - m.left - m.right, g = p - m.top - m.bottom, _ = n.map((e, t) => ({
+		x: m.left + (n.length === 1 ? h : h * t / (n.length - 1)),
+		y: m.top + g - (Number(e.totalValueKrw || 0) - u) / d * g,
 		point: e
-	})), g = h.map((e, t) => `${t === 0 ? "M" : "L"}${e.x.toFixed(1)} ${e.y.toFixed(1)}`).join(" "), _ = `${g} L${h[h.length - 1].x.toFixed(1)} ${280 - f.bottom} L${h[0].x.toFixed(1)} ${280 - f.bottom} Z`, v = [
+	})), v = _.map((e, t) => `${t === 0 ? "M" : "L"}${e.x.toFixed(1)} ${e.y.toFixed(1)}`).join(" "), y = `${v} L${_[_.length - 1].x.toFixed(1)} ${p - m.bottom} L${_[0].x.toFixed(1)} ${p - m.bottom} Z`, b = [
 		0,
 		.33,
 		.66,
 		1
 	].map((e) => ({
-		y: f.top + m * e,
-		value: c - u * e
+		y: m.top + g * e,
+		value: l - d * e
 	}));
 	return /* @__PURE__ */ (0, T.jsxs)(T.Fragment, { children: [
 		/* @__PURE__ */ (0, T.jsxs)("div", {
@@ -8498,18 +8511,18 @@ function he({ state: e }) {
 		/* @__PURE__ */ (0, T.jsxs)("div", {
 			className: "performance-stats",
 			children: [
-				/* @__PURE__ */ (0, T.jsxs)("div", { children: [/* @__PURE__ */ (0, T.jsx)("span", { children: "최근 총자산" }), /* @__PURE__ */ (0, T.jsx)("strong", { children: Be(n.totalValueKrw) })] }),
+				/* @__PURE__ */ (0, T.jsxs)("div", { children: [/* @__PURE__ */ (0, T.jsx)("span", { children: "최근 총자산" }), /* @__PURE__ */ (0, T.jsx)("strong", { children: Ve(r.totalValueKrw) })] }),
 				/* @__PURE__ */ (0, T.jsxs)("div", { children: [/* @__PURE__ */ (0, T.jsx)("span", { children: "최근 일 증감" }), /* @__PURE__ */ (0, T.jsx)("strong", {
-					className: a >= 0 ? "positive" : "negative",
-					children: Be(a)
+					className: o >= 0 ? "positive" : "negative",
+					children: Ve(o)
 				})] }),
 				/* @__PURE__ */ (0, T.jsxs)("div", { children: [/* @__PURE__ */ (0, T.jsx)("span", { children: "표시기간 증감" }), /* @__PURE__ */ (0, T.jsx)("strong", {
-					className: o >= 0 ? "positive" : "negative",
-					children: Be(o)
+					className: s >= 0 ? "positive" : "negative",
+					children: Ve(s)
 				})] }),
 				/* @__PURE__ */ (0, T.jsxs)("div", { children: [/* @__PURE__ */ (0, T.jsx)("span", { children: "최대 낙폭" }), /* @__PURE__ */ (0, T.jsx)("strong", {
 					className: "negative",
-					children: Be(s)
+					children: Ve(c)
 				})] })
 			]
 		}),
@@ -8517,7 +8530,7 @@ function he({ state: e }) {
 			className: "dashboard-line-chart",
 			"aria-label": "성과 차트",
 			children: /* @__PURE__ */ (0, T.jsxs)("svg", {
-				viewBox: `0 0 ${d} 280`,
+				viewBox: `0 0 ${f} ${p}`,
 				role: "img",
 				"aria-label": "총자산 추이 차트",
 				children: [
@@ -8535,33 +8548,33 @@ function he({ state: e }) {
 							stopColor: "rgba(31, 68, 49, 0.05)"
 						})]
 					}) }),
-					v.map((e) => /* @__PURE__ */ (0, T.jsxs)("g", { children: [/* @__PURE__ */ (0, T.jsx)("line", {
+					b.map((e) => /* @__PURE__ */ (0, T.jsxs)("g", { children: [/* @__PURE__ */ (0, T.jsx)("line", {
 						className: "trend-grid",
-						x1: f.left,
-						x2: d - f.right,
+						x1: m.left,
+						x2: f - m.right,
 						y1: e.y,
 						y2: e.y
 					}), /* @__PURE__ */ (0, T.jsx)("text", {
 						className: "dashboard-chart-axis",
-						x: f.left - 14,
+						x: m.left - 14,
 						y: e.y + 5,
 						textAnchor: "end",
-						children: Ge(e.value)
+						children: A(e.value)
 					})] }, e.y)),
 					/* @__PURE__ */ (0, T.jsx)("path", {
 						className: "trend-area",
-						d: _
+						d: y
 					}),
 					/* @__PURE__ */ (0, T.jsx)("path", {
 						className: "trend-line",
-						d: g
+						d: v
 					}),
-					h.map(({ x: e, y: t, point: n }, r) => {
-						let i = h[r - 1], a = i ? n.totalValueKrw - i.point.totalValueKrw : 0, o = a >= 0, s = o ? "▲" : "▼", c = o ? "tooltip-positive" : "tooltip-negative", l = Math.max(f.left, Math.min(d - f.right - 160, e - 160 / 2)), u = Math.max(6, t - 64 - 12);
+					_.map(({ x: e, y: t, point: n }, r) => {
+						let i = _[r - 1], a = i ? n.totalValueKrw - i.point.totalValueKrw : 0, o = a >= 0, s = o ? "▲" : "▼", c = o ? "tooltip-positive" : "tooltip-negative", l = Math.max(m.left, Math.min(f - m.right - 160, e - 160 / 2)), u = Math.max(6, t - 64 - 12);
 						return /* @__PURE__ */ (0, T.jsxs)("g", {
 							className: "trend-point-group",
 							tabIndex: 0,
-							"aria-label": `${n.date} 총자산 ${Be(n.totalValueKrw)}, 일 증감 ${o ? "+" : ""}${Be(a)}`,
+							"aria-label": `${n.date} 총자산 ${Ve(n.totalValueKrw)}, 일 증감 ${o ? "+" : ""}${Ve(a)}`,
 							children: [
 								/* @__PURE__ */ (0, T.jsx)("circle", {
 									className: "trend-hit",
@@ -8588,13 +8601,13 @@ function he({ state: e }) {
 											className: "tooltip-date",
 											x: "12",
 											y: "19",
-											children: qe(n.date)
+											children: Je(n.date)
 										}),
 										/* @__PURE__ */ (0, T.jsx)("text", {
 											className: "tooltip-value",
 											x: "12",
 											y: "38",
-											children: Be(n.totalValueKrw)
+											children: Ve(n.totalValueKrw)
 										}),
 										/* @__PURE__ */ (0, T.jsxs)("text", {
 											className: c,
@@ -8603,7 +8616,7 @@ function he({ state: e }) {
 											children: [
 												s,
 												" ",
-												Be(Math.abs(a))
+												Ve(Math.abs(a))
 											]
 										})
 									]
@@ -8612,29 +8625,29 @@ function he({ state: e }) {
 						}, n.id || n.date);
 					}),
 					[
-						h[0],
-						h[Math.floor(h.length / 2)],
-						h[h.length - 1]
+						_[0],
+						_[Math.floor(_.length / 2)],
+						_[_.length - 1]
 					].filter(Boolean).map(({ x: e, point: t }, n) => /* @__PURE__ */ (0, T.jsx)("text", {
 						className: "trend-label",
 						x: e,
-						y: 266,
+						y: p - 14,
 						textAnchor: n === 0 ? "start" : n === 2 ? "end" : "middle",
-						children: Ke(t.date)
+						children: qe(t.date)
 					}, `${t.date}-${n}`)),
 					/* @__PURE__ */ (0, T.jsx)("text", {
 						className: "trend-last-label",
-						x: h[h.length - 1].x - 6,
-						y: Math.max(16, h[h.length - 1].y - 10),
+						x: _[_.length - 1].x - 6,
+						y: Math.max(16, _[_.length - 1].y - 10),
 						textAnchor: "end",
-						children: Ge(n.totalValueKrw)
+						children: A(r.totalValueKrw)
 					})
 				]
 			})
 		})
 	] });
 }
-function ge(e) {
+function _e(e) {
 	let t = Number(e[0]?.totalValueKrw || 0), n = 0;
 	for (let r of e) {
 		let e = Number(r.totalValueKrw || 0);
@@ -8642,11 +8655,11 @@ function ge(e) {
 	}
 	return n;
 }
-function _e({ state: e }) {
-	let [t, n] = (0, _.useState)(!1), r = be(), i = Ue(He(), e.fxRate), a = ve(e, r), o = t ? a : a.slice(0, 5), s = Se(e), c = (e.holdings || []).map((e) => ({
+function ve({ state: e }) {
+	let [t, n] = (0, _.useState)(!1), r = xe(), i = We(Ue(), e.fxRate), a = ye(e, r), o = t ? a : a.slice(0, 5), s = Ce(e), c = (e.holdings || []).map((e) => ({
 		...e,
-		accountType: De(e.accountType)
-	})), l = [...Re(e.holdings || [], e, "investor"), ...Re(c, e, "accountType")], u = a.reduce((e, t) => e + t.value, 0), d = a.reduce((e, t) => e + t.priceEffectKrw, 0), f = a.reduce((e, t) => e + t.fxEffectKrw, 0), p = Te(a, u, d, f);
+		accountType: Oe(e.accountType)
+	})), l = [...ze(e.holdings || [], e, "investor"), ...ze(c, e, "accountType")], u = a.reduce((e, t) => e + t.value, 0), d = a.reduce((e, t) => e + t.priceEffectKrw, 0), f = a.reduce((e, t) => e + t.fxEffectKrw, 0), p = Ee(a, u, d, f);
 	return /* @__PURE__ */ (0, T.jsxs)(T.Fragment, { children: [/* @__PURE__ */ (0, T.jsxs)("div", {
 		className: "section-heading",
 		children: [/* @__PURE__ */ (0, T.jsx)("h2", { children: "오늘 변동 원인" }), /* @__PURE__ */ (0, T.jsx)("span", { children: "종목 기여도" })]
@@ -8664,10 +8677,10 @@ function _e({ state: e }) {
 					/* @__PURE__ */ (0, T.jsxs)("small", { children: [
 						"가격 ",
 						d >= 0 ? "+" : "",
-						Ge(d),
+						A(d),
 						" · 환율 ",
 						f >= 0 ? "+" : "",
-						Ge(f)
+						A(f)
 					] })
 				]
 			}),
@@ -8680,9 +8693,9 @@ function _e({ state: e }) {
 				children: [/* @__PURE__ */ (0, T.jsxs)("div", { children: [/* @__PURE__ */ (0, T.jsx)("strong", { children: e.name }), /* @__PURE__ */ (0, T.jsxs)("small", { children: [
 					e.ticker,
 					" · ",
-					we(e),
+					Te(e),
 					" · 영향 ",
-					A(Math.abs(e.contributionShare || 0))
+					Ke(Math.abs(e.contributionShare || 0))
 				] })] }), /* @__PURE__ */ (0, T.jsxs)("span", {
 					className: e.value >= 0 ? "positive" : "negative",
 					children: [e.value >= 0 ? "+" : "", i(e.value)]
@@ -8694,7 +8707,7 @@ function _e({ state: e }) {
 				onClick: () => n((e) => !e),
 				children: t ? "접기" : `전체 보기 (${a.length}개)`
 			}),
-			s && Math.abs(s.totalDeltaKrw) > Math.max(1e5, Math.abs(u) * 3) ? /* @__PURE__ */ (0, T.jsx)(xe, {
+			s && Math.abs(s.totalDeltaKrw) > Math.max(1e5, Math.abs(u) * 3) ? /* @__PURE__ */ (0, T.jsx)(Se, {
 				impact: s,
 				compact: !0
 			}) : null
@@ -8716,13 +8729,13 @@ function _e({ state: e }) {
 				children: [
 					/* @__PURE__ */ (0, T.jsx)("span", {
 						className: "swatch",
-						style: { background: D[t % D.length] }
+						style: { background: ue[t % ue.length] }
 					}),
 					/* @__PURE__ */ (0, T.jsx)("span", { children: e.label }),
-					/* @__PURE__ */ (0, T.jsx)("strong", { children: Be(e.value) })
+					/* @__PURE__ */ (0, T.jsx)("strong", { children: Ve(e.value) })
 				]
 			}, `${e.label}-${t}`))
-		] }) : s?.rows?.length ? /* @__PURE__ */ (0, T.jsx)(xe, { impact: s }) : /* @__PURE__ */ (0, T.jsxs)(T.Fragment, { children: [
+		] }) : s?.rows?.length ? /* @__PURE__ */ (0, T.jsx)(Se, { impact: s }) : /* @__PURE__ */ (0, T.jsxs)(T.Fragment, { children: [
 			/* @__PURE__ */ (0, T.jsxs)("div", {
 				className: "daily-move-empty",
 				children: [/* @__PURE__ */ (0, T.jsx)("strong", { children: "가격 갱신 후 원인을 분석할 수 있습니다" }), /* @__PURE__ */ (0, T.jsx)("span", { children: "전일 대비 가격 데이터가 없는 캐시나 일부 종목 실패가 있으면 원인 분석이 제한됩니다. 가격을 다시 가져오면 새 데이터로 분석합니다." })]
@@ -8736,20 +8749,20 @@ function _e({ state: e }) {
 				children: [
 					/* @__PURE__ */ (0, T.jsx)("span", {
 						className: "swatch",
-						style: { background: D[t % D.length] }
+						style: { background: ue[t % ue.length] }
 					}),
 					/* @__PURE__ */ (0, T.jsx)("span", { children: e.label }),
-					/* @__PURE__ */ (0, T.jsx)("strong", { children: Be(e.value) })
+					/* @__PURE__ */ (0, T.jsx)("strong", { children: Ve(e.value) })
 				]
 			}, `${e.label}-${t}`))
 		] }) })
 	})] });
 }
-function ve(e, t = null) {
+function ye(e, t = null) {
 	if (t?.isMarketClosed) return [];
 	let n = /* @__PURE__ */ new Map();
 	for (let t of e.holdings || []) {
-		let r = ye(e, t);
+		let r = be(e, t);
 		if (!r.hasData) continue;
 		let i = t.ticker;
 		if (n.has(i)) {
@@ -8773,7 +8786,7 @@ function ve(e, t = null) {
 		contributionShare: i ? Math.abs(e.value) / i : 0
 	}));
 }
-function ye(e, t) {
+function be(e, t) {
 	let n = Number(t.priceChange), r = Number(t.priceChangePercent || 0);
 	if (!Number.isFinite(n)) return {
 		hasData: !1,
@@ -8791,10 +8804,10 @@ function ye(e, t) {
 		changePercent: r
 	};
 }
-function be() {
+function xe() {
 	return b(te(/* @__PURE__ */ new Date(), "Asia/Seoul"));
 }
-function xe({ impact: e, compact: t = !1 }) {
+function Se({ impact: e, compact: t = !1 }) {
 	let n = (e.rows || []).slice(0, t ? 3 : 5);
 	return /* @__PURE__ */ (0, T.jsxs)(T.Fragment, { children: [
 		/* @__PURE__ */ (0, T.jsxs)("div", {
@@ -8803,67 +8816,67 @@ function xe({ impact: e, compact: t = !1 }) {
 				/* @__PURE__ */ (0, T.jsx)("span", { children: t ? "이번 가격 갱신 전후" : "최근 가격 갱신 영향" }),
 				/* @__PURE__ */ (0, T.jsxs)("strong", {
 					className: e.totalDeltaKrw >= 0 ? "positive" : "negative",
-					children: [e.totalDeltaKrw >= 0 ? "+" : "", Be(e.totalDeltaKrw)]
+					children: [e.totalDeltaKrw >= 0 ? "+" : "", Ve(e.totalDeltaKrw)]
 				}),
 				/* @__PURE__ */ (0, T.jsxs)("small", { children: [
-					Je(e.at),
+					Ye(e.at),
 					" · 갱신 전 ",
-					Ge(e.previousTotalKrw),
+					A(e.previousTotalKrw),
 					" → 갱신 후 ",
-					Ge(e.nextTotalKrw)
+					A(e.nextTotalKrw)
 				] })
 			]
 		}),
 		/* @__PURE__ */ (0, T.jsx)("div", {
 			className: "daily-move-insight",
-			children: Ce(e)
+			children: we(e)
 		}),
 		n.map((e) => /* @__PURE__ */ (0, T.jsxs)("div", {
 			className: "daily-move-row",
 			children: [/* @__PURE__ */ (0, T.jsxs)("div", { children: [/* @__PURE__ */ (0, T.jsx)("strong", { children: e.name }), /* @__PURE__ */ (0, T.jsxs)("small", { children: [
 				e.ticker,
 				" · ",
-				Ge(e.beforeValueKrw),
+				A(e.beforeValueKrw),
 				" → ",
-				Ge(e.afterValueKrw)
+				A(e.afterValueKrw)
 			] })] }), /* @__PURE__ */ (0, T.jsxs)("span", {
 				className: e.deltaKrw >= 0 ? "positive" : "negative",
-				children: [e.deltaKrw >= 0 ? "+" : "", Be(e.deltaKrw)]
+				children: [e.deltaKrw >= 0 ? "+" : "", Ve(e.deltaKrw)]
 			})]
 		}, `${e.id || e.ticker}-refresh-impact`))
 	] });
 }
-function Se(e) {
+function Ce(e) {
 	let t = e.lastPriceRefreshImpact;
 	if (!t?.at || !Array.isArray(t.rows)) return null;
 	let n = Date.now() - new Date(t.at).getTime();
 	return !Number.isFinite(n) || n > 1440 * 60 * 1e3 ? null : t;
 }
-function Ce(e) {
+function we(e) {
 	let t = e.rows?.[0];
 	return !t || Math.abs(e.totalDeltaKrw) < 1e3 ? "이번 가격 갱신으로 평가금액 변화가 거의 없었습니다." : `이번 ${e.totalDeltaKrw >= 0 ? "증가" : "감소"}는 ${t.name} 등 Yahoo 가격으로 바뀐 종목 영향이 큽니다.`;
 }
-function we(e) {
-	return Math.abs(e.fxEffectKrw) >= 1e3 ? `가격 ${e.priceEffectKrw >= 0 ? "+" : ""}${Ge(e.priceEffectKrw)} · 환율 ${e.fxEffectKrw >= 0 ? "+" : ""}${Ge(e.fxEffectKrw)}` : `${We(e.quantity, 4)}주 · ${A(e.changePercent)}`;
+function Te(e) {
+	return Math.abs(e.fxEffectKrw) >= 1e3 ? `가격 ${e.priceEffectKrw >= 0 ? "+" : ""}${A(e.priceEffectKrw)} · 환율 ${e.fxEffectKrw >= 0 ? "+" : ""}${A(e.fxEffectKrw)}` : `${Ge(e.quantity, 4)}주 · ${Ke(e.changePercent)}`;
 }
-function Te(e, t, n, r) {
+function Ee(e, t, n, r) {
 	let i = e.slice(0, 2).map((e) => e.name).filter(Boolean);
 	if (!i.length || Math.abs(t) < 1e3) return "오늘은 뚜렷하게 총자산을 움직인 종목이 없습니다.";
 	let a = t >= 0 ? "증가" : "하락", o = i.join(", ");
 	return Math.abs(r) > Math.abs(n) * .35 ? `오늘 ${a}는 ${o}와 ${r >= 0 ? "환율 상승" : "환율 하락"} 영향이 큽니다.` : `오늘 ${a}는 ${o}의 가격 변동이 대부분 설명합니다.`;
 }
-function Ee(e) {
+function De(e) {
 	return [
 		"pension",
 		"irp",
 		"retirement_pension"
 	].includes(String(e || "")) ? "pension" : "direct_investment";
 }
-function De(e) {
-	return ue[Ee(e)] || "직접투자 계좌";
-}
 function Oe(e) {
-	let t = new Map(le.map((e) => [e.id, e])), n = {
+	return de[De(e)] || "직접투자 계좌";
+}
+function ke(e) {
+	let t = new Map(E.map((e) => [e.id, e])), n = {
 		small: 3,
 		medium: 4,
 		wide: 6,
@@ -8871,33 +8884,33 @@ function Oe(e) {
 	}, r = /* @__PURE__ */ new Set(), i = [];
 	for (let a of Array.isArray(e) ? e : []) {
 		if (!t.has(a.id) || r.has(a.id)) continue;
-		let e = t.get(a.id), o = Ye(Math.round(Number(a.span ?? n[a.size] ?? e.span)), 2, 12), s = Number(a.widthPct ?? o / 12 * 100);
+		let e = t.get(a.id), o = Xe(Math.round(Number(a.span ?? n[a.size] ?? e.span)), 2, 12), s = Number(a.widthPct ?? o / 12 * 100);
 		i.push({
 			id: a.id,
-			widthPct: Ye(Xe(s, .1), 18, 100),
+			widthPct: Xe(Ze(s, .1), 18, 100),
 			span: o,
-			minHeight: Ye(Math.round(Number(a.minHeight ?? e.minHeight)), 112, 720),
+			minHeight: Xe(Math.round(Number(a.minHeight ?? e.minHeight)), 112, 720),
 			visible: a.visible !== !1
 		}), r.add(a.id);
 	}
-	for (let e of le) r.has(e.id) || i.push({ ...e });
+	for (let e of E) r.has(e.id) || i.push({ ...e });
 	return i;
 }
-function ke(e, t, n, r) {
+function Ae(e, t, n, r) {
 	let i = [...e], a = i.findIndex((e) => e.id === t);
 	if (a < 0) return i;
 	let [o] = i.splice(a, 1), s = i.findIndex((e) => e.id === n);
 	return i.splice(s + +!!r, 0, o), i;
 }
-function Ae(e) {
+function je(e) {
 	return [
 		"allocation",
 		"performance-flow",
 		"breakdown"
 	].includes(e) ? "panel" : "metric";
 }
-function je(e) {
-	let t = Number(e.fxRate?.rate || 1), n = e.holdings || [], r = Ne(e), i = n.reduce((e, n) => e + Me(n, t).valueKrw, 0), a = n.reduce((e, n) => e + Me(n, t).costKrw, 0), o = i - a;
+function Me(e) {
+	let t = Number(e.fxRate?.rate || 1), n = e.holdings || [], r = Pe(e), i = n.reduce((e, n) => e + Ne(n, t).valueKrw, 0), a = n.reduce((e, n) => e + Ne(n, t).costKrw, 0), o = i - a;
 	return {
 		valueKrw: i + r,
 		stockValueKrw: i,
@@ -8907,32 +8920,32 @@ function je(e) {
 		returnRate: a ? o / a : 0
 	};
 }
-function Me(e, t) {
+function Ne(e, t) {
 	let n = e.currency === "USD" ? t : 1, r = Number(e.quantity || 0) * Number(e.price || 0), i = Number(e.quantity || 0) * Number(e.averageCost || 0);
 	return {
 		valueKrw: r * n,
 		costKrw: i * n
 	};
 }
-function Ne(e) {
+function Pe(e) {
 	let t = Number(e.fxRate?.rate || 1);
 	return (e.cashBalances || []).reduce((e, n) => e + Number(n.amount || 0) * (n.currency === "USD" ? t : 1), 0);
 }
-function Pe(e, t = "strategy") {
-	return Le(t === "holding" ? Ie(Fe(e, (e) => e.name || e.ticker), e, () => "예수금") : t === "account" ? Ie(Fe(e, (e) => `${e.investor} · ${e.account}`), e, (e) => `${e.investor} · ${e.account}`) : t === "investor" ? Ie(Fe(e, (e) => e.investor), e, (e) => e.investor) : t === "accountType" ? Ie(Fe(e, (e) => De(e.accountType)), e, () => "직접투자 계좌") : Ie(Fe(e, (e) => e.strategy || "기타"), e, () => "예수금"));
+function Fe(e, t = "strategy") {
+	return Re(t === "holding" ? Le(Ie(e, (e) => e.name || e.ticker), e, () => "예수금") : t === "account" ? Le(Ie(e, (e) => `${e.investor} · ${e.account}`), e, (e) => `${e.investor} · ${e.account}`) : t === "investor" ? Le(Ie(e, (e) => e.investor), e, (e) => e.investor) : t === "accountType" ? Le(Ie(e, (e) => Oe(e.accountType)), e, () => "직접투자 계좌") : Le(Ie(e, (e) => e.strategy || "기타"), e, () => "예수금"));
 }
-function Fe(e, t) {
+function Ie(e, t) {
 	let n = Number(e.fxRate?.rate || 1), r = /* @__PURE__ */ new Map();
 	for (let i of e.holdings || []) {
 		let e = t(i) || "미분류";
-		r.set(e, (r.get(e) || 0) + Me(i, n).valueKrw);
+		r.set(e, (r.get(e) || 0) + Ne(i, n).valueKrw);
 	}
 	return [...r.entries()].map(([e, t]) => ({
 		label: e,
 		value: t
 	})).sort((e, t) => t.value - e.value);
 }
-function Ie(e, t, n) {
+function Le(e, t, n) {
 	let r = Number(t.fxRate?.rate || 1), i = new Map(e.map((e) => [e.label, e.value]));
 	for (let e of t.cashBalances || []) {
 		let t = n(e) || "예수금", a = Number(e.amount || 0) * (e.currency === "USD" ? r : 1);
@@ -8943,7 +8956,7 @@ function Ie(e, t, n) {
 		value: t
 	})).sort((e, t) => t.value - e.value);
 }
-function Le(e, t = 5) {
+function Re(e, t = 5) {
 	let n = [...e].filter((e) => e.value > 0).sort((e, t) => t.value - e.value);
 	if (n.length <= t) return n;
 	let r = n.slice(0, t), i = n.slice(t).reduce((e, t) => e + t.value, 0);
@@ -8952,18 +8965,18 @@ function Le(e, t = 5) {
 		value: i
 	}] : r;
 }
-function Re(e, t, n) {
+function ze(e, t, n) {
 	let r = Number(t.fxRate?.rate || 1), i = /* @__PURE__ */ new Map();
 	for (let t of e) {
 		let e = t[n] || "미분류";
-		i.set(e, (i.get(e) || 0) + Me(t, r).valueKrw);
+		i.set(e, (i.get(e) || 0) + Ne(t, r).valueKrw);
 	}
 	return [...i.entries()].map(([e, t]) => ({
 		label: e,
 		value: t
 	})).sort((e, t) => t.value - e.value);
 }
-function ze(e) {
+function Be(e) {
 	let t = e.reduce((e, t) => e + t.value, 0), n = 2 * Math.PI * 78, r = 0;
 	return e.map((e, i) => {
 		let a = (t ? e.value / t : 0) * n, o = /* @__PURE__ */ (0, T.jsx)("circle", {
@@ -8971,7 +8984,7 @@ function ze(e) {
 			cy: "110",
 			r: 78,
 			fill: "none",
-			stroke: D[i % D.length],
+			stroke: ue[i % ue.length],
 			strokeWidth: "28",
 			strokeDasharray: `${a} ${n - a}`,
 			strokeDashoffset: -r,
@@ -8980,56 +8993,56 @@ function ze(e) {
 		return r += a, o;
 	});
 }
-function Be(e) {
+function Ve(e) {
 	return `${new Intl.NumberFormat("ko-KR", { maximumFractionDigits: 0 }).format(e || 0)}원`;
 }
-function Ve(e) {
+function He(e) {
 	return new Intl.NumberFormat("en-US", {
 		style: "currency",
 		currency: "USD",
 		maximumFractionDigits: 2
 	}).format(e || 0);
 }
-function He() {
+function Ue() {
 	let [e, t] = (0, _.useState)(() => localStorage.getItem("currencyMode") === "usd" ? "usd" : "krw");
 	return (0, _.useEffect)(() => {
 		let e = (e) => t(e.detail);
 		return window.addEventListener("currencyModeChange", e), () => window.removeEventListener("currencyModeChange", e);
 	}, []), e;
 }
-function Ue(e, t) {
-	if (e === "krw") return (e) => Be(e);
+function We(e, t) {
+	if (e === "krw") return (e) => Ve(e);
 	let n = t?.rate || 1;
-	return (e) => Ve(e / n);
+	return (e) => He(e / n);
 }
-function We(e, t = 2) {
+function Ge(e, t = 2) {
 	return new Intl.NumberFormat("ko-KR", { maximumFractionDigits: t }).format(e || 0);
 }
-function Ge(e) {
+function A(e) {
 	return new Intl.NumberFormat("ko-KR", {
 		notation: "compact",
 		maximumFractionDigits: 1
 	}).format(e || 0);
 }
-function A(e) {
+function Ke(e) {
 	return new Intl.NumberFormat("en-US", {
 		style: "percent",
 		minimumFractionDigits: 2,
 		maximumFractionDigits: 2
 	}).format(e || 0);
 }
-function Ke(e) {
+function qe(e) {
 	let t = /* @__PURE__ */ new Date(`${e}T00:00:00`);
 	return Number.isNaN(t.getTime()) ? e : t.toLocaleDateString("ko-KR", {
 		month: "numeric",
 		day: "numeric"
 	});
 }
-function qe(e) {
+function Je(e) {
 	let t = /* @__PURE__ */ new Date(`${e}T00:00:00`);
 	return Number.isNaN(t.getTime()) ? e : `${t.getMonth() + 1}/${t.getDate()}`;
 }
-function Je(e) {
+function Ye(e) {
 	if (!e || e === "샘플" || e === "Sample") return "샘플";
 	let t = new Date(e);
 	return Number.isNaN(t.getTime()) ? e : t.toLocaleString("ko-KR", {
@@ -9039,14 +9052,14 @@ function Je(e) {
 		minute: "2-digit"
 	});
 }
-function Ye(e, t, n) {
+function Xe(e, t, n) {
 	return Math.min(n, Math.max(t, e));
 }
-function Xe(e, t) {
+function Ze(e, t) {
 	return Math.round(e / t) * t;
 }
-function Ze({ state: e }) {
-	let t = Ue(He(), e.fxRate), n = be();
+function Qe({ state: e }) {
+	let t = We(Ue(), e.fxRate), n = xe();
 	if (n.isMarketClosed) return /* @__PURE__ */ (0, T.jsxs)(T.Fragment, { children: [/* @__PURE__ */ (0, T.jsxs)("div", {
 		className: "section-heading",
 		children: [/* @__PURE__ */ (0, T.jsx)("h2", { children: "오늘의 주인공" }), /* @__PURE__ */ (0, T.jsx)("span", { children: "가격 갱신 기준" })]
@@ -9056,7 +9069,7 @@ function Ze({ state: e }) {
 	})] });
 	let r = (e.holdings || []).map((t) => ({
 		holding: t,
-		dailyMove: ye(e, t)
+		dailyMove: be(e, t)
 	})).filter((e) => e.dailyMove.hasData);
 	if (!r.length) return /* @__PURE__ */ (0, T.jsxs)(T.Fragment, { children: [/* @__PURE__ */ (0, T.jsxs)("div", {
 		className: "section-heading",
@@ -9116,13 +9129,13 @@ function Ze({ state: e }) {
 					children: [s ? "+" : "", t(o.valueKrw)]
 				}), /* @__PURE__ */ (0, T.jsx)("span", {
 					className: `top-mover-pct ${s ? "positive" : "negative"}`,
-					children: A(o.changePercent)
+					children: Ke(o.changePercent)
 				})]
 			})
 		]
 	})] });
 }
-var Qe = class extends _.Component {
+var $e = class extends _.Component {
 	constructor(e) {
 		super(e), this.state = { error: null };
 	}
@@ -9153,6 +9166,6 @@ var Qe = class extends _.Component {
 			})]
 		}) : this.props.children;
 	}
-}, $e = document.querySelector("#dashboardBoard");
-$e && ($e.classList.add("craft-dashboard-board"), (0, v.createRoot)($e).render(/* @__PURE__ */ (0, T.jsx)(Qe, { children: /* @__PURE__ */ (0, T.jsx)(fe, {}) })));
+}, et = document.querySelector("#dashboardBoard");
+et && (et.classList.add("craft-dashboard-board"), (0, v.createRoot)(et).render(/* @__PURE__ */ (0, T.jsx)($e, { children: /* @__PURE__ */ (0, T.jsx)(pe, {}) })));
 //#endregion

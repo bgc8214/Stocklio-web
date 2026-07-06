@@ -1,8 +1,8 @@
 # 투자일지
 
-Numbers로 관리하던 개인 주식 포트폴리오를 웹 서비스로 옮기기 위한 프로젝트다.
+개인 주식 포트폴리오를 관리하는 독립 웹 서비스다. Numbers 스프레드시트를 대체하는 것이 초기 계기였지만, 지금은 그 계기와 분리된 자체 제품으로 본다.
 
-초기 목표는 보유 종목, 계좌, 투자자, 자산군, 환율, 평가금액, 손익, 기간별 성과를 웹에서 관리하고 확인하는 것이다. 원본 Numbers 파일은 민감한 금융 데이터이므로 레포에 저장하지 않고, 하네스 문서에는 구조와 계산 규칙만 남긴다.
+보유 종목, 계좌, 투자자, 자산군, 환율, 평가금액, 손익, 기간별 성과를 웹에서 관리하고 확인한다. 원본 Numbers 파일은 민감한 금융 데이터이므로 레포에 저장하지 않고, 하네스 문서에는 구조와 계산 규칙만 남긴다.
 
 ## 현재 상태
 
@@ -41,11 +41,22 @@ npm run verify
 
 `npm run verify`는 도메인 단위 테스트, Numbers 마이그레이션 테스트, 로컬 서버/API/브라우저/Craft.js 대시보드 스모크 테스트를 한 번에 실행한다.
 
+## CSS 구조
+
+`styles.css`는 자동 생성 파일이다. 직접 수정하지 말고 `styles/*.css` 소스 파일을 고친 뒤 `npm run build:css`를 실행한다 (`npm run dev`/`npm run build`가 이미 자동으로 실행한다).
+
+- `styles/base.css` — 리셋, 타이포그래피, CSS 변수
+- `styles/layout-nav.css`, `layout-login.css`, `layout-common.css`, `layout-drawer.css` — 사이드바/네비게이션, 로그인, 공통 컴포넌트(패널·폼·테이블·토스트 등), 드로어
+- `styles/dashboard.css`, `holdings.css`, `accounts.css`, `cashflows.css`, `performance.css`, `automation.css`, `simulator.css` — 탭별 스타일
+- `styles/theme.css` — 다크 테마
+
+각 파일은 `@layer <카테고리>`로 감싸여 있고, `scripts/build-css.mjs`가 병합 시 최상단에 `@layer base, layout, dashboard, ..., responsive;` 순서 선언을 붙인다. CSS Cascade Layers 덕분에 반응형(`@layer responsive`) 규칙은 소스 파일 순서와 무관하게 항상 다른 레이어보다 우선한다 — 예전에는 모바일 오버라이드가 나중에 추가된 전역 규칙에 우연히 덮이는 버그가 여러 곳 있었는데, 이 구조에서는 그런 캐스케이드 버그가 생기지 않는다.
+
 ## Import
 
 `자동화/데이터` 탭에서 `.xlsx` 파일을 올리면 서버가 먼저 preview 상태를 만든다. 이 단계에서는 현재 포트폴리오가 바뀌지 않는다. 요약을 확인한 뒤 `Import 확정`을 눌러야 SQLite 상태가 교체된다.
 
-제품 방향상 신규 사용자용 import는 후순위다. 현재 구현은 기존 Numbers 데이터를 옮기는 관리자/마이그레이션 보조 기능으로 둔다.
+제품 방향상 신규 사용자용 import는 후순위다. 현재 구현은 기존 스프레드시트 데이터를 옮기려는 사용자를 위한 보조 기능으로 둔다.
 
 미국 주식/ETF 가격과 USD/KRW 환율은 Yahoo Finance chart endpoint를 작은 로컬 프록시로 가져온다. 별도 API key는 필요 없다. 가격 응답은 5분, 환율 응답은 1시간 캐시한다.
 

@@ -1,0 +1,133 @@
+/* 자동화/설정 탭
+   이 파일은 styles/ 소스 중 하나이며, scripts/build-css.mjs가 병합해 styles.css를 생성한다.
+   직접 styles.css를 수정하지 말 것. */
+@layer automation {
+.sync-status {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--muted) !important;
+  font-size: 12px !important;
+  padding: 3px 8px;
+  white-space: nowrap;
+}
+
+.sync-status[data-sync-status="failed"] {
+  border-color: rgba(185, 67, 67, 0.28);
+  color: var(--red) !important;
+}
+
+.sync-status[data-sync-status="saving"] {
+  border-color: rgba(169, 120, 25, 0.28);
+  color: var(--gold) !important;
+}
+
+.automation-list div {
+  border-bottom: 1px solid var(--line);
+  display: grid;
+  gap: 3px;
+  padding-bottom: 10px;
+}
+
+.automation-list div:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+.automation-list strong {
+  font-size: 14px;
+}
+
+.automation-list span {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.automation-actions > div {
+  display: grid;
+  gap: 6px;
+  max-width: 260px;
+}
+
+.automation-actions span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.automation-view {
+  grid-template-columns: minmax(0, 1.2fr) minmax(320px, 0.8fr);
+}
+
+.automation-view .automation-advanced-panel {
+  grid-column: 1 / -1;
+}
+
+.automation-panel {
+  align-content: start;
+}
+
+.automation-summary {
+  display: grid;
+  gap: 10px;
+}
+
+.automation-summary div {
+  background: var(--surface-soft);
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  padding: 12px;
+}
+
+.automation-summary strong {
+  font-size: 13px;
+}
+
+.automation-summary span {
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.notification-form {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(2, minmax(180px, 1fr));
+  margin-bottom: 14px;
+}
+
+.notification-form label {
+  color: var(--muted);
+  display: grid;
+  font-size: 13px;
+  font-weight: 700;
+  gap: 6px;
+  min-width: 0;
+}
+
+.notification-form input,
+.notification-form button {
+  min-width: 0;
+  width: 100%;
+}
+
+.automation-advanced-panel > summary {
+  margin: -8px 0 16px;
+}
+
+.log-grids {
+  display: grid;
+  gap: 14px;
+  margin-top: 14px;
+}
+
+.automation-section-toggle,
+details > summary {
+  cursor: pointer;
+}
+
+}

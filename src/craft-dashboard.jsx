@@ -2,6 +2,16 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { createRoot } from "react-dom/client";
 import { dateKeyInTimeZone, getUsMarketContextForSeoulDate } from "./domain/market-calendar.js";
 
+function useIsMobile(breakpoint = 640) {
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth <= breakpoint);
+  useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth <= breakpoint);
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, [breakpoint]);
+  return isMobile;
+}
+
 const DEFAULT_LAYOUT = [
   { id: "total-value", widthPct: 25, span: 3, minHeight: 128, visible: true },
   { id: "total-cost", widthPct: 25, span: 3, minHeight: 128, visible: true },
@@ -389,6 +399,7 @@ function AllocationPanel({ state }) {
 }
 
 function PerformancePanel({ state }) {
+  const isMobile = useIsMobile();
   const points = [...(state.portfolioSnapshots || [])].slice(-20);
   if (!points.length) {
     return <div className="empty-state">저장된 성과 스냅샷이 없습니다</div>;
@@ -402,9 +413,11 @@ function PerformancePanel({ state }) {
   const max = Math.max(...points.map((point) => point.totalValueKrw));
   const min = Math.min(...points.map((point) => point.totalValueKrw));
   const span = Math.max(1, max - min);
-  const chartWidth = 1000;
-  const chartHeight = 280;
-  const padding = { left: 72, right: 28, top: 28, bottom: 48 };
+  const chartWidth = isMobile ? 380 : 1000;
+  const chartHeight = isMobile ? 320 : 280;
+  const padding = isMobile
+    ? { left: 58, right: 16, top: 26, bottom: 42 }
+    : { left: 72, right: 28, top: 28, bottom: 48 };
   const plotWidth = chartWidth - padding.left - padding.right;
   const plotHeight = chartHeight - padding.top - padding.bottom;
   const coordinates = points.map((point, index) => {

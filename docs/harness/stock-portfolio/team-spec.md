@@ -2,7 +2,7 @@
 
 ## 목표
 
-Numbers로 관리 중인 개인 주식 포트폴리오를 웹 서비스로 옮긴다. MVP는 보유 종목, 계좌, 투자자, 자산군, 환율, 평가금액, 매입금액, 손익, 수익률, 월별/일별 성과 흐름을 명확하게 보여주고 관리하는 것이다.
+개인 주식 포트폴리오를 관리하는 독립 웹 서비스를 만든다. Numbers 스프레드시트를 대체하는 것이 초기 계기였지만, 지금은 그 계기와 분리된 자체 제품으로 본다. MVP는 보유 종목, 계좌, 투자자, 자산군, 환율, 평가금액, 매입금액, 손익, 수익률, 월별/일별 성과 흐름을 명확하게 보여주고 관리하는 것이다.
 
 ## 아키텍처
 
@@ -17,7 +17,7 @@ Numbers로 관리 중인 개인 주식 포트폴리오를 웹 서비스로 옮�
 | 역할 | 책임 | 재사용 스킬 | 작성 파일 |
 | --- | --- | --- | --- |
 | Orchestrator | 단계 진행, 핸드오프, 최종 요약 | `.agents/skills/stock-portfolio-orchestrator/SKILL.md` | `_workspace/stock-portfolio/final/initial-harness-summary.md` |
-| Workbook Analyst | Numbers/XLSX 구조, 시트, 계산식, 데이터 위험 분석 | `.agents/skills/stock-workbook-analyst/SKILL.md` | `_workspace/stock-portfolio/01_workbook_audit.md` |
+| Workbook Analyst | (초기 마이그레이션 단계 전용) Numbers/XLSX 구조, 시트, 계산식, 데이터 위험 분석 | `.agents/skills/stock-workbook-analyst/SKILL.md` | `_workspace/stock-portfolio/01_workbook_audit.md` |
 | Product Strategist | MVP 범위, 사용자 흐름, 제외 범위 정의 | `.agents/skills/stock-product-strategist/SKILL.md` | `_workspace/stock-portfolio/03_mvp_plan.md` |
 | Web Builder | 데이터 모델, 라우트, 컴포넌트, 구현 순서 정의 | `.agents/skills/stock-web-builder/SKILL.md` | `_workspace/stock-portfolio/02_domain_model.md` |
 | QA Reviewer | 계산식, 개인정보, 금융 표현, 가져오기 경계 검토 | `.agents/skills/stock-qa-reviewer/SKILL.md` | `_workspace/stock-portfolio/05_qa_review.md` |

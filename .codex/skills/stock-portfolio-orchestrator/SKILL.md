@@ -1,6 +1,6 @@
 ---
 name: stock-portfolio-orchestrator
-description: Numbers 기반 주식 포트폴리오를 웹 서비스로 옮기는 단계, 핸드오프, 품질 게이트를 조율한다.
+description: 주식 포트폴리오 웹 서비스의 작업 단계, 핸드오프, 품질 게이트를 조율한다.
 ---
 
 # 주식 포트폴리오 오케스트레이터
