@@ -116,7 +116,7 @@ export function getAvailableMonths(rows) {
   return months;
 }
 
-export function getNumbersChartSource(rows, allRows = rows, targetYearMonth = null) {
+export function getMonthlyFlowChartSource(rows, allRows = rows, targetYearMonth = null) {
   const latest = rows[rows.length - 1];
   if (!latest) {
     return { points: [], rows: [], monthLabel: "", yearLabel: "" };

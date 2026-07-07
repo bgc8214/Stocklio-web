@@ -38,7 +38,6 @@ import {
   getAccountPerformanceRows as selectAccountPerformanceRows,
   getAvailableMonths,
   getMonthlyRows as selectMonthlyRows,
-  getNumbersChartSource,
   getPerformanceStats,
   getSnapshotRows as selectSnapshotRows,
 } from "./performance-selectors.js";
@@ -192,8 +191,6 @@ let editingAccountId = null;
 let holdingPage = 1;
 let holdingScope = "all";
 let holdingsViewMode = "detail";
-let selectedNumbersMonth = null; // "YYYY-MM" or null (= latest) // "detail" | "summary"
-let numbersPerformanceChart = null;
 let priceRefreshPromise = null;
 let snapshotSavePromise = null;
 let toastTimer = null;
@@ -1145,7 +1142,7 @@ function configureRuntimeSurface() {
     element.hidden = true;
   });
   if (els.importSummary) {
-    els.importSummary.textContent = "Numbers import는 로컬 마이그레이션 전용입니다";
+    els.importSummary.textContent = "엑셀 가져오기는 로컬 환경 전용입니다";
   }
   if (els.backupStatus) {
     els.backupStatus.textContent = "JSON 백업과 복원은 현재 브라우저 포트폴리오에 적용됩니다";

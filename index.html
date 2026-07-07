@@ -64,7 +64,7 @@
               <span class="theme-toggle-icon" id="themeToggleIcon">🌙</span>
               <span id="themeToggleLabel">다크 모드</span>
             </button>
-            <span>Numbers 이관</span>
+            <span>엑셀 가져오기</span>
             <strong>자동 가격 · 일일 알림</strong>
           </div>
         </div>
@@ -588,7 +588,7 @@
           </div>
           <div class="panel performance-detail-panel" style="align-self:start">
             <div class="section-heading">
-              <div><h2>일별 성과</h2><span>Numbers 일별 스냅샷 기준</span></div>
+              <div><h2>일별 성과</h2><span>일별 스냅샷 기준</span></div>
               <select id="snapshotDayFilter" aria-label="일별 성과 날짜 범위">
                 <option value="all">전체 일자</option>
                 <option value="30d">최근 30일</option>
@@ -714,18 +714,18 @@
         <details class="panel performance-detail-panel performance-full-panel">
           <summary>
             <h2>월간 수익 흐름</h2>
-            <span id="numbersChartCaption">표 데이터를 참조한 복합 차트</span>
+            <span id="monthlyFlowChartCaption">표 데이터를 참조한 복합 차트</span>
           </summary>
-          <div class="numbers-month-nav" id="numbersMonthNav" aria-label="월 선택"></div>
-          <div class="table-wrap numbers-source-wrap">
-            <table class="numbers-source-table">
+          <div class="monthly-flow-month-nav" id="monthlyFlowMonthNav" aria-label="월 선택"></div>
+          <div class="table-wrap monthly-flow-source-wrap">
+            <table class="monthly-flow-source-table">
               <caption>표 1</caption>
-              <thead id="numbersSourceHead"></thead>
-              <tbody id="numbersSourceBody"></tbody>
+              <thead id="monthlyFlowSourceHead"></thead>
+              <tbody id="monthlyFlowSourceBody"></tbody>
             </table>
           </div>
-          <div class="numbers-chart-wrap">
-            <canvas id="numbersPerformanceChart" aria-label="Numbers 스타일 월간 수익 차트"></canvas>
+          <div class="monthly-flow-chart-wrap">
+            <canvas id="monthlyFlowChart" aria-label="월간 수익 차트"></canvas>
           </div>
         </details>
 
@@ -910,11 +910,11 @@
               <input id="restoreInput" type="file" accept="application/json">
             </label>
             <label class="file-button" data-local-only>
-              XLSX preview
+              엑셀 미리보기
               <input id="importPreviewInput" type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
             </label>
-            <button id="commitImportButton" class="secondary" type="button" data-local-only disabled>Import 확정</button>
-            <button id="loadImportSummaryButton" class="secondary" type="button" data-local-only>최근 import 검증</button>
+            <button id="commitImportButton" class="secondary" type="button" data-local-only disabled>가져오기 확정</button>
+            <button id="loadImportSummaryButton" class="secondary" type="button" data-local-only>최근 가져오기 검증</button>
           </div>
           <div class="automation-list">
             <div>
@@ -922,8 +922,8 @@
               <span>최근 발송 상세는 아래 기록에서 확인할 수 있습니다</span>
             </div>
             <div>
-              <strong>Numbers import</strong>
-              <span id="importSummary">검증 리포트를 불러오면 마이그레이션 요약을 표시합니다</span>
+              <strong>엑셀 가져오기</strong>
+              <span id="importSummary">검증 리포트를 불러오면 가져오기 요약을 표시합니다</span>
             </div>
             <div>
               <strong>검증 리포트</strong>
