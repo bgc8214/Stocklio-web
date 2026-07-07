@@ -14,7 +14,7 @@ import {
   getAccountPerformanceRows as selectAccountPerformanceRows,
   getAvailableMonths,
   getMonthlyRows as selectMonthlyRows,
-  getNumbersChartSource,
+  getMonthlyFlowChartSource,
   getPerformanceStats,
   getSnapshotRows as selectSnapshotRows,
 } from "./performance-selectors.js";
@@ -48,15 +48,11 @@ async function fetchBenchmarkData(symbol, startDate) {
 }
 
 // 모듈 내부 상태
-let numbersPerformanceChart = null;
-let selectedNumbersMonth = null; // "YYYY-MM" or null (= latest)
+let monthlyFlowChart = null;
+let selectedFlowMonth = null; // "YYYY-MM" or null (= latest)
 
 export function init(ctx) {
   _ctx = ctx;
-}
-
-export function getSelectedNumbersMonth() {
-  return selectedNumbersMonth;
 }
 
 function getFilteredSnapshotRows() {
@@ -132,67 +128,67 @@ function renderPerformanceDetails(rows) {
   `;
 
   els.performanceTrendChart.innerHTML = renderTrendChart(rows);
-  renderNumbersPerformanceChart(rows);
+  renderMonthlyFlowChart(rows);
   els.performanceWaterfall.innerHTML = renderWaterfall(stats);
   els.performanceInsight.innerHTML = renderPerformanceInsights(stats);
   renderAccountPerformance(rows);
   renderStrategyPerformance();
 }
 
-function renderNumbersMonthNav(rows) {
-  const navEl = document.getElementById("numbersMonthNav");
+function renderMonthlyFlowMonthNav(rows) {
+  const navEl = document.getElementById("monthlyFlowMonthNav");
   if (!navEl) return;
   const allRows = getSnapshotRows();
   const months = getAvailableMonths(allRows);
   if (months.length <= 1) { navEl.hidden = true; return; }
   navEl.hidden = false;
   const latestYm = allRows[allRows.length - 1]?.date.slice(0, 7);
-  const active = selectedNumbersMonth || latestYm;
-  navEl.innerHTML = `<select class="numbers-month-select" aria-label="월 선택">
+  const active = selectedFlowMonth || latestYm;
+  navEl.innerHTML = `<select class="monthly-flow-month-select" aria-label="월 선택">
     ${months.slice().reverse().map((ym) => {
       const [y, m] = ym.split("-");
       const label = `${y}년 ${Number(m)}월`;
       return `<option value="${ym}"${ym === active ? " selected" : ""}>${label}</option>`;
     }).join("")}
   </select>`;
-  navEl.querySelector(".numbers-month-select").addEventListener("change", (e) => {
-    selectedNumbersMonth = e.target.value;
-    renderNumbersPerformanceChart(rows);
+  navEl.querySelector(".monthly-flow-month-select").addEventListener("change", (e) => {
+    selectedFlowMonth = e.target.value;
+    renderMonthlyFlowChart(rows);
   });
 }
 
-function renderNumbersPerformanceChart(rows) {
+function renderMonthlyFlowChart(rows) {
   const els = _ctx.els;
-  renderNumbersMonthNav(rows);
-  const source = getNumbersChartSource(rows, getSnapshotRows(), selectedNumbersMonth);
+  renderMonthlyFlowMonthNav(rows);
+  const source = getMonthlyFlowChartSource(rows, getSnapshotRows(), selectedFlowMonth);
   if (!source.points.length) {
-    els.numbersChartCaption.textContent = "월간 성과 데이터 없음";
-    els.numbersSourceHead.innerHTML = "";
-    els.numbersSourceBody.innerHTML = `<tr><td>선택 기간에 월간 차트를 만들 스냅샷이 없습니다</td></tr>`;
-    if (numbersPerformanceChart) {
-      numbersPerformanceChart.destroy();
-      numbersPerformanceChart = null;
+    els.monthlyFlowChartCaption.textContent = "월간 성과 데이터 없음";
+    els.monthlyFlowSourceHead.innerHTML = "";
+    els.monthlyFlowSourceBody.innerHTML = `<tr><td>선택 기간에 월간 차트를 만들 스냅샷이 없습니다</td></tr>`;
+    if (monthlyFlowChart) {
+      monthlyFlowChart.destroy();
+      monthlyFlowChart = null;
     }
     return;
   }
 
-  els.numbersChartCaption.textContent = `${source.monthLabel} · 단위 만원`;
-  els.numbersSourceHead.innerHTML = `<tr><th></th>${source.points.map((point) => `<th>${escapeHtml(point.label)}</th>`).join("")}</tr>`;
-  els.numbersSourceBody.innerHTML = source.rows
+  els.monthlyFlowChartCaption.textContent = `${source.monthLabel} · 단위 만원`;
+  els.monthlyFlowSourceHead.innerHTML = `<tr><th></th>${source.points.map((point) => `<th>${escapeHtml(point.label)}</th>`).join("")}</tr>`;
+  els.monthlyFlowSourceBody.innerHTML = source.rows
     .map((row) => `<tr><th>${escapeHtml(row.label)}</th>${row.values.map((value) => `<td>${formatNumber(value, 0)}</td>`).join("")}</tr>`)
     .join("");
 
   if (!window.Chart || !window.ChartDataLabels) {
-    els.numbersChartCaption.textContent = `${source.monthLabel} · 차트 라이브러리 로드 대기`;
+    els.monthlyFlowChartCaption.textContent = `${source.monthLabel} · 차트 라이브러리 로드 대기`;
     return;
   }
 
-  const ctx = els.numbersPerformanceChart.getContext("2d");
-  if (numbersPerformanceChart) {
-    numbersPerformanceChart.destroy();
+  const ctx = els.monthlyFlowChart.getContext("2d");
+  if (monthlyFlowChart) {
+    monthlyFlowChart.destroy();
   }
   window.Chart.register(window.ChartDataLabels);
-  numbersPerformanceChart = new window.Chart(ctx, {
+  monthlyFlowChart = new window.Chart(ctx, {
     type: "line",
     data: {
       labels: source.points.map((point) => point.label),

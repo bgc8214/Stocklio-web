@@ -6821,24 +6821,24 @@ tr.is-editing-row td {
         max-height: 44px !important;
       }
 
-    .performance-detail-panel table:not(.numbers-source-table),
+    .performance-detail-panel table:not(.monthly-flow-source-table),
       [data-view="cashflows"] table {
         min-width: 0 !important;
         width: 100% !important;
       }
 
-    .performance-detail-panel table:not(.numbers-source-table) thead,
+    .performance-detail-panel table:not(.monthly-flow-source-table) thead,
       [data-view="cashflows"] thead {
         display: none !important;
       }
 
-    .performance-detail-panel table:not(.numbers-source-table) tbody,
+    .performance-detail-panel table:not(.monthly-flow-source-table) tbody,
       [data-view="cashflows"] tbody {
         display: grid !important;
         gap: 8px !important;
       }
 
-    .performance-detail-panel table:not(.numbers-source-table) tbody tr,
+    .performance-detail-panel table:not(.monthly-flow-source-table) tbody tr,
       [data-view="cashflows"] tbody tr {
         display: grid !important;
         gap: 7px !important;
@@ -6848,7 +6848,7 @@ tr.is-editing-row td {
         background: var(--surface) !important;
       }
 
-    .performance-detail-panel table:not(.numbers-source-table) tbody td,
+    .performance-detail-panel table:not(.monthly-flow-source-table) tbody td,
       [data-view="cashflows"] tbody td {
         display: flex !important;
         align-items: baseline !important;
@@ -6861,7 +6861,7 @@ tr.is-editing-row td {
         white-space: normal !important;
       }
 
-    .performance-detail-panel table:not(.numbers-source-table) tbody td::before,
+    .performance-detail-panel table:not(.monthly-flow-source-table) tbody td::before,
       [data-view="cashflows"] tbody td::before {
         content: attr(data-label);
         flex: 0 0 auto;
@@ -6870,7 +6870,7 @@ tr.is-editing-row td {
         text-align: left;
       }
 
-    .performance-detail-panel table:not(.numbers-source-table) tbody td[colspan]::before,
+    .performance-detail-panel table:not(.monthly-flow-source-table) tbody td[colspan]::before,
       [data-view="cashflows"] tbody td[colspan]::before {
         content: none !important;
       }
@@ -6910,24 +6910,24 @@ tr.is-editing-row td {
         max-height: 44px !important;
       }
 
-    .performance-detail-panel table:not(.numbers-source-table),
+    .performance-detail-panel table:not(.monthly-flow-source-table),
       [data-view="cashflows"] table {
         min-width: 0 !important;
         width: 100% !important;
       }
 
-    .performance-detail-panel table:not(.numbers-source-table) thead,
+    .performance-detail-panel table:not(.monthly-flow-source-table) thead,
       [data-view="cashflows"] thead {
         display: none !important;
       }
 
-    .performance-detail-panel table:not(.numbers-source-table) tbody,
+    .performance-detail-panel table:not(.monthly-flow-source-table) tbody,
       [data-view="cashflows"] tbody {
         display: grid !important;
         gap: 8px !important;
       }
 
-    .performance-detail-panel table:not(.numbers-source-table) tbody tr,
+    .performance-detail-panel table:not(.monthly-flow-source-table) tbody tr,
       [data-view="cashflows"] tbody tr {
         display: grid !important;
         gap: 7px !important;
@@ -6937,7 +6937,7 @@ tr.is-editing-row td {
         background: var(--surface) !important;
       }
 
-    .performance-detail-panel table:not(.numbers-source-table) tbody td,
+    .performance-detail-panel table:not(.monthly-flow-source-table) tbody td,
       [data-view="cashflows"] tbody td {
         display: flex !important;
         align-items: baseline !important;
@@ -6950,7 +6950,7 @@ tr.is-editing-row td {
         white-space: normal !important;
       }
 
-    .performance-detail-panel table:not(.numbers-source-table) tbody td::before,
+    .performance-detail-panel table:not(.monthly-flow-source-table) tbody td::before,
       [data-view="cashflows"] tbody td::before {
         content: attr(data-label);
         flex: 0 0 auto;
@@ -6959,7 +6959,7 @@ tr.is-editing-row td {
         text-align: left;
       }
 
-    .performance-detail-panel table:not(.numbers-source-table) tbody td[colspan]::before,
+    .performance-detail-panel table:not(.monthly-flow-source-table) tbody td[colspan]::before,
       [data-view="cashflows"] tbody td[colspan]::before {
         content: none !important;
       }
@@ -7005,24 +7005,24 @@ tr.is-editing-row td {
         min-height: 44px !important;
       }
 
-    .performance-detail-panel table:not(.numbers-source-table),
+    .performance-detail-panel table:not(.monthly-flow-source-table),
       [data-view="cashflows"] table {
         min-width: 0 !important;
         width: 100%;
       }
 
-    .performance-detail-panel table:not(.numbers-source-table) thead,
+    .performance-detail-panel table:not(.monthly-flow-source-table) thead,
       [data-view="cashflows"] thead {
         display: none;
       }
 
-    .performance-detail-panel table:not(.numbers-source-table) tbody,
+    .performance-detail-panel table:not(.monthly-flow-source-table) tbody,
       [data-view="cashflows"] tbody {
         display: grid;
         gap: 8px;
       }
 
-    .performance-detail-panel table:not(.numbers-source-table) tbody tr,
+    .performance-detail-panel table:not(.monthly-flow-source-table) tbody tr,
       [data-view="cashflows"] tbody tr {
         display: grid;
         gap: 7px;
@@ -7032,7 +7032,7 @@ tr.is-editing-row td {
         background: var(--surface);
       }
 
-    .performance-detail-panel table:not(.numbers-source-table) tbody td,
+    .performance-detail-panel table:not(.monthly-flow-source-table) tbody td,
       [data-view="cashflows"] tbody td {
         display: flex;
         align-items: baseline;
@@ -7045,7 +7045,7 @@ tr.is-editing-row td {
         white-space: normal;
       }
 
-    .performance-detail-panel table:not(.numbers-source-table) tbody td::before,
+    .performance-detail-panel table:not(.monthly-flow-source-table) tbody td::before,
       [data-view="cashflows"] tbody td::before {
         content: attr(data-label);
         flex: 0 0 auto;
@@ -7054,13 +7054,13 @@ tr.is-editing-row td {
         text-align: left;
       }
 
-    .performance-detail-panel table:not(.numbers-source-table) tbody td[colspan],
+    .performance-detail-panel table:not(.monthly-flow-source-table) tbody td[colspan],
       [data-view="cashflows"] tbody td[colspan] {
         justify-content: center;
         text-align: center;
       }
 
-    .performance-detail-panel table:not(.numbers-source-table) tbody td[colspan]::before,
+    .performance-detail-panel table:not(.monthly-flow-source-table) tbody td[colspan]::before,
       [data-view="cashflows"] tbody td[colspan]::before {
         content: none;
       }
@@ -7099,24 +7099,24 @@ tr.is-editing-row td {
         max-height: 44px !important;
       }
 
-    .performance-detail-panel table:not(.numbers-source-table),
+    .performance-detail-panel table:not(.monthly-flow-source-table),
       [data-view="cashflows"] table {
         min-width: 0 !important;
         width: 100% !important;
       }
 
-    .performance-detail-panel table:not(.numbers-source-table) thead,
+    .performance-detail-panel table:not(.monthly-flow-source-table) thead,
       [data-view="cashflows"] thead {
         display: none !important;
       }
 
-    .performance-detail-panel table:not(.numbers-source-table) tbody,
+    .performance-detail-panel table:not(.monthly-flow-source-table) tbody,
       [data-view="cashflows"] tbody {
         display: grid !important;
         gap: 8px !important;
       }
 
-    .performance-detail-panel table:not(.numbers-source-table) tbody tr,
+    .performance-detail-panel table:not(.monthly-flow-source-table) tbody tr,
       [data-view="cashflows"] tbody tr {
         display: grid !important;
         gap: 7px !important;
@@ -7126,7 +7126,7 @@ tr.is-editing-row td {
         background: var(--surface) !important;
       }
 
-    .performance-detail-panel table:not(.numbers-source-table) tbody td,
+    .performance-detail-panel table:not(.monthly-flow-source-table) tbody td,
       [data-view="cashflows"] tbody td {
         display: flex !important;
         align-items: baseline !important;
@@ -7139,7 +7139,7 @@ tr.is-editing-row td {
         white-space: normal !important;
       }
 
-    .performance-detail-panel table:not(.numbers-source-table) tbody td::before,
+    .performance-detail-panel table:not(.monthly-flow-source-table) tbody td::before,
       [data-view="cashflows"] tbody td::before {
         content: attr(data-label);
         flex: 0 0 auto;
@@ -7148,7 +7148,7 @@ tr.is-editing-row td {
         text-align: left;
       }
 
-    .performance-detail-panel table:not(.numbers-source-table) tbody td[colspan]::before,
+    .performance-detail-panel table:not(.monthly-flow-source-table) tbody td[colspan]::before,
       [data-view="cashflows"] tbody td[colspan]::before {
         content: none !important;
       }
@@ -7467,31 +7467,31 @@ tr.is-editing-row td {
   font-weight: 900;
 }
 
-.numbers-month-nav {
+.monthly-flow-month-nav {
   display: flex;
   justify-content: flex-end;
   margin-bottom: 14px;
 }
 
-.numbers-month-select {
+.monthly-flow-month-select {
   font-size: 13px;
   font-weight: 700;
   min-width: 130px;
 }
 
-.numbers-source-wrap {
+.monthly-flow-source-wrap {
   border: 1px solid var(--line);
   border-radius: 7px;
   margin-bottom: 18px;
   max-height: none;
 }
 
-.numbers-source-table {
+.monthly-flow-source-table {
   font-size: 13px;
   min-width: 1200px;
 }
 
-.numbers-source-table caption {
+.monthly-flow-source-table caption {
   caption-side: top;
   color: var(--ink);
   font-size: 13px;
@@ -7500,24 +7500,24 @@ tr.is-editing-row td {
   text-align: center;
 }
 
-.numbers-source-table th {
+.monthly-flow-source-table th {
   background: #c8ccca;
   color: #0f1712;
 }
 
-.numbers-source-table tbody th {
+.monthly-flow-source-table tbody th {
   background: var(--surface-soft);
   font-size: 13px;
   text-transform: none;
 }
 
-.numbers-source-table th,
-.numbers-source-table td {
+.monthly-flow-source-table th,
+.monthly-flow-source-table td {
   border-color: #b7beb9;
   padding: 7px 8px;
 }
 
-.numbers-chart-wrap {
+.monthly-flow-chart-wrap {
   border: 1px solid var(--line);
   border-radius: 7px;
   height: 440px;
@@ -7525,7 +7525,7 @@ tr.is-editing-row td {
   padding: 12px;
 }
 
-.numbers-chart-wrap canvas {
+.monthly-flow-chart-wrap canvas {
   min-width: 960px;
 }
 
@@ -7686,12 +7686,12 @@ tr.is-editing-row td {
   color: rgba(255,255,255,0.85);
 }
 
-.performance-detail-panel table:not(.numbers-source-table) {
+.performance-detail-panel table:not(.monthly-flow-source-table) {
   min-width: 100% !important;
   table-layout: auto !important;
 }
 
-.performance-detail-panel table:not(.numbers-source-table) {
+.performance-detail-panel table:not(.monthly-flow-source-table) {
   min-width: 100% !important;
 }
 
@@ -7711,7 +7711,7 @@ button.ghost[id*="Export"] {
   font-size: 13px;
 }
 
-.performance-detail-panel table:not(.numbers-source-table) {
+.performance-detail-panel table:not(.monthly-flow-source-table) {
   min-width: 100% !important;
 }
 

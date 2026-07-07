@@ -34,7 +34,7 @@ import {
   filterSnapshotRows,
   getAccountPerformanceRows,
   getMonthlyRows,
-  getNumbersChartSource,
+  getMonthlyFlowChartSource,
   getPerformanceStats,
   getSnapshotRows,
 } from "../src/app/performance-selectors.js";
@@ -202,7 +202,7 @@ test("account helpers derive explicit accounts and update references immutably",
   assert.equal(renamed.cashFlows[0].account, "미래에셋");
 });
 
-test("performance selectors calculate snapshot deltas and Numbers-style chart rows", () => {
+test("performance selectors calculate snapshot deltas and monthly flow chart rows", () => {
   const rows = getSnapshotRows([
     { id: "s1", date: "2026-04-01", totalValueKrw: 10_000_000, netInflowKrw: 0 },
     { id: "s2", date: "2026-04-02", totalValueKrw: 12_500_000, netInflowKrw: 1_000_000 },
@@ -221,7 +221,7 @@ test("performance selectors calculate snapshot deltas and Numbers-style chart ro
   assert.equal(stats.periodChangeKrw, 3_000_000);
   assert.equal(stats.investmentGainKrw, 2_000_000);
 
-  const source = getNumbersChartSource(rows.slice(0, 2), rows);
+  const source = getMonthlyFlowChartSource(rows.slice(0, 2), rows);
   assert.deepEqual(source.rows[2].values, [0, 150]);
 });
 
