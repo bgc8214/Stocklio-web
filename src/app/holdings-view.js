@@ -162,7 +162,7 @@ export function tickerLogoHtml(ticker, name, size = 36) {
 export function renderAccountChips() {
   const els = _ctx.els;
   const state = _ctx.getState();
-  if (!els.accountChipsBar) return;
+  if (!els.accountChipsSelect) return;
 
   // 고유 계좌 목록 추출 (investor|||account 키 기준)
   const seen = new Map();
@@ -172,29 +172,22 @@ export function renderAccountChips() {
   }
   const accounts = [...seen.values()];
 
-  const chipHtml = (key, label) => {
-    const active = selectedAccountChip === key;
-    return `<button class="account-chip${active ? " is-active" : ""}" type="button" data-account-chip="${escapeHtml(key ?? "")}">${escapeHtml(label)}</button>`;
-  };
+  const optionHtml = (key, label) =>
+    `<option value="${escapeHtml(key ?? "")}" ${selectedAccountChip === key ? "selected" : ""}>${escapeHtml(label)}</option>`;
 
-  let html = chipHtml(null, "전체");
+  let html = optionHtml(null, "전체 계좌");
   for (const acc of accounts) {
     const label = acc.investor !== accounts[0]?.investor || accounts.filter(a => a.investor === acc.investor).length > 1
       ? `${acc.investor} · ${acc.account}`
       : acc.account;
-    html += chipHtml(acc.key, label);
+    html += optionHtml(acc.key, label);
   }
-  els.accountChipsBar.innerHTML = html;
-
-  els.accountChipsBar.querySelectorAll("[data-account-chip]").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const key = btn.dataset.accountChip || null;
-      selectedAccountChip = key === "" ? null : key;
-      holdingPage = 1;
-      renderAccountChips();
-      renderHoldings();
-    });
-  });
+  els.accountChipsSelect.innerHTML = html;
+  els.accountChipsSelect.onchange = () => {
+    selectedAccountChip = els.accountChipsSelect.value || null;
+    holdingPage = 1;
+    renderHoldings();
+  };
 }
 
 export function filteredHoldings() {
@@ -457,12 +450,6 @@ function renderHoldingsSummary(rows) {
     els.holdingsSummaryDayMove.textContent = `${totalDayMove >= 0 ? "+" : ""}${formatKrw(totalDayMove)}`;
     els.holdingsSummaryDayMove.className = totalDayMove >= 0 ? "positive" : "negative";
   }
-  if (els.holdingsSummaryDayNote) {
-    const leadingMove = values
-      .filter((row) => row.dailyMove.hasData)
-      .sort((a, b) => Math.abs(b.dailyMove.valueKrw) - Math.abs(a.dailyMove.valueKrw))[0];
-    els.holdingsSummaryDayNote.textContent = leadingMove ? `${leadingMove.holding.ticker} 영향 최대` : "가격 갱신 기준";
-  }
   if (els.holdingsSummaryConcentration) {
     els.holdingsSummaryConcentration.textContent = formatPercent(concentration);
   }
@@ -541,7 +528,7 @@ function renderHoldingsSummaryView(rows) {
         <div class="hsc-header">
           ${tickerLogoHtml(item.ticker, item.name, 32)}
           <div class="hsc-name-wrap">
-            <strong class="hsc-name">${escapeHtml(item.name)}</strong>
+            <strong class="hsc-name" title="${escapeHtml(item.name)}">${escapeHtml(item.name)}</strong>
             <span class="hsc-ticker">${escapeHtml(item.ticker)}</span>
           </div>
           <span class="hsc-change ${gainPositive ? "positive" : "negative"}">${gainPositive ? "+" : ""}${formatPercent(returnRate)}</span>

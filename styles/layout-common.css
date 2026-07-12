@@ -1396,11 +1396,10 @@ th[data-sort],
 .account-overview-card,
 .account-card-row,
 .performance-header,
-.side-drawer,
 .login-card,
 .operation-toast {
-  border-radius: 8px !important;
-  box-shadow: none !important;
+  border-radius: var(--radius);
+  box-shadow: var(--card-shadow);
 }
 
 .status-actions #dashboardAddHoldingButton,
@@ -1446,12 +1445,21 @@ th[data-sort],
 .filters-row1-controls {
   display: flex;
   align-items: center;
+  flex: 1;
   gap: 6px;
-  flex-shrink: 0;         /* 우측 컨트롤 그룹은 절대 줄어들지 않음 */
+  min-width: 0;
 }
 
 .filters-row1-controls input[type="search"] {
-  width: 180px;
+  flex: 1;
+  min-width: 120px;
+  width: auto;
+}
+
+.filters-row1-controls .filter-popover-wrap,
+.filters-row1-controls > select {
+  flex: 0 0 auto;
+  width: auto;
 }
 
 .filters-row2 {

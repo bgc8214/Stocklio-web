@@ -8126,14 +8126,14 @@ var E = [
 		visible: !0
 	},
 	{
-		id: "fx-rate",
-		widthPct: 25,
-		span: 3,
-		minHeight: 128,
+		id: "allocation",
+		widthPct: 50,
+		span: 6,
+		minHeight: 320,
 		visible: !0
 	},
 	{
-		id: "allocation",
+		id: "breakdown",
 		widthPct: 50,
 		span: 6,
 		minHeight: 320,
@@ -8145,30 +8145,22 @@ var E = [
 		span: 12,
 		minHeight: 360,
 		visible: !0
-	},
-	{
-		id: "breakdown",
-		widthPct: 100,
-		span: 12,
-		minHeight: 320,
-		visible: !0
 	}
 ], D = {
 	"total-value": "총자산",
 	"total-cost": "주식 매입금액",
 	"total-gain": "주식 평가손익",
 	"cash-total": "예수금",
-	"fx-rate": "USD/KRW",
 	allocation: "자산 비중",
 	"performance-flow": "성과 흐름",
 	breakdown: "오늘 변동 원인",
 	"top-mover": "오늘의 주인공"
 }, ue = [
-	"#1F4431",
-	"#3366a8",
-	"#a97819",
-	"#7b5aa6",
-	"#b94343"
+	"#3366FF",
+	"#16A34A",
+	"#F59E0B",
+	"#8B5CF6",
+	"#6541F2"
 ], de = {
 	direct_investment: "직접투자 계좌",
 	pension: "연금 계좌"
@@ -8339,49 +8331,17 @@ function k({ id: e, state: t }) {
 	let n = Ue();
 	if (!t) return null;
 	let r = Me(t), i = We(n, t.fxRate);
-	if (e === "total-value") {
-		let e = xe(), n = [...t.holdings].filter((e) => e.priceAsOf).sort((e, t) => String(t.priceAsOf).localeCompare(String(e.priceAsOf)))[0]?.priceAsOf || t.fxRate?.asOf, a = [
-			n && /^\d{4}-\d{2}-\d{2}/.test(n) ? `${qe(n.slice(0, 10))} 종가` : e.isMarketClosed ? e.label : "",
-			t.fxRate?.rate ? `USD/KRW ${Ge(t.fxRate.rate, 2)}` : "",
-			e.isMarketClosed ? e.closedReason || "미국장 휴장" : ""
-		].filter(Boolean), o = r.gainKrw >= 0 ? "+" : "", s = r.gainKrw >= 0 ? "positive" : "negative";
-		return /* @__PURE__ */ (0, T.jsxs)(T.Fragment, { children: [
-			/* @__PURE__ */ (0, T.jsx)("span", { children: "총자산" }),
-			/* @__PURE__ */ (0, T.jsx)("strong", { children: i(r.valueKrw) }),
-			/* @__PURE__ */ (0, T.jsx)("small", { children: `주식 ${i(r.stockValueKrw)} · 예수금 ${i(r.cashKrw)}` }),
-			/* @__PURE__ */ (0, T.jsxs)("div", {
-				className: "metric-badges",
-				children: [a.map((e) => /* @__PURE__ */ (0, T.jsx)("span", {
-					className: "metric-badge",
-					children: e
-				}, e)), /* @__PURE__ */ (0, T.jsxs)("span", {
-					className: `metric-return-badge ${s}`,
-					children: [o, Ke(r.returnRate)]
-				})]
-			})
-		] });
-	}
-	if (e === "total-cost") {
-		let e = t.holdings.filter((e) => e.type !== "cash").length;
-		return /* @__PURE__ */ (0, T.jsx)(me, {
-			label: "주식 매입금액",
-			value: i(r.costKrw),
-			hint: `${e}개 종목 · 평단 기준`
-		});
-	}
-	return e === "total-gain" ? /* @__PURE__ */ (0, T.jsx)(me, {
+	return e === "total-value" ? /* @__PURE__ */ (0, T.jsxs)(T.Fragment, { children: [/* @__PURE__ */ (0, T.jsx)("span", { children: "총자산" }), /* @__PURE__ */ (0, T.jsx)("strong", { children: i(r.valueKrw) })] }) : e === "total-cost" ? /* @__PURE__ */ (0, T.jsx)(me, {
+		label: "주식 매입금액",
+		value: i(r.costKrw)
+	}) : e === "total-gain" ? /* @__PURE__ */ (0, T.jsx)(me, {
 		label: "주식 평가순익",
 		value: i(r.gainKrw),
 		hint: Ke(r.returnRate),
 		tone: r.gainKrw >= 0 ? "positive" : "negative"
 	}) : e === "cash-total" ? /* @__PURE__ */ (0, T.jsx)(me, {
 		label: "예수금",
-		value: i(r.cashKrw),
-		hint: "총자산에 포함"
-	}) : e === "fx-rate" ? /* @__PURE__ */ (0, T.jsx)(me, {
-		label: "USD/KRW",
-		value: Ge(t.fxRate?.rate || 0, 2),
-		hint: `${t.fxRate?.source || "환율 기준"} · ${Ye(t.fxRate?.asOf)}`
+		value: i(r.cashKrw)
 	}) : e === "allocation" ? /* @__PURE__ */ (0, T.jsx)(he, { state: t }) : e === "performance-flow" ? /* @__PURE__ */ (0, T.jsx)(ge, { state: t }) : e === "top-mover" ? /* @__PURE__ */ (0, T.jsx)(Qe, { state: t }) : /* @__PURE__ */ (0, T.jsx)(ve, { state: t });
 }
 function me({ label: e, value: t, hint: n, tone: r }) {
@@ -8884,7 +8844,12 @@ function ke(e) {
 	}, r = /* @__PURE__ */ new Set(), i = [];
 	for (let a of Array.isArray(e) ? e : []) {
 		if (!t.has(a.id) || r.has(a.id)) continue;
-		let e = t.get(a.id), o = Xe(Math.round(Number(a.span ?? n[a.size] ?? e.span)), 2, 12), s = Number(a.widthPct ?? o / 12 * 100);
+		let e = t.get(a.id);
+		if (a.id === "breakdown" && Number(a.span) === 12 && Number(a.widthPct) === 100) {
+			i.push({ ...e }), r.add(a.id);
+			continue;
+		}
+		let o = Xe(Math.round(Number(a.span ?? n[a.size] ?? e.span)), 2, 12), s = Number(a.widthPct ?? o / 12 * 100);
 		i.push({
 			id: a.id,
 			widthPct: Xe(Ze(s, .1), 18, 100),

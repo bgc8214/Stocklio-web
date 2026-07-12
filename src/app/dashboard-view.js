@@ -58,15 +58,12 @@ export function renderAccountSelectors() {
   const els = _ctx.els;
   const accounts = _ctx.getKnownAccounts();
   const options = accounts.map(accountOption).join("");
-  for (const form of [els.holdingForm, els.cashFlowForm, els.cashBalanceForm]) {
+  for (const form of [els.holdingForm, els.cashFlowForm]) {
     const select = form.elements.accountKey;
     const previous = select.value;
     select.innerHTML = `<option value="">계좌 선택</option>${options}`;
     select.value = accounts.some((account) => account.key === previous) ? previous : "";
   }
-  const previousDetail = els.accountDetailSelect.value;
-  els.accountDetailSelect.innerHTML = `<option value="">전체 계좌</option>${options}`;
-  els.accountDetailSelect.value = accounts.some((account) => account.key === previousDetail) ? previousDetail : accounts[0]?.key || "";
   fillSelect(els.accountInvestorFilter, "모든 투자자", _ctx.unique(accounts.map((account) => account.investor)));
 }
 
@@ -76,6 +73,7 @@ export function accountOption(account) {
 }
 
 export function renderSummary() {
+  if (window.STOCKLIO_USE_CRAFT) return;
   const state = _ctx.getState();
   const els = _ctx.els;
   const totals = _ctx.getTotals(state.holdings);
@@ -121,6 +119,7 @@ export function renderSummary() {
 }
 
 export function renderAllocation() {
+  if (window.STOCKLIO_USE_CRAFT) return;
   const els = _ctx.els;
   const { activeAllocationView, allocationViewLabels } = _ctx;
   els.allocationDimensionButtons.forEach((button) => {

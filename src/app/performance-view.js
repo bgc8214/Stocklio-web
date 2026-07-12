@@ -20,6 +20,8 @@ import {
 } from "./performance-selectors.js";
 
 let _ctx;
+let contributionView = "account";
+let lastPerformanceRows = [];
 
 // 벤치마크 캐시
 const benchmarkCache = new Map();
@@ -131,8 +133,8 @@ function renderPerformanceDetails(rows) {
   renderMonthlyFlowChart(rows);
   els.performanceWaterfall.innerHTML = renderWaterfall(stats);
   els.performanceInsight.innerHTML = renderPerformanceInsights(stats);
-  renderAccountPerformance(rows);
-  renderStrategyPerformance();
+  lastPerformanceRows = rows;
+  renderContribution();
 }
 
 function renderMonthlyFlowMonthNav(rows) {
@@ -388,36 +390,62 @@ export function renderMonthlySummary() {
     .join("") || `<tr><td colspan="4">한 달치 기록이 쌓이면 월별 분석이 시작됩니다</td></tr>`;
 }
 
-function renderAccountPerformance(rows) {
-  const state = _ctx.getState();
-  const els = _ctx.els;
-  const accountRows = selectAccountPerformanceRows(state.accountSnapshots, rows);
-  els.accountPerformanceBody.innerHTML = accountRows
-    .map((row) => `<tr>
-      <td data-label="계좌">${escapeHtml(row.account)}<small>${escapeHtml(row.investor)}</small></td>
-      <td data-label="최근 총액">${formatKrw(row.latestValueKrw)}</td>
-      <td data-label="일 증감" class="${row.dailyChangeKrw >= 0 ? "positive" : "negative"}">${formatKrw(row.dailyChangeKrw)}</td>
-      <td data-label="기간 증감" class="${row.periodChangeKrw >= 0 ? "positive" : "negative"}">${formatKrw(row.periodChangeKrw)}</td>
-      <td data-label="주식">${formatKrw(row.stockValueKrw)}</td>
-      <td data-label="예수금">${formatKrw(row.cashKrw)}</td>
-      <td data-label="수익률" class="${row.returnRate >= 0 ? "positive" : "negative"}">${formatPercent(row.returnRate)}</td>
-    </tr>`)
-    .join("") || `<tr><td colspan="7">계좌별 성과 기록이 없습니다</td></tr>`;
+export function setContributionView(view) {
+  contributionView = view === "strategy" ? "strategy" : "account";
+  renderContribution();
 }
 
-function renderStrategyPerformance() {
+function renderContribution() {
   const els = _ctx.els;
-  const rows = getStrategyPerformanceRows();
-  els.strategyPerformanceBody.innerHTML = rows
-    .map((row) => `<tr>
-      <td data-label="전략">${escapeHtml(row.strategy)}</td>
-      <td data-label="평가금액">${formatKrw(row.valueKrw)}</td>
-      <td data-label="비중">${formatPercent(row.weight)}</td>
-      <td data-label="평가손익" class="${row.gainKrw >= 0 ? "positive" : "negative"}">${formatKrw(row.gainKrw)}</td>
-      <td data-label="수익률" class="${row.returnRate >= 0 ? "positive" : "negative"}">${formatPercent(row.returnRate)}</td>
-      <td data-label="종목 수">${formatNumber(row.count)}</td>
-    </tr>`)
-    .join("") || `<tr><td colspan="6">보유 종목이 없습니다</td></tr>`;
+  if (!els.contributionList) return;
+  els.contributionViewAccount?.classList.toggle("is-active", contributionView === "account");
+  els.contributionViewStrategy?.classList.toggle("is-active", contributionView === "strategy");
+  if (els.contributionSubtitle) {
+    els.contributionSubtitle.textContent = contributionView === "account"
+      ? "선택 기간 총자산 증감에 대한 계좌별 기여"
+      : "현재 보유 기준 전략별 평가손익";
+  }
+
+  if (contributionView === "strategy") {
+    const rows = getStrategyPerformanceRows();
+    const maxAbs = Math.max(...rows.map((row) => Math.abs(row.gainKrw)), 1);
+    els.contributionList.innerHTML = rows.length
+      ? rows.map((row) => {
+          const gainCls = row.gainKrw >= 0 ? "positive" : "negative";
+          const gainSign = row.gainKrw >= 0 ? "+" : "";
+          return `<div class="contribution-row">
+            <div class="contribution-row-head">
+              <div>
+                <strong>${escapeHtml(row.strategy)}</strong>
+                <small>${formatPercent(row.weight)} · ${formatNumber(row.count)}개 · ${formatKrw(row.valueKrw)}</small>
+              </div>
+              <strong class="${gainCls}">${gainSign}${formatKrw(row.gainKrw)} (${gainSign}${formatPercent(row.returnRate)})</strong>
+            </div>
+            <div class="contribution-bar"><span style="width:${Math.min(100, (Math.abs(row.gainKrw) / maxAbs) * 100)}%"></span></div>
+          </div>`;
+        }).join("")
+      : `<div class="empty-state">보유 종목이 없습니다</div>`;
+    return;
+  }
+
+  const state = _ctx.getState();
+  const rows = selectAccountPerformanceRows(state.accountSnapshots, lastPerformanceRows);
+  const maxAbs = Math.max(...rows.map((row) => Math.abs(row.periodChangeKrw)), 1);
+  els.contributionList.innerHTML = rows.length
+    ? rows.map((row) => {
+        const changeCls = row.periodChangeKrw >= 0 ? "positive" : "negative";
+        return `<div class="contribution-row">
+          <div class="contribution-row-head">
+            <div>
+              <strong>${escapeHtml(row.account)}</strong>
+              <small>${escapeHtml(row.investor)} · ${formatKrw(row.latestValueKrw)}</small>
+            </div>
+            <strong class="${changeCls}">${formatKrw(row.periodChangeKrw)}</strong>
+          </div>
+          <div class="contribution-bar"><span style="width:${Math.min(100, (Math.abs(row.periodChangeKrw) / maxAbs) * 100)}%"></span></div>
+        </div>`;
+      }).join("")
+    : `<div class="empty-state">계좌별 성과 기록이 없습니다</div>`;
 }
 
 function breakdownRow(item, index) {

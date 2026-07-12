@@ -55,6 +55,7 @@ export function renderAutomation() {
 }
 
 export function renderDashboardStatus() {
+  if (window.STOCKLIO_USE_CRAFT) return;
   const state = _ctx.getState();
   const els = _ctx.els;
   const marketContext = _ctx.getCurrentMarketContext();

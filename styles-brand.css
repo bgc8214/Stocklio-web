@@ -4,41 +4,41 @@
 :root {
   --bg: #F4F5F7;
   --surface: #ffffff;
-  --surface-soft: #eef5f0;
+  --surface-soft: #eef1f5;
   --ink: #132018;
   --value: #0f1712;
   --muted: #657168;
   --subtle: #879189;
-  --line: #d9dfda;
-  --accent: #1F4431;
-  --accent-dark: #163225;
-  --accent-light: #58D68D;
+  --line: #dde1e6;
+  --accent: #3366FF;
+  --accent-dark: #2451D9;
+  --accent-light: #8FB4FF;
   --control-bg: #F4F5F7;
-  --nav-active-bg: rgba(88, 214, 141, 0.16);
-  --nav-active-color: #1F4431;
-  --nav-active-indicator: #58D68D;
-  --nav-icon-active-bg: rgba(88, 214, 141, 0.18);
-  --focus-ring: 0 0 0 3px rgba(88, 214, 141, 0.34);
+  --nav-active-bg: rgba(51, 102, 255, 0.08);
+  --nav-active-color: #2451D9;
+  --nav-active-indicator: #3366FF;
+  --nav-icon-active-bg: rgba(51, 102, 255, 0.10);
+  --focus-ring: 0 0 0 3px rgba(51, 102, 255, 0.30);
 }
 
 [data-theme="dark"] {
-  --bg: #0f1813;
-  --surface: #121f18;
-  --surface-soft: #17271e;
+  --bg: #10131a;
+  --surface: #171b23;
+  --surface-soft: #181c22;
   --ink: #F4F5F7;
   --value: #ffffff;
   --muted: rgba(244, 245, 247, 0.62);
   --subtle: rgba(244, 245, 247, 0.42);
   --line: rgba(244, 245, 247, 0.1);
-  --accent: #58D68D;
-  --accent-dark: #39b873;
-  --accent-light: #7ee6aa;
-  --control-bg: #17271e;
-  --nav-active-bg: rgba(88, 214, 141, 0.14);
-  --nav-active-color: #7ee6aa;
-  --nav-active-indicator: #58D68D;
-  --nav-icon-active-bg: rgba(88, 214, 141, 0.16);
-  --focus-ring: 0 0 0 3px rgba(88, 214, 141, 0.28);
+  --accent: #5C8DFF;
+  --accent-dark: #3B6FE0;
+  --accent-light: #A8C6FF;
+  --control-bg: #181c22;
+  --nav-active-bg: rgba(92, 141, 255, 0.14);
+  --nav-active-color: #8FB4FF;
+  --nav-active-indicator: #5C8DFF;
+  --nav-icon-active-bg: rgba(92, 141, 255, 0.16);
+  --focus-ring: 0 0 0 3px rgba(92, 141, 255, 0.28);
 }
 
 body {
@@ -200,7 +200,8 @@ body {
 .craft-dashboard-board .dashboard-card {
   background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: 8px;
+  border-radius: var(--radius, 16px);
+  box-shadow: var(--card-shadow);
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -213,7 +214,7 @@ body {
 }
 
 .craft-dashboard-board .dashboard-card.metric {
-  justify-content: space-between;
+  justify-content: flex-start;
 }
 
 .craft-dashboard-board .dashboard-card.panel {
