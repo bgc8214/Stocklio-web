@@ -360,7 +360,7 @@ main {
 
 .content {
   margin: 0 auto;
-  max-width: 1500px;
+  max-width: 1920px;
   padding: 0 clamp(16px, 2.6vw, 32px) 42px;
 }
 

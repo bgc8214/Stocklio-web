@@ -90,7 +90,7 @@ import {
   renderTrendChart,
   renderWaterfall,
   renderPerformanceInsights,
-  getStrategyPerformanceRows,
+  setContributionView,
 } from "./performance-view.js";
 import {
   init as initCashflowsView,
@@ -165,11 +165,7 @@ import {
 import {
   init as initAccountsView,
   renderAccounts,
-  renderAccountDetail,
   renderAccountOverview,
-  renderAccountSummary,
-  renderCashSelectedPreview,
-  syncCashFormToSelectedAccount,
   getAccountStats,
   getFilteredAccounts,
   rowActionMenu,
@@ -690,6 +686,9 @@ els.snapshotDayFilter?.addEventListener("change", renderSnapshots);
 els.performanceCopyButton?.addEventListener("click", copyPerformanceSummary);
 els.performanceExportButton?.addEventListener("click", exportPerformanceCsv);
 
+els.contributionViewAccount?.addEventListener("click", () => setContributionView("account"));
+els.contributionViewStrategy?.addEventListener("click", () => setContributionView("strategy"));
+
 els.cashFlowTypeFilter.addEventListener("change", renderCashFlows);
 els.cashFlowSort.addEventListener("change", () => {
   cashFlowHeaderSort = parseSortValue(els.cashFlowSort.value, DEFAULT_CASH_FLOW_SORT);
@@ -706,23 +705,9 @@ document.querySelectorAll("[data-flow-sort-key]").forEach((button) => {
   });
 });
 
-els.accountDetailSelect.addEventListener("change", () => {
-  syncCashFormToSelectedAccount();
-  renderAccounts();
-  renderAccountDetail();
-  renderCashBalances();
-});
 for (const accountFilter of [els.accountInvestorFilter, els.accountCurrencyFilter, els.accountSearch]) {
   accountFilter?.addEventListener(accountFilter === els.accountSearch ? "input" : "change", renderAccounts);
 }
-els.cashBalanceForm.elements.accountKey.addEventListener("change", () => {
-  els.accountDetailSelect.value = els.cashBalanceForm.elements.accountKey.value;
-  renderAccounts();
-  renderAccountDetail();
-  renderCashBalances();
-});
-els.cashBalanceForm.elements.currency.addEventListener("change", renderCashSelectedPreview);
-els.cashBalanceForm.elements.amount.addEventListener("input", renderCashSelectedPreview);
 els.accountReconcileButton?.addEventListener("click", () => {
   renderReconciliation();
   setView("automation");
@@ -833,35 +818,8 @@ els.cashFlowForm.addEventListener("submit", (event) => {
   // 입출금 저장 상태 알림 제거
 });
 
-els.cashBalanceForm.addEventListener("submit", (event) => {
-  event.preventDefault();
-  const form = new FormData(event.currentTarget);
-  const account = parseAccountKey(form.get("accountKey"));
-  const nextCash = {
-    id: editingCashBalanceId || makeId(),
-    investor: account.investor,
-    account: account.account,
-    currency: String(form.get("currency")),
-    amount: Number(form.get("amount")),
-    asOf: todayKey(),
-    source: editingCashBalanceId ? "사용자 수정" : "사용자 입력",
-  };
-  if (editingCashBalanceId) {
-    state.cashBalances = state.cashBalances.map((cash) => (cash.id === editingCashBalanceId ? nextCash : cash));
-  } else {
-    state.cashBalances.push(nextCash);
-  }
-  editingCashBalanceId = null;
-  event.currentTarget.reset();
-  updateEditControls();
-  saveState();
-  render();
-  // 예수금 저장 상태 알림 제거
-});
-
 els.holdingCancel.addEventListener("click", () => cancelEdit("holding"));
 els.cashFlowCancel.addEventListener("click", () => cancelEdit("cashFlow"));
-els.cashBalanceCancel.addEventListener("click", () => cancelEdit("cashBalance"));
 els.accountCancel.addEventListener("click", () => cancelEdit("account"));
 
 els.cashAllocationForm.addEventListener("submit", (event) => {
@@ -1108,7 +1066,6 @@ async function initialize() {
     // cancel edit
     cancelEdit,
     // accounts-view helpers
-    renderCashSelectedPreview,
     rowActionMenu,
   };
   initHoldingsView(ctx);
@@ -1222,8 +1179,6 @@ function render() {
   renderTopMover();
 
   renderAccounts();
-  renderAccountSummary();
-  renderAccountDetail();
   renderSnapshots();
   renderMonthlySummary();
   renderAllocationOverview();
@@ -1480,7 +1435,6 @@ function cancelEdit(kind) {
   }
   if (kind === "cashBalance") {
     editingCashBalanceId = null;
-    els.cashBalanceForm.reset();
     renderCashBalances();
   }
   if (kind === "account") {
@@ -1504,8 +1458,6 @@ function updateEditControls() {
   }
   els.cashFlowSubmit.textContent = editingCashFlowId ? "수정 저장" : "기록";
   els.cashFlowCancel.hidden = !editingCashFlowId;
-  els.cashBalanceSubmit.textContent = editingCashBalanceId ? "수정 저장" : "저장";
-  els.cashBalanceCancel.hidden = !editingCashBalanceId;
 }
 
 function getTotals(holdings) {

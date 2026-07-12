@@ -17,11 +17,9 @@ const DEFAULT_LAYOUT = [
   { id: "total-cost", widthPct: 25, span: 3, minHeight: 128, visible: true },
   { id: "total-gain", widthPct: 25, span: 3, minHeight: 128, visible: true },
   { id: "cash-total", widthPct: 25, span: 3, minHeight: 128, visible: true },
-  { id: "fx-rate", widthPct: 25, span: 3, minHeight: 128, visible: true },
   { id: "allocation", widthPct: 50, span: 6, minHeight: 320, visible: true },
+  { id: "breakdown", widthPct: 50, span: 6, minHeight: 320, visible: true },
   { id: "performance-flow", widthPct: 100, span: 12, minHeight: 360, visible: true },
-  { id: "breakdown", widthPct: 100, span: 12, minHeight: 320, visible: true },
-
 ];
 
 const LABELS = {
@@ -29,15 +27,13 @@ const LABELS = {
   "total-cost": "주식 매입금액",
   "total-gain": "주식 평가손익",
   "cash-total": "예수금",
-  "fx-rate": "USD/KRW",
   allocation: "자산 비중",
   "performance-flow": "성과 흐름",
   breakdown: "오늘 변동 원인",
   "top-mover": "오늘의 주인공",
-
 };
 
-const palette = ["#1F4431", "#3366a8", "#a97819", "#7b5aa6", "#b94343"];
+const palette = ["#3366FF", "#16A34A", "#F59E0B", "#8B5CF6", "#6541F2"];
 const accountTypeLabels = {
   direct_investment: "직접투자 계좌",
   pension: "연금 계좌",
@@ -291,41 +287,21 @@ function CardContent({ id, state }) {
   const totals = getTotals(state);
   const fmt = makeFmt(cm, state.fxRate);
   if (id === "total-value") {
-    const marketContext = getCurrentMarketContext();
-    const latestPriceAsOf = [...state.holdings]
-      .filter((h) => h.priceAsOf)
-      .sort((a, b) => String(b.priceAsOf).localeCompare(String(a.priceAsOf)))[0]?.priceAsOf || state.fxRate?.asOf;
-    const isRealDate = latestPriceAsOf && /^\d{4}-\d{2}-\d{2}/.test(latestPriceAsOf);
-    const dateText = isRealDate ? `${formatShortDate(latestPriceAsOf.slice(0, 10))} 종가` : (marketContext.isMarketClosed ? marketContext.label : "");
-    const fxText = state.fxRate?.rate ? `USD/KRW ${formatNumber(state.fxRate.rate, 2)}` : "";
-    const marketText = marketContext.isMarketClosed ? marketContext.closedReason || "미국장 휴장" : "";
-    const badges = [dateText, fxText, marketText].filter(Boolean);
-    const returnSign = totals.gainKrw >= 0 ? "+" : "";
-    const returnCls = totals.gainKrw >= 0 ? "positive" : "negative";
     return (
       <>
         <span>총자산</span>
         <strong>{fmt(totals.valueKrw)}</strong>
-        <small>{`주식 ${fmt(totals.stockValueKrw)} · 예수금 ${fmt(totals.cashKrw)}`}</small>
-        <div className="metric-badges">
-          {badges.map((b) => <span key={b} className="metric-badge">{b}</span>)}
-          <span className={`metric-return-badge ${returnCls}`}>{returnSign}{formatPercent(totals.returnRate)}</span>
-        </div>
       </>
     );
   }
   if (id === "total-cost") {
-    const stockCount = state.holdings.filter((h) => h.type !== "cash").length;
-    return <Metric label="주식 매입금액" value={fmt(totals.costKrw)} hint={`${stockCount}개 종목 · 평단 기준`} />;
+    return <Metric label="주식 매입금액" value={fmt(totals.costKrw)} />;
   }
   if (id === "total-gain") {
     return <Metric label="주식 평가순익" value={fmt(totals.gainKrw)} hint={formatPercent(totals.returnRate)} tone={totals.gainKrw >= 0 ? "positive" : "negative"} />;
   }
   if (id === "cash-total") {
-    return <Metric label="예수금" value={fmt(totals.cashKrw)} hint="총자산에 포함" />;
-  }
-  if (id === "fx-rate") {
-    return <Metric label="USD/KRW" value={formatNumber(state.fxRate?.rate || 0, 2)} hint={`${state.fxRate?.source || "환율 기준"} · ${formatAsOf(state.fxRate?.asOf)}`} />;
+    return <Metric label="예수금" value={fmt(totals.cashKrw)} />;
   }
   if (id === "allocation") {
     return <AllocationPanel state={state} />;
@@ -757,6 +733,12 @@ function normalizeLayout(layout) {
       continue;
     }
     const fallback = defaults.get(item.id);
+    // breakdown 카드가 예전 기본값(전체폭)으로 저장돼 있으면 새 기본값(자산 비중과 나란히)으로 마이그레이션한다.
+    if (item.id === "breakdown" && Number(item.span) === 12 && Number(item.widthPct) === 100) {
+      next.push({ ...fallback });
+      seen.add(item.id);
+      continue;
+    }
     const span = clamp(Math.round(Number(item.span ?? sizeToSpan[item.size] ?? fallback.span)), 2, 12);
     const widthPct = Number(item.widthPct ?? (span / 12) * 100);
     next.push({

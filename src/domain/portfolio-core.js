@@ -5,11 +5,9 @@ export const DEFAULT_DASHBOARD_LAYOUT = [
   { id: "total-cost", widthPct: 25, span: 3, minHeight: 128, visible: true },
   { id: "total-gain", widthPct: 25, span: 3, minHeight: 128, visible: true },
   { id: "cash-total", widthPct: 25, span: 3, minHeight: 128, visible: true },
-  { id: "fx-rate", widthPct: 25, span: 3, minHeight: 128, visible: true },
   { id: "allocation", widthPct: 50, span: 6, minHeight: 320, visible: true },
+  { id: "breakdown", widthPct: 50, span: 6, minHeight: 320, visible: true },
   { id: "performance-flow", widthPct: 100, span: 12, minHeight: 360, visible: true },
-  { id: "breakdown", widthPct: 100, span: 12, minHeight: 320, visible: true },
-
 ];
 
 export function normalizeDashboardLayout(layout) {
@@ -22,6 +20,12 @@ export function normalizeDashboardLayout(layout) {
       continue;
     }
     const fallback = defaults.get(item.id);
+    // breakdown 카드가 예전 기본값(전체폭)으로 저장돼 있으면 새 기본값(자산 비중과 나란히)으로 마이그레이션한다.
+    if (item.id === "breakdown" && Number(item.span) === 12 && Number(item.widthPct) === 100) {
+      normalized.push({ ...fallback });
+      seen.add(item.id);
+      continue;
+    }
     const span = clamp(Math.round(Number(item.span ?? sizeToSpan[item.size] ?? fallback.span)), 2, 12);
     normalized.push({
       id: item.id,

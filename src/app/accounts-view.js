@@ -2,15 +2,14 @@ import { accountKeyFor, parseAccountKey } from "./accounts.js";
 import { formatAccountType, normalizeAccountType } from "./account-types.js";
 import {
   escapeHtml,
-  formatAsOf,
-  formatCompactKrw,
   formatKrw,
   formatMoney,
-  formatNumber,
   formatPercent,
 } from "./formatters.js";
 
 let _ctx;
+let expandedAccountKey = null;
+let accountDrafts = {};
 
 export function init(ctx) {
   _ctx = ctx;
@@ -27,24 +26,26 @@ export function getAccountStats() {
   const state = _ctx.getState();
   const stats = new Map();
   for (const account of _ctx.getKnownAccounts()) {
-    stats.set(account.key, { stockValueKrw: 0, cashKrw: 0, flowsKrw: 0, holdingCount: 0 });
+    stats.set(account.key, { stockValueKrw: 0, cashKrw: 0, flowsKrw: 0, gainKrw: 0, holdingCount: 0 });
   }
   for (const holding of state.holdings) {
     const key = accountKeyFor(holding);
-    const current = stats.get(key) || { stockValueKrw: 0, cashKrw: 0, flowsKrw: 0, holdingCount: 0 };
-    current.stockValueKrw += _ctx.getHoldingValues(holding).valueKrw;
+    const current = stats.get(key) || { stockValueKrw: 0, cashKrw: 0, flowsKrw: 0, gainKrw: 0, holdingCount: 0 };
+    const values = _ctx.getHoldingValues(holding);
+    current.stockValueKrw += values.valueKrw;
+    current.gainKrw += values.gainKrw;
     current.holdingCount += 1;
     stats.set(key, current);
   }
   for (const cash of state.cashBalances || []) {
     const key = accountKeyFor(cash);
-    const current = stats.get(key) || { stockValueKrw: 0, cashKrw: 0, flowsKrw: 0, holdingCount: 0 };
+    const current = stats.get(key) || { stockValueKrw: 0, cashKrw: 0, flowsKrw: 0, gainKrw: 0, holdingCount: 0 };
     current.cashKrw += _ctx.getCashValueKrw(cash);
     stats.set(key, current);
   }
   for (const flow of state.cashFlows || []) {
     const key = accountKeyFor(flow);
-    const current = stats.get(key) || { stockValueKrw: 0, cashKrw: 0, flowsKrw: 0, holdingCount: 0 };
+    const current = stats.get(key) || { stockValueKrw: 0, cashKrw: 0, flowsKrw: 0, gainKrw: 0, holdingCount: 0 };
     current.flowsKrw += Number(flow.amountKrw || 0);
     stats.set(key, current);
   }
@@ -84,106 +85,95 @@ export function renderAccountOverview() {
   }
 }
 
-export function renderAccountSummary() {
-  const els = _ctx.els;
-  const grouped = _ctx.groupByAccount(_ctx.getState().holdings);
-  els.accountSummary.innerHTML = grouped
-    .map((item) => `<div class="detail-row">
-      <span>
-        <strong>${escapeHtml(item.account)}</strong>
-        <small>${escapeHtml(item.investor)} · 주식 ${formatKrw(item.stockValueKrw)} · 예수금 ${formatKrw(item.cashKrw)}</small>
-      </span>
-      <span>${formatKrw(item.valueKrw)}</span>
-      <strong class="${item.gain >= 0 ? "positive" : "negative"}">${formatPercent(item.returnRate)}</strong>
-    </div>`)
-    .join("");
+function draftForAccount(account, stats) {
+  return accountDrafts[account.key] || { currency: account.baseCurrency || "KRW", amount: "" };
 }
 
-export function renderCashSelectedPreview() {
-  const els = _ctx.els;
-  if (!els.cashSelectedPreview) return;
-  const selected = els.cashBalanceForm.elements.accountKey.value;
-  const account = selected ? parseAccountKey(selected) : null;
-  const amount = Number(els.cashBalanceForm.elements.amount.value || 0);
-  const currency = els.cashBalanceForm.elements.currency.value || "KRW";
-  const rate = currency === "USD" ? Number(_ctx.getState().fxRate?.rate || 1) : 1;
-  const stats = selected ? getAccountStats().get(selected) : null;
-  const existingCashRows = selected
-    ? (_ctx.getState().cashBalances || []).filter((cash) => cash.investor === account.investor && cash.account === account.account && cash.currency === currency)
-    : [];
-  const existingSameCurrencyKrw = existingCashRows.reduce((sum, cash) => sum + _ctx.getCashValueKrw(cash), 0);
-  const nextCashKrw = Math.max(0, amount * rate);
-  const baseTotal = stats ? stats.stockValueKrw + stats.cashKrw - existingSameCurrencyKrw : 0;
-  const previewTotal = selected ? baseTotal + nextCashKrw : 0;
-  els.cashSelectedPreview.innerHTML = selected
-    ? `<span>저장 후 선택 계좌 총자산</span><strong>${formatKrw(previewTotal)}</strong><small>${account.account} · ${currency} 예수금 ${formatMoney(amount, currency)}</small>`
-    : `<span>저장 후 선택 계좌 총자산</span><strong>-</strong><small>계좌를 선택하면 미리 계산합니다</small>`;
-}
-
-export function syncCashFormToSelectedAccount() {
-  const els = _ctx.els;
-  const selected = els.accountDetailSelect.value;
-  if (selected && [...els.cashBalanceForm.elements.accountKey.options].some((o) => o.value === selected)) {
-    els.cashBalanceForm.elements.accountKey.value = selected;
-  }
-  renderCashSelectedPreview();
-}
-
-export function renderAccountDetail() {
-  const els = _ctx.els;
-  const state = _ctx.getState();
-  const selected = els.accountDetailSelect.value;
-  if (!selected) {
-    if (els.accountDetailSubtitle) els.accountDetailSubtitle.textContent = "계좌를 선택해 상세를 확인합니다";
-    if (els.accountDetailType) els.accountDetailType.textContent = "-";
-    if (els.accountSummary) els.accountSummary.innerHTML = "";
-    if (els.accountComposition) els.accountComposition.innerHTML = `<div class="empty-state">계좌를 선택하면 구성이 표시됩니다</div>`;
-    els.accountDetail.innerHTML = `<div class="empty-state">계좌를 선택하면 보유 종목, 예수금, 현금흐름을 한 번에 볼 수 있습니다</div>`;
-    renderCashSelectedPreview();
+export function toggleAccountExpand(key) {
+  if (expandedAccountKey === key) {
+    expandedAccountKey = null;
+    renderAccounts();
     return;
   }
-  const account = parseAccountKey(selected);
-  const accountInfo = _ctx.getKnownAccounts().find((item) => item.key === selected);
+  const account = _ctx.getKnownAccounts().find((item) => item.key === key);
+  const stats = getAccountStats().get(key) || { stockValueKrw: 0, cashKrw: 0, flowsKrw: 0, holdingCount: 0 };
+  expandedAccountKey = key;
+  if (!accountDrafts[key] && account) {
+    const currency = account.baseCurrency || "KRW";
+    const rate = currency === "USD" ? Number(_ctx.getState().fxRate?.rate || 1) : 1;
+    accountDrafts[key] = { currency, amount: rate ? Math.round((stats.cashKrw / rate) * 100) / 100 : stats.cashKrw };
+  }
+  renderAccounts();
+}
+
+export function setAccountDraftField(key, field, value) {
+  accountDrafts[key] = { ...(accountDrafts[key] || { currency: "KRW", amount: "" }), [field]: value };
+}
+
+export function saveAccountCashDraft(key) {
+  const state = _ctx.getState();
+  const account = parseAccountKey(key);
+  const draft = accountDrafts[key];
+  if (!draft) return;
+  const amount = Number(draft.amount) || 0;
+  const currency = draft.currency || "KRW";
+  const existing = (state.cashBalances || []).find((cash) => cash.investor === account.investor && cash.account === account.account && cash.currency === currency);
+  const nextCash = {
+    id: existing?.id || _ctx.makeId(),
+    investor: account.investor,
+    account: account.account,
+    currency,
+    amount,
+    asOf: _ctx.todayKey(),
+    source: existing ? "사용자 수정" : "사용자 입력",
+  };
+  state.cashBalances = existing
+    ? state.cashBalances.map((cash) => (cash.id === existing.id ? nextCash : cash))
+    : [...(state.cashBalances || []), nextCash];
+  _ctx.saveState();
+  _ctx.render();
+  _ctx.setStatus("예수금 저장 완료", `${account.account} · ${formatMoney(amount, currency)}`);
+  _ctx.showOperationToast("예수금 저장 완료", `${account.account} · ${formatMoney(amount, currency)}`, "success");
+}
+
+function renderAccountAccordionBody(account, stats) {
+  const state = _ctx.getState();
   const holdings = state.holdings.filter((h) => h.investor === account.investor && h.account === account.account);
-  const cashBalances = (state.cashBalances || []).filter((c) => c.investor === account.investor && c.account === account.account);
-  const flows = (state.cashFlows || []).filter((f) => f.investor === account.investor && f.account === account.account).slice(-6).reverse();
-  const stockValueKrw = holdings.reduce((sum, h) => sum + _ctx.getHoldingValues(h).valueKrw, 0);
-  const cashKrw = cashBalances.reduce((sum, c) => sum + _ctx.getCashValueKrw(c), 0);
-  const totalKrw = stockValueKrw + cashKrw;
-  const stockRatio = totalKrw ? stockValueKrw / totalKrw : 0;
-  const cashRatio = totalKrw ? cashKrw / totalKrw : 0;
-  if (els.accountDetailSubtitle) els.accountDetailSubtitle.textContent = `${account.account} · ${account.investor} · ${accountInfo?.provider || "기관 미지정"}`;
-  if (els.accountDetailType) els.accountDetailType.textContent = formatAccountType(accountInfo?.accountType);
-  if (els.accountCompositionCurrency) els.accountCompositionCurrency.textContent = accountInfo?.baseCurrency || "KRW";
-  if (els.accountSummary) {
-    els.accountSummary.innerHTML = `
-      <div><span>총자산<small>주식과 예수금 합계</small></span><strong>${formatKrw(totalKrw)}</strong></div>
-      <div><span>주식 평가금액<small>${holdings.length}개 포지션</small></span><strong>${formatKrw(stockValueKrw)}</strong></div>
-      <div><span>예수금<small>${cashBalances.length}개 잔액</small></span><strong>${formatKrw(cashKrw)}</strong></div>
-      <div><span>보유 종목<small>현재 추적 중인 포지션</small></span><strong>${holdings.length}개</strong></div>
-    `;
-  }
-  if (els.accountComposition) {
-    els.accountComposition.innerHTML = `
-      <div class="composition-row"><span>주식</span><strong>${formatPercent(stockRatio)}</strong></div>
-      <div class="composition-bar"><span style="width:${Math.max(0, stockRatio * 100)}%"></span></div>
-      <div class="composition-row"><span>예수금</span><strong>${formatPercent(cashRatio)}</strong></div>
-      <div class="composition-bar muted"><span style="width:${Math.max(0, cashRatio * 100)}%"></span></div>
-      <div class="composition-note">${cashBalances.length ? "예수금 기록 있음" : "예수금 기록 없음"}<span>${cashBalances.length ? "" : "필요할 때 오른쪽 입력 폼에서 추가합니다."}</span></div>
-    `;
-  }
+  const draft = draftForAccount(account, stats);
+  const totalKrw = stats.stockValueKrw + stats.cashKrw;
+  const stockRatio = totalKrw ? stats.stockValueKrw / totalKrw : 0;
+  const cashRatio = totalKrw ? stats.cashKrw / totalKrw : 0;
   const holdingRows = holdings.map((h) => {
     const values = _ctx.getHoldingValues(h);
     return `<li><span>${escapeHtml(h.name || h.ticker)}<small>${escapeHtml(h.ticker)}</small></span><strong>${formatKrw(values.valueKrw)}</strong></li>`;
   }).join("");
-  const cashRows = cashBalances.map((c) => `<li><span>${escapeHtml(c.currency)} 예수금<small>${escapeHtml(c.source || "")}</small></span><strong>${formatMoney(c.amount, c.currency)}</strong></li>`).join("");
-  const flowRows = flows.map((f) => `<li><span>${escapeHtml(f.date)} · ${_ctx.formatFlowType(f.type)}<small>${escapeHtml(f.note || "")}</small></span><strong>${formatKrw(f.amountKrw)}</strong></li>`).join("");
-  els.accountDetail.innerHTML = `
-    <div class="detail-block"><h3>보유 종목</h3><ul>${holdingRows || "<li>보유 종목 없음</li>"}</ul></div>
-    <div class="detail-block"><h3>예수금</h3><ul>${cashRows || "<li>예수금 없음</li>"}</ul></div>
-    <div class="detail-block"><h3>최근 현금흐름</h3><ul>${flowRows || "<li>현금흐름 없음</li>"}</ul></div>
-  `;
-  renderCashSelectedPreview();
+  return `<div class="account-accordion-body">
+    <div class="account-cash-form-row">
+      <label>통화
+        <select data-account-draft-field="currency" data-account-key="${escapeHtml(account.key)}">
+          <option value="KRW" ${draft.currency === "KRW" ? "selected" : ""}>KRW</option>
+          <option value="USD" ${draft.currency === "USD" ? "selected" : ""}>USD</option>
+        </select>
+      </label>
+      <label>예수금
+        <input data-account-draft-field="amount" data-account-key="${escapeHtml(account.key)}" type="number" step="0.01" placeholder="0" value="${escapeHtml(draft.amount ?? "")}">
+      </label>
+      <button type="button" data-save-account-cash="${escapeHtml(account.key)}">예수금 저장</button>
+    </div>
+    <div class="account-accordion-columns">
+      <div>
+        <div class="section-badge">보유 종목 (${holdings.length})</div>
+        <ul class="detail-list">${holdingRows || "<li>보유 종목 없음</li>"}</ul>
+      </div>
+      <div>
+        <div class="section-badge">구성 비중</div>
+        <div class="composition-row"><span>주식</span><strong>${formatPercent(stockRatio)}</strong></div>
+        <div class="composition-bar"><span style="width:${Math.max(0, stockRatio * 100)}%"></span></div>
+        <div class="composition-row"><span>예수금</span><strong>${formatPercent(cashRatio)}</strong></div>
+        <div class="composition-bar muted"><span style="width:${Math.max(0, cashRatio * 100)}%"></span></div>
+      </div>
+    </div>
+  </div>`;
 }
 
 export function renderAccounts() {
@@ -196,40 +186,50 @@ export function renderAccounts() {
   els.accountList.innerHTML = accounts.length
     ? accounts.map((account) => {
         const inUse = _ctx.isAccountInUse(account);
-        const stats = accountStats.get(account.key) || { stockValueKrw: 0, cashKrw: 0, flowsKrw: 0, holdingCount: 0 };
+        const stats = accountStats.get(account.key) || { stockValueKrw: 0, cashKrw: 0, flowsKrw: 0, gainKrw: 0, holdingCount: 0 };
         const deleteLabel = inUse ? "사용 중인 계좌라 삭제할 수 없습니다" : "계좌 삭제";
-        const isSelected = els.accountDetailSelect.value === account.key;
-        return `<div class="account-list-row ${isSelected ? "is-selected" : ""}" role="button" tabindex="0" data-select-account="${escapeHtml(account.key)}">
-          <div>
-            <strong>${escapeHtml(account.account)}</strong>
-            <small>${escapeHtml(account.investor)} · ${escapeHtml(account.provider || "기관 미지정")} · ${formatAccountType(account.accountType)} · ${escapeHtml(account.baseCurrency || "KRW")}</small>
+        const isExpanded = expandedAccountKey === account.key;
+        const totalKrw = stats.stockValueKrw + stats.cashKrw;
+        const gainClass = stats.gainKrw >= 0 ? "positive" : "negative";
+        const gainSign = stats.gainKrw >= 0 ? "+" : "";
+        return `<div class="account-list-row-wrap ${isExpanded ? "is-expanded" : ""}">
+          <div class="account-list-row" role="button" tabindex="0" data-toggle-account="${escapeHtml(account.key)}">
+            <div>
+              <strong>${escapeHtml(account.account)}</strong>
+              <small>${escapeHtml(account.investor)} · ${escapeHtml(account.provider || "기관 미지정")} · ${formatAccountType(account.accountType)} · ${escapeHtml(account.baseCurrency || "KRW")}</small>
+            </div>
+            <div class="account-row-totals">
+              <strong>${formatKrw(totalKrw)}</strong>
+              <small class="${gainClass}">${gainSign}${formatKrw(stats.gainKrw)}</small>
+            </div>
+            <div class="account-row-menu" onclick="event.stopPropagation()">${rowActionMenu(`계좌 ${account.account} 작업`, [
+              `<button type="button" data-edit-account="${account.id}">수정</button>`,
+              `<button class="row-menu-danger" type="button" data-delete-account="${account.id}" ${inUse ? "disabled" : ""} title="${deleteLabel}">삭제</button>`,
+            ])}</div>
+            <span class="account-row-chevron" aria-hidden="true">${isExpanded ? "▲" : "▼"}</span>
           </div>
-          <div class="account-card-metrics">
-            <span><small>총자산</small><strong>${formatCompactKrw(stats.stockValueKrw + stats.cashKrw)}</strong></span>
-            <span><small>주식</small><strong>${formatCompactKrw(stats.stockValueKrw)}</strong></span>
-            <span><small>예수금</small><strong>${formatCompactKrw(stats.cashKrw)}</strong></span>
-            <span><small>종목</small><strong>${formatNumber(stats.holdingCount)}</strong></span>
-          </div>
-          <div class="account-row-menu" onclick="event.stopPropagation()">${rowActionMenu(`계좌 ${account.account} 작업`, [
-            `<button type="button" data-edit-account="${account.id}">수정</button>`,
-            `<button class="row-menu-danger" type="button" data-delete-account="${account.id}" ${inUse ? "disabled" : ""} title="${deleteLabel}">삭제</button>`,
-          ])}</div>
+          ${isExpanded ? renderAccountAccordionBody(account, stats) : ""}
         </div>`;
       }).join("")
     : `<div class="empty-state">등록된 계좌가 없습니다</div>`;
 
-  document.querySelectorAll("[data-select-account]").forEach((button) => {
-    const select = () => {
-      els.accountDetailSelect.value = button.dataset.selectAccount;
-      syncCashFormToSelectedAccount();
-      renderAccounts();
-      renderAccountDetail();
-      _ctx.renderCashBalances();
-    };
-    button.addEventListener("click", select);
+  document.querySelectorAll("[data-toggle-account]").forEach((button) => {
+    const toggle = () => toggleAccountExpand(button.dataset.toggleAccount);
+    button.addEventListener("click", toggle);
     button.addEventListener("keydown", (event) => {
-      if (event.key === "Enter" || event.key === " ") { event.preventDefault(); select(); }
+      if (event.key === "Enter" || event.key === " ") { event.preventDefault(); toggle(); }
     });
+  });
+
+  document.querySelectorAll("[data-account-draft-field]").forEach((field) => {
+    const key = field.dataset.accountKey;
+    field.addEventListener(field.tagName === "SELECT" ? "change" : "input", () => {
+      setAccountDraftField(key, field.dataset.accountDraftField, field.value);
+    });
+  });
+
+  document.querySelectorAll("[data-save-account-cash]").forEach((button) => {
+    button.addEventListener("click", () => saveAccountCashDraft(button.dataset.saveAccountCash));
   });
 
   document.querySelectorAll("[data-edit-account]").forEach((button) => {

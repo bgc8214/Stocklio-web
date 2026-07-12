@@ -276,97 +276,42 @@
           </article>
         </div>
 
-        <div class="account-workspace-grid">
-          <div class="panel account-list-panel">
-            <div class="section-heading">
-              <div>
-                <h2>계좌 목록</h2>
-                <span>계좌를 선택하면 상세와 예수금 입력값이 함께 갱신됩니다.</span>
-              </div>
-              <span id="accountListCount" class="status-pill">0개 계좌</span>
+        <div class="panel account-list-panel">
+          <div class="section-heading">
+            <div>
+              <h2>계좌 목록</h2>
+              <span>계좌를 클릭하면 그 자리에서 예수금과 보유 종목을 바로 편집할 수 있어요.</span>
             </div>
-            <div class="account-filters">
-              <select id="accountInvestorFilter" aria-label="계좌 투자자 필터"></select>
-              <select id="accountCurrencyFilter" aria-label="계좌 통화 필터">
-                <option value="">모든 통화</option>
-                <option value="KRW">KRW</option>
-                <option value="USD">USD</option>
-              </select>
-              <input id="accountSearch" type="search" placeholder="계좌명/증권사 검색" aria-label="계좌 검색">
-            </div>
-            <div id="accountList" class="account-list"></div>
+            <span id="accountListCount" class="status-pill">0개 계좌</span>
           </div>
-
-          <div class="panel account-cash-panel">
-            <div class="section-heading">
-              <div>
-                <h2>예수금</h2>
-                <span>선택한 계좌의 현금 잔액을 업데이트합니다.</span>
-              </div>
-              <span class="status-pill">총자산 포함</span>
+          <div class="account-filters">
+            <select id="accountInvestorFilter" aria-label="계좌 투자자 필터"></select>
+            <select id="accountCurrencyFilter" aria-label="계좌 통화 필터">
+              <option value="">모든 통화</option>
+              <option value="KRW">KRW</option>
+              <option value="USD">USD</option>
+            </select>
+            <input id="accountSearch" type="search" placeholder="계좌명/증권사 검색" aria-label="계좌 검색">
+          </div>
+          <div id="unclassifiedCashPanel" class="allocation-box" hidden>
+            <div class="section-heading compact-heading">
+              <h2>미분류 예수금 배분</h2>
+              <span id="unclassifiedCashSummary">배분할 금액 없음</span>
             </div>
-            <form id="cashBalanceForm" class="cash-balance-form cash-side-form">
-              <label>계좌 선택
-                <select name="accountKey" aria-label="계좌 선택" required></select>
-              </label>
-              <div class="cash-form-row">
-                <label>통화
-                  <select name="currency" required>
-                    <option value="KRW">KRW</option>
-                    <option value="USD">USD</option>
-                  </select>
-                </label>
-                <label>예수금
-                  <input name="amount" type="number" step="0.01" placeholder="0" required>
-                </label>
-              </div>
-              <div id="cashSelectedPreview" class="cash-selected-preview">
-                <span>저장 후 선택 계좌 총자산</span>
-                <strong>-</strong>
-                <small>계좌를 선택하면 미리 계산합니다</small>
-              </div>
-              <button id="cashBalanceSubmit" type="submit">저장</button>
-              <button id="cashBalanceCancel" class="ghost" type="button" hidden>취소</button>
+            <form id="cashAllocationForm" class="cash-allocation-form">
+              <select name="targetAccount" aria-label="배분할 계좌" required></select>
+              <input name="amount" type="number" step="0.01" min="0.01" placeholder="배분 금액" required>
+              <button type="submit">계좌로 배분</button>
             </form>
-            <div id="unclassifiedCashPanel" class="allocation-box" hidden>
-              <div class="section-heading compact-heading">
-                <h2>미분류 예수금 배분</h2>
-                <span id="unclassifiedCashSummary">배분할 금액 없음</span>
-              </div>
-              <form id="cashAllocationForm" class="cash-allocation-form">
-                <select name="targetAccount" aria-label="배분할 계좌" required></select>
-                <input name="amount" type="number" step="0.01" min="0.01" placeholder="배분 금액" required>
-                <button type="submit">계좌로 배분</button>
-              </form>
-            </div>
-            <div id="cashBalanceList" class="cash-balance-list"></div>
           </div>
+          <div id="accountList" class="account-list"></div>
         </div>
 
-        <div class="account-detail-grid">
-          <div class="panel">
-            <div class="section-heading">
-              <div>
-                <h2>계좌 상세</h2>
-                <span id="accountDetailSubtitle">계좌를 선택해 상세를 확인합니다</span>
-              </div>
-              <span id="accountDetailType" class="status-pill">-</span>
-            </div>
-            <select id="accountDetailSelect" class="visually-hidden" aria-label="상세 계좌 선택"></select>
-            <div id="accountSummary" class="account-detail-summary"></div>
-            <div id="accountDetail" class="account-detail"></div>
+        <div class="panel">
+          <div class="section-heading">
+            <h2>예수금 변경 기록</h2>
           </div>
-
-          <div class="panel account-composition-panel">
-            <div class="section-heading">
-              <div>
-                <h2>선택 계좌 구성</h2>
-                <span>주식과 예수금 비중</span>
-              </div>
-              <span id="accountCompositionCurrency" class="status-pill">KRW</span>
-            </div>
-            <div id="accountComposition" class="account-composition"></div>
-          </div>
+          <div id="cashBalanceList" class="cash-balance-list"></div>
         </div>
 
       </section>
@@ -384,7 +329,6 @@
           <article class="holding-summary-card">
             <span>총 평가금액</span>
             <strong id="holdingsSummaryValue">-</strong>
-            <small>표시 종목 기준</small>
           </article>
           <article class="holding-summary-card">
             <span>총 손익</span>
@@ -394,7 +338,6 @@
           <article class="holding-summary-card">
             <span>일 영향</span>
             <strong id="holdingsSummaryDayMove">-</strong>
-            <small id="holdingsSummaryDayNote">가격 갱신 기준</small>
           </article>
           <article class="holding-summary-card">
             <span>상위 집중도</span>
@@ -404,7 +347,7 @@
         </div>
         <div class="filters" aria-label="보유 종목 필터">
           <div class="filters-row1">
-            <div id="accountChipsBar" class="account-chips-bar" role="group" aria-label="계좌 선택"></div>
+            <select id="accountChipsSelect" class="account-chips-select" aria-label="계좌 선택"></select>
             <div class="filters-row1-controls">
               <input id="holdingSearch" type="search" placeholder="종목/티커 검색" aria-label="보유 종목 검색">
               <div class="filter-popover-wrap">
@@ -433,12 +376,12 @@
               <option value="name-desc">종목명 역순</option>
             </select>
             </div><!-- /.filters-row1-controls -->
-            <div class="holding-view-toggle" role="group" aria-label="보기 방식">
-              <button id="holdingsViewDetail" class="ghost small-button is-active" type="button" aria-pressed="true">계좌별</button>
-              <button id="holdingsViewSummary" class="ghost small-button" type="button" aria-pressed="false">종목별</button>
-            </div>
           </div><!-- /.filters-row1 -->
         </div><!-- /.filters -->
+        <div class="holding-view-toggle" role="group" aria-label="보기 방식">
+          <button id="holdingsViewDetail" class="ghost small-button is-active" type="button" aria-pressed="true">계좌별</button>
+          <button id="holdingsViewSummary" class="ghost small-button" type="button" aria-pressed="false">종목별</button>
+        </div>
         <div class="holding-list-tools">
           <div class="segmented-control compact-segmented" role="group" aria-label="보유 종목 범위">
             <button id="holdingScopeAll" type="button" class="is-active">전체</button>
@@ -663,52 +606,20 @@
           </div>
         </details>
 
-        <!-- 계좌별 기여 + 전략별 현황 2컬럼 -->
-        <div class="performance-tables-row">
-          <details class="panel performance-detail-panel">
-            <summary>
-              <h2>계좌별 기여</h2>
-              <span>최근 기록 기준</span>
-            </summary>
-            <div class="table-wrap compact tall">
-              <table>
-                <thead>
-                  <tr>
-                    <th>계좌</th>
-                    <th>최근 총액</th>
-                    <th>일 증감</th>
-                    <th>기간 증감</th>
-                    <th>주식</th>
-                    <th>예수금</th>
-                    <th>수익률</th>
-                  </tr>
-                </thead>
-                <tbody id="accountPerformanceBody"></tbody>
-              </table>
+        <!-- 기여 분석 (계좌별/전략별 전환) -->
+        <details class="panel performance-detail-panel performance-full-panel" open>
+          <summary>
+            <div class="section-heading-title">
+              <h2>기여 분석</h2>
+              <span id="contributionSubtitle">선택 기간 총자산 증감에 대한 계좌별 기여</span>
             </div>
-          </details>
-          <details class="panel performance-detail-panel">
-            <summary>
-              <h2>전략별 현황</h2>
-              <span>현재 보유 기준</span>
-            </summary>
-            <div class="table-wrap compact tall">
-              <table>
-                <thead>
-                  <tr>
-                    <th>전략</th>
-                    <th>평가금액</th>
-                    <th>비중</th>
-                    <th>평가손익</th>
-                    <th>수익률</th>
-                    <th>종목 수</th>
-                  </tr>
-                </thead>
-                <tbody id="strategyPerformanceBody"></tbody>
-              </table>
+            <div class="segmented-control compact-segmented contribution-view-toggle" role="group" aria-label="기여 분석 기준" onclick="event.stopPropagation()">
+              <button id="contributionViewAccount" type="button" class="is-active">계좌별</button>
+              <button id="contributionViewStrategy" type="button">전략별</button>
             </div>
-          </details>
-        </div>
+          </summary>
+          <div id="contributionList" class="contribution-list"></div>
+        </details>
 
         <!-- 월간 수익 흐름 (접이식, 전체 너비) -->
         <details class="panel performance-detail-panel performance-full-panel">

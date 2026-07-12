@@ -66,7 +66,6 @@ export function renderCashBalances() {
   const state = _ctx.getState();
   const els = _ctx.els;
   renderUnclassifiedCashAllocation();
-  _ctx.renderCashSelectedPreview();
   const rows = [...(state.cashBalances || [])].sort((a, b) => `${a.investor}${a.account}`.localeCompare(`${b.investor}${b.account}`));
   els.cashBalanceList.innerHTML = rows.length
     ? rows

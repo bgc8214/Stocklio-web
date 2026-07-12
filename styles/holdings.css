@@ -269,9 +269,7 @@ tr.is-editing-row td {
   display: flex;
   gap: 4px;
   flex-shrink: 0;
-  margin-left: 4px;        /* 정렬 드롭다운과 약간 간격 */
-  padding-left: 8px;
-  border-left: 1px solid var(--line); /* 시각적 구분선 */
+  margin-bottom: 14px;
 }
 
 .holding-view-toggle button.is-active {
@@ -281,15 +279,14 @@ tr.is-editing-row td {
 }
 
 .holdings-summary-card {
-  flex: 0 0 160px;
-  scroll-snap-align: start;
   background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: 12px;
-  padding: 14px;
+  border-radius: var(--radius, 14px);
+  box-shadow: var(--card-shadow);
+  padding: 18px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  min-width: 0;
   transition: box-shadow 0.15s;
 }
 

@@ -418,10 +418,6 @@
   flex-basis: calc(25% - 9px);
 }
 
-.craft-dashboard-board .dashboard-card:not(.is-layout-editing)[data-dashboard-card="fx-rate"] {
-  display: none;
-}
-
 .craft-dashboard-board .dashboard-card:not(.is-layout-editing)[data-dashboard-card="allocation"],
 .craft-dashboard-board .dashboard-card:not(.is-layout-editing)[data-dashboard-card="breakdown"] {
   flex-basis: calc(50% - 6px);
@@ -569,36 +565,31 @@
 .top-mover-pct { font-size: 12px; font-weight: 600; }
 
 .holdings-card-slider {
-  display: flex;
-  gap: 12px;
-  overflow-x: auto;
-  scroll-snap-type: x mandatory;
-  scrollbar-width: none;
-  padding-bottom: 4px;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
 }
 
-.holdings-card-slider::-webkit-scrollbar { display: none; }
-
-.hsc-header { display: flex; align-items: center; gap: 6px; }
+.hsc-header { display: flex; align-items: center; gap: 10px; }
 
 .hsc-name-wrap { flex: 1; min-width: 0; }
 
 .hsc-name {
   display: block;
-  font-size: 12px;
-  font-weight: 600;
+  font-size: 14.5px;
+  font-weight: 700;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.hsc-ticker { font-size: 11px; color: var(--muted); }
+.hsc-ticker { font-size: 12px; color: var(--muted); }
 
-.hsc-change { font-size: 11px; font-weight: 700; flex-shrink: 0; }
+.hsc-change { font-size: 13px; font-weight: 700; flex-shrink: 0; }
 
-.hsc-value { font-size: 15px; font-weight: 800; color: var(--ink); }
+.hsc-value { font-size: 18px; font-weight: 800; color: var(--ink); margin-top: 10px; }
 
-.hsc-meta { display: flex; justify-content: space-between; font-size: 11px; }
+.hsc-meta { display: flex; justify-content: space-between; font-size: 12.5px; margin-top: 6px; }
 
 .hsc-day { font-weight: 600; }
 
@@ -705,11 +696,19 @@
         display: none !important;
       }
 
+    .holdings-card-slider {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
   }
 
   @media (max-width: 640px) {
     .dashboard-line-chart {
         min-height: 340px;
+      }
+
+    .holdings-card-slider {
+        grid-template-columns: 1fr;
       }
 
     .dashboard-layout-toolbar,
@@ -734,14 +733,6 @@
   }
 
   @media (max-width: 1180px) {
-    .craft-dashboard-board .dashboard-card:not(.is-layout-editing)[data-dashboard-card="total-value"],
-      .craft-dashboard-board .dashboard-card:not(.is-layout-editing)[data-dashboard-card="total-cost"],
-      .craft-dashboard-board .dashboard-card:not(.is-layout-editing)[data-dashboard-card="total-gain"],
-      .craft-dashboard-board .dashboard-card:not(.is-layout-editing)[data-dashboard-card="cash-total"],
-      .craft-dashboard-board .dashboard-card:not(.is-layout-editing)[data-dashboard-card="fx-rate"] {
-        flex-basis: calc(50% - 6px);
-      }
-
     .craft-dashboard-board .dashboard-card:not(.is-layout-editing)[data-dashboard-card="total-value"],
       .craft-dashboard-board .dashboard-card:not(.is-layout-editing)[data-dashboard-card="total-cost"],
       .craft-dashboard-board .dashboard-card:not(.is-layout-editing)[data-dashboard-card="total-gain"],

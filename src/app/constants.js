@@ -6,7 +6,7 @@ export const AUTO_PRICE_REFRESH_TTL_MS = 10 * 60 * 1000;
 export const DATA_VERSION = 6;
 export const AUTH_READY_TIMEOUT_MS = 1800;
 
-export const palette = ["#1F4431", "#3366a8", "#a97819", "#7b5aa6", "#b94343"];
+export const palette = ["#3366FF", "#16A34A", "#F59E0B", "#8B5CF6", "#6541F2"];
 
 export const dashboardCardLabels = {
   "total-value": "총자산",
@@ -46,9 +46,7 @@ export const defaultDashboardLayout = [
   { id: "total-cost", widthPct: 25, span: 3, minHeight: 128, visible: true },
   { id: "total-gain", widthPct: 25, span: 3, minHeight: 128, visible: true },
   { id: "cash-total", widthPct: 25, span: 3, minHeight: 128, visible: true },
-  { id: "fx-rate", widthPct: 25, span: 3, minHeight: 128, visible: true },
   { id: "allocation", widthPct: 50, span: 6, minHeight: 320, visible: true },
+  { id: "breakdown", widthPct: 50, span: 6, minHeight: 320, visible: true },
   { id: "performance-flow", widthPct: 100, span: 12, minHeight: 360, visible: true },
-  { id: "breakdown", widthPct: 100, span: 12, minHeight: 320, visible: true },
-
 ];
