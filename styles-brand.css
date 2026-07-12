@@ -404,7 +404,9 @@ body {
     width: auto !important;
   }
 
-  .view-tabs button[data-view-tab="simulator"] {
+  .view-tabs button[data-view-tab="simulator"],
+  .view-tabs button[data-view-tab="cashflows"],
+  .view-tabs button[data-view-tab="automation"] {
     display: none;
   }
 
