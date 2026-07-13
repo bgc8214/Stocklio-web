@@ -10,6 +10,7 @@ import {
 } from "./formatters.js";
 import { palette } from "./constants.js";
 import {
+  downsampleToWeekly,
   filterSnapshotRows,
   getAccountPerformanceRows as selectAccountPerformanceRows,
   getAvailableMonths,
@@ -560,14 +561,17 @@ export function copyPerformanceSummary() {
 }
 
 export function renderTrendChart(rows) {
-  const chartRows = rows.slice(-30);
-  if (chartRows.length < 2) {
+  if (rows.length < 2) {
     return `<div class="empty-state">하루만 더 지나면 추이 차트가 그려집니다</div>`;
   }
-  return buildTrendChartSvg(chartRows);
+  const { points: chartRows, isDownsampled } = downsampleToWeekly(rows);
+  const caption = isDownsampled
+    ? `<div class="trend-chart-caption">표시 기간이 길어 주 단위로 집계해 표시합니다 (${chartRows.length}개 구간)</div>`
+    : "";
+  return buildTrendChartSvg(chartRows, isDownsampled) + caption;
 }
 
-function buildTrendChartSvg(chartRows) {
+function buildTrendChartSvg(chartRows, isDownsampled = false) {
   const isMobile = window.innerWidth <= 640;
   const width = isMobile ? 380 : 1200;
   const height = isMobile ? 300 : 260;
@@ -588,21 +592,26 @@ function buildTrendChartSvg(chartRows) {
   const lastRow = chartRows[chartRows.length - 1];
   const lastX = xFor(chartRows.length - 1);
   const lastY = yFor(lastRow.totalValueKrw);
+  const changeLabel = isDownsampled ? "주간 증감" : "일 증감";
+  const gainLabel = isDownsampled ? "주간 투자손익" : "투자손익";
   const pointGroups = chartRows
     .map((row, index) => {
       const x = xFor(index);
       const y = yFor(row.totalValueKrw);
       const previous = chartRows[index - 1];
       const dailyChange = Number(row.dailyChangeKrw ?? (previous ? row.totalValueKrw - previous.totalValueKrw : 0));
-      const tooltipWidth = 160;
-      const tooltipHeight = 64;
+      const investmentGain = Number(row.investmentGainKrw || 0);
+      const dailyReturn = Number(row.dailyReturn || 0);
+      const tooltipWidth = 168;
+      const tooltipHeight = 96;
       const tooltipX = Math.max(padding.left, Math.min(width - padding.right - tooltipWidth, x - tooltipWidth / 2));
       const tooltipY = Math.max(6, y - tooltipHeight - 12);
       const isPositive = dailyChange >= 0;
       const arrow = isPositive ? "▲" : "▼";
       const changeClass = isPositive ? "tooltip-positive" : "tooltip-negative";
-      const dateStr = escapeHtml(formatMonthDay(row.date));
-      return `<g class="trend-point-group" tabindex="0" aria-label="${escapeHtml(`${row.date} 총자산 ${formatKrw(row.totalValueKrw)}, 일 증감 ${isPositive ? "+" : ""}${formatKrw(dailyChange)}`)}">
+      const gainClass = investmentGain >= 0 ? "tooltip-positive" : "tooltip-negative";
+      const dateStr = escapeHtml(isDownsampled ? `${formatMonthDay(row.weekStartDate || row.date)} 주` : formatMonthDay(row.date));
+      return `<g class="trend-point-group" tabindex="0" aria-label="${escapeHtml(`${row.date} 총자산 ${formatKrw(row.totalValueKrw)}, ${changeLabel} ${isPositive ? "+" : ""}${formatKrw(dailyChange)}, ${gainLabel} ${formatKrw(investmentGain)}, 수익률 ${formatPercent(dailyReturn)}`)}">
         <circle class="trend-hit" cx="${x}" cy="${y}" r="13"></circle>
         <circle class="trend-point" cx="${x}" cy="${y}" r="2.5"></circle>
         <g class="trend-tooltip" transform="translate(${tooltipX} ${tooltipY})">
@@ -610,6 +619,8 @@ function buildTrendChartSvg(chartRows) {
           <text class="tooltip-date" x="12" y="19">${dateStr}</text>
           <text class="tooltip-value" x="12" y="38">${escapeHtml(formatKrw(row.totalValueKrw))}</text>
           <text class="${changeClass}" x="12" y="56">${arrow} ${escapeHtml(formatKrw(Math.abs(dailyChange)))}</text>
+          <text class="${gainClass}" x="12" y="74">${escapeHtml(gainLabel)} ${escapeHtml(formatKrw(investmentGain))}</text>
+          <text class="tooltip-return" x="12" y="90">수익률 ${escapeHtml(formatPercent(dailyReturn))}</text>
         </g>
       </g>`;
     })

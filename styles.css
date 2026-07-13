@@ -7364,6 +7364,20 @@ tr.is-editing-row td {
   font-weight: 700;
 }
 
+.trend-tooltip .tooltip-return {
+  fill: rgba(255,255,255,0.55);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.trend-chart-caption {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+  margin-top: 8px;
+  text-align: center;
+}
+
 .trend-point-group:focus .trend-tooltip,
 .trend-point-group:hover .trend-tooltip {
   opacity: 1;

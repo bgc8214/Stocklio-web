@@ -69,6 +69,45 @@ export function getMonthlyRows(rows) {
   });
 }
 
+function mondayOf(dateStr) {
+  const date = new Date(`${dateStr}T00:00:00`);
+  const day = date.getDay();
+  const diff = day === 0 ? -6 : 1 - day;
+  date.setDate(date.getDate() + diff);
+  return date.toISOString().slice(0, 10);
+}
+
+export function downsampleToWeekly(rows, maxPoints = 45) {
+  if (rows.length <= maxPoints) {
+    return { points: rows, isDownsampled: false };
+  }
+  const grouped = new Map();
+  for (const row of rows) {
+    const weekKey = mondayOf(row.date);
+    if (!grouped.has(weekKey)) {
+      grouped.set(weekKey, []);
+    }
+    grouped.get(weekKey).push(row);
+  }
+  const points = [...grouped.entries()].map(([weekKey, weekRows]) => {
+    const first = weekRows[0];
+    const last = weekRows[weekRows.length - 1];
+    const netInflowKrw = weekRows.reduce((sum, row) => sum + row.netInflowKrw, 0);
+    const investmentGainKrw = weekRows.reduce((sum, row) => sum + row.investmentGainKrw, 0);
+    const dailyChangeKrw = last.totalValueKrw - first.totalValueKrw + (first.dailyChangeKrw || 0);
+    return {
+      ...last,
+      date: last.date,
+      weekStartDate: weekKey,
+      dailyChangeKrw,
+      netInflowKrw,
+      investmentGainKrw,
+      dailyReturn: first.totalValueKrw ? investmentGainKrw / first.totalValueKrw : 0,
+    };
+  });
+  return { points, isDownsampled: true };
+}
+
 export function getPerformanceStats(rows) {
   const latest = rows[rows.length - 1];
   const first = rows[0];
