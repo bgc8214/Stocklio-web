@@ -215,7 +215,7 @@
 
 .trend-line {
   fill: none;
-  stroke: var(--accent);
+  stroke: #1f7a5b;
   stroke-linecap: round;
   stroke-linejoin: round;
   stroke-width: 2;
@@ -223,7 +223,7 @@
 
 .trend-point {
   fill: var(--surface);
-  stroke: var(--accent-dark);
+  stroke: #1f7a5b;
   stroke-width: 2;
 }
 
@@ -238,7 +238,7 @@
 
 .trend-point-group:focus .trend-point,
 .trend-point-group:hover .trend-point {
-  fill: var(--accent-dark);
+  fill: #1f7a5b;
   stroke: var(--surface);
 }
 
@@ -297,7 +297,7 @@
 }
 
 .trend-last-label {
-  fill: var(--accent-dark);
+  fill: #1f7a5b;
   font-weight: 900;
 }
 
