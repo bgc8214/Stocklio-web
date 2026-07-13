@@ -113,8 +113,6 @@ function renderPerformanceDetails(rows) {
   if (!rows.length) {
     els.performanceDetailStats.innerHTML = "";
     els.performanceTrendChart.innerHTML = `<div class="empty-state">성과 기록이 아직 없습니다</div>`;
-    els.performanceWaterfall.innerHTML = `<div class="empty-state">분석할 데이터가 없습니다</div>`;
-    els.performanceInsight.innerHTML = "";
     els.accountPerformanceBody.innerHTML = `<tr><td colspan="7">계좌별 스냅샷이 없습니다</td></tr>`;
     els.strategyPerformanceBody.innerHTML = `<tr><td colspan="6">보유 종목이 없습니다</td></tr>`;
     return;
@@ -131,8 +129,6 @@ function renderPerformanceDetails(rows) {
 
   els.performanceTrendChart.innerHTML = renderTrendChart(rows);
   renderMonthlyFlowChart(rows);
-  els.performanceWaterfall.innerHTML = renderWaterfall(stats);
-  els.performanceInsight.innerHTML = renderPerformanceInsights(stats);
   lastPerformanceRows = rows;
   renderContribution();
 }
@@ -164,9 +160,9 @@ function renderMonthlyFlowChart(rows) {
   renderMonthlyFlowMonthNav(rows);
   const source = getMonthlyFlowChartSource(rows, getSnapshotRows(), selectedFlowMonth);
   if (!source.points.length) {
-    els.monthlyFlowChartCaption.textContent = "월간 성과 데이터 없음";
+    els.monthlyFlowChartCaption.textContent = "손익 데이터 없음";
     els.monthlyFlowSourceHead.innerHTML = "";
-    els.monthlyFlowSourceBody.innerHTML = `<tr><td>선택 기간에 월간 차트를 만들 스냅샷이 없습니다</td></tr>`;
+    els.monthlyFlowSourceBody.innerHTML = `<tr><td>선택 기간에 표시할 스냅샷이 없습니다</td></tr>`;
     if (monthlyFlowChart) {
       monthlyFlowChart.destroy();
       monthlyFlowChart = null;
@@ -180,7 +176,7 @@ function renderMonthlyFlowChart(rows) {
     .map((row) => `<tr><th>${escapeHtml(row.label)}</th>${row.values.map((value) => `<td>${formatNumber(value, 0)}</td>`).join("")}</tr>`)
     .join("");
 
-  if (!window.Chart || !window.ChartDataLabels) {
+  if (!window.Chart) {
     els.monthlyFlowChartCaption.textContent = `${source.monthLabel} · 차트 라이브러리 로드 대기`;
     return;
   }
@@ -189,7 +185,6 @@ function renderMonthlyFlowChart(rows) {
   if (monthlyFlowChart) {
     monthlyFlowChart.destroy();
   }
-  window.Chart.register(window.ChartDataLabels);
   monthlyFlowChart = new window.Chart(ctx, {
     type: "line",
     data: {
@@ -199,46 +194,47 @@ function renderMonthlyFlowChart(rows) {
           label: source.yearLabel,
           data: source.points.map((point) => point.yearCumulativeMan),
           borderColor: "#4f7f36",
-          backgroundColor: "rgba(190, 224, 166, 0.72)",
-          borderWidth: 4,
+          backgroundColor: "rgba(190, 224, 166, 0.55)",
+          borderWidth: 2.5,
           fill: "origin",
           pointRadius: 0,
           pointHitRadius: 10,
           tension: 0,
-          datalabels: {
-            align: "top",
-            anchor: "end",
-            color: "#4f7f36",
-            font: { weight: "bold", size: 11 },
-            formatter: (value) => (value != null ? formatNumber(value, 0) : ""),
-          },
         },
         {
           label: source.monthLabel,
-          data: source.points.map((point) => point.monthMan),
+          data: source.points.map((point) => point.monthCumulativeMan),
           borderColor: "#1d6fa4",
-          backgroundColor: "rgba(93, 169, 233, 0.22)",
-          borderWidth: 3,
-          fill: "origin",
+          borderWidth: 2.5,
+          fill: false,
           pointRadius: 3,
           pointHitRadius: 10,
           tension: 0,
-          datalabels: {
-            align: "bottom",
-            anchor: "start",
-            color: "#1d6fa4",
-            font: { size: 10 },
-            formatter: (value) => (value != null ? formatNumber(value, 0) : ""),
-          },
+        },
+        {
+          label: "일일 손익",
+          data: source.points.map((point) => point.dailyMan),
+          borderColor: "#c7433d",
+          borderWidth: 2,
+          fill: false,
+          pointRadius: 3,
+          pointHitRadius: 10,
+          tension: 0,
         },
       ],
     },
     options: {
       responsive: true,
+      maintainAspectRatio: false,
       animation: false,
+      interaction: { mode: "index", intersect: false },
       plugins: {
         legend: { display: true, position: "bottom" },
-        datalabels: { display: true },
+        tooltip: {
+          callbacks: {
+            label: (item) => `${item.dataset.label}: ${formatNumber(item.parsed.y, 0)}만원`,
+          },
+        },
       },
       scales: {
         y: { ticks: { callback: (v) => formatNumber(v, 0) } },
@@ -684,34 +680,6 @@ function buildTrendChartSvg(chartRows, sp500Map, kospiMap) {
   `;
 }
 
-export function renderWaterfall(stats) {
-  const items = [
-    { label: "총 증감", value: stats.periodChangeKrw, tone: stats.periodChangeKrw >= 0 ? "positive" : "negative" },
-    { label: "입출금", value: stats.netInflowKrw, tone: "neutral" },
-    { label: "투자손익", value: stats.investmentGainKrw, tone: stats.investmentGainKrw >= 0 ? "positive" : "negative" },
-  ];
-  const max = Math.max(1, ...items.map((item) => Math.abs(item.value)));
-  return items
-    .map((item) => {
-      const width = Math.max(6, Math.round((Math.abs(item.value) / max) * 100));
-      return `<div class="waterfall-row">
-        <span>${escapeHtml(item.label)}</span>
-        <div class="waterfall-track"><b class="${item.tone}" style="width:${width}%"></b></div>
-        <strong class="${item.tone === "negative" ? "negative" : item.tone === "positive" ? "positive" : ""}">${formatKrw(item.value)}</strong>
-      </div>`;
-    })
-    .join("");
-}
-
-export function renderPerformanceInsights(stats) {
-  const flowShare = stats.periodChangeKrw ? stats.netInflowKrw / stats.periodChangeKrw : 0;
-  const gainLabel = stats.investmentGainKrw >= 0 ? "투자손익이 총자산 증가에 기여했습니다" : "투자손익이 총자산을 낮췄습니다";
-  return `
-    <div><strong>기간 해석</strong><span>${gainLabel}. 입출금 보정 후 수익률은 ${formatPercent(stats.periodReturn)}입니다.</span></div>
-    <div><strong>현금흐름 영향</strong><span>총 증감 중 입출금 비중은 ${Number.isFinite(flowShare) ? formatPercent(flowShare) : "0.00%"}입니다.</span></div>
-    <div><strong>리스크</strong><span>선택 기간 최대 낙폭은 ${formatKrw(stats.maxDrawdownKrw)} (${formatPercent(stats.maxDrawdownRate)})입니다.</span></div>
-  `;
-}
 
 export function getStrategyPerformanceRows() {
   const state = _ctx.getState();

@@ -83,8 +83,6 @@ export function getDomElements() {
   monthlySummaryBody: document.querySelector("#monthlySummaryBody"),
   performanceDetailStats: document.querySelector("#performanceDetailStats"),
   performanceTrendChart: document.querySelector("#performanceTrendChart"),
-  performanceWaterfall: document.querySelector("#performanceWaterfall"),
-  performanceInsight: document.querySelector("#performanceInsight"),
   monthlyFlowChartCaption: document.querySelector("#monthlyFlowChartCaption"),
   monthlyFlowSourceHead: document.querySelector("#monthlyFlowSourceHead"),
   monthlyFlowSourceBody: document.querySelector("#monthlyFlowSourceBody"),
