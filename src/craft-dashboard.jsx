@@ -389,7 +389,7 @@ function PerformancePanel({ state }) {
   const max = Math.max(...points.map((point) => point.totalValueKrw));
   const min = Math.min(...points.map((point) => point.totalValueKrw));
   const span = Math.max(1, max - min);
-  const chartWidth = isMobile ? 380 : 1000;
+  const chartWidth = isMobile ? 380 : 1600;
   const chartHeight = isMobile ? 320 : 280;
   const padding = isMobile
     ? { left: 58, right: 16, top: 26, bottom: 42 }
@@ -450,6 +450,15 @@ function PerformancePanel({ state }) {
           ))}
           <path className="trend-area" d={areaPath} />
           <path className="trend-line" d={linePath} />
+          {!isMobile && coordinates.map(({ x, y, point }) => {
+            const isAboveMidline = y > padding.top + plotHeight / 2;
+            const labelY = isAboveMidline ? y - 10 : y + 16;
+            return (
+              <text key={`label-${point.id || point.date}`} className="trend-point-label" x={x} y={labelY} textAnchor="middle">
+                {formatCompactKrw(point.totalValueKrw)}
+              </text>
+            );
+          })}
           {coordinates.map(({ x, y, point }, index) => {
             const prev = coordinates[index - 1];
             const dailyChange = prev ? point.totalValueKrw - prev.point.totalValueKrw : 0;
@@ -481,9 +490,6 @@ function PerformancePanel({ state }) {
                 {formatShortDate(point.date)}
               </text>
             ))}
-          <text className="trend-last-label" x={coordinates[coordinates.length - 1].x - 6} y={Math.max(16, coordinates[coordinates.length - 1].y - 10)} textAnchor="end">
-            {formatCompactKrw(latest.totalValueKrw)}
-          </text>
         </svg>
       </div>
     </>
