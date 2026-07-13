@@ -489,23 +489,28 @@
           <div id="performanceDetailStats" class="performance-detail-stats"></div>
         </div>
 
-        <!-- 차트 + 증감 분석 2컬럼 -->
-        <div class="performance-main-row">
-          <div class="panel performance-chart-panel">
-            <div class="section-heading">
-              <h2>총자산 추세</h2>
-              <span>입출금 보정 후 누적 성과와 월 누적 수익을 비교합니다.</span>
+        <!-- 손익 흐름 (전체 너비, 월 선택) -->
+        <div class="panel performance-chart-panel performance-full-panel">
+          <div class="section-heading">
+            <div>
+              <h2>손익 흐름</h2>
+              <span id="monthlyFlowChartCaption">일별 투자손익과 월/연 누적 수익을 비교합니다.</span>
             </div>
-            <div id="performanceTrendChart" class="trend-chart" aria-label="총자산 추이 차트"></div>
+            <div class="monthly-flow-month-nav" id="monthlyFlowMonthNav" aria-label="월 선택"></div>
           </div>
-          <div class="panel performance-waterfall-panel">
-            <div class="section-heading">
-              <h2>증감 분석</h2>
-              <span>입출금 보정 기준</span>
+          <div class="monthly-flow-chart-wrap">
+            <canvas id="monthlyFlowChart" aria-label="일별 투자손익 및 월/연 누적 차트"></canvas>
+          </div>
+          <details class="monthly-flow-source-details">
+            <summary>표로 보기</summary>
+            <div class="table-wrap monthly-flow-source-wrap">
+              <table class="monthly-flow-source-table">
+                <caption>일별 투자손익 상세</caption>
+                <thead id="monthlyFlowSourceHead"></thead>
+                <tbody id="monthlyFlowSourceBody"></tbody>
+              </table>
             </div>
-            <div id="performanceWaterfall" class="waterfall-chart" aria-label="입출금과 투자손익 분해"></div>
-            <div id="performanceInsight" class="insight-list"></div>
-          </div>
+          </details>
         </div>
 
         <!-- 월별 요약 + 일별 성과 2컬럼 -->
@@ -621,23 +626,13 @@
           <div id="contributionList" class="contribution-list"></div>
         </details>
 
-        <!-- 월간 수익 흐름 (접이식, 전체 너비) -->
+        <!-- 총자산 추세 (자산 금액 추이, 접이식, 전체 너비) -->
         <details class="panel performance-detail-panel performance-full-panel">
           <summary>
-            <h2>월간 수익 흐름</h2>
-            <span id="monthlyFlowChartCaption">표 데이터를 참조한 복합 차트</span>
+            <h2>총자산 추세</h2>
+            <span>입출금 보정 후 누적 자산 금액과 벤치마크 지수를 비교합니다.</span>
           </summary>
-          <div class="monthly-flow-month-nav" id="monthlyFlowMonthNav" aria-label="월 선택"></div>
-          <div class="table-wrap monthly-flow-source-wrap">
-            <table class="monthly-flow-source-table">
-              <caption>표 1</caption>
-              <thead id="monthlyFlowSourceHead"></thead>
-              <tbody id="monthlyFlowSourceBody"></tbody>
-            </table>
-          </div>
-          <div class="monthly-flow-chart-wrap">
-            <canvas id="monthlyFlowChart" aria-label="월간 수익 차트"></canvas>
-          </div>
+          <div id="performanceTrendChart" class="trend-chart" aria-label="총자산 추이 차트"></div>
         </details>
 
       </section>
@@ -887,7 +882,6 @@
     </div>
 
     <script src="/assets/chart.umd.min.js"></script>
-    <script src="/assets/chartjs-plugin-datalabels.min.js"></script>
     <script type="module" src="/assets/supabase-auth.js"></script>
     <script type="module" src="app.js"></script>
     <script type="module" src="/assets/craft-dashboard.js"></script>

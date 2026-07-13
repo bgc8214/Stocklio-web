@@ -303,8 +303,8 @@
 
 .monthly-flow-month-nav {
   display: flex;
+  flex-shrink: 0;
   justify-content: flex-end;
-  margin-bottom: 14px;
 }
 
 .monthly-flow-month-select {
@@ -313,10 +313,26 @@
   min-width: 130px;
 }
 
+.monthly-flow-source-details {
+  margin-top: 18px;
+}
+
+.monthly-flow-source-details summary {
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 800;
+  list-style: none;
+}
+
+.monthly-flow-source-details summary::-webkit-details-marker {
+  display: none;
+}
+
 .monthly-flow-source-wrap {
   border: 1px solid var(--line);
   border-radius: 7px;
-  margin-bottom: 18px;
+  margin-top: 10px;
   max-height: none;
 }
 
@@ -655,6 +671,14 @@ button.ghost[id*="Export"] {
   @media (max-width: 640px) {
     .trend-chart {
         min-height: 320px;
+      }
+
+    .monthly-flow-chart-wrap {
+        height: 300px;
+      }
+
+    .monthly-flow-chart-wrap canvas {
+        min-width: 0;
       }
 
     .waterfall-row {

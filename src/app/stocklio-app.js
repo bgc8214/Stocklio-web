@@ -87,9 +87,6 @@ import {
   renderMonthlySummary,
   exportPerformanceCsv,
   copyPerformanceSummary,
-  renderTrendChart,
-  renderWaterfall,
-  renderPerformanceInsights,
   setContributionView,
 } from "./performance-view.js";
 import {
