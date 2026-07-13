@@ -159,6 +159,10 @@ function renderMonthlyFlowChart(rows) {
   if (monthlyFlowChart) {
     monthlyFlowChart.destroy();
   }
+  if (window.ChartDataLabels) {
+    window.Chart.register(window.ChartDataLabels);
+  }
+  const labelFormatter = (value) => (value != null ? formatNumber(value, 0) : "");
   monthlyFlowChart = new window.Chart(ctx, {
     type: "line",
     data: {
@@ -174,6 +178,13 @@ function renderMonthlyFlowChart(rows) {
           pointRadius: 0,
           pointHitRadius: 10,
           tension: 0,
+          datalabels: {
+            align: "top",
+            anchor: "end",
+            color: "#4f7f36",
+            font: { weight: "bold", size: 10 },
+            formatter: labelFormatter,
+          },
         },
         {
           label: source.monthLabel,
@@ -184,6 +195,13 @@ function renderMonthlyFlowChart(rows) {
           pointRadius: 3,
           pointHitRadius: 10,
           tension: 0,
+          datalabels: {
+            align: "bottom",
+            anchor: "end",
+            color: "#1d6fa4",
+            font: { size: 10 },
+            formatter: labelFormatter,
+          },
         },
         {
           label: "일일 손익",
@@ -194,6 +212,13 @@ function renderMonthlyFlowChart(rows) {
           pointRadius: 3,
           pointHitRadius: 10,
           tension: 0,
+          datalabels: {
+            align: (context) => (context.dataset.data[context.dataIndex] >= 0 ? "top" : "bottom"),
+            anchor: (context) => (context.dataset.data[context.dataIndex] >= 0 ? "end" : "start"),
+            color: "#c7433d",
+            font: { size: 10 },
+            formatter: labelFormatter,
+          },
         },
       ],
     },
@@ -202,6 +227,9 @@ function renderMonthlyFlowChart(rows) {
       maintainAspectRatio: false,
       animation: false,
       interaction: { mode: "index", intersect: false },
+      layout: {
+        padding: { top: 16, bottom: 8 },
+      },
       plugins: {
         legend: { display: true, position: "bottom" },
         tooltip: {
@@ -209,6 +237,7 @@ function renderMonthlyFlowChart(rows) {
             label: (item) => `${item.dataset.label}: ${formatNumber(item.parsed.y, 0)}만원`,
           },
         },
+        datalabels: { display: true },
       },
       scales: {
         y: { ticks: { callback: (v) => formatNumber(v, 0) } },
@@ -538,11 +567,11 @@ export function renderTrendChart(rows) {
 
 function buildTrendChartSvg(chartRows) {
   const isMobile = window.innerWidth <= 640;
-  const width = isMobile ? 380 : 720;
-  const height = isMobile ? 300 : 230;
+  const width = isMobile ? 380 : 1200;
+  const height = isMobile ? 300 : 260;
   const padding = isMobile
     ? { top: 26, right: 16, bottom: 40, left: 60 }
-    : { top: 22, right: 38, bottom: 34, left: 78 };
+    : { top: 22, right: 48, bottom: 34, left: 88 };
   const values = chartRows.map((row) => row.totalValueKrw);
   const max = Math.max(...values);
   const min = Math.min(...values);
