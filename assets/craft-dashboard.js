@@ -8440,7 +8440,7 @@ function ge({ state: e }) {
 		className: "empty-state",
 		children: "저장된 성과 스냅샷이 없습니다"
 	});
-	let r = n[n.length - 1], i = n[0], a = n[n.length - 2], o = a ? r.totalValueKrw - a.totalValueKrw : 0, s = r.totalValueKrw - i.totalValueKrw, c = _e(n), l = Math.max(...n.map((e) => e.totalValueKrw)), u = Math.min(...n.map((e) => e.totalValueKrw)), d = Math.max(1, l - u), f = t ? 380 : 1e3, p = t ? 320 : 280, m = t ? {
+	let r = n[n.length - 1], i = n[0], a = n[n.length - 2], o = a ? r.totalValueKrw - a.totalValueKrw : 0, s = r.totalValueKrw - i.totalValueKrw, c = _e(n), l = Math.max(...n.map((e) => e.totalValueKrw)), u = Math.min(...n.map((e) => e.totalValueKrw)), d = Math.max(1, l - u), f = t ? 380 : 1600, p = t ? 320 : 280, m = t ? {
 		left: 58,
 		right: 16,
 		top: 26,
@@ -8529,6 +8529,13 @@ function ge({ state: e }) {
 						className: "trend-line",
 						d: v
 					}),
+					!t && _.map(({ x: e, y: t, point: n }) => /* @__PURE__ */ (0, T.jsx)("text", {
+						className: "trend-point-label",
+						x: e,
+						y: t > m.top + g / 2 ? t - 10 : t + 16,
+						textAnchor: "middle",
+						children: A(n.totalValueKrw)
+					}, `label-${n.id || n.date}`)),
 					_.map(({ x: e, y: t, point: n }, r) => {
 						let i = _[r - 1], a = i ? n.totalValueKrw - i.point.totalValueKrw : 0, o = a >= 0, s = o ? "▲" : "▼", c = o ? "tooltip-positive" : "tooltip-negative", l = Math.max(m.left, Math.min(f - m.right - 160, e - 160 / 2)), u = Math.max(6, t - 64 - 12);
 						return /* @__PURE__ */ (0, T.jsxs)("g", {
@@ -8594,14 +8601,7 @@ function ge({ state: e }) {
 						y: p - 14,
 						textAnchor: n === 0 ? "start" : n === 2 ? "end" : "middle",
 						children: qe(t.date)
-					}, `${t.date}-${n}`)),
-					/* @__PURE__ */ (0, T.jsx)("text", {
-						className: "trend-last-label",
-						x: _[_.length - 1].x - 6,
-						y: Math.max(16, _[_.length - 1].y - 10),
-						textAnchor: "end",
-						children: A(r.totalValueKrw)
-					})
+					}, `${t.date}-${n}`))
 				]
 			})
 		})

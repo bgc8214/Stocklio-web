@@ -190,6 +190,7 @@ function renderMonthlyFlowChart(rows) {
           label: source.monthLabel,
           data: source.points.map((point) => point.monthCumulativeMan),
           borderColor: "#1d6fa4",
+          backgroundColor: "rgba(93, 169, 233, 0.35)",
           borderWidth: 2.5,
           fill: false,
           pointRadius: 3,
@@ -207,6 +208,7 @@ function renderMonthlyFlowChart(rows) {
           label: "일일 손익",
           data: source.points.map((point) => point.dailyMan),
           borderColor: "#c7433d",
+          backgroundColor: "rgba(199, 67, 61, 0.35)",
           borderWidth: 2,
           fill: false,
           pointRadius: 3,
@@ -612,7 +614,15 @@ function buildTrendChartSvg(chartRows) {
       </g>`;
     })
     .join("");
-  // MDD 구간
+  const pointValueLabels = isMobile ? "" : chartRows
+    .map((row, index) => {
+      const x = xFor(index);
+      const y = yFor(row.totalValueKrw);
+      const isAboveMidline = y > padding.top + (height - padding.top - padding.bottom) / 2;
+      const labelY = isAboveMidline ? y - 10 : y + 16;
+      return `<text class="trend-point-label" x="${x}" y="${labelY}" text-anchor="middle">${formatCompactKrw(row.totalValueKrw)}</text>`;
+    })
+    .join("");
   return `
     <svg viewBox="0 0 ${width} ${height}" role="img" aria-label="총자산 추이">
       ${valueLabels
@@ -620,8 +630,8 @@ function buildTrendChartSvg(chartRows) {
         .join("")}
       <polygon class="trend-area" points="${area}"></polygon>
       <polyline class="trend-line" points="${line}"></polyline>
+      ${pointValueLabels}
       ${pointGroups}
-      <text class="trend-last-label" x="${Math.min(width - padding.right - 4, lastX + 8)}" y="${Math.max(16, lastY - 10)}" text-anchor="end">${formatCompactKrw(lastRow.totalValueKrw)}</text>
       ${labels
         .map((row, index) => `<text class="trend-label" x="${xFor(index === 0 ? 0 : index === 1 ? Math.floor((chartRows.length - 1) / 2) : chartRows.length - 1)}" y="${height - 10}" text-anchor="${index === 0 ? "start" : index === 1 ? "middle" : "end"}">${formatShortDate(row.date)}</text>`)
         .join("")}
