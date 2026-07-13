@@ -201,7 +201,12 @@ let authState = {
   signedIn: false,
   user: null,
 };
-let activeView = window.innerWidth <= 980 ? "holdings" : "dashboard";
+const VIEW_IDS = Object.keys(viewCopy);
+function viewFromHash() {
+  const hash = window.location.hash.slice(1);
+  return VIEW_IDS.includes(hash) ? hash : null;
+}
+let activeView = viewFromHash() || (window.innerWidth <= 980 ? "holdings" : "dashboard");
 let activeAllocationView = "strategy";
 let syncState = {
   status: "idle",
@@ -223,6 +228,10 @@ els.viewTabs.forEach((button) => {
   button.addEventListener("click", () => {
     setView(button.dataset.viewTab);
   });
+});
+
+window.addEventListener("popstate", () => {
+  setView(viewFromHash() || "dashboard", { fromHistory: true });
 });
 
 // ─── 모바일 더보기 드로어 ─────────────────────────────────────────
@@ -1076,14 +1085,14 @@ async function initialize() {
     authState = await waitForAuthState();
     [state] = await Promise.all([loadState(), loadNotificationState()]);
     render();
-    setView(activeView);
+    setView(activeView, { replaceHistory: true });
     renderAuth();
     if (authState.signedIn) setStatus("포트폴리오 불러옴", authState.user?.email || "");
     queueAutomaticPriceRefresh();
   } catch {
     state = structuredClone(sampleState);
     render();
-    setView(activeView);
+    setView(activeView, { replaceHistory: true });
     setStatus("샘플 데이터 불러옴", "서버 저장소를 사용할 수 없습니다");
   }
 }
@@ -1376,7 +1385,10 @@ function publishState() {
 
 let simulatorInitialized = false;
 
-function setView(view) {
+function setView(view, { fromHistory = false, replaceHistory = false } = {}) {
+  if (!VIEW_IDS.includes(view)) {
+    view = "dashboard";
+  }
   if (activeView === "holdings" && view !== "holdings") {
     editingHoldingId = null;
     els.holdingFormPanel.hidden = true;
@@ -1384,6 +1396,13 @@ function setView(view) {
     renderHoldings();
   }
   activeView = view;
+  if (!fromHistory && window.location.hash.slice(1) !== view) {
+    if (replaceHistory) {
+      window.history.replaceState(null, "", `#${view}`);
+    } else {
+      window.history.pushState(null, "", `#${view}`);
+    }
+  }
   const copy = viewCopy[view] || viewCopy.dashboard;
   if (els.pageTitle) {
     els.pageTitle.textContent = copy.title;
