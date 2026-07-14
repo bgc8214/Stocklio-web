@@ -1,5 +1,6 @@
 import { SIMULATOR_PRESETS, SIMULATOR_SYMBOLS } from "./simulator-presets.js";
 import {
+  calcMaxDrawdown,
   simulateDCA,
   simulateLumpSum,
   simulateLumpSumVsDCA,
@@ -314,11 +315,11 @@ async function runLumpSum(params, root, fxRate) {
   const result = scaleResultToKrw(raw, params.symbol, fxRate);
 
   const title = `${params.symbol} · ${formatKrw(params.investAmount)} 일시 투자`;
-  showResultCards(root, result);
+  showResultCards(root, [{ label: params.symbol, result }]);
   renderChart(root, [
     { label: "원금", points: result.points.map((p) => ({ date: p.date, value: p.principal })), isPrincipal: true },
     { label: params.symbol, points: result.points.map((p) => ({ date: p.date, value: p.value })) },
-  ], title, result.actualStart, result);
+  ], title, result.actualStart, [{ label: params.symbol, result }]);
 }
 
 async function runDCA(params, root, fxRate) {
@@ -332,11 +333,11 @@ async function runDCA(params, root, fxRate) {
   const result = scaleResultToKrw(raw, params.symbol, fxRate);
 
   const title = `${params.symbol} · 월 ${formatKrw(params.monthlyAmount)} 적립식`;
-  showResultCards(root, result);
+  showResultCards(root, [{ label: params.symbol, result }]);
   renderChart(root, [
     { label: "원금", points: result.points.map((p) => ({ date: p.date, value: p.principal })), isPrincipal: true },
     { label: params.symbol, points: result.points.map((p) => ({ date: p.date, value: p.value })) },
-  ], title, result.actualStart, result);
+  ], title, result.actualStart, [{ label: params.symbol, result }]);
 }
 
 async function runLumpSumVsDCA(params, root, fxRate) {
@@ -351,7 +352,7 @@ async function runLumpSumVsDCA(params, root, fxRate) {
   const lumpSum = scaleResultToKrw(rawLS, params.symbol, fxRate);
   const dca = scaleResultToKrw(rawDCA, params.symbol, fxRate);
 
-  showResultCards(root, lumpSum, null, [
+  showResultCards(root, [
     { label: "몰빵", result: lumpSum },
     { label: "적립식", result: dca },
   ]);
@@ -361,7 +362,10 @@ async function runLumpSumVsDCA(params, root, fxRate) {
     { label: "원금", points: lumpSum.points.map((p) => ({ date: p.date, value: p.principal })), isPrincipal: true },
     { label: "몰빵", points: lumpSum.points.map((p) => ({ date: p.date, value: p.value })) },
     { label: "적립식", points: dca.points.map((p) => ({ date: p.date, value: p.value })) },
-  ], title, lumpSum.actualStart, lumpSum);
+  ], title, lumpSum.actualStart, [
+    { label: "몰빵", result: lumpSum },
+    { label: "적립식", result: dca },
+  ]);
 }
 
 async function runMultiSimulation(params, root, fxRate) {
@@ -382,26 +386,26 @@ async function runMultiSimulation(params, root, fxRate) {
     result: scaleResultToKrw(result, symbol, fxRate),
   }));
 
-  const primary = scaled[0].result;
-  showResultCards(root, primary, null, scaled.map(({ symbol, result }) => ({ label: symbol, result })));
+  const comparisons = scaled.map(({ symbol, result }) => ({ label: symbol, result }));
+  showResultCards(root, comparisons);
 
   const title = symbols.join(" vs ") + ` · ${formatKrw(params.investAmount)} 일시 투자`;
   const series = scaled.map(({ symbol, result }) => ({
     label: symbol,
     points: result.points.map((p) => ({ date: p.date, value: p.value })),
   }));
-  renderChart(root, series, title, primary.actualStart, primary);
+  renderChart(root, series, title, scaled[0].result.actualStart, comparisons);
 }
 
 // ─── 결과 카드 ────────────────────────────────────────────────────
 
-function showResultCards(root, primary, _unused = null, comparisons = null) {
+function showResultCards(root, comparisons) {
   const area = root.querySelector("#simResultCards");
   const single = root.querySelector("#simResultSingle");
   const compare = root.querySelector("#simResultCompare");
   area.hidden = false;
 
-  if (comparisons && comparisons.length > 1) {
+  if (comparisons.length > 1) {
     single.hidden = true;
     compare.hidden = false;
     compare.innerHTML = comparisons.map(({ label, result }, i) =>
@@ -410,7 +414,7 @@ function showResultCards(root, primary, _unused = null, comparisons = null) {
   } else {
     single.hidden = false;
     compare.hidden = true;
-    const display = comparisons ? comparisons[0].result : primary;
+    const display = comparisons[0].result;
     setCard(root, "simValPrincipal", formatKrw(display.totalPrincipal));
     setCard(root, "simValFinal", formatKrw(display.finalValue));
     setCard(root, "simValGain", formatKrw(display.gain), display.gain >= 0 ? "positive" : "negative");
@@ -434,23 +438,23 @@ function buildCompareRow(label, result, index) {
   <div class="sim-result-cards">
     <div class="sim-stat">
       <span class="sim-stat-label">총 투자금</span>
-      <span class="sim-stat-value">${formatKrw(result.totalPrincipal)}</span>
+      <span class="sim-stat-value" data-stat="principal">${formatKrw(result.totalPrincipal)}</span>
     </div>
     <div class="sim-stat">
       <span class="sim-stat-label">최종 평가금액</span>
-      <span class="sim-stat-value">${formatKrw(result.finalValue)}</span>
+      <span class="sim-stat-value" data-stat="final">${formatKrw(result.finalValue)}</span>
     </div>
     <div class="sim-stat">
       <span class="sim-stat-label">수익</span>
-      <span class="sim-stat-value sim-stat-value--${gainTone}">${formatKrw(result.gain)}</span>
+      <span class="sim-stat-value sim-stat-value--${gainTone}" data-stat="gain">${formatKrw(result.gain)}</span>
     </div>
     <div class="sim-stat">
       <span class="sim-stat-label">수익률</span>
-      <span class="sim-stat-value sim-stat-value--${returnTone}">${formatPercent(result.returnRate)}</span>
+      <span class="sim-stat-value sim-stat-value--${returnTone}" data-stat="return">${formatPercent(result.returnRate)}</span>
     </div>
     <div class="sim-stat">
       <span class="sim-stat-label">최대 낙폭</span>
-      <span class="sim-stat-value sim-stat-value--negative">${formatPercent(-result.maxDrawdown)}</span>
+      <span class="sim-stat-value sim-stat-value--negative" data-stat="mdd">${formatPercent(-result.maxDrawdown)}</span>
     </div>
   </div>
 </div>`;
@@ -463,9 +467,30 @@ function setCard(root, id, text, modifier = "") {
   el.className = "sim-stat-value" + (modifier ? ` sim-stat-value--${modifier}` : "");
 }
 
+function setRowStat(row, stat, text, modifier = "") {
+  const el = row.querySelector(`[data-stat="${stat}"]`);
+  if (!el) return;
+  el.textContent = text;
+  el.className = "sim-stat-value" + (modifier ? ` sim-stat-value--${modifier}` : "");
+}
+
+// 애니메이션 진행률(0~1)에 해당하는 시점까지의 구간으로 수익/수익률/MDD를 다시 계산한다.
+function computePartialStats(result, progress) {
+  const points = result.points;
+  const n = points.length;
+  if (!n) return { principal: 0, value: 0, gain: 0, returnRate: 0, maxDrawdown: 0 };
+  const idx = Math.max(0, Math.min(n - 1, Math.floor(progress * (n - 1))));
+  const slice = points.slice(0, idx + 1);
+  const { principal, value } = slice[idx];
+  const gain = value - principal;
+  const returnRate = principal > 0 ? gain / principal : 0;
+  const maxDrawdown = calcMaxDrawdown(slice.map((p) => p.value));
+  return { principal, value, gain, returnRate, maxDrawdown };
+}
+
 // ─── 차트 렌더 ────────────────────────────────────────────────────
 
-function renderChart(root, seriesList, title, actualStart, finalResult) {
+function renderChart(root, seriesList, title, actualStart, resultsList) {
   const container = root.querySelector("#simChartContainer");
   const titleEl = root.querySelector("#simChartTitle");
   const controls = root.querySelector("#simChartControls");
@@ -481,32 +506,28 @@ function renderChart(root, seriesList, title, actualStart, finalResult) {
   const compareEl = root.querySelector("#simResultCompare");
   const isCompareMode = compareEl && !compareEl.hidden;
 
-  const onProgress = (date, seriesValues) => {
-    const nonPrincipal = seriesValues.filter((s) => s.label !== "원금");
-    if (!nonPrincipal.length || !finalResult) return;
-    const principal = seriesValues.find((s) => s.label === "원금")?.value ?? finalResult.totalPrincipal;
+  const onProgress = (date, seriesValues, progress) => {
+    if (!resultsList || !resultsList.length) return;
 
     if (isCompareMode) {
-      // 비교 모드: 각 종목 행의 수치를 개별 업데이트
       const rows = compareEl.querySelectorAll(".sim-compare-row");
-      rows.forEach((row, i) => {
-        const sv = nonPrincipal[i];
-        if (!sv) return;
-        const curPrincipal = row.querySelector(".sim-stat:nth-child(1) .sim-stat-value");
-        const curFinal = row.querySelector(".sim-stat:nth-child(2) .sim-stat-value");
-        const curGainEl = row.querySelector(".sim-stat:nth-child(3) .sim-stat-value");
-        const curReturnEl = row.querySelector(".sim-stat:nth-child(4) .sim-stat-value");
-        // 평가금액만 현재 시점으로 업데이트, 수익/수익률은 최종값 고정
-        if (curFinal) curFinal.textContent = formatKrw(sv.value);
+      resultsList.forEach(({ result }, i) => {
+        const row = rows[i];
+        if (!row) return;
+        const stats = computePartialStats(result, progress);
+        setRowStat(row, "principal", formatKrw(stats.principal));
+        setRowStat(row, "final", formatKrw(stats.value));
+        setRowStat(row, "gain", formatKrw(stats.gain), stats.gain >= 0 ? "positive" : "negative");
+        setRowStat(row, "return", formatPercent(stats.returnRate), stats.returnRate >= 0 ? "positive" : "negative");
+        setRowStat(row, "mdd", formatPercent(-stats.maxDrawdown), "negative");
       });
     } else {
-      const cur = nonPrincipal.reduce((a, b) => (a.value > b.value ? a : b));
-      // 평가금액만 현재 시점으로 업데이트, 수익/수익률은 최종값 고정
-      setCard(root, "simValFinal", formatKrw(cur.value));
-      if (finalResult) {
-        setCard(root, "simValGain", formatKrw(finalResult.gain), finalResult.gain >= 0 ? "positive" : "negative");
-        setCard(root, "simValReturn", formatPercent(finalResult.returnRate), finalResult.returnRate >= 0 ? "positive" : "negative");
-      }
+      const stats = computePartialStats(resultsList[0].result, progress);
+      setCard(root, "simValPrincipal", formatKrw(stats.principal));
+      setCard(root, "simValFinal", formatKrw(stats.value));
+      setCard(root, "simValGain", formatKrw(stats.gain), stats.gain >= 0 ? "positive" : "negative");
+      setCard(root, "simValReturn", formatPercent(stats.returnRate), stats.returnRate >= 0 ? "positive" : "negative");
+      setCard(root, "simValMDD", formatPercent(-stats.maxDrawdown), "negative");
     }
   };
 
