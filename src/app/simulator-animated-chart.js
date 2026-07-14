@@ -464,7 +464,7 @@ export class SimulatorAnimatedChart {
           const ptIdx = Math.max(0, Math.min(s.points.length - 1, Math.floor(progress * (s.points.length - 1))));
           return { label: s.label, value: s.points[ptIdx]?.value ?? 0 };
         });
-      this.#onProgress(curDate, seriesValues);
+      this.#onProgress(curDate, seriesValues, progress);
     }
   }
 
