@@ -39,6 +39,26 @@ export function getNyseHolidayName(dateKey) {
   return holidays.get(dateKey) || "";
 }
 
+export function parseYahooChartMeta(data) {
+  const meta = data?.chart?.result?.[0]?.meta;
+  const price = Number(meta?.regularMarketPrice);
+  if (!Number.isFinite(price) || price <= 0) {
+    return null;
+  }
+  const previousClose = Number(meta?.previousClose ?? meta?.chartPreviousClose ?? price);
+  const timestamp = Number(meta?.regularMarketTime);
+  const asOf = timestamp ? new Date(timestamp * 1000).toISOString() : new Date().toISOString();
+  return {
+    price,
+    previousClose,
+    priceChange: price - previousClose,
+    priceChangePercent: previousClose ? (price - previousClose) / previousClose : 0,
+    source: "Yahoo Finance",
+    asOf,
+    priceDate: timestamp ? getPriceDateInUsMarket(asOf) : "",
+  };
+}
+
 export function getPriceDateInUsMarket(asOf) {
   if (!asOf) {
     return "";

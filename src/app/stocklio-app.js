@@ -48,7 +48,7 @@ import {
   getDailyMoveRows as selectDailyMoveRows,
   getHoldingDailyMove as selectHoldingDailyMove,
 } from "./daily-move-selectors.js";
-import { fetchJson, getQuote, getUsdKrw, searchSymbols } from "./services/market-data-service.js";
+import { clearStaleQuoteCaches, fetchJson, getQuote, getUsdKrw, searchSymbols } from "./services/market-data-service.js";
 import { getUsMarketContextForSeoulDate } from "../domain/market-calendar.js";
 import { initSimulatorView } from "./simulator-view.js";
 import {
@@ -985,6 +985,7 @@ function applyTheme(theme) {
 
 async function initialize() {
   initTheme();
+  clearStaleQuoteCaches();
   const ctx = {
     getState: () => state,
     els,
@@ -1113,10 +1114,7 @@ function configureRuntimeSurface() {
 }
 
 function makeId() {
-  if (globalThis.crypto?.randomUUID) {
-    return globalThis.crypto.randomUUID();
-  }
-  return `holding-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+  return crypto.randomUUID();
 }
 
 function normalizeStrategy(value) {

@@ -180,8 +180,32 @@ export function validateStateShape(state) {
     if (!holding.id || !holding.investor || !holding.account || !holding.ticker) {
       issues.push(`holding ${holding.id || "(missing id)"} is missing required identity fields`);
     }
-    if (Number(holding.quantity || 0) < 0) {
+    if (!Number.isFinite(Number(holding.quantity))) {
+      issues.push(`holding ${holding.id} quantity must be a finite number`);
+    } else if (Number(holding.quantity) < 0) {
       issues.push(`holding ${holding.id} quantity cannot be negative`);
+    }
+    if (holding.price != null && !Number.isFinite(Number(holding.price))) {
+      issues.push(`holding ${holding.id} price must be a finite number`);
+    }
+    if (holding.averageCost != null && !Number.isFinite(Number(holding.averageCost))) {
+      issues.push(`holding ${holding.id} averageCost must be a finite number`);
+    }
+    if (holding.currency && holding.currency !== "KRW" && holding.currency !== "USD") {
+      issues.push(`holding ${holding.id} currency "${holding.currency}" is not supported (KRW or USD only)`);
+    }
+  }
+  for (const cash of state.cashBalances || []) {
+    if (cash.amount != null && !Number.isFinite(Number(cash.amount))) {
+      issues.push(`cash balance ${cash.id || "(missing id)"} amount must be a finite number`);
+    }
+    if (cash.currency && cash.currency !== "KRW" && cash.currency !== "USD") {
+      issues.push(`cash balance ${cash.id || "(missing id)"} currency "${cash.currency}" is not supported (KRW or USD only)`);
+    }
+  }
+  for (const flow of state.cashFlows || []) {
+    if (flow.amountKrw != null && !Number.isFinite(Number(flow.amountKrw))) {
+      issues.push(`cash flow ${flow.id || "(missing id)"} amountKrw must be a finite number`);
     }
   }
   return issues;
@@ -203,5 +227,5 @@ function clamp(value, min, max) {
 }
 
 function defaultId() {
-  return `generated-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+  return crypto.randomUUID();
 }

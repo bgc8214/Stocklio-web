@@ -1,6 +1,6 @@
 import { createReadStream } from "node:fs";
 import { execFile } from "node:child_process";
-import { mkdir, readFile, stat, writeFile } from "node:fs/promises";
+import { mkdir, readFile, stat, unlink, writeFile } from "node:fs/promises";
 import { createServer } from "node:http";
 import { DatabaseSync } from "node:sqlite";
 import { extname, join, normalize } from "node:path";
@@ -16,6 +16,7 @@ import {
   validateStateShape,
 } from "./src/domain/portfolio-core.js";
 import { createSampleState } from "./src/domain/sample-state.js";
+import { dateKeyInTimeZone, parseYahooChartMeta } from "./src/domain/market-calendar.js";
 
 const rootDir = fileURLToPath(new URL(".", import.meta.url));
 try {
@@ -32,6 +33,7 @@ const importSummaryPath = join(privateDataDir, "migration-summary.json");
 const importPreviewStatePath = join(privateDataDir, "import-preview-state.json");
 const stateKey = "default";
 const automationIntervalMs = 15 * 60 * 1000;
+const priceFetchConcurrency = Number(process.env.AUTOMATION_PRICE_CONCURRENCY || 5);
 const execFileAsync = promisify(execFile);
 const pythonBin = process.env.PYTHON_BIN || "python3";
 
@@ -89,7 +91,7 @@ createServer(async (request, response) => {
     }
 
     if (url.pathname === "/api/import/commit" && request.method === "POST") {
-      await commitImportPreview(response);
+      await commitImportPreview(request, response);
       return;
     }
 
@@ -110,6 +112,10 @@ createServer(async (request, response) => {
 
     await serveStatic(url.pathname, response);
   } catch (error) {
+    if (response.headersSent) {
+      response.destroy();
+      return;
+    }
     sendJson(response, 500, { error: error.message || "Internal server error" });
   }
 }).listen(port, host, () => {
@@ -451,15 +457,16 @@ async function fetchLatestQuotes(state) {
   const newLogs = [];
   const tickers = unique(state.holdings.filter((holding) => holding.autoPrice !== false).map((holding) => holding.ticker));
 
-  for (const ticker of tickers) {
+  await runWithConcurrency(tickers, priceFetchConcurrency, async (ticker) => {
     try {
-      quoteMap.set(ticker, await getYahooQuote(ticker));
-      newLogs.push(createPriceLog({ symbol: ticker, status: "success", price: quoteMap.get(ticker).price, source: "Yahoo Finance" }));
+      const quote = await getYahooQuote(ticker);
+      quoteMap.set(ticker, quote);
+      newLogs.push(createPriceLog({ symbol: ticker, status: "success", price: quote.price, source: "Yahoo Finance" }));
     } catch (error) {
       console.error(`Quote refresh failed for ${ticker}: ${error.message}`);
       newLogs.push(createPriceLog({ symbol: ticker, status: "error", message: error.message }));
     }
-  }
+  });
 
   let fxRate = null;
   try {
@@ -486,6 +493,8 @@ function applyQuotesToState(state, { quoteMap, fxRate, newLogs }) {
         ? {
             ...holding,
             price: quote.price,
+            priceChange: quote.priceChange,
+            priceChangePercent: quote.priceChangePercent,
             priceSource: quote.source,
             priceAsOf: quote.asOf,
           }
@@ -504,32 +513,28 @@ function createPriceLog(log) {
 
 async function getYahooQuote(ticker) {
   const data = await fetchYahooChartData(ticker);
-  const meta = data?.chart?.result?.[0]?.meta;
-  const price = Number(meta?.regularMarketPrice);
-  if (!Number.isFinite(price) || price <= 0) {
+  const quote = parseYahooChartMeta(data);
+  if (!quote) {
     throw new Error(`${ticker} 가격 응답이 없습니다`);
   }
-  const timestamp = Number(meta?.regularMarketTime);
-  return {
-    price,
-    source: "Yahoo Finance",
-    asOf: timestamp ? new Date(timestamp * 1000).toISOString() : new Date().toISOString(),
-  };
+  return quote;
 }
 
 async function getYahooFxRate() {
   const data = await fetchYahooChartData("KRW=X");
-  const meta = data?.chart?.result?.[0]?.meta;
-  const rate = Number(meta?.regularMarketPrice);
-  if (!Number.isFinite(rate) || rate <= 0) {
+  const quote = parseYahooChartMeta(data);
+  if (!quote) {
     throw new Error("USD/KRW 환율 응답이 없습니다");
   }
-  const timestamp = Number(meta?.regularMarketTime);
   return {
     pair: "USD/KRW",
-    rate,
-    source: "Yahoo Finance",
-    asOf: timestamp ? new Date(timestamp * 1000).toISOString() : new Date().toISOString(),
+    rate: quote.price,
+    previousClose: quote.previousClose,
+    change: quote.priceChange,
+    changePercent: quote.priceChangePercent,
+    source: quote.source,
+    asOf: quote.asOf,
+    priceDate: quote.priceDate,
   };
 }
 
@@ -687,6 +692,8 @@ async function sendImportSummary(response) {
   }
 }
 
+let latestImportPreviewToken = null;
+
 async function previewImport(request, response) {
   const contentType = request.headers["content-type"] || "";
   if (!contentType.includes("spreadsheet") && !contentType.includes("octet-stream")) {
@@ -694,39 +701,53 @@ async function previewImport(request, response) {
     return;
   }
   const uploadPath = join(privateDataDir, `import-preview-${Date.now()}.xlsx`);
-  await writeFile(uploadPath, await readBinaryBody(request));
-  const { stdout, stderr } = await execFileAsync(pythonBin, [
-    "scripts/migrate_numbers.py",
-    "--xlsx",
-    uploadPath,
-    "--preview",
-  ], {
-    cwd: rootDir,
-    maxBuffer: 20 * 1024 * 1024,
-  });
-  if (stderr.trim()) {
-    console.warn(stderr.trim());
+  try {
+    await writeFile(uploadPath, await readBinaryBody(request));
+    const { stdout, stderr } = await execFileAsync(pythonBin, [
+      "scripts/migrate_numbers.py",
+      "--xlsx",
+      uploadPath,
+      "--preview",
+    ], {
+      cwd: rootDir,
+      maxBuffer: 20 * 1024 * 1024,
+    });
+    if (stderr.trim()) {
+      console.warn(stderr.trim());
+    }
+    const preview = JSON.parse(stdout);
+    const normalized = normalizeState(preview.state);
+    const token = crypto.randomUUID();
+    await writeFile(importPreviewStatePath, JSON.stringify({ token, state: normalized }, null, 2), "utf8");
+    await writeFile(importSummaryPath, JSON.stringify(preview.summary, null, 2), "utf8");
+    latestImportPreviewToken = token;
+    sendJson(response, 200, {
+      token,
+      summary: preview.summary,
+      preview: {
+        holdings: normalized.holdings.length,
+        snapshots: normalized.portfolioSnapshots.length,
+        cashBalances: normalized.cashBalances.length,
+        accounts: normalized.accounts.length,
+        firstHoldingNames: normalized.holdings.slice(0, 5).map((holding) => holding.name || holding.ticker),
+      },
+    });
+  } finally {
+    await unlink(uploadPath).catch(() => {});
   }
-  const preview = JSON.parse(stdout);
-  const normalized = normalizeState(preview.state);
-  await writeFile(importPreviewStatePath, JSON.stringify(normalized, null, 2), "utf8");
-  await writeFile(importSummaryPath, JSON.stringify(preview.summary, null, 2), "utf8");
-  sendJson(response, 200, {
-    summary: preview.summary,
-    preview: {
-      holdings: normalized.holdings.length,
-      snapshots: normalized.portfolioSnapshots.length,
-      cashBalances: normalized.cashBalances.length,
-      accounts: normalized.accounts.length,
-      firstHoldingNames: normalized.holdings.slice(0, 5).map((holding) => holding.name || holding.ticker),
-    },
-  });
 }
 
-async function commitImportPreview(response) {
+async function commitImportPreview(request, response) {
+  const body = await readJsonBody(request);
   const content = await readFile(importPreviewStatePath, "utf8");
-  const nextState = normalizeState(JSON.parse(content));
+  const { token, state } = JSON.parse(content);
+  if (!body.token || body.token !== token || token !== latestImportPreviewToken) {
+    sendJson(response, 409, { error: "이 프리뷰는 더 이상 최신이 아닙니다. 다시 업로드해주세요." });
+    return;
+  }
+  const nextState = normalizeState(state);
   writeState(nextState);
+  latestImportPreviewToken = null;
   sendJson(response, 200, {
     ok: true,
     savedAt: new Date().toISOString(),
@@ -746,13 +767,7 @@ function createSeedState() {
 }
 
 function todayKey(date = new Date()) {
-  const parts = new Intl.DateTimeFormat("en-CA", {
-    timeZone: "Asia/Seoul",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).formatToParts(date);
-  return `${part(parts, "year")}-${part(parts, "month")}-${part(parts, "day")}`;
+  return dateKeyInTimeZone(date, "Asia/Seoul");
 }
 
 function seoulTime(date = new Date()) {
@@ -773,6 +788,19 @@ function unique(values) {
   return [...new Set(values.filter(Boolean))].sort((a, b) => String(a).localeCompare(String(b)));
 }
 
+async function runWithConcurrency(items, concurrency, worker) {
+  const queue = [...items];
+  const workerCount = Math.max(1, Math.min(Number(concurrency) || 1, queue.length || 1));
+  await Promise.all(
+    Array.from({ length: workerCount }, async () => {
+      while (queue.length) {
+        const item = queue.shift();
+        await worker(item);
+      }
+    }),
+  );
+}
+
 function makeId() {
-  return `id-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+  return crypto.randomUUID();
 }

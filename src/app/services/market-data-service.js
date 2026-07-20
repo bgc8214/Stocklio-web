@@ -1,46 +1,44 @@
 import { CACHE_PREFIX, FX_CACHE_TTL_MS, QUOTE_CACHE_TTL_MS } from "../constants.js";
-import { getPriceDateInUsMarket } from "../../domain/market-calendar.js";
+import { parseYahooChartMeta } from "../../domain/market-calendar.js";
+
+const CACHE_BASE_NAME = CACHE_PREFIX.replace(/-v\d+$/, "");
+
+export function clearStaleQuoteCaches() {
+  for (let i = localStorage.length - 1; i >= 0; i -= 1) {
+    const key = localStorage.key(i);
+    if (key && key.startsWith(CACHE_BASE_NAME) && !key.startsWith(CACHE_PREFIX)) {
+      localStorage.removeItem(key);
+    }
+  }
+}
 
 export async function getQuote(ticker, options = {}) {
   return cached(`quote:${ticker}`, QUOTE_CACHE_TTL_MS, async () => {
     const data = await fetchYahooChart(ticker);
-    const meta = data?.chart?.result?.[0]?.meta;
-    const price = Number(meta?.regularMarketPrice);
-    if (!Number.isFinite(price) || price <= 0) {
+    const quote = parseYahooChartMeta(data);
+    if (!quote) {
       throw new Error(`${ticker} 가격 응답이 없습니다`);
     }
-    const previousClose = Number(meta?.previousClose ?? meta?.chartPreviousClose ?? price);
-    const timestamp = Number(meta?.regularMarketTime);
-    return {
-      price,
-      priceChange: price - previousClose,
-      priceChangePercent: previousClose ? (price - previousClose) / previousClose : 0,
-      source: "Yahoo Finance",
-      asOf: timestamp ? new Date(timestamp * 1000).toISOString() : new Date().toISOString(),
-      priceDate: timestamp ? getPriceDateInUsMarket(new Date(timestamp * 1000).toISOString()) : "",
-    };
+    return quote;
   }, { ...options, validate: isQuotePayload });
 }
 
 export async function getUsdKrw(options = {}) {
   return cached("fx:USD:KRW", FX_CACHE_TTL_MS, async () => {
     const data = await fetchYahooChart("KRW=X");
-    const meta = data?.chart?.result?.[0]?.meta;
-    const rate = Number(meta?.regularMarketPrice);
-    if (!Number.isFinite(rate) || rate <= 0) {
+    const quote = parseYahooChartMeta(data);
+    if (!quote) {
       throw new Error("USD/KRW 환율 응답이 없습니다");
     }
-    const previousClose = Number(meta?.previousClose ?? meta?.chartPreviousClose ?? rate);
-    const timestamp = Number(meta?.regularMarketTime);
     return {
       pair: "USD/KRW",
-      rate,
-      previousClose,
-      change: rate - previousClose,
-      changePercent: previousClose ? (rate - previousClose) / previousClose : 0,
-      source: "Yahoo Finance",
-      asOf: timestamp ? new Date(timestamp * 1000).toISOString() : new Date().toISOString(),
-      priceDate: timestamp ? getPriceDateInUsMarket(new Date(timestamp * 1000).toISOString()) : "",
+      rate: quote.price,
+      previousClose: quote.previousClose,
+      change: quote.priceChange,
+      changePercent: quote.priceChangePercent,
+      source: quote.source,
+      asOf: quote.asOf,
+      priceDate: quote.priceDate,
     };
   }, { ...options, validate: isFxPayload });
 }
