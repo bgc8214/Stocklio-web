@@ -7,7 +7,7 @@ import { extname, join, normalize } from "node:path";
 import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
 import {
-  DEFAULT_DASHBOARD_LAYOUT,
+  STATE_VERSION,
   buildAccountSnapshots as buildAccountSnapshotsCore,
   buildPortfolioSnapshot as buildPortfolioSnapshotCore,
   getNetInflowKrw,
@@ -15,6 +15,7 @@ import {
   normalizeDashboardLayout,
   validateStateShape,
 } from "./src/domain/portfolio-core.js";
+import { createSampleState } from "./src/domain/sample-state.js";
 
 const rootDir = fileURLToPath(new URL(".", import.meta.url));
 try {
@@ -305,8 +306,11 @@ function normalizeState(input) {
   if (!input || typeof input !== "object") {
     return createSeedState();
   }
+  // Spread `input` first so fields the server doesn't know about (e.g. lastPriceRefreshImpact)
+  // survive the round trip instead of being dropped by this whitelist.
   const normalized = {
-    version: 6,
+    ...input,
+    version: STATE_VERSION,
     fxRate: input.fxRate || {
       pair: "USD/KRW",
       rate: 1350,
@@ -329,6 +333,9 @@ function normalizeState(input) {
     },
   };
   const issues = validateStateShape(normalized);
+  if (Number(input.version || 0) > STATE_VERSION) {
+    issues.push(`input version ${input.version} is newer than server STATE_VERSION ${STATE_VERSION} — server may be out of date`);
+  }
   return {
     ...normalized,
     diagnostics: {
@@ -618,8 +625,19 @@ async function readBinaryBody(request) {
   return Buffer.concat(chunks);
 }
 
+const STATIC_ALLOWED_FILES = new Set(["/index.html", "/landing.html", "/app.js", "/styles.css", "/styles-brand.css", "/screenshot-dashboard.png"]);
+const STATIC_ALLOWED_PREFIXES = ["/assets/", "/src/"];
+
+function isServableStaticPath(cleanPath) {
+  return STATIC_ALLOWED_FILES.has(cleanPath) || STATIC_ALLOWED_PREFIXES.some((prefix) => cleanPath.startsWith(prefix));
+}
+
 async function serveStatic(pathname, response) {
   const cleanPath = pathname === "/" ? "/index.html" : pathname === "/landing" ? "/landing.html" : pathname;
+  if (!isServableStaticPath(cleanPath)) {
+    sendJson(response, 404, { error: "Not found" });
+    return;
+  }
   const absolutePath = normalize(join(rootDir, cleanPath));
   if (!absolutePath.startsWith(rootDir)) {
     sendJson(response, 403, { error: "Forbidden" });
@@ -724,112 +742,7 @@ function sendJson(response, statusCode, payload, headers = {}) {
 }
 
 function createSeedState() {
-  return {
-    version: 6,
-    fxRate: {
-      pair: "USD/KRW",
-      rate: 1380,
-      previousClose: 1375,
-      change: 5,
-      changePercent: 0.0036,
-      source: "샘플 환율",
-      asOf: "샘플",
-    },
-    holdings: [
-      // Alpha — ISA + pension
-      createHolding("Alpha", "ISA 계좌", "isa", "인덱스", "SPY", "SPDR S&P 500 ETF", 10, 480.0, 510.0, "USD"),
-      createHolding("Alpha", "ISA 계좌", "isa", "인덱스", "QQQ", "Invesco QQQ Trust", 10, 420.0, 445.0, "USD"),
-      createHolding("Alpha", "연금 계좌", "pension", "배당", "SCHD", "Schwab US Dividend Equity ETF", 20, 76.0, 82.0, "USD"),
-      // Beta — overseas brokerage
-      createHolding("Beta", "해외주식 계좌", "brokerage", "성장", "AAPL", "Apple", 15, 170.0, 195.0, "USD"),
-      createHolding("Beta", "해외주식 계좌", "brokerage", "성장", "MSFT", "Microsoft", 10, 380.0, 415.0, "USD"),
-      createHolding("Beta", "해외주식 계좌", "brokerage", "성장", "GOOGL", "Alphabet", 12, 155.0, 175.0, "USD"),
-      // Gamma — Korean stocks
-      createHolding("Gamma", "국내주식 계좌", "brokerage", "인덱스", "069500", "KODEX 200", 50, 32000, 34500, "KRW"),
-      createHolding("Gamma", "국내주식 계좌", "brokerage", "배당", "361580", "TIGER 미국배당다우존스", 40, 11500, 12200, "KRW"),
-      createHolding("Gamma", "연금 계좌", "pension", "인덱스", "379800", "KODEX 미국S&P500TR", 30, 15800, 17200, "KRW"),
-    ],
-    cashFlows: [
-      createCashFlow("2026-04-01", "Alpha", "ISA 계좌", "deposit", 1000000, "월 납입"),
-      createCashFlow("2026-04-01", "Beta", "해외주식 계좌", "deposit", 1000000, "월 납입"),
-      createCashFlow("2026-04-01", "Gamma", "국내주식 계좌", "deposit", 1000000, "월 납입"),
-      createCashFlow("2026-05-01", "Alpha", "ISA 계좌", "deposit", 1000000, "월 납입"),
-      createCashFlow("2026-05-01", "Beta", "해외주식 계좌", "deposit", 1000000, "월 납입"),
-      createCashFlow("2026-05-01", "Gamma", "국내주식 계좌", "deposit", 1000000, "월 납입"),
-    ],
-    cashBalances: [
-      { id: makeId(), investor: "Alpha", account: "ISA 계좌", currency: "USD", amount: 500, source: "샘플" },
-      { id: makeId(), investor: "Beta", account: "해외주식 계좌", currency: "USD", amount: 500, source: "샘플" },
-      { id: makeId(), investor: "Gamma", account: "국내주식 계좌", currency: "KRW", amount: 500000, source: "샘플" },
-    ],
-    accounts: [],
-    dashboardLayout: createDefaultDashboardLayout(),
-    accountSnapshots: [],
-    priceUpdateLogs: [],
-    lastPriceRefreshImpact: null,
-    portfolioSnapshots: [
-      createSnapshot("2026-04-07", 28000, 38640000, 27000, 1000, 1380, 3000000),
-      createSnapshot("2026-04-14", 28400, 39192000, 27000, 1400, 1380, 0),
-      createSnapshot("2026-04-21", 29100, 40158000, 27000, 2100, 1380, 0),
-      createSnapshot("2026-04-28", 28800, 39744000, 27000, 1800, 1380, 0),
-      createSnapshot("2026-05-06", 30000, 41400000, 30000, 0, 1380, 3000000),
-      createSnapshot("2026-05-13", 30800, 42504000, 30000, 800, 1380, 0),
-      createSnapshot("2026-05-20", 31500, 43470000, 30000, 1500, 1380, 0),
-    ],
-    automation: {
-      lastRunAt: null,
-      lastResult: "아직 자동 실행 없음",
-      snapshotTime: "09:10",
-      timezone: "Asia/Seoul",
-    },
-  };
-}
-
-function createDefaultDashboardLayout() {
-  return DEFAULT_DASHBOARD_LAYOUT.map((item) => ({ ...item }));
-}
-
-function createHolding(investor, account, accountType, strategy, ticker, name, quantity, averageCost, price, currency = "USD") {
-  return {
-    id: makeId(),
-    investor,
-    account,
-    accountType,
-    strategy,
-    ticker,
-    name,
-    quantity,
-    averageCost,
-    price,
-    currency,
-    priceSource: "샘플",
-    priceAsOf: "샘플",
-  };
-}
-
-function createCashFlow(date, investor, account, type, amountKrw, note) {
-  return {
-    id: makeId(),
-    date,
-    investor,
-    account,
-    type,
-    amountKrw,
-    note,
-  };
-}
-
-function createSnapshot(date, totalValueUsd, totalValueKrw, totalCostUsd, totalGainUsd, fxRate, netInflowKrw) {
-  return {
-    id: makeId(),
-    date,
-    totalValueUsd,
-    totalValueKrw,
-    totalCostUsd,
-    totalGainUsd,
-    fxRate,
-    netInflowKrw,
-  };
+  return createSampleState(makeId);
 }
 
 function todayKey(date = new Date()) {
