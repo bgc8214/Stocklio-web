@@ -17,6 +17,7 @@ let _ctx;
 // 모듈 내부 상태
 let priceRefreshPromise = null;
 let snapshotSavePromise = null;
+let latestImportPreviewToken = null;
 let notificationSettings = {
   telegram_chat_id: "",
   telegram_enabled: false,
@@ -492,6 +493,7 @@ export async function previewImport(file) {
       throw new Error(error.error || `HTTP ${response.status}`);
     }
     const result = await response.json();
+    latestImportPreviewToken = result.token;
     const summary = result.summary;
     const names = result.preview.firstHoldingNames.length ? ` · 예: ${result.preview.firstHoldingNames.join(", ")}` : "";
     els.importSummary.textContent = `Preview 완료 · 보유 ${summary.holdings}개 · 스냅샷 ${summary.snapshots}개 · 예수금 ${summary.cashBalances}개 · 총자산 ${formatKrw(summary.migratedTotalAssetsKrw)}${names}`;
@@ -509,7 +511,10 @@ export async function commitImport() {
   try {
     const result = await fetchJson("/api/import/commit", {
       method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ token: latestImportPreviewToken }),
     });
+    latestImportPreviewToken = null;
     const newState = await _ctx.loadState();
     _ctx.setState(newState);
     _ctx.render();

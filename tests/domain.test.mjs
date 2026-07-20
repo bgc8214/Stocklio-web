@@ -138,6 +138,34 @@ test("state shape validation catches product data issues", () => {
   assert.ok(validateStateShape({ ...sample, fxRate: { rate: "nope" } }).includes("fxRate.rate must be numeric"));
 });
 
+test("state shape validation rejects NaN quantities and prices", () => {
+  const withNaNQuantity = {
+    ...sample,
+    holdings: [{ ...sample.holdings[0], quantity: NaN }],
+  };
+  assert.ok(withNaNQuantity && validateStateShape(withNaNQuantity).some((issue) => issue.includes("quantity must be a finite number")));
+
+  const withNaNPrice = {
+    ...sample,
+    holdings: [{ ...sample.holdings[0], price: NaN }],
+  };
+  assert.ok(validateStateShape(withNaNPrice).some((issue) => issue.includes("price must be a finite number")));
+});
+
+test("state shape validation rejects unsupported currencies", () => {
+  const withJpyHolding = {
+    ...sample,
+    holdings: [{ ...sample.holdings[0], currency: "JPY" }],
+  };
+  assert.ok(validateStateShape(withJpyHolding).some((issue) => issue.includes('currency "JPY" is not supported')));
+
+  const withEurCash = {
+    ...sample,
+    cashBalances: [{ ...sample.cashBalances[0], currency: "EUR" }],
+  };
+  assert.ok(validateStateShape(withEurCash).some((issue) => issue.includes('currency "EUR" is not supported')));
+});
+
 test("account type taxonomy collapses to product categories", () => {
   assert.equal(normalizeAccountType("brokerage"), "direct_investment");
   assert.equal(normalizeAccountType("overseas_brokerage"), "direct_investment");

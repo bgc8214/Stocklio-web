@@ -8,8 +8,9 @@ import {
   shouldSendDailyDigest,
 } from "../../src/domain/notification-core.js";
 import {
-  getPriceDateInUsMarket,
+  dateKeyInTimeZone,
   getUsMarketContextForSeoulDate,
+  parseYahooChartMeta,
 } from "../../src/domain/market-calendar.js";
 
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || "";
@@ -486,20 +487,10 @@ async function getYahooQuote(ticker) {
   for (const symbol of symbols) {
     try {
       const data = await fetchYahooChartData(symbol);
-      const meta = data?.chart?.result?.[0]?.meta;
-      const price = Number(meta?.regularMarketPrice);
-      if (!Number.isFinite(price) || price <= 0) continue;
-      const previousClose = Number(meta?.previousClose ?? meta?.chartPreviousClose ?? price);
-      const timestamp = Number(meta?.regularMarketTime);
-      return {
-        price,
-        previousClose,
-        priceChange: price - previousClose,
-        priceChangePercent: previousClose ? (price - previousClose) / previousClose : 0,
-        source: "Yahoo Finance",
-        asOf: timestamp ? new Date(timestamp * 1000).toISOString() : new Date().toISOString(),
-        priceDate: timestamp ? getPriceDateInUsMarket(new Date(timestamp * 1000).toISOString()) : "",
-      };
+      const quote = parseYahooChartMeta(data);
+      if (quote) {
+        return quote;
+      }
     } catch (err) {
       lastError = err;
     }
@@ -509,22 +500,19 @@ async function getYahooQuote(ticker) {
 
 async function getYahooFxRate() {
   const data = await fetchYahooChartData("KRW=X");
-  const meta = data?.chart?.result?.[0]?.meta;
-  const rate = Number(meta?.regularMarketPrice);
-  if (!Number.isFinite(rate) || rate <= 0) {
+  const quote = parseYahooChartMeta(data);
+  if (!quote) {
     throw new Error("USD/KRW 환율 응답이 없습니다");
   }
-  const previousClose = Number(meta?.previousClose ?? meta?.chartPreviousClose ?? rate);
-  const timestamp = Number(meta?.regularMarketTime);
   return {
     pair: "USD/KRW",
-    rate,
-    previousClose,
-    change: rate - previousClose,
-    changePercent: previousClose ? (rate - previousClose) / previousClose : 0,
-    source: "Yahoo Finance",
-    asOf: timestamp ? new Date(timestamp * 1000).toISOString() : new Date().toISOString(),
-    priceDate: timestamp ? getPriceDateInUsMarket(new Date(timestamp * 1000).toISOString()) : "",
+    rate: quote.price,
+    previousClose: quote.previousClose,
+    change: quote.priceChange,
+    changePercent: quote.priceChangePercent,
+    source: quote.source,
+    asOf: quote.asOf,
+    priceDate: quote.priceDate,
   };
 }
 
@@ -589,12 +577,7 @@ async function runWithConcurrency(items, concurrency, worker) {
 }
 
 function seoulDateKey(date = new Date()) {
-  return new Intl.DateTimeFormat("en-CA", {
-    timeZone: "Asia/Seoul",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).format(date);
+  return dateKeyInTimeZone(date, "Asia/Seoul");
 }
 
 function summarizeRun(status, date, processed, failures) {
