@@ -122,6 +122,12 @@ setInterval(() => {
   });
 }, automationIntervalMs);
 
+const YAHOO_FETCH_TIMEOUT_MS = 10000;
+
+async function fetchWithTimeout(url, options = {}) {
+  return fetch(url, { ...options, signal: AbortSignal.timeout(YAHOO_FETCH_TIMEOUT_MS) });
+}
+
 async function proxyYahooChart(url, response) {
   const symbol = String(url.searchParams.get("symbol") || "").trim().toUpperCase();
   if (!/^[A-Z0-9.=^-]{1,20}$/.test(symbol)) {
@@ -140,7 +146,7 @@ async function proxyYahooChart(url, response) {
   yahooUrl.searchParams.set("interval", interval);
   yahooUrl.searchParams.set("range", range);
 
-  const yahooResponse = await fetch(yahooUrl, {
+  const yahooResponse = await fetchWithTimeout(yahooUrl, {
     headers: {
       accept: "application/json",
       "user-agent": "stock-portfolio-lab/0.1",
@@ -180,7 +186,7 @@ async function proxyYahooHistory(url, response) {
   yahooUrl.searchParams.set("interval", interval);
   yahooUrl.searchParams.set("events", "div,splits");
   yahooUrl.searchParams.set("includeAdjustedClose", "true");
-  const yahooResponse = await fetch(yahooUrl, {
+  const yahooResponse = await fetchWithTimeout(yahooUrl, {
     headers: { accept: "application/json", "user-agent": "stock-portfolio-lab/0.1" },
   });
   if (!yahooResponse.ok) {
@@ -228,7 +234,7 @@ async function proxyYahooSearch(url, response) {
   yahooUrl.searchParams.set("enableFuzzyQuery", "true");
   yahooUrl.searchParams.set("quotesQueryId", "tss_match_phrase_query");
 
-  const yahooResponse = await fetch(yahooUrl, {
+  const yahooResponse = await fetchWithTimeout(yahooUrl, {
     headers: {
       accept: "application/json",
       "user-agent": "stock-portfolio-lab/0.1",
@@ -349,7 +355,22 @@ async function runDailySnapshotJob(trigger) {
     });
   }
 
-  const refreshed = await refreshStatePrices(state);
+  const alreadySnapshotted = state.portfolioSnapshots.some((item) => item.date === today);
+  if (alreadySnapshotted && trigger !== "manual") {
+    return updateAutomationState(state, {
+      ok: true,
+      skipped: true,
+      trigger,
+      reason: `오늘(${today}) 스냅샷이 이미 존재합니다`,
+    });
+  }
+
+  const quotes = await fetchLatestQuotes(state);
+  // Re-read state right before writing: the Yahoo fetch above can take tens of seconds,
+  // during which the user may have saved edits via PUT /api/state. Merging onto a fresh
+  // read (instead of the state captured at the top of this function) avoids clobbering those.
+  const latestState = readState();
+  const refreshed = applyQuotesToState(latestState, quotes);
   const snapshot = buildPortfolioSnapshot(refreshed, today);
   const accountSnapshots = buildAccountSnapshots(refreshed, today);
   const existingIndex = refreshed.portfolioSnapshots.findIndex((item) => item.date === today);
@@ -418,34 +439,40 @@ function getHealthStatus() {
   };
 }
 
-async function refreshStatePrices(state) {
+async function fetchLatestQuotes(state) {
   const quoteMap = new Map();
-  const priceUpdateLogs = [...(state.priceUpdateLogs || [])];
+  const newLogs = [];
   const tickers = unique(state.holdings.filter((holding) => holding.autoPrice !== false).map((holding) => holding.ticker));
 
   for (const ticker of tickers) {
     try {
       quoteMap.set(ticker, await getYahooQuote(ticker));
-      priceUpdateLogs.push(createPriceLog({ symbol: ticker, status: "success", price: quoteMap.get(ticker).price, source: "Yahoo Finance" }));
+      newLogs.push(createPriceLog({ symbol: ticker, status: "success", price: quoteMap.get(ticker).price, source: "Yahoo Finance" }));
     } catch (error) {
       console.error(`Quote refresh failed for ${ticker}: ${error.message}`);
-      priceUpdateLogs.push(createPriceLog({ symbol: ticker, status: "error", message: error.message }));
+      newLogs.push(createPriceLog({ symbol: ticker, status: "error", message: error.message }));
     }
   }
 
-  let fxRate = state.fxRate;
+  let fxRate = null;
   try {
     fxRate = await getYahooFxRate();
-    priceUpdateLogs.push(createPriceLog({ symbol: "USD/KRW", status: "success", price: fxRate.rate, source: "Yahoo Finance" }));
+    newLogs.push(createPriceLog({ symbol: "USD/KRW", status: "success", price: fxRate.rate, source: "Yahoo Finance" }));
   } catch (error) {
     console.error(`FX refresh failed: ${error.message}`);
-    priceUpdateLogs.push(createPriceLog({ symbol: "USD/KRW", status: "error", message: error.message }));
+    newLogs.push(createPriceLog({ symbol: "USD/KRW", status: "error", message: error.message }));
   }
 
+  return { quoteMap, fxRate, newLogs };
+}
+
+// state must be freshly read (right before writing) so concurrent user edits during the slow Yahoo
+// fetch above aren't clobbered — only price-related fields are overlaid here.
+function applyQuotesToState(state, { quoteMap, fxRate, newLogs }) {
   return {
     ...state,
-    fxRate,
-    priceUpdateLogs: priceUpdateLogs.slice(-200),
+    fxRate: fxRate || state.fxRate,
+    priceUpdateLogs: [...(state.priceUpdateLogs || []), ...newLogs].slice(-200),
     holdings: state.holdings.map((holding) => {
       const quote = quoteMap.get(holding.ticker);
       return quote
@@ -504,7 +531,7 @@ async function fetchYahooChartData(symbol) {
   yahooUrl.searchParams.set("interval", "1d");
   yahooUrl.searchParams.set("range", "1d");
 
-  const yahooResponse = await fetch(yahooUrl, {
+  const yahooResponse = await fetchWithTimeout(yahooUrl, {
     headers: {
       accept: "application/json",
       "user-agent": "stock-portfolio-lab/0.1",
