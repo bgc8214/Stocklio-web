@@ -1,9 +1,11 @@
+import { STATE_VERSION } from "../domain/portfolio-core.js";
+
 export const STORAGE_KEY = "stock-portfolio-lab-state";
 export const CACHE_PREFIX = "stock-portfolio-lab-yahoo-cache-v2";
 export const QUOTE_CACHE_TTL_MS = 5 * 60 * 1000;
 export const FX_CACHE_TTL_MS = 60 * 60 * 1000;
 export const AUTO_PRICE_REFRESH_TTL_MS = 10 * 60 * 1000;
-export const DATA_VERSION = 6;
+export const DATA_VERSION = STATE_VERSION;
 export const AUTH_READY_TIMEOUT_MS = 1800;
 
 export const palette = ["#3366FF", "#16A34A", "#F59E0B", "#8B5CF6", "#6541F2"];
