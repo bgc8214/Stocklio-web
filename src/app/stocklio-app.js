@@ -62,21 +62,7 @@ import {
   groupByAccount as calculateGroupByAccount,
   normalizeDashboardLayout,
 } from "../domain/portfolio-core.js";
-import {
-  init as initHoldingsView,
-  renderHoldings,
-  openHoldingDrawer,
-  closeHoldingDrawer,
-  filteredHoldings,
-  tickerLogoHtml,
-  exportVisibleHoldings,
-  startEditHolding,
-  hideTickerSuggestions,
-  queueTickerSearch,
-  selectTickerSuggestion,
-  saveInlineHoldingEdit,
-  setHoldingsViewMode,
-} from "./holdings-view.js";
+// 보유 종목 탭은 Phase 7 에서 React HoldingsView 가 소유한다(holdings-view.js 제거).
 // 성과 탭은 Phase 4 에서 React PerformanceView 가 소유한다(performance-view.js 제거).
 // 대시보드의 오늘 변동/오늘의 주인공 패널은 craft-dashboard.jsx(React)가 직접 렌더한다.
 // 입출금 탭은 Phase 3 에서 React CashflowsView 가 소유한다(cashflows-view.js 제거).
@@ -233,11 +219,9 @@ els.dashboardSnapshotButton?.addEventListener("click", () => {
 });
 
 els.dashboardAddHoldingButton?.addEventListener("click", () => {
-  editingHoldingId = null;
-  openHoldingDrawer();
-  updateEditControls();
-  renderAccountSelectors();
+  // 보유 종목 드로어는 React HoldingsView 가 소유한다. 탭 전환 + 신규 드로어 신호.
   setView("holdings");
+  useStore.getState().requestOpenHoldingDrawer();
 });
 
 els.allocationDimensionButtons.forEach((button) => {
@@ -434,170 +418,22 @@ els.dashboardBoard.addEventListener("dragend", () => {
   clearDashboardDragState();
 });
 
-// 필터 팝오버 토글
-els.filterPopoverBtn?.addEventListener("click", (e) => {
-  e.stopPropagation();
-  const open = !els.filterPopover.hidden;
-  els.filterPopover.hidden = open;
-  els.filterPopoverBtn.setAttribute("aria-expanded", String(!open));
-});
-document.addEventListener("click", (e) => {
-  if (!els.filterPopover?.hidden && !els.filterPopover.contains(e.target) && e.target !== els.filterPopoverBtn) {
-    els.filterPopover.hidden = true;
-    els.filterPopoverBtn?.setAttribute("aria-expanded", "false");
-  }
-});
-
 // 통화 모드 토글: 버튼 UI 는 React 셸(Sidebar)이 store.currencyMode 로 렌더한다.
-// 여기서는 상태 갱신 + legacy 뷰 재렌더 + store push + currencyModeChange 이벤트를 담당한다.
+// 포팅된 탭(대시보드/보유종목 등)은 store.currencyMode + currencyModeChange 이벤트로 재렌더된다.
 function applyCurrencyMode(mode) {
   currencyMode = mode === "usd" ? "usd" : "krw";
   localStorage.setItem("currencyMode", currencyMode);
   useStore.getState().setCurrencyMode(currencyMode);
-  renderHoldings();
-  renderSummary();
   window.dispatchEvent(new CustomEvent("currencyModeChange", { detail: currencyMode }));
 }
 // 초기 통화 모드를 store 에 반영한다(부트스트랩 시점의 localStorage 값).
 useStore.getState().setCurrencyMode(currencyMode);
 
-// 필터 초기화
-els.filterResetBtn?.addEventListener("click", () => {
-  if (els.investorFilter) els.investorFilter.value = "";
-  if (els.strategyFilter) els.strategyFilter.value = "";
-  if (els.accountTypeFilter) els.accountTypeFilter.value = "";
-  holdingPage = 1;
-  renderHoldings();
-});
-
-for (const filter of [els.investorFilter, els.strategyFilter, els.accountTypeFilter, els.holdingSort]) {
-  filter.addEventListener("change", () => {
-    holdingPage = 1;
-    if (filter === els.holdingSort) {
-      holdingHeaderSort = parseSortValue(els.holdingSort.value, DEFAULT_HOLDING_SORT);
-      renderSortHeaders();
-    }
-    renderHoldings();
-  });
-}
-
-document.querySelectorAll("[data-holding-sort-key]").forEach((button) => {
-  button.addEventListener("click", () => {
-    const nextSort = cycleSortValue(els.holdingSort.value, button.dataset.holdingSortKey, DEFAULT_HOLDING_SORT);
-    els.holdingSort.value = nextSort;
-    holdingPage = 1;
-    holdingHeaderSort = parseSortValue(nextSort, DEFAULT_HOLDING_SORT);
-    renderSortHeaders();
-    renderHoldings();
-  });
-});
-
-els.holdingSearch.addEventListener("input", () => {
-  holdingPage = 1;
-  renderHoldings();
-});
-
-for (const [button, scope] of [
-  [els.holdingScopeAll, "all"],
-  [els.holdingScopeGain, "gain"],
-  [els.holdingScopeLoss, "loss"],
-]) {
-  button?.addEventListener("click", () => {
-    holdingScope = scope;
-    holdingPage = 1;
-    renderHoldings();
-  });
-}
-
-els.holdingsViewDetail?.addEventListener("click", () => {
-  setHoldingsViewMode("detail");
-  renderHoldings();
-});
-els.holdingsViewSummary?.addEventListener("click", () => {
-  setHoldingsViewMode("summary");
-  renderHoldings();
-});
-
-els.holdingForm.elements.ticker.addEventListener("input", () => {
-  els.holdingForm.elements.name.value = "";
-  queueTickerSearch();
-});
-els.holdingForm.elements.ticker.addEventListener("focus", queueTickerSearch);
-els.holdingTickerSuggestions.addEventListener("mousedown", (event) => {
-  const button = event.target.closest("[data-symbol]");
-  if (!button) {
-    return;
-  }
-  event.preventDefault();
-  selectTickerSuggestion(button.dataset.symbol, button.dataset.name);
-});
-document.addEventListener("click", (event) => {
-  if (!event.target.closest(".ticker-search-field")) {
-    hideTickerSuggestions();
-  }
-});
-
-els.addHoldingButton.addEventListener("click", () => {
-  editingHoldingId = null;
-  openHoldingDrawer();
-  updateEditControls();
-  renderAccountSelectors();
-  setView("holdings");
-});
-
-els.holdingDrawerClose?.addEventListener("click", () => closeHoldingDrawer());
-els.holdingDrawerBackdrop?.addEventListener("click", () => closeHoldingDrawer());
-els.holdingCancel.addEventListener("click", () => closeHoldingDrawer());
-els.holdingsExportButton?.addEventListener("click", exportVisibleHoldings);
-
+// 보유 종목 탭(필터/정렬/검색/범위/보기모드/드로어/티커검색/CSV)은 Phase 7 에서 React HoldingsView 가 소유한다.
 // 성과 탭(기간/일별 필터, 요약 복사/CSV, 기여 분석)은 Phase 4 에서 React PerformanceView 가 소유한다.
 // 입출금 필터/정렬/폼/인라인 편집은 Phase 3 에서 React CashflowsView 가 소유한다.
 // 계좌 필터/검증/계좌 폼/계좌별 예수금은 Phase 2 에서 React AccountsView 가 소유한다.
 
-els.holdingForm.addEventListener("submit", (event) => {
-  event.preventDefault();
-  const form = new FormData(event.currentTarget);
-  const account = parseAccountKey(form.get("accountKey"));
-  const ticker = String(form.get("ticker")).trim().toUpperCase();
-  const selectedName = String(form.get("name") || "").trim();
-  const name = selectedName || ticker || String(form.get("strategy"));
-  const existingHolding = editingHoldingId ? state.holdings.find((holding) => holding.id === editingHoldingId) : null;
-  const averageCost = Number(form.get("averageCost"));
-  const currency = existingHolding?.currency || (/^[0-9]{6}\.KS$/.test(ticker) ? "KRW" : "USD");
-  const nextHolding = {
-    id: editingHoldingId || makeId(),
-    investor: account.investor,
-    account: account.account,
-    accountType: normalizeAccountType(String(form.get("accountType"))),
-    strategy: normalizeStrategy(form.get("strategy")),
-    ticker: ticker || name,
-    name,
-    quantity: Number(form.get("quantity")),
-    averageCost,
-    price: existingHolding?.price ?? averageCost,
-    currency,
-    priceSource: existingHolding?.priceSource || "사용자 입력",
-    priceAsOf: existingHolding?.priceAsOf || new Date().toISOString(),
-    autoPrice: existingHolding?.autoPrice ?? true,
-    targetPrice: Number(form.get("targetPrice")) || null,
-    stopLoss: Number(form.get("stopLoss")) || null,
-  };
-  if (editingHoldingId) {
-    state.holdings = state.holdings.map((holding) => (holding.id === editingHoldingId ? { ...holding, ...nextHolding } : holding));
-  } else {
-    state.holdings.push(nextHolding);
-  }
-  editingHoldingId = null;
-  event.currentTarget.reset();
-  hideTickerSuggestions();
-  closeHoldingDrawer({ reset: false });
-  updateEditControls();
-  saveState();
-  render();
-  // 보유 종목 저장 — UI에 반영
-});
-
-els.holdingCancel.addEventListener("click", () => cancelEdit("holding"));
 
 // 미분류 예수금 배분은 Phase 2 에서 React AccountsView 가 소유한다.
 
@@ -705,7 +541,6 @@ async function initialize() {
     setActionState,
     showOperationToast,
     setView,
-    updateEditControls,
     getTotals,
     getCashValueKrw,
     getHoldingValues,
@@ -767,14 +602,11 @@ async function initialize() {
     setState: (s) => { state = s; },
     loadState,
     normalizeState,
-    // cancel edit
-    cancelEdit,
     // accounts-view helpers
     rowActionMenu,
     // 설정 탭: 알림 상태를 store 로 push (automation-view → React AutomationView)
     setNotificationState: (payload) => useStore.getState().setNotification(payload),
   };
-  initHoldingsView(ctx);
   initAutomationView(ctx);
   initDashboardView(ctx);
   try {
@@ -868,18 +700,9 @@ function isStaticDeployment() {
 }
 
 function render() {
-  renderFilters();
-  renderAccountSelectors();
-  renderSortHeaders();
-  updateEditControls();
-  renderSummary();
-  renderAllocation();
-  // 성과 탭(성과 흐름/변동/스냅샷/월별/기여/자산구성)은 Phase 4 에서 React PerformanceView 가 소유한다.
-  // 대시보드 변동/주인공 패널은 craft-dashboard.jsx(React)가 렌더한다.
-  // 계좌 목록/개요/예수금 잔고는 Phase 2 에서 React AccountsView 가 store 구독으로 렌더한다.
-  renderHoldings();
-  // 입출금 기록/배당 차트는 Phase 3 에서 React CashflowsView 가 store 구독으로 렌더한다.
-  // 설정 탭(자동화/가격로그/알림/검증)은 Phase 5 에서 React AutomationView 가 렌더한다.
+  // 모든 탭(대시보드/보유종목/계좌/성과/입출금/설정/시뮬레이터)은 React 가 store 구독으로 렌더한다.
+  // legacy render() 는 state 변경을 store 브리지(publishState)로 발행하고, 대시보드 status/layout 과
+  // auth/empty-notice 만 갱신한다.
   renderDashboardStatus();
   renderDashboardLayout();
   renderEmptyPortfolioNotice();
@@ -1008,12 +831,6 @@ function setView(view, { fromHistory = false, replaceHistory = false } = {}) {
   if (!VIEW_IDS.includes(view)) {
     view = "dashboard";
   }
-  if (activeView === "holdings" && view !== "holdings") {
-    editingHoldingId = null;
-    els.holdingFormPanel.hidden = true;
-    els.holdingForm.reset();
-    renderHoldings();
-  }
   activeView = view;
   if (!fromHistory && window.location.hash.slice(1) !== view) {
     if (replaceHistory) {
@@ -1037,25 +854,6 @@ function setView(view, { fromHistory = false, replaceHistory = false } = {}) {
   // 시뮬레이터 탭은 Phase 6 에서 React SimulatorView 가 소유한다(항상 마운트, 실행 시에만 차트 재생).
   // 배너 표시는 React 셸(SampleDataBanner)이 store.auth + store.activeView 로 파생한다.
   renderEmptyPortfolioNotice();
-}
-
-function cancelEdit(kind) {
-  // 계좌/입출금 편집은 React AccountsView/CashflowsView 가 소유한다. 여기서는 종목만 처리한다.
-  if (kind === "holding") {
-    closeHoldingDrawer();
-  }
-  updateEditControls();
-  renderAccountSelectors();
-}
-
-function updateEditControls() {
-  // 계좌/입출금 폼은 React AccountsView/CashflowsView 가 소유한다. 종목 폼만 처리한다.
-  els.holdingSubmit.textContent = editingHoldingId ? "수정 저장" : "목록에 추가";
-  els.holdingCancel.hidden = Boolean(els.holdingFormPanel?.hidden);
-  if (els.holdingFormTitle) {
-    els.holdingFormTitle.textContent = editingHoldingId ? "종목 수정" : "종목 추가";
-    els.holdingFormSubtitle.textContent = editingHoldingId ? "보유 포지션의 계좌, 전략, 수량, 평단가를 수정합니다." : "현재 보유 종목 목록에 새 포지션을 추가합니다.";
-  }
 }
 
 function getTotals(holdings) {

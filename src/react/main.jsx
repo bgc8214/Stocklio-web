@@ -14,6 +14,7 @@ import { CashflowsView } from "./views/CashflowsView.jsx";
 import { PerformanceView } from "./views/PerformanceView.jsx";
 import { AutomationView } from "./views/AutomationView.jsx";
 import { SimulatorView } from "./views/SimulatorView.jsx";
+import { HoldingsView } from "./views/HoldingsView.jsx";
 import "../craft-dashboard.jsx";
 
 // initialize() 의 첫 render()→publishState() 이전에 브리지 리스너를 붙여야 초기 상태를 놓치지 않는다.
@@ -55,6 +56,11 @@ if (automationMount) {
 const simulatorMount = document.querySelector("#simulatorViewMount");
 if (simulatorMount) {
   createRoot(simulatorMount).render(<SimulatorView />);
+}
+
+const holdingsMount = document.querySelector("#holdingsViewMount");
+if (holdingsMount) {
+  createRoot(holdingsMount).render(<HoldingsView />);
 }
 
 initializeStocklioApp();
