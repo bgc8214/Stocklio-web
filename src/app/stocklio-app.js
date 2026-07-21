@@ -283,22 +283,17 @@ els.allocationDimensionSelect?.addEventListener("change", () => {
   renderAllocation();
 });
 
-els.openLoginButton?.addEventListener("click", () => {
-  openLoginDialog();
-});
-
-document.getElementById("sampleDataLoginButton")?.addEventListener("click", () => {
-  openLoginDialog();
-});
-
-els.loginDialogCloseButton?.addEventListener("click", () => {
-  closeLoginDialog();
-});
-
-els.loginDialog?.addEventListener("click", (event) => {
-  if (event.target === els.loginDialog) {
-    closeLoginDialog();
-  }
+// 로그인/이메일 다이얼로그, 로그인 버튼, 배너 로그인 버튼은 React 셸(ContentChrome)이 소유한다.
+// 아래 액션들을 store 에 등록하면 React 컴포넌트가 호출한다.
+useStore.getState().registerActions({
+  openLoginDialog,
+  closeLoginDialog,
+  openEmailDialog: openEmailLoginDialog,
+  closeEmailDialog: closeEmailLoginDialog,
+  signInWithGoogle: handleGoogleLogin,
+  signInWithNaver: handleNaverLogin,
+  signInWithEmail: sendEmailLoginLink,
+  signOut: handleLogout,
 });
 
 els.notificationForm?.addEventListener("submit", (event) => {
@@ -345,7 +340,7 @@ els.addAccountButton?.addEventListener("click", () => {
   els.accountForm.querySelector("input")?.focus();
 });
 
-els.googleLoginButton.addEventListener("click", () => {
+function handleGoogleLogin() {
   if (isEmbeddedBrowser()) {
     closeLoginDialog();
     openEmailLoginDialog();
@@ -358,44 +353,27 @@ els.googleLoginButton.addEventListener("click", () => {
     setStatus("로그인 실패", error.message);
     showOperationToast("Google 로그인 실패", error.message, "error");
   });
-});
+}
 
-els.naverLoginButton.addEventListener("click", () => {
+function handleNaverLogin() {
   closeLoginDialog();
   window.StocklioAuth?.signInWithNaver?.().catch((error) => {
     setStatus("네이버 로그인 실패", error.message);
     showOperationToast("네이버 로그인 실패", "Supabase Custom OAuth Provider 설정을 확인하세요", "error");
   });
-});
+}
 
-els.emailLoginButton.addEventListener("click", () => {
-  closeLoginDialog();
-  openEmailLoginDialog();
-});
-
-els.emailLoginCancelButton.addEventListener("click", () => {
-  closeEmailLoginDialog();
-});
-
-els.emailLoginForm.addEventListener("submit", (event) => {
-  event.preventDefault();
-  sendEmailLoginLink();
-});
-
-els.logoutButton.addEventListener("click", () => {
-  els.logoutButton.disabled = true;
+function handleLogout() {
   setStatus("로그아웃 중", "세션을 정리하고 있습니다");
   window.StocklioAuth?.signOut?.()
     .then(() => {
       localStorage.removeItem(STORAGE_KEY);
-      els.logoutButton.disabled = false;
       setStatus("로그아웃 완료", "다시 로그인할 수 있습니다");
     })
     .catch((error) => {
-      els.logoutButton.disabled = false;
       setStatus("로그아웃 실패", error.message);
     });
-});
+}
 
 window.addEventListener("stocklio:auth", (event) => {
   authState = event.detail;
@@ -1116,99 +1094,42 @@ function render() {
 }
 
 function renderAuth() {
-  if (!els.authStatus) {
-    return;
-  }
+  // auth 패널/배너/버튼 disabled 상태는 React 셸(Toolbar/SampleDataBanner)이 store.auth 로 렌더한다.
   const configured = window.StocklioAuth?.isConfigured?.() || false;
   authState = window.StocklioAuth?.getState?.() || authState;
-  if (!configured) {
-    els.authStatus.textContent = "";
+  useStore.getState().setAuth({
+    configured,
+    signedIn: Boolean(authState.signedIn),
+    user: authState.user || null,
+  });
+  if (!configured || !authState.signedIn) {
     setSyncState("idle", "");
-    els.openLoginButton.hidden = true;
-    els.naverLoginButton.disabled = true;
-    els.googleLoginButton.disabled = true;
-    els.emailLoginButton.disabled = true;
-    els.logoutButton.hidden = true;
-    const banner = document.getElementById("sampleDataBanner");
-    if (banner) banner.hidden = false;
-    renderDashboardStatus();
-    return;
-  }
-  if (authState.signedIn) {
-    els.authStatus.textContent = authState.user?.name || authState.user?.email || "";
-    els.openLoginButton.hidden = true;
-    els.logoutButton.disabled = false;
-    els.logoutButton.hidden = false;
-    const banner = document.getElementById("sampleDataBanner");
-    if (banner) banner.hidden = true;
+  } else {
     closeLoginDialog();
     renderSyncStatus();
-    renderDashboardStatus();
-    return;
   }
-  els.authStatus.textContent = "";
-  setSyncState("idle", "");
-  els.openLoginButton.disabled = false;
-  els.openLoginButton.hidden = false;
-  els.naverLoginButton.disabled = false;
-  els.googleLoginButton.disabled = false;
-  els.emailLoginButton.disabled = false;
-  els.logoutButton.disabled = false;
-  els.logoutButton.hidden = true;
-  const banner = document.getElementById("sampleDataBanner");
-  if (banner) banner.hidden = false;
   renderDashboardStatus();
 }
 
 function openLoginDialog() {
-  if (!els.loginDialog) {
-    return;
-  }
-  if (typeof els.loginDialog.showModal === "function") {
-    els.loginDialog.showModal();
-  } else {
-    els.loginDialog.hidden = false;
-  }
+  useStore.getState().setLoginDialog(true);
 }
 
 function closeLoginDialog() {
-  if (!els.loginDialog) {
-    return;
-  }
-  if (els.loginDialog.open) {
-    els.loginDialog.close();
-  } else {
-    els.loginDialog.hidden = true;
-  }
+  useStore.getState().setLoginDialog(false);
 }
 
 function openEmailLoginDialog() {
-  if (!els.emailLoginDialog) {
-    return;
-  }
-  els.emailLoginInput.value = authState.user?.email || "";
-  if (typeof els.emailLoginDialog.showModal === "function") {
-    els.emailLoginDialog.showModal();
-  } else {
-    els.emailLoginDialog.hidden = false;
-  }
-  window.setTimeout(() => els.emailLoginInput.focus(), 0);
+  // 로그인 다이얼로그에서 넘어오는 경우가 있어 먼저 닫는다(두 모달 동시 open 방지).
+  useStore.getState().setLoginDialog(false);
+  useStore.getState().setEmailDialog(true, authState.user?.email || "");
 }
 
 function closeEmailLoginDialog() {
-  if (!els.emailLoginDialog) {
-    return;
-  }
-  if (typeof els.emailLoginDialog.close === "function") {
-    els.emailLoginDialog.close();
-  } else {
-    els.emailLoginDialog.hidden = true;
-  }
+  useStore.getState().setEmailDialog(false);
 }
 
-async function sendEmailLoginLink() {
-  const email = els.emailLoginInput.value;
-  els.emailLoginSubmitButton.disabled = true;
+async function sendEmailLoginLink(email) {
   try {
     await window.StocklioAuth?.signInWithEmail?.(email);
     closeEmailLoginDialog();
@@ -1217,8 +1138,6 @@ async function sendEmailLoginLink() {
   } catch (error) {
     setStatus("이메일 로그인 실패", error.message);
     showOperationToast("이메일 로그인 실패", error.message, "error");
-  } finally {
-    els.emailLoginSubmitButton.disabled = false;
   }
 }
 
@@ -1242,13 +1161,8 @@ function setSyncState(status, message) {
 }
 
 function renderSyncStatus() {
-  if (!els.syncStatus) {
-    return;
-  }
-  const shouldShow = authState.signedIn && syncState.message;
-  els.syncStatus.hidden = !shouldShow;
-  els.syncStatus.textContent = syncState.message;
-  els.syncStatus.dataset.syncStatus = syncState.status;
+  // sync 상태 표시는 React 셸(Toolbar)이 store.sync + store.auth 로 렌더한다.
+  useStore.getState().setSync({ status: syncState.status, message: syncState.message });
 }
 
 function renderEmptyPortfolioNotice() {
@@ -1316,13 +1230,7 @@ function setView(view, { fromHistory = false, replaceHistory = false } = {}) {
     }
   }
   const copy = viewCopy[view] || viewCopy.dashboard;
-  if (els.pageTitle) {
-    els.pageTitle.textContent = copy.title;
-  }
-  if (els.pageSubtitle) {
-    els.pageSubtitle.textContent = copy.subtitle;
-  }
-  // React 셸(Sidebar)의 활성 탭 표시는 store.activeView 로 구동된다.
+  // page title/subtitle 및 활성 탭 표시는 React 셸(Toolbar/Sidebar)이 store 로 구동한다.
   useStore.getState().setActiveView(view, copy.title, copy.subtitle);
   els.viewSections.forEach((section) => {
     const isActive = section.dataset.view === view;
@@ -1337,16 +1245,7 @@ function setView(view, { fromHistory = false, replaceHistory = false } = {}) {
     simulatorInitialized = true;
     initSimulatorView();
   }
-  // 배너는 대시보드에서만 표시 (다른 탭에선 authStatus 링크로 충분)
-  const banner = document.getElementById("sampleDataBanner");
-  if (banner && !banner.hidden !== undefined) {
-    const shouldShowBanner = view === "dashboard";
-    // 로그인 상태면 항상 숨김, 비로그인이면 대시보드에서만 표시
-    const isLoggedIn = window.StocklioAuth?.getState?.()?.signedIn;
-    if (!isLoggedIn && !window.StocklioAuth?.isConfigured?.()) {
-      banner.hidden = view !== "dashboard";
-    }
-  }
+  // 배너 표시는 React 셸(SampleDataBanner)이 store.auth + store.activeView 로 파생한다.
   renderEmptyPortfolioNotice();
 }
 
@@ -1434,8 +1333,8 @@ function unique(values) {
 }
 
 function setStatus(status, detail) {
-  els.providerStatus.textContent = status;
-  els.lastUpdated.textContent = detail;
+  // sr-only 상태 라인은 React 셸(Toolbar)이 store.status 로 렌더한다.
+  useStore.getState().setStatus({ title: status, detail });
 }
 
 function setActionState(kind, isRunning) {
@@ -1458,16 +1357,12 @@ function setActionState(kind, isRunning) {
 }
 
 function showOperationToast(title, detail, tone = "info") {
-  if (!els.operationToast) {
-    return;
-  }
+  // 토스트는 React 셸(Toast)이 store.toast 로 렌더한다. 자동 숨김 타이머는 여기서 스케줄한다.
+  const store = useStore.getState();
   window.clearTimeout(toastTimer);
-  els.operationToast.hidden = false;
-  els.operationToast.dataset.tone = tone;
-  els.operationToastTitle.textContent = title;
-  els.operationToastDetail.textContent = detail;
+  store.setToast({ visible: true, title, detail, tone });
   toastTimer = window.setTimeout(() => {
-    els.operationToast.hidden = true;
+    useStore.getState().setToast({ visible: false });
   }, tone === "busy" ? 2200 : 4200);
 }
 

@@ -8,6 +8,7 @@ import "../supabase-auth.js";
 import { initializeStocklioApp } from "../app/stocklio-app.js";
 import { connectLegacyBridge } from "./store/useStore.js";
 import { App } from "./App.jsx";
+import { ContentChrome } from "./components/ContentChrome.jsx";
 import "../craft-dashboard.jsx";
 
 // initialize() 의 첫 render()→publishState() 이전에 브리지 리스너를 붙여야 초기 상태를 놓치지 않는다.
@@ -17,6 +18,12 @@ connectLegacyBridge();
 const sidebarMount = document.querySelector("#appShellSidebar");
 if (sidebarMount) {
   createRoot(sidebarMount).render(<App />);
+}
+
+// .content 상단 chrome(툴바/배너/토스트/다이얼로그)을 마운트한다.
+const chromeMount = document.querySelector("#contentChromeMount");
+if (chromeMount) {
+  createRoot(chromeMount).render(<ContentChrome />);
 }
 
 initializeStocklioApp();

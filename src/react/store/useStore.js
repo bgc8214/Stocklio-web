@@ -22,6 +22,12 @@ export const useStore = create((set) => ({
   auth: { configured: false, signedIn: false, user: null },
   sync: { status: "idle", message: "" },
   toast: { visible: false, title: "", detail: "", tone: "info" },
+  // sr-only 상태 라인(providerStatus/lastUpdated).
+  status: { title: "준비됨", detail: "작업 내역 없음" },
+  // 로그인/이메일 다이얼로그 open 상태 + 이메일 프리필.
+  loginDialogOpen: false,
+  emailDialogOpen: false,
+  emailPrefill: "",
 
   setActiveView: (activeView, pageTitle, pageSubtitle) =>
     set((prev) => ({
@@ -33,6 +39,10 @@ export const useStore = create((set) => ({
   setAuth: (auth) => set({ auth }),
   setSync: (sync) => set({ sync }),
   setToast: (toast) => set((prev) => ({ toast: { ...prev.toast, ...toast } })),
+  setStatus: (status) => set({ status }),
+  setLoginDialog: (loginDialogOpen) => set({ loginDialogOpen }),
+  setEmailDialog: (emailDialogOpen, emailPrefill) =>
+    set((prev) => ({ emailDialogOpen, emailPrefill: emailPrefill ?? prev.emailPrefill })),
 
   // ── legacy 가 등록하는 imperative 액션 (React 셸이 호출) ─────────
   // { setView, refreshPrices, saveSnapshot, openLoginDialog, signOut,

@@ -20,78 +20,9 @@
       <div id="appShellSidebar" style="display: contents"></div>
 
       <main class="content">
-      <section class="toolbar" aria-label="포트폴리오 작업">
-        <div class="page-heading">
-          <strong id="pageTitle">대시보드</strong>
-          <span id="pageSubtitle">포트폴리오 현황</span>
-        </div>
-        <div class="toolbar-actions">
-          <div class="status-panel sr-only" aria-live="polite">
-            <span id="providerStatus">준비됨</span>
-            <span id="lastUpdated">작업 내역 없음</span>
-          </div>
-          <div class="auth-panel">
-            <span id="authStatus"></span>
-            <span id="syncStatus" class="sync-status" hidden></span>
-            <button id="openLoginButton" class="small-button" type="button">로그인</button>
-            <button id="logoutButton" class="ghost small-button" type="button" hidden>로그아웃</button>
-          </div>
-        </div>
-      </section>
-
-      <div id="sampleDataBanner" class="sample-data-banner" hidden>
-        <span>지금 보이는 데이터는 <strong>예시 데이터</strong>입니다. 로그인하면 내 포트폴리오가 저장됩니다.</span>
-        <button id="sampleDataLoginButton" class="small-button" type="button">로그인</button>
-      </div>
-
-      <div id="operationToast" class="operation-toast" role="status" aria-live="polite" hidden>
-        <strong id="operationToastTitle">처리 중</strong>
-        <span id="operationToastDetail">작업 상태를 확인하고 있습니다</span>
-      </div>
-
-      <dialog id="loginDialog" class="login-dialog" aria-labelledby="loginDialogTitle">
-        <div class="login-card">
-          <div class="login-dialog-heading">
-            <div>
-              <strong id="loginDialogTitle">투자일지 로그인</strong>
-              <span>포트폴리오를 클라우드에 저장하고 자동 알림을 받을 수 있습니다.</span>
-            </div>
-            <button id="loginDialogCloseButton" class="ghost small-button" type="button" aria-label="로그인 창 닫기">닫기</button>
-          </div>
-          <div class="login-options" aria-label="로그인 방식">
-            <button id="naverLoginButton" class="login-provider-button login-provider-naver" type="button">
-              <span aria-hidden="true">N</span>
-              <strong>네이버로 로그인</strong>
-            </button>
-            <button id="googleLoginButton" class="login-provider-button login-provider-google" type="button">
-              <span aria-hidden="true">G</span>
-              <strong>Google로 로그인</strong>
-            </button>
-            <button id="emailLoginButton" class="login-provider-button login-provider-email" type="button">
-              <span aria-hidden="true">@</span>
-              <strong>이메일로 로그인</strong>
-            </button>
-          </div>
-          <p class="login-dialog-note">네이버 앱 안에서는 Google 로그인이 제한될 수 있어 네이버 로그인이나 이메일 로그인을 권장합니다.</p>
-        </div>
-      </dialog>
-
-      <dialog id="emailLoginDialog" class="email-login-dialog" aria-labelledby="emailLoginTitle">
-        <form id="emailLoginForm" method="dialog">
-          <div>
-            <strong id="emailLoginTitle">이메일로 로그인</strong>
-            <span>메일로 받은 링크를 열면 투자일지에 로그인됩니다.</span>
-          </div>
-          <label>
-            이메일
-            <input id="emailLoginInput" type="email" autocomplete="email" placeholder="you@example.com" required>
-          </label>
-          <div class="dialog-actions">
-            <button id="emailLoginCancelButton" class="ghost small-button" type="button">취소</button>
-            <button id="emailLoginSubmitButton" class="small-button" type="submit">로그인 링크 받기</button>
-          </div>
-        </form>
-      </dialog>
+      <!-- .content 상단 chrome(툴바/배너/토스트/로그인·이메일 다이얼로그)은 React(ContentChrome)가 렌더한다.
+           display:contents 로 .toolbar 의 sticky 컨텍스트가 .content 기준으로 유지된다. -->
+      <div id="contentChromeMount" style="display: contents"></div>
 
       <section id="emptyPortfolioNotice" class="empty-portfolio" data-view="dashboard" hidden>
         <div>
