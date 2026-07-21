@@ -50,7 +50,7 @@ import {
 } from "./daily-move-selectors.js";
 import { clearStaleQuoteCaches, fetchJson, getQuote, getUsdKrw, searchSymbols } from "./services/market-data-service.js";
 import { getUsMarketContextForSeoulDate } from "../domain/market-calendar.js";
-import { initSimulatorView } from "./simulator-view.js";
+// 시뮬레이터 탭은 Phase 6 에서 React SimulatorView 가 소유한다(simulator-view.js 제거).
 import {
   buildAccountSnapshots as createAccountSnapshots,
   buildPortfolioSnapshot as createPortfolioSnapshot,
@@ -1003,7 +1003,6 @@ function publishState() {
   window.dispatchEvent(new CustomEvent("stocklio:state", { detail: structuredClone(state) }));
 }
 
-let simulatorInitialized = false;
 
 function setView(view, { fromHistory = false, replaceHistory = false } = {}) {
   if (!VIEW_IDS.includes(view)) {
@@ -1035,10 +1034,7 @@ function setView(view, { fromHistory = false, replaceHistory = false } = {}) {
       setTimeout(() => delete section.dataset.entering, 500);
     }
   });
-  if (view === "simulator" && !simulatorInitialized) {
-    simulatorInitialized = true;
-    initSimulatorView();
-  }
+  // 시뮬레이터 탭은 Phase 6 에서 React SimulatorView 가 소유한다(항상 마운트, 실행 시에만 차트 재생).
   // 배너 표시는 React 셸(SampleDataBanner)이 store.auth + store.activeView 로 파생한다.
   renderEmptyPortfolioNotice();
 }
