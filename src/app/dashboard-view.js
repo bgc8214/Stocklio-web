@@ -62,6 +62,7 @@ export function renderAccountSelectors() {
   const accounts = _ctx.getKnownAccounts();
   const options = accounts.map(accountOption).join("");
   for (const form of [els.holdingForm, els.cashFlowForm]) {
+    if (!form) continue;
     const select = form.elements.accountKey;
     const previous = select.value;
     select.innerHTML = `<option value="">계좌 선택</option>${options}`;
