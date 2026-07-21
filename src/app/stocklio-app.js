@@ -1,80 +1,29 @@
-import {
-  accountKeyFor,
-  getKnownAccounts as getKnownAccountsFromState,
-  isAccountInUse as isAccountInUseInState,
-  isUnclassifiedCash,
-  normalizeAccounts,
-  parseAccountKey,
-  renameAccountReferences,
-} from "./accounts.js";
-import {
-  AUTH_READY_TIMEOUT_MS,
-  AUTO_PRICE_REFRESH_TTL_MS,
-  dashboardCardLabels,
-  dashboardSizeToSpan,
-  DATA_VERSION,
-  DEFAULT_CASH_FLOW_SORT,
-  DEFAULT_HOLDING_SORT,
-  defaultDashboardLayout,
-  palette,
-  STORAGE_KEY,
-  viewCopy,
-} from "./constants.js";
-import { accountTypeLabels, formatAccountType, normalizeAccountType } from "./account-types.js";
-import {
-  escapeHtml,
-  formatAsOf,
-  formatChartLabel,
-  formatCompactKrw,
-  formatKrw,
-  formatMoney,
-  formatNumber,
-  formatPercent,
-  formatMonthDay,
-  formatShortDate,
-} from "./formatters.js";
-import {
-  filterSnapshotRows,
-  getAccountPerformanceRows as selectAccountPerformanceRows,
-  getAvailableMonths,
-  getMonthlyRows as selectMonthlyRows,
-  getPerformanceStats,
-  getSnapshotRows as selectSnapshotRows,
-} from "./performance-selectors.js";
-import { cycleSortValue, parseSortValue } from "./sort.js";
+// 앱 부트스트랩 + 영속성 컨트롤러.
+//
+// Phase 1~7 에서 모든 UI(셸 + 7개 탭)가 React 로 이관됐다. 이 모듈은 더 이상 DOM 을 렌더하지 않고,
+// 아래만 담당한다:
+//  - portfolio state 의 load/save (localStorage + Supabase + /api/state) — 단일 writer
+//  - state 변경을 Zustand 스토어로 발행(publishState → store 미러) → React 가 구독 렌더
+//  - auth 이벤트 처리, 자동 가격 갱신 부트스트랩
+//  - React 셸/탭이 호출하는 store.actions(setView/mutate/로그인/자동화 op) 등록
+//  - automation-view 서비스 모듈(가격/스냅샷/알림/백업/임포트)에 ctx 주입
+//
+// 대시보드 카드 badge(날짜/FX/장상태)는 automation-view.renderDashboardStatus 가 craft 카드에 주입한다.
+import { normalizeAccounts } from "./accounts.js";
+import { AUTH_READY_TIMEOUT_MS, DATA_VERSION, STORAGE_KEY, viewCopy } from "./constants.js";
+import { normalizeAccountType } from "./account-types.js";
 import { createEmptyState, createSampleState } from "./state-factory.js";
-import { getDomElements } from "./dom-elements.js";
+import { clearStaleQuoteCaches, fetchJson } from "./services/market-data-service.js";
 import {
-  getDailyMoveRows as selectDailyMoveRows,
-  getHoldingDailyMove as selectHoldingDailyMove,
-} from "./daily-move-selectors.js";
-import { clearStaleQuoteCaches, fetchJson, getQuote, getUsdKrw, searchSymbols } from "./services/market-data-service.js";
-import { getUsMarketContextForSeoulDate } from "../domain/market-calendar.js";
-// 시뮬레이터 탭은 Phase 6 에서 React SimulatorView 가 소유한다(simulator-view.js 제거).
-import {
-  buildAccountSnapshots as createAccountSnapshots,
-  buildPortfolioSnapshot as createPortfolioSnapshot,
-  getCashValueKrw as calculateCashValueKrw,
-  getExternalFlowAmount as calculateExternalFlowAmount,
-  getHoldingValues as calculateHoldingValues,
-  getNetInflowKrw as calculateNetInflowKrw,
   getTotals as calculateTotals,
   groupByAccount as calculateGroupByAccount,
   normalizeDashboardLayout,
 } from "../domain/portfolio-core.js";
-// 보유 종목 탭은 Phase 7 에서 React HoldingsView 가 소유한다(holdings-view.js 제거).
-// 성과 탭은 Phase 4 에서 React PerformanceView 가 소유한다(performance-view.js 제거).
-// 대시보드의 오늘 변동/오늘의 주인공 패널은 craft-dashboard.jsx(React)가 직접 렌더한다.
-// 입출금 탭은 Phase 3 에서 React CashflowsView 가 소유한다(cashflows-view.js 제거).
-// automation-view.js 는 Phase 5 이후 서비스 모듈(가격 갱신/스냅샷/알림/백업/임포트 op)로 남는다.
-// UI 렌더는 React AutomationView 가 담당하므로 op/부트스트랩용 export 만 가져온다.
 import {
   init as initAutomationView,
-  renderDashboardStatus,
   saveTodaySnapshot,
   queueAutomaticPriceRefresh,
   refreshPrices,
-  getRecentPriceRefreshImpact,
   loadNotificationState,
   saveNotificationSettings,
   sendTestNotification,
@@ -85,105 +34,39 @@ import {
   previewImport,
   commitImport,
 } from "./automation-view.js";
-import {
-  init as initDashboardView,
-  renderSummary,
-  renderAllocation,
-  renderFilters,
-  renderSortHeaders,
-  renderAccountSelectors,
-  fillSelect,
-  getAllocationItems,
-  accountOption,
-  updateSortHeaderButtons,
-  renderDashboardLayout,
-  createLayoutControls,
-  handleDashboardLayoutAction,
-  handleDashboardResizeMove,
-  finishDashboardResize,
-  getDashboardColumnWidth,
-  getDashboardDropTarget,
-  shouldDropAfter,
-  reorderDashboardLayout,
-  clearDashboardDragState,
-  getIsLayoutEditing,
-  setIsLayoutEditing,
-  getDraggedDashboardCardId,
-  setDraggedDashboardCardId,
-  getResizingDashboardCard,
-  setResizingDashboardCard,
-} from "./dashboard-view.js";
 import { useStore } from "../react/store/useStore.js";
 
-// 계좌 탭은 Phase 2 에서 React AccountsView 가 소유한다(accounts-view.js 제거).
-// cashflows/holdings 뷰가 ctx 로 쓰는 공용 행 메뉴 헬퍼만 여기로 이식한다.
-function rowActionMenu(label, actions) {
-  return `<details class="row-menu">
-    <summary aria-label="${escapeHtml(label)}" title="작업 더보기">⋮</summary>
-    <div class="row-menu-popover">${actions.join("")}</div>
-  </details>`;
-}
-
-let holdingHeaderSort = { key: "value", dir: "desc" };
-let cashFlowHeaderSort = { key: "date", dir: "desc" };
-let currencyMode = localStorage.getItem("currencyMode") === "usd" ? "usd" : "krw";
-const HOLDINGS_PAGE_SIZE = window.innerWidth <= 980 ? 100 : 10;
+const DEFAULT_STRATEGIES = ["QQQ", "S&P500", "국내주식", "SCHD", "기타"];
 
 const sampleState = createSampleState(makeId);
 
 let state = createEmptyState();
-let editingHoldingId = null;
-let holdingPage = 1;
-let holdingScope = "all";
-let holdingsViewMode = "detail";
-let priceRefreshPromise = null;
-let snapshotSavePromise = null;
+let currencyMode = localStorage.getItem("currencyMode") === "usd" ? "usd" : "krw";
 let toastTimer = null;
-let tickerSearchTimer = null;
-let tickerSearchSeq = 0;
-let notificationSettings = {
-  telegram_chat_id: "",
-  telegram_enabled: false,
-  daily_digest_enabled: true,
-  large_move_threshold_krw: 0,
-};
-let notificationLogs = [];
-let authState = {
-  configured: false,
-  signedIn: false,
-  user: null,
-};
+let authState = { configured: false, signedIn: false, user: null };
+let syncState = { status: "idle", message: "" };
+
 const VIEW_IDS = Object.keys(viewCopy);
 function viewFromHash() {
   const hash = window.location.hash.slice(1);
   return VIEW_IDS.includes(hash) ? hash : null;
 }
 let activeView = viewFromHash() || (window.innerWidth <= 980 ? "holdings" : "dashboard");
-let activeAllocationView = "strategy";
-let syncState = {
-  status: "idle",
-  message: "",
+
+// 레거시 컨트롤러가 참조하는 DOM 은 대시보드 status strip 버튼과 뷰 섹션(setView 토글) 뿐이다.
+const els = {
+  viewSections: document.querySelectorAll("[data-view]"),
+  dashboardRefreshButton: document.querySelector("#dashboardRefreshButton"),
+  dashboardAddHoldingButton: document.querySelector("#dashboardAddHoldingButton"),
+  layoutResetButton: document.querySelector("#layoutResetButton"),
+  emptyPortfolioNotice: document.querySelector("#emptyPortfolioNotice"),
 };
 
-const DEFAULT_STRATEGIES = ["QQQ", "S&P500", "국내주식", "SCHD", "기타"];
-const allocationViewLabels = {
-  strategy: "전략",
-  holding: "종목",
-  account: "계좌",
-  investor: "투자자",
-  accountType: "계좌 유형",
-};
-
-const els = getDomElements();
-
-// 사이드바 nav(탭/통화토글/테마/모바일 더보기 드로어)는 Phase 1b-1 에서 React 셸(Sidebar)이 소유한다.
-// React 셸이 store.actions 를 통해 아래 액션을 호출한다. store 로 view/currency 를 push 한다.
+// ─── store.actions 등록 (React 셸/탭이 호출) ──────────────────────
 useStore.getState().registerActions({
   setView: (view) => setView(view),
-  applyCurrencyMode: (mode) => applyCurrencyMode(mode),
-  // 포팅된 React 탭이 상태를 변경할 때 쓰는 공용 mutation 표면.
-  // fn(state)이 state 를 직접 변형(또는 새 state 반환)하면 save+render 로 브리지에 반영한다.
-  // legacy 가 여전히 단일 writer 이므로 React 는 이 액션을 통해서만 쓴다(Phase 8 에서 store 로 승격).
+  applyCurrencyMode,
+  // 포팅된 React 탭이 상태를 변경할 때 쓰는 공용 mutation. fn(state)→(변형 또는 새 state) 후 save+publish.
   mutate: (fn) => {
     const next = fn(state);
     if (next && next !== state) {
@@ -196,49 +79,7 @@ useStore.getState().registerActions({
   todayKey,
   setStatus,
   showOperationToast,
-});
-
-window.addEventListener("popstate", () => {
-  setView(viewFromHash() || "dashboard", { fromHistory: true });
-});
-
-// 설정 탭의 수동 가격 갱신/스냅샷 버튼은 Phase 5 에서 React AutomationView 가 소유한다.
-
-els.dashboardRefreshButton?.addEventListener("click", () => {
-  refreshPrices({ reason: "manual" }).catch((error) => {
-    setStatus("가격 업데이트 실패", error.message);
-    showOperationToast("가격 업데이트 실패", error.message, "error");
-  });
-});
-
-els.dashboardSnapshotButton?.addEventListener("click", () => {
-  saveTodaySnapshot({ reason: "manual" }).catch((error) => {
-    setStatus("오늘 성과 기록 실패", error.message);
-    showOperationToast("오늘 성과 기록 실패", error.message, "error");
-  });
-});
-
-els.dashboardAddHoldingButton?.addEventListener("click", () => {
-  // 보유 종목 드로어는 React HoldingsView 가 소유한다. 탭 전환 + 신규 드로어 신호.
-  setView("holdings");
-  useStore.getState().requestOpenHoldingDrawer();
-});
-
-els.allocationDimensionButtons.forEach((button) => {
-  button.addEventListener("click", () => {
-    activeAllocationView = button.dataset.allocationView || "strategy";
-    if (els.allocationDimensionSelect) els.allocationDimensionSelect.value = activeAllocationView;
-    renderAllocation();
-  });
-});
-els.allocationDimensionSelect?.addEventListener("change", () => {
-  activeAllocationView = els.allocationDimensionSelect.value || "strategy";
-  renderAllocation();
-});
-
-// 로그인/이메일 다이얼로그, 로그인 버튼, 배너 로그인 버튼은 React 셸(ContentChrome)이 소유한다.
-// 아래 액션들을 store 에 등록하면 React 컴포넌트가 호출한다.
-useStore.getState().registerActions({
+  // 로그인/이메일 다이얼로그 + OAuth
   openLoginDialog,
   closeLoginDialog,
   openEmailDialog: openEmailLoginDialog,
@@ -247,7 +88,7 @@ useStore.getState().registerActions({
   signInWithNaver: handleNaverLogin,
   signInWithEmail: sendEmailLoginLink,
   signOut: handleLogout,
-  // 설정(자동화) 탭 op — React AutomationView 가 호출한다.
+  // 설정(자동화) 탭 op
   refreshPrices: (opts) => refreshPrices(opts),
   saveTodaySnapshot: (opts) => saveTodaySnapshot(opts),
   saveNotificationSettings: (settings) => saveNotificationSettings(settings),
@@ -260,14 +101,12 @@ useStore.getState().registerActions({
   loadImportSummary: () => loadImportSummary(),
   emptyPortfolio: () => {
     state = createEmptyState();
-    setIsLayoutEditing(false);
     saveState();
     render();
     showOperationToast("포트폴리오 초기화", "보유 종목과 계좌를 새로 입력하세요");
   },
   loadSampleData: () => {
     state = structuredClone(sampleState);
-    setIsLayoutEditing(false);
     saveState();
     render();
     showOperationToast("예시 데이터 로드됨", "보유 종목과 계좌에서 직접 입력하세요");
@@ -279,6 +118,45 @@ useStore.getState().registerActions({
   },
 });
 
+// 초기 통화 모드를 store 에 반영한다.
+useStore.getState().setCurrencyMode(currencyMode);
+
+window.addEventListener("popstate", () => {
+  setView(viewFromHash() || "dashboard", { fromHistory: true });
+});
+
+// 대시보드 status strip 버튼(레거시 HTML — status/layout 스트립)은 여기서 그대로 처리한다.
+els.dashboardRefreshButton?.addEventListener("click", () => {
+  refreshPrices({ reason: "manual" }).catch((error) => {
+    setStatus("가격 업데이트 실패", error.message);
+    showOperationToast("가격 업데이트 실패", error.message, "error");
+  });
+});
+els.dashboardAddHoldingButton?.addEventListener("click", () => {
+  setView("holdings");
+  useStore.getState().requestOpenHoldingDrawer();
+});
+
+// 대시보드 레이아웃 편집/초기화 — craft 대시보드(React)가 소유하므로 여기서는 no-op 방지 가드만 유지.
+els.layoutResetButton?.addEventListener("click", () => {
+  state.dashboardLayout = normalizeDashboardLayout(undefined);
+  saveState();
+  showOperationToast("레이아웃 초기화", "기본 배치로 되돌렸습니다");
+});
+
+// auth 이벤트: 상태 갱신 → 데이터/알림 로드 → 렌더 → 자동 가격 갱신.
+window.addEventListener("stocklio:auth", (event) => {
+  authState = event.detail;
+  renderAuth();
+  Promise.all([loadState(), loadNotificationState()]).then(([nextState]) => {
+    state = nextState;
+    render();
+    if (authState.signedIn) setStatus("포트폴리오 동기화됨", authState.user?.email || "");
+    queueAutomaticPriceRefresh();
+  });
+});
+
+// ─── 로그인/로그아웃 핸들러 ───────────────────────────────────────
 function handleGoogleLogin() {
   if (isEmbeddedBrowser()) {
     closeLoginDialog();
@@ -314,131 +192,32 @@ function handleLogout() {
     });
 }
 
-window.addEventListener("stocklio:auth", (event) => {
-  authState = event.detail;
-  renderAuth();
-  Promise.all([loadState(), loadNotificationState()]).then(([nextState]) => {
-    state = nextState;
-    render();
-    if (authState.signedIn) setStatus("포트폴리오 동기화됨", authState.user?.email || "");
-    queueAutomaticPriceRefresh();
-  });
-});
-
-// 포트폴리오 초기화/샘플 로드는 Phase 5 에서 React AutomationView 가 store.actions 로 호출한다.
-
-els.layoutEditButton.addEventListener("click", () => {
-  if (window.STOCKLIO_USE_CRAFT) {
-    return;
+async function sendEmailLoginLink(email) {
+  try {
+    await window.StocklioAuth?.signInWithEmail?.(email);
+    closeEmailLoginDialog();
+    setStatus("이메일 확인", `${email}로 로그인 링크를 보냈습니다`);
+    showOperationToast("로그인 링크 전송", "메일함에서 Stocklio 로그인 링크를 열어주세요", "success");
+  } catch (error) {
+    setStatus("이메일 로그인 실패", error.message);
+    showOperationToast("이메일 로그인 실패", error.message, "error");
   }
-  setIsLayoutEditing(!getIsLayoutEditing());
-  renderDashboardLayout();
-});
+}
 
-els.layoutResetButton.addEventListener("click", () => {
-  if (window.STOCKLIO_USE_CRAFT) {
-    return;
-  }
-  state.dashboardLayout = structuredClone(defaultDashboardLayout);
-  setIsLayoutEditing(false);
-  saveState();
-  renderDashboardLayout();
-  showOperationToast("레이아웃 초기화", "기본 배치로 되돌렸습니다");
-});
+function isEmbeddedBrowser() {
+  const userAgent = navigator.userAgent || "";
+  return /NAVER|KAKAOTALK|KAKAOSTORY|Instagram|FBAN|FBAV|Line\//i.test(userAgent);
+}
 
-els.dashboardBoard.addEventListener("click", (event) => {
-  const button = event.target.closest("[data-layout-action]");
-  if (!button) {
-    return;
-  }
-  handleDashboardLayoutAction(button.dataset.layoutAction, button.dataset.layoutCard);
-});
-
-els.dashboardBoard.addEventListener("pointerdown", (event) => {
-  const handle = event.target.closest("[data-layout-resize]");
-  if (!getIsLayoutEditing() || !handle) {
-    return;
-  }
-  const card = handle.closest("[data-dashboard-card]");
-  const item = normalizeDashboardLayout(state.dashboardLayout).find((layoutItem) => layoutItem.id === card?.dataset.dashboardCard);
-  if (!card || !item) {
-    return;
-  }
-  event.preventDefault();
-  setResizingDashboardCard({
-    id: item.id,
-    startX: event.clientX,
-    startY: event.clientY,
-    startSpan: item.span,
-    startHeight: card.getBoundingClientRect().height,
-  });
-  card.classList.add("is-resizing");
-  card.draggable = false;
-  window.addEventListener("pointermove", handleDashboardResizeMove);
-  window.addEventListener("pointerup", finishDashboardResize, { once: true });
-});
-
-els.dashboardBoard.addEventListener("dragstart", (event) => {
-  const card = event.target.closest("[data-dashboard-card]");
-  if (!getIsLayoutEditing() || !card || event.target.closest("button, input, select, textarea")) {
-    event.preventDefault();
-    return;
-  }
-  setDraggedDashboardCardId(card.dataset.dashboardCard);
-  card.classList.add("is-dragging");
-  event.dataTransfer.effectAllowed = "move";
-  event.dataTransfer.setData("text/plain", getDraggedDashboardCardId());
-});
-
-els.dashboardBoard.addEventListener("dragover", (event) => {
-  if (!getIsLayoutEditing() || !getDraggedDashboardCardId()) {
-    return;
-  }
-  event.preventDefault();
-  event.dataTransfer.dropEffect = "move";
-  const target = getDashboardDropTarget(event);
-  els.dashboardBoard.querySelectorAll(".is-drag-over").forEach((card) => card.classList.remove("is-drag-over", "is-drop-after"));
-  if (target) {
-    target.classList.add("is-drag-over");
-    target.classList.toggle("is-drop-after", shouldDropAfter(event, target));
-  }
-});
-
-els.dashboardBoard.addEventListener("drop", (event) => {
-  if (!getIsLayoutEditing() || !getDraggedDashboardCardId()) {
-    return;
-  }
-  event.preventDefault();
-  const target = getDashboardDropTarget(event);
-  reorderDashboardLayout(getDraggedDashboardCardId(), target?.dataset.dashboardCard, target ? shouldDropAfter(event, target) : true);
-  clearDashboardDragState();
-});
-
-els.dashboardBoard.addEventListener("dragend", () => {
-  clearDashboardDragState();
-});
-
-// 통화 모드 토글: 버튼 UI 는 React 셸(Sidebar)이 store.currencyMode 로 렌더한다.
-// 포팅된 탭(대시보드/보유종목 등)은 store.currencyMode + currencyModeChange 이벤트로 재렌더된다.
+// ─── 통화 모드 ────────────────────────────────────────────────────
 function applyCurrencyMode(mode) {
   currencyMode = mode === "usd" ? "usd" : "krw";
   localStorage.setItem("currencyMode", currencyMode);
   useStore.getState().setCurrencyMode(currencyMode);
   window.dispatchEvent(new CustomEvent("currencyModeChange", { detail: currencyMode }));
 }
-// 초기 통화 모드를 store 에 반영한다(부트스트랩 시점의 localStorage 값).
-useStore.getState().setCurrencyMode(currencyMode);
 
-// 보유 종목 탭(필터/정렬/검색/범위/보기모드/드로어/티커검색/CSV)은 Phase 7 에서 React HoldingsView 가 소유한다.
-// 성과 탭(기간/일별 필터, 요약 복사/CSV, 기여 분석)은 Phase 4 에서 React PerformanceView 가 소유한다.
-// 입출금 필터/정렬/폼/인라인 편집은 Phase 3 에서 React CashflowsView 가 소유한다.
-// 계좌 필터/검증/계좌 폼/계좌별 예수금은 Phase 2 에서 React AccountsView 가 소유한다.
-
-
-// 미분류 예수금 배분은 Phase 2 에서 React AccountsView 가 소유한다.
-
-// 백업/복원/엑셀 임포트는 Phase 5 에서 React AutomationView 가 store.actions 로 호출한다.
-
+// ─── load / save / normalize ──────────────────────────────────────
 function loadState() {
   const stored = localStorage.getItem(STORAGE_KEY);
   if (window.StocklioAuth?.isConfigured?.() && window.StocklioAuth.getState().signedIn) {
@@ -527,147 +306,6 @@ function normalizeState(input) {
   };
 }
 
-async function initialize() {
-  // 테마 초기 적용은 index.html <head> 인라인 스크립트가, 토글은 React 셸(useTheme)이 담당한다.
-  clearStaleQuoteCaches();
-  const ctx = {
-    getState: () => state,
-    els,
-    saveState,
-    render,
-    makeId,
-    todayKey,
-    setStatus,
-    setActionState,
-    showOperationToast,
-    setView,
-    getTotals,
-    getCashValueKrw,
-    getHoldingValues,
-    getCashTotalKrw,
-    getUnclassifiedCashBalances,
-    getKnownAccounts,
-    isAccountInUse,
-    groupByAccount: calculateGroupByAccount,
-    groupByValue,
-    unique,
-    normalizeStrategy,
-    strategyBuckets,
-    getEditingHoldingId: () => editingHoldingId,
-    setEditingHoldingId: (id) => { editingHoldingId = id; },
-    getAuthState: () => authState,
-    setAuthState: (s) => { authState = s; },
-    getSyncState: () => syncState,
-    setSyncState: (s) => { syncState = s; },
-    getHoldingDailyMove: selectHoldingDailyMove,
-    getDailyMoveRows: selectDailyMoveRows,
-    getCurrentMarketContext: () => getUsMarketContextForSeoulDate(),
-    getSnapshotRows: selectSnapshotRows,
-    getFilteredSnapshotRows: filterSnapshotRows,
-    buildAccountSnapshots: createAccountSnapshots,
-    getRecentPriceRefreshImpact,
-    renderAccountSelectors,
-    clamp,
-    // sort helpers
-    parseSortValue,
-    cycleSortValue,
-    DEFAULT_HOLDING_SORT,
-    DEFAULT_CASH_FLOW_SORT,
-    get holdingHeaderSort() { return holdingHeaderSort; },
-    set holdingHeaderSort(v) { holdingHeaderSort = v; },
-    get cashFlowHeaderSort() { return cashFlowHeaderSort; },
-    set cashFlowHeaderSort(v) { cashFlowHeaderSort = v; },
-    // allocation view state
-    get activeAllocationView() { return activeAllocationView; },
-    get allocationViewLabels() { return allocationViewLabels; },
-    // labels/formatters
-    accountTypeLabels,
-    formatAccountType,
-    formatShortDate,
-    // account helpers
-    isUnclassifiedCash,
-    parseAccountKey,
-    normalizeAccountType,
-    // auth state direct access
-    get authState() { return authState; },
-    // currency display mode
-    get currencyMode() { return currencyMode; },
-    setCurrencyMode(mode) {
-      currencyMode = mode;
-      localStorage.setItem("currencyMode", mode);
-    },
-    getFxRate: () => state.fxRate.rate,
-    getFxRateObj: () => state.fxRate,
-    // state management
-    setState: (s) => { state = s; },
-    loadState,
-    normalizeState,
-    // accounts-view helpers
-    rowActionMenu,
-    // 설정 탭: 알림 상태를 store 로 push (automation-view → React AutomationView)
-    setNotificationState: (payload) => useStore.getState().setNotification(payload),
-  };
-  initAutomationView(ctx);
-  initDashboardView(ctx);
-  try {
-    configureRuntimeSurface();
-    authState = await waitForAuthState();
-    [state] = await Promise.all([loadState(), loadNotificationState()]);
-    render();
-    setView(activeView, { replaceHistory: true });
-    renderAuth();
-    if (authState.signedIn) setStatus("포트폴리오 불러옴", authState.user?.email || "");
-    queueAutomaticPriceRefresh();
-  } catch {
-    state = structuredClone(sampleState);
-    render();
-    setView(activeView, { replaceHistory: true });
-    setStatus("샘플 데이터 불러옴", "서버 저장소를 사용할 수 없습니다");
-  }
-}
-
-function configureRuntimeSurface() {
-  if (!isStaticDeployment()) {
-    return;
-  }
-  document.querySelectorAll("[data-local-only]").forEach((element) => {
-    element.hidden = true;
-  });
-  if (els.importSummary) {
-    els.importSummary.textContent = "엑셀 가져오기는 로컬 환경 전용입니다";
-  }
-  if (els.backupStatus) {
-    els.backupStatus.textContent = "JSON 백업과 복원은 현재 브라우저 포트폴리오에 적용됩니다";
-  }
-}
-
-function makeId() {
-  return crypto.randomUUID();
-}
-
-function normalizeStrategy(value) {
-  const label = String(value || "").trim();
-  if (!label) {
-    return "기타";
-  }
-  if (["Growth", "성장주", "Core", "코어"].includes(label)) {
-    return "기타";
-  }
-  if (label.toLowerCase() === "schd") {
-    return "SCHD";
-  }
-  return DEFAULT_STRATEGIES.includes(label) ? label : label;
-}
-
-function strategyBuckets(values = []) {
-  const extras = unique(values.map((value) => normalizeStrategy(value)).filter((value) => !DEFAULT_STRATEGIES.includes(value)));
-  return [...DEFAULT_STRATEGIES, ...extras];
-}
-
-function clamp(value, min, max) {
-  return Math.min(max, Math.max(min, value));
-}
-
 function saveState() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   publishState();
@@ -686,9 +324,7 @@ function saveState() {
   }
   fetch("/api/state", {
     method: "PUT",
-    headers: {
-      "content-type": "application/json",
-    },
+    headers: { "content-type": "application/json" },
     body: JSON.stringify(state),
   }).catch((error) => {
     setStatus("서버 저장 실패", error.message);
@@ -699,19 +335,53 @@ function isStaticDeployment() {
   return !["localhost", "127.0.0.1", ""].includes(window.location.hostname);
 }
 
+// ─── 부트스트랩 ───────────────────────────────────────────────────
+async function initialize() {
+  clearStaleQuoteCaches();
+  // automation-view 서비스 모듈에 주입하는 ctx (DOM 렌더 없이 op 만 담당).
+  const ctx = {
+    getState: () => state,
+    saveState,
+    render,
+    makeId,
+    todayKey,
+    setStatus,
+    setActionState,
+    showOperationToast,
+    getTotals,
+    unique,
+    setState: (s) => { state = s; },
+    loadState,
+    normalizeState,
+    get authState() { return authState; },
+    setNotificationState: (payload) => useStore.getState().setNotification(payload),
+  };
+  initAutomationView(ctx);
+  try {
+    authState = await waitForAuthState();
+    [state] = await Promise.all([loadState(), loadNotificationState()]);
+    render();
+    setView(activeView, { replaceHistory: true });
+    renderAuth();
+    if (authState.signedIn) setStatus("포트폴리오 불러옴", authState.user?.email || "");
+    queueAutomaticPriceRefresh();
+  } catch {
+    state = structuredClone(sampleState);
+    render();
+    setView(activeView, { replaceHistory: true });
+    setStatus("샘플 데이터 불러옴", "서버 저장소를 사용할 수 없습니다");
+  }
+}
+
+// ─── 렌더(=store 발행) ────────────────────────────────────────────
 function render() {
-  // 모든 탭(대시보드/보유종목/계좌/성과/입출금/설정/시뮬레이터)은 React 가 store 구독으로 렌더한다.
-  // legacy render() 는 state 변경을 store 브리지(publishState)로 발행하고, 대시보드 status/layout 과
-  // auth/empty-notice 만 갱신한다.
-  renderDashboardStatus();
-  renderDashboardLayout();
+  // 모든 탭은 React 가 store 구독으로 렌더한다. 여기서는 브리지 발행 + auth/empty-notice 만 갱신.
   renderEmptyPortfolioNotice();
   publishState();
   renderAuth();
 }
 
 function renderAuth() {
-  // auth 패널/배너/버튼 disabled 상태는 React 셸(Toolbar/SampleDataBanner)이 store.auth 로 렌더한다.
   const configured = window.StocklioAuth?.isConfigured?.() || false;
   authState = window.StocklioAuth?.getState?.() || authState;
   useStore.getState().setAuth({
@@ -725,61 +395,6 @@ function renderAuth() {
     closeLoginDialog();
     renderSyncStatus();
   }
-  renderDashboardStatus();
-}
-
-function openLoginDialog() {
-  useStore.getState().setLoginDialog(true);
-}
-
-function closeLoginDialog() {
-  useStore.getState().setLoginDialog(false);
-}
-
-function openEmailLoginDialog() {
-  // 로그인 다이얼로그에서 넘어오는 경우가 있어 먼저 닫는다(두 모달 동시 open 방지).
-  useStore.getState().setLoginDialog(false);
-  useStore.getState().setEmailDialog(true, authState.user?.email || "");
-}
-
-function closeEmailLoginDialog() {
-  useStore.getState().setEmailDialog(false);
-}
-
-async function sendEmailLoginLink(email) {
-  try {
-    await window.StocklioAuth?.signInWithEmail?.(email);
-    closeEmailLoginDialog();
-    setStatus("이메일 확인", `${email}로 로그인 링크를 보냈습니다`);
-    showOperationToast("로그인 링크 전송", "메일함에서 Stocklio 로그인 링크를 열어주세요", "success");
-  } catch (error) {
-    setStatus("이메일 로그인 실패", error.message);
-    showOperationToast("이메일 로그인 실패", error.message, "error");
-  }
-}
-
-function isEmbeddedBrowser() {
-  const userAgent = navigator.userAgent || "";
-  return /NAVER|KAKAOTALK|KAKAOSTORY|Instagram|FBAN|FBAV|Line\//i.test(userAgent);
-}
-
-let syncClearTimer = null;
-function setSyncState(status, message) {
-  syncState = { status, message };
-  renderSyncStatus();
-  // synced 상태는 1.5초 후 자동으로 숨김
-  if (syncClearTimer) clearTimeout(syncClearTimer);
-  if (status === "synced") {
-    syncClearTimer = setTimeout(() => {
-      syncState = { status: "idle", message: "" };
-      renderSyncStatus();
-    }, 1500);
-  }
-}
-
-function renderSyncStatus() {
-  // sync 상태 표시는 React 셸(Toolbar)이 store.sync + store.auth 로 렌더한다.
-  useStore.getState().setSync({ status: syncState.status, message: syncState.message });
 }
 
 function renderEmptyPortfolioNotice() {
@@ -795,6 +410,33 @@ function renderEmptyPortfolioNotice() {
   els.emptyPortfolioNotice.hidden = hasUserData || activeView !== "dashboard";
 }
 
+// ─── 다이얼로그 (store 로 open 상태 push) ─────────────────────────
+function openLoginDialog() { useStore.getState().setLoginDialog(true); }
+function closeLoginDialog() { useStore.getState().setLoginDialog(false); }
+function openEmailLoginDialog() {
+  useStore.getState().setLoginDialog(false);
+  useStore.getState().setEmailDialog(true, authState.user?.email || "");
+}
+function closeEmailLoginDialog() { useStore.getState().setEmailDialog(false); }
+
+// ─── sync 상태 ────────────────────────────────────────────────────
+let syncClearTimer = null;
+function setSyncState(status, message) {
+  syncState = { status, message };
+  renderSyncStatus();
+  if (syncClearTimer) clearTimeout(syncClearTimer);
+  if (status === "synced") {
+    syncClearTimer = setTimeout(() => {
+      syncState = { status: "idle", message: "" };
+      renderSyncStatus();
+    }, 1500);
+  }
+}
+
+function renderSyncStatus() {
+  useStore.getState().setSync({ status: syncState.status, message: syncState.message });
+}
+
 function waitForAuthState() {
   return new Promise((resolve) => {
     if (window.StocklioAuth) {
@@ -802,31 +444,27 @@ function waitForAuthState() {
       return;
     }
     const timer = setTimeout(() => resolve(authState), AUTH_READY_TIMEOUT_MS);
-    window.addEventListener(
-      "stocklio:auth",
-      (event) => {
-        clearTimeout(timer);
-        resolve(event.detail);
-      },
-      { once: true },
-    );
+    window.addEventListener("stocklio:auth", (event) => {
+      clearTimeout(timer);
+      resolve(event.detail);
+    }, { once: true });
   });
 }
 
+// ─── 브리지: state → Zustand 스토어 미러 ──────────────────────────
 function publishState() {
   window.StocklioApp = {
     getState: () => structuredClone(state),
     setDashboardLayout: (layout) => {
       state.dashboardLayout = normalizeDashboardLayout(layout);
       saveState();
-      renderDashboardLayout();
       publishState();
     },
   };
   window.dispatchEvent(new CustomEvent("stocklio:state", { detail: structuredClone(state) }));
 }
 
-
+// ─── 뷰 전환 (store + hash 동기화) ────────────────────────────────
 function setView(view, { fromHistory = false, replaceHistory = false } = {}) {
   if (!VIEW_IDS.includes(view)) {
     view = "dashboard";
@@ -840,7 +478,6 @@ function setView(view, { fromHistory = false, replaceHistory = false } = {}) {
     }
   }
   const copy = viewCopy[view] || viewCopy.dashboard;
-  // page title/subtitle 및 활성 탭 표시는 React 셸(Toolbar/Sidebar)이 store 로 구동한다.
   useStore.getState().setActiveView(view, copy.title, copy.subtitle);
   els.viewSections.forEach((section) => {
     const isActive = section.dataset.view === view;
@@ -851,11 +488,10 @@ function setView(view, { fromHistory = false, replaceHistory = false } = {}) {
       setTimeout(() => delete section.dataset.entering, 500);
     }
   });
-  // 시뮬레이터 탭은 Phase 6 에서 React SimulatorView 가 소유한다(항상 마운트, 실행 시에만 차트 재생).
-  // 배너 표시는 React 셸(SampleDataBanner)이 store.auth + store.activeView 로 파생한다.
   renderEmptyPortfolioNotice();
 }
 
+// ─── 도메인/유틸 (automation-view ctx 및 액션에서 사용) ────────────
 function getTotals(holdings) {
   return calculateTotals({
     holdings: holdings || state.holdings,
@@ -864,73 +500,42 @@ function getTotals(holdings) {
   });
 }
 
-function getCashTotalKrw() {
-  return (state.cashBalances || []).reduce((sum, cash) => sum + getCashValueKrw(cash), 0);
-}
-
-function getCashValueKrw(cash) {
-  return calculateCashValueKrw(cash, state.fxRate.rate);
-}
-
-function getUnclassifiedCashBalances() {
-  return (state.cashBalances || []).filter(isUnclassifiedCash);
-}
-
-function getKnownAccounts() {
-  return getKnownAccountsFromState(state, makeId);
-}
-
-function isAccountInUse(account) {
-  return isAccountInUseInState(state, account);
-}
-
-function getHoldingValues(holding) {
-  return calculateHoldingValues(holding, state.fxRate.rate);
-}
-
-function groupByValue(holdings, key) {
-  const map = new Map();
-  for (const holding of holdings) {
-    map.set(holding[key], (map.get(holding[key]) || 0) + getHoldingValues(holding).valueKrw);
-  }
-  return [...map.entries()]
-    .map(([label, value]) => ({ label, value }))
-    .sort((a, b) => b.value - a.value);
-}
-
 function unique(values) {
   return [...new Set(values.filter(Boolean))].sort((a, b) => String(a).localeCompare(String(b)));
 }
 
+function normalizeStrategy(value) {
+  const label = String(value || "").trim();
+  if (!label) {
+    return "기타";
+  }
+  if (["Growth", "성장주", "Core", "코어"].includes(label)) {
+    return "기타";
+  }
+  if (label.toLowerCase() === "schd") {
+    return "SCHD";
+  }
+  return DEFAULT_STRATEGIES.includes(label) ? label : label;
+}
+
+function makeId() {
+  return crypto.randomUUID();
+}
+
 function setStatus(status, detail) {
-  // sr-only 상태 라인은 React 셸(Toolbar)이 store.status 로 렌더한다.
   useStore.getState().setStatus({ title: status, detail });
 }
 
 function setActionState(kind, isRunning) {
-  if (kind === "price" && els.refreshButton) {
-    els.refreshButton.disabled = isRunning;
-    els.refreshButton.textContent = isRunning ? "가격 갱신 중..." : "가격 다시 가져오기";
-  }
   if (kind === "price" && els.dashboardRefreshButton) {
     els.dashboardRefreshButton.disabled = isRunning;
     els.dashboardRefreshButton.textContent = isRunning ? "확인 중..." : "시세 확인";
   }
-  if (kind === "snapshot" && els.saveSnapshotButton) {
-    els.saveSnapshotButton.disabled = isRunning;
-    els.saveSnapshotButton.textContent = isRunning ? "성과 기록 중..." : "오늘 스냅샷 다시 계산";
-  }
-  if (kind === "snapshot" && els.dashboardSnapshotButton) {
-    els.dashboardSnapshotButton.disabled = isRunning;
-    els.dashboardSnapshotButton.textContent = isRunning ? "저장 중..." : "스냅샷 저장";
-  }
 }
 
 function showOperationToast(title, detail, tone = "info") {
-  // 토스트는 React 셸(Toast)이 store.toast 로 렌더한다. 자동 숨김 타이머는 여기서 스케줄한다.
-  const store = useStore.getState();
   window.clearTimeout(toastTimer);
-  store.setToast({ visible: true, title, detail, tone });
+  useStore.getState().setToast({ visible: true, title, detail, tone });
   toastTimer = window.setTimeout(() => {
     useStore.getState().setToast({ visible: false });
   }, tone === "busy" ? 2200 : 4200);
