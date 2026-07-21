@@ -42,18 +42,9 @@ export function getPriceRefreshPromise() {
   return priceRefreshPromise;
 }
 
-export function renderAutomation() {
-  const state = _ctx.getState();
-  const els = _ctx.els;
-  const automation = state.automation || {};
-  const storageLabel = _ctx.authState.signedIn ? "클라우드 저장" : "로컬 저장";
-  els.automationCurrent.textContent = `${storageLabel} · 스냅샷 ${state.portfolioSnapshots.length}개 · 보유 ${state.holdings.length}개 · 예수금 ${(state.cashBalances || []).length}개`;
-  els.automationSchedule.textContent = `매일 ${automation.snapshotTime || "09:10"} ${automation.timezone || "Asia/Seoul"}`;
-  els.automationResult.textContent = automation.lastRunAt
-    ? `${automation.lastResult || "자동화 실행 완료"} · ${formatAsOf(automation.lastRunAt)}`
-    : automation.lastResult || "자동 기록 대기 중";
-
-}
+// 설정(자동화) 탭 UI 는 Phase 5 에서 React AutomationView 가 렌더한다.
+// 이 모듈은 가격 갱신/스냅샷/알림/백업/임포트 같은 서비스 op 만 담당한다(DOM 렌더 없음).
+export function renderAutomation() {}
 
 export function renderDashboardStatus() {
   if (window.STOCKLIO_USE_CRAFT) return;
@@ -104,60 +95,13 @@ export function renderDashboardStatus() {
   }
 }
 
-export function renderPriceLogs() {
-  const state = _ctx.getState();
-  const els = _ctx.els;
-  const logs = [...(state.priceUpdateLogs || [])].slice(-20).reverse();
-  els.priceLogsBody.innerHTML = logs.length
-    ? logs
-        .map((log) => `<tr>
-          <td>${formatAsOf(log.at)}</td>
-          <td>${escapeHtml(log.symbol)}</td>
-          <td class="${log.status === "success" ? "positive" : "negative"}">${log.status === "success" ? "성공" : "실패"}</td>
-          <td>${log.price ? formatNumber(log.price, 4) : ""}</td>
-          <td>${escapeHtml(log.message || log.source || "")}</td>
-        </tr>`)
-        .join("")
-    : `<tr><td colspan="5">가격 업데이트 로그가 없습니다</td></tr>`;
-}
+// 가격 로그/알림 표는 React AutomationView 가 렌더한다.
+export function renderPriceLogs() {}
+export function renderNotifications() {}
 
-export function renderNotifications() {
-  const els = _ctx.els;
-  if (!els.notificationForm) {
-    return;
-  }
-  const signedIn = Boolean(_ctx.authState.signedIn);
-  els.telegramChatId.value = notificationSettings.telegram_chat_id || "";
-  els.largeMoveThreshold.value = Number(notificationSettings.large_move_threshold_krw || 0) || "";
-  els.telegramEnabled.checked = Boolean(notificationSettings.telegram_enabled);
-  els.dailyDigestEnabled.checked = notificationSettings.daily_digest_enabled !== false;
-  els.notificationForm.querySelectorAll("input, button").forEach((control) => {
-    control.disabled = !signedIn;
-  });
-  if (els.notificationLockedNotice) {
-    els.notificationLockedNotice.hidden = signedIn;
-  }
-  els.notificationForm.hidden = !signedIn;
-  els.notificationStatus.textContent = signedIn
-    ? notificationSettings.telegram_enabled
-      ? "매일 스냅샷 후 발송"
-      : "알림 꺼짐"
-    : "로그인 후 설정 가능";
-  const latest = notificationLogs[0];
-  els.notificationLogSummary.textContent = latest
-    ? `${latest.status === "success" ? "성공" : latest.status === "skipped" ? "건너뜀" : "실패"} · ${formatAsOf(latest.sent_at || latest.created_at)}`
-    : "발송 기록이 없습니다";
-  els.notificationLogsBody.innerHTML = notificationLogs.length
-    ? notificationLogs
-        .slice(0, 8)
-        .map((log) => `<tr>
-          <td>${formatAsOf(log.sent_at || log.created_at)}</td>
-          <td>${log.message_type === "test" ? "테스트" : "일일 요약"}</td>
-          <td class="${log.status === "success" ? "positive" : log.status === "error" ? "negative" : ""}">${formatNotificationStatus(log.status)}</td>
-          <td>${escapeHtml(log.error_message || log.message_preview || "")}</td>
-        </tr>`)
-        .join("")
-    : `<tr><td colspan="4">발송 기록이 없습니다</td></tr>`;
+// AutomationView 가 알림 상태/로그를 store 로 push 하도록 돕는 헬퍼.
+function publishNotificationState() {
+  _ctx.setNotificationState?.({ settings: { ...notificationSettings }, logs: notificationLogs });
 }
 
 export function formatNotificationStatus(status) {
@@ -170,14 +114,8 @@ export function formatNotificationStatus(status) {
   return "실패";
 }
 
-export function renderReconciliation() {
-  const state = _ctx.getState();
-  const els = _ctx.els;
-  const totals = _ctx.getTotals(state.holdings);
-  const accountsTotal = _ctx.groupByAccount(state.holdings).reduce((sum, item) => sum + item.valueKrw, 0);
-  const diff = totals.valueKrw - accountsTotal;
-  els.reconcileSummary.textContent = `전체 총자산 ${formatKrw(totals.valueKrw)} · 계좌 합계 ${formatKrw(accountsTotal)} · 차이 ${formatKrw(diff)}`;
-}
+// 검증 리포트는 React AutomationView 가 계산/렌더한다.
+export function renderReconciliation() {}
 
 export async function saveTodaySnapshot({ reason = "manual" } = {}) {
   if (snapshotSavePromise) {
@@ -424,13 +362,10 @@ export function getRecentPriceRefreshImpact() {
   return impact;
 }
 
+// 백업/임포트 op 는 상태 문자열을 반환한다(React AutomationView 가 표시). hasToken 으로 확정 버튼 활성화.
 export async function exportBackup() {
   const state = _ctx.getState();
-  const els = _ctx.els;
-  const payload = {
-    exportedAt: new Date().toISOString(),
-    state,
-  };
+  const payload = { exportedAt: new Date().toISOString(), state };
   const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
@@ -438,54 +373,40 @@ export async function exportBackup() {
   link.download = `stock-portfolio-backup-${_ctx.todayKey()}.json`;
   link.click();
   URL.revokeObjectURL(url);
-  els.backupStatus.textContent = `백업 생성 완료 · ${formatAsOf(payload.exportedAt)}`;
+  return `백업 생성 완료 · ${formatAsOf(payload.exportedAt)}`;
 }
 
 export async function restoreBackup(file) {
-  const els = _ctx.els;
-  if (!file) {
-    return;
-  }
+  if (!file) return null;
   try {
     const payload = JSON.parse(await file.text());
     const nextState = _ctx.normalizeState(payload.state || payload);
-    const state = _ctx.getState();
-    // 상태 교체 — ctx를 통해 처리
     _ctx.setState(nextState);
     _ctx.saveState();
     _ctx.render();
-    els.backupStatus.textContent = `복원 완료 · ${file.name}`;
     _ctx.setStatus("백업 복원 완료", "현재 포트폴리오에 반영했습니다");
+    return `복원 완료 · ${file.name}`;
   } catch (error) {
-    els.backupStatus.textContent = `복원 실패 · ${error.message}`;
     _ctx.setStatus("백업 복원 실패", error.message);
+    return `복원 실패 · ${error.message}`;
   }
 }
 
 export async function loadImportSummary() {
-  const els = _ctx.els;
-  const { formatKrw: fmtKrw } = { formatKrw };
   try {
     const summary = await fetchJson("/api/import/summary");
-    els.importSummary.textContent = `보유 ${summary.holdings}개 · 스냅샷 ${summary.snapshots}개 · 예수금 ${summary.cashBalances}개 · 총자산 ${formatKrw(summary.migratedTotalAssetsKrw)}`;
+    return `보유 ${summary.holdings}개 · 스냅샷 ${summary.snapshots}개 · 예수금 ${summary.cashBalances}개 · 총자산 ${formatKrw(summary.migratedTotalAssetsKrw)}`;
   } catch (error) {
-    els.importSummary.textContent = `검증 리포트를 불러오지 못했습니다 · ${error.message}`;
+    return `검증 리포트를 불러오지 못했습니다 · ${error.message}`;
   }
 }
 
 export async function previewImport(file) {
-  const els = _ctx.els;
-  if (!file) {
-    return;
-  }
-  els.importSummary.textContent = `${file.name} 검증 중...`;
-  els.commitImportButton.disabled = true;
+  if (!file) return { summary: null, canCommit: false };
   try {
     const response = await fetch("/api/import/preview", {
       method: "POST",
-      headers: {
-        "content-type": file.type || "application/octet-stream",
-      },
+      headers: { "content-type": file.type || "application/octet-stream" },
       body: await file.arrayBuffer(),
     });
     if (!response.ok) {
@@ -496,18 +417,15 @@ export async function previewImport(file) {
     latestImportPreviewToken = result.token;
     const summary = result.summary;
     const names = result.preview.firstHoldingNames.length ? ` · 예: ${result.preview.firstHoldingNames.join(", ")}` : "";
-    els.importSummary.textContent = `Preview 완료 · 보유 ${summary.holdings}개 · 스냅샷 ${summary.snapshots}개 · 예수금 ${summary.cashBalances}개 · 총자산 ${formatKrw(summary.migratedTotalAssetsKrw)}${names}`;
-    els.commitImportButton.disabled = false;
     _ctx.setStatus("Import preview 완료", "확정 전까지 현재 포트폴리오는 바뀌지 않습니다");
+    return { summary: `Preview 완료 · 보유 ${summary.holdings}개 · 스냅샷 ${summary.snapshots}개 · 예수금 ${summary.cashBalances}개 · 총자산 ${formatKrw(summary.migratedTotalAssetsKrw)}${names}`, canCommit: true };
   } catch (error) {
-    els.importSummary.textContent = `Preview 실패 · ${error.message}`;
     _ctx.setStatus("Import preview 실패", error.message);
+    return { summary: `Preview 실패 · ${error.message}`, canCommit: false };
   }
 }
 
 export async function commitImport() {
-  const els = _ctx.els;
-  els.commitImportButton.disabled = true;
   try {
     const result = await fetchJson("/api/import/commit", {
       method: "POST",
@@ -518,11 +436,11 @@ export async function commitImport() {
     const newState = await _ctx.loadState();
     _ctx.setState(newState);
     _ctx.render();
-    els.importSummary.textContent = `Import 확정 완료 · 보유 ${result.holdings}개 · 스냅샷 ${result.snapshots}개 · 예수금 ${result.cashBalances}개`;
     _ctx.setStatus("Import 확정 완료", "새 포트폴리오를 저장했습니다");
+    return { summary: `Import 확정 완료 · 보유 ${result.holdings}개 · 스냅샷 ${result.snapshots}개 · 예수금 ${result.cashBalances}개`, done: true };
   } catch (error) {
-    els.importSummary.textContent = `Import 확정 실패 · ${error.message}`;
     _ctx.setStatus("Import 확정 실패", error.message);
+    return { summary: `Import 확정 실패 · ${error.message}`, done: false };
   }
 }
 
@@ -557,94 +475,65 @@ export async function loadNotificationState() {
     notificationLogs = [];
     _ctx.setStatus("알림 설정 불러오기 실패", error.message);
   }
+  publishNotificationState();
 }
 
-export async function saveNotificationSettings() {
-  const els = _ctx.els;
+// React AutomationView 가 폼 값을 인자로 넘긴다.
+export async function saveNotificationSettings(nextSettings) {
   if (!_ctx.authState.signedIn) {
     throw new Error("로그인 후 알림을 설정할 수 있습니다");
   }
-  const nextSettings = {
-    telegram_chat_id: els.telegramChatId.value.trim(),
-    telegram_enabled: els.telegramEnabled.checked,
-    daily_digest_enabled: els.dailyDigestEnabled.checked,
-    large_move_threshold_krw: Number(els.largeMoveThreshold.value || 0),
-  };
-  els.saveNotificationButton.disabled = true;
-  try {
-    await window.StocklioAuth.saveNotificationSettings(nextSettings);
-    notificationSettings = nextSettings;
-    _ctx.setStatus("알림 설정 저장됨", notificationSettings.telegram_enabled ? "매일 스냅샷 후 텔레그램으로 발송합니다" : "알림이 꺼져 있습니다");
-    _ctx.showOperationToast("알림 설정 저장", "텔레그램 알림 설정을 저장했습니다", "success");
-    await loadNotificationState();
-    renderNotifications();
-  } finally {
-    els.saveNotificationButton.disabled = false;
-  }
+  await window.StocklioAuth.saveNotificationSettings(nextSettings);
+  notificationSettings = nextSettings;
+  _ctx.setStatus("알림 설정 저장됨", notificationSettings.telegram_enabled ? "매일 스냅샷 후 텔레그램으로 발송합니다" : "알림이 꺼져 있습니다");
+  _ctx.showOperationToast("알림 설정 저장", "텔레그램 알림 설정을 저장했습니다", "success");
+  await loadNotificationState();
 }
 
-export async function sendTestNotification() {
-  const els = _ctx.els;
+export async function sendTestNotification(chatId) {
   if (!_ctx.authState.signedIn) {
     throw new Error("로그인 후 테스트할 수 있습니다");
   }
-  const chatId = els.telegramChatId.value.trim();
   if (!chatId) {
     throw new Error("Telegram chat id를 입력하세요");
   }
-  els.testNotificationButton.disabled = true;
   _ctx.setStatus("테스트 알림 전송 중", "텔레그램으로 메시지를 보내고 있습니다");
-  try {
-    const token = window.StocklioAuth.getAccessToken?.();
-    const result = await fetch("/api/notifications/test", {
-      method: "POST",
-      headers: {
-        "content-type": "application/json",
-        authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({ chatId }),
-    });
-    const payload = await result.json().catch(() => ({}));
-    if (!result.ok) {
-      throw new Error(formatNotificationError(payload.error || `HTTP ${result.status}`));
-    }
-    _ctx.setStatus("테스트 알림 전송 완료", "텔레그램에서 메시지를 확인하세요");
-    _ctx.showOperationToast("테스트 알림 전송", "텔레그램으로 테스트 메시지를 보냈습니다", "success");
-    await loadNotificationState();
-    renderNotifications();
-  } finally {
-    els.testNotificationButton.disabled = false;
+  const token = window.StocklioAuth.getAccessToken?.();
+  const result = await fetch("/api/notifications/test", {
+    method: "POST",
+    headers: { "content-type": "application/json", authorization: `Bearer ${token}` },
+    body: JSON.stringify({ chatId }),
+  });
+  const payload = await result.json().catch(() => ({}));
+  if (!result.ok) {
+    throw new Error(formatNotificationError(payload.error || `HTTP ${result.status}`));
   }
+  _ctx.setStatus("테스트 알림 전송 완료", "텔레그램에서 메시지를 확인하세요");
+  _ctx.showOperationToast("테스트 알림 전송", "텔레그램으로 테스트 메시지를 보냈습니다", "success");
+  await loadNotificationState();
 }
 
+// chat id 를 찾아 반환한다(React 가 폼에 반영).
 export async function findTelegramChatId() {
-  const els = _ctx.els;
   if (!_ctx.authState.signedIn) {
     throw new Error("로그인 후 chat id를 찾을 수 있습니다");
   }
-  els.findTelegramChatButton.disabled = true;
   _ctx.setStatus("chat id 찾는 중", "@stocklio_alarm_bot에 /start를 보낸 대화를 확인합니다");
-  try {
-    const token = window.StocklioAuth.getAccessToken?.();
-    const result = await fetch("/api/notifications/telegram-updates", {
-      headers: {
-        authorization: `Bearer ${token}`,
-      },
-    });
-    const payload = await result.json().catch(() => ({}));
-    if (!result.ok) {
-      throw new Error(formatNotificationError(payload.error || `HTTP ${result.status}`));
-    }
-    const chat = payload.chats?.[0];
-    if (!chat) {
-      throw new Error("@stocklio_alarm_bot에 /start를 먼저 보내고 다시 눌러주세요");
-    }
-    els.telegramChatId.value = chat.id;
-    _ctx.setStatus("chat id 입력 완료", `${chat.name || "텔레그램 대화"} · ${chat.id}`);
-    _ctx.showOperationToast("chat id 찾기 완료", "텔레그램 chat id를 입력했습니다. 설정 저장 또는 테스트 메시지를 눌러주세요", "success");
-  } finally {
-    els.findTelegramChatButton.disabled = false;
+  const token = window.StocklioAuth.getAccessToken?.();
+  const result = await fetch("/api/notifications/telegram-updates", {
+    headers: { authorization: `Bearer ${token}` },
+  });
+  const payload = await result.json().catch(() => ({}));
+  if (!result.ok) {
+    throw new Error(formatNotificationError(payload.error || `HTTP ${result.status}`));
   }
+  const chat = payload.chats?.[0];
+  if (!chat) {
+    throw new Error("@stocklio_alarm_bot에 /start를 먼저 보내고 다시 눌러주세요");
+  }
+  _ctx.setStatus("chat id 입력 완료", `${chat.name || "텔레그램 대화"} · ${chat.id}`);
+  _ctx.showOperationToast("chat id 찾기 완료", "텔레그램 chat id를 입력했습니다. 설정 저장 또는 테스트 메시지를 눌러주세요", "success");
+  return String(chat.id);
 }
 
 function formatNotificationError(error) {
