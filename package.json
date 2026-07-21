@@ -8,8 +8,10 @@
   },
   "scripts": {
     "build:css": "node scripts/build-css.mjs",
-    "dev": "npm run build:css && PORT=4173 node server.mjs",
-    "start": "npm run build:css && PORT=4173 node server.mjs",
+    "dev": "npm run build:css && node scripts/dev.mjs",
+    "dev:api": "PORT=4173 node server.mjs",
+    "dev:vite": "vite",
+    "start": "PORT=4173 node server.mjs",
     "build": "npm run build:css && node scripts/build-static.mjs",
     "check": "node scripts/check-js.mjs && node --test tests/domain.test.mjs && npm run build",
     "test:product": "node scripts/product-smoke.mjs",
@@ -17,7 +19,6 @@
     "test:migration": "${PYTHON_BIN:-python3} -m unittest tests/test_migration.py"
   },
   "dependencies": {
-    "@craftjs/core": "^0.2.12",
     "@supabase/supabase-js": "^2.105.4",
     "@vitejs/plugin-react": "^6.0.1",
     "chart.js": "^4.5.1",
@@ -25,7 +26,8 @@
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
     "tslib": "^2.8.1",
-    "vite": "^8.0.12"
+    "vite": "^8.0.12",
+    "zustand": "^5.0.14"
   },
   "devDependencies": {
     "playwright": "^1.60.0"

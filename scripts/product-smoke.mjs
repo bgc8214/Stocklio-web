@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
 import { once } from "node:events";
-import { access } from "node:fs/promises";
+import { access, readdir } from "node:fs/promises";
 import { chromium } from "playwright";
 
 const port = Number(process.env.PORT || 4273);
@@ -34,11 +34,13 @@ try {
 
 async function verifyStaticBuild() {
   const root = new URL("..", import.meta.url);
-  await Promise.all([
-    access(new URL("dist/index.html", root)),
-    access(new URL("dist/src/app/stocklio-app.js", root)),
-    access(new URL("dist/src/domain/portfolio-core.js", root)),
-  ]);
+  const assetsDir = new URL("dist/assets/", root);
+  await access(new URL("dist/index.html", root));
+  // Vite 는 해시된 진입 번들(index-*.js)을 생성한다.
+  const entries = await readdir(assetsDir);
+  if (!entries.some((name) => /^index-.*\.js$/.test(name))) {
+    throw new Error("dist/assets 에 Vite 진입 번들(index-*.js)이 없습니다");
+  }
 }
 
 async function waitForServer() {
