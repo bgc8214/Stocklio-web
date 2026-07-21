@@ -6,6 +6,31 @@ import {
   getTotals as calcTotals,
 } from "../../domain/portfolio-core.js";
 import { accountKeyFor, getKnownAccounts as knownAccountsOf, isAccountInUse as accountInUse } from "../../app/accounts.js";
+import { getHoldingDailyMove as calcHoldingDailyMove } from "../../app/daily-move-selectors.js";
+import { normalizeAccountType } from "../../app/account-types.js";
+
+const DEFAULT_STRATEGIES = ["QQQ", "S&P500", "국내주식", "SCHD", "기타"];
+
+export function normalizeStrategy(value) {
+  const label = String(value || "").trim();
+  if (!label) return "기타";
+  if (["Growth", "성장주", "Core", "코어"].includes(label)) return "기타";
+  if (label.toLowerCase() === "schd") return "SCHD";
+  return label;
+}
+
+export function strategyBuckets(values = []) {
+  const uniq = [...new Set(values.map((v) => normalizeStrategy(v)).filter(Boolean))];
+  const extras = uniq.filter((v) => !DEFAULT_STRATEGIES.includes(v)).sort((a, b) => String(a).localeCompare(String(b)));
+  return [...DEFAULT_STRATEGIES, ...extras];
+}
+
+// 종목의 일간 변동(가격/환율 효과). fxRate 객체를 넘겨 previousClose 반영.
+export function holdingDailyMove(state, holding, marketContext = null) {
+  return calcHoldingDailyMove(holding, state?.fxRate || { rate: 1 }, marketContext);
+}
+
+export { normalizeAccountType };
 
 export function fxOf(state) {
   return Number(state?.fxRate?.rate || 1);

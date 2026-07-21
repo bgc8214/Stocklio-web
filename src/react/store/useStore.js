@@ -49,6 +49,9 @@ export const useStore = create((set) => ({
   setEmailDialog: (emailDialogOpen, emailPrefill) =>
     set((prev) => ({ emailDialogOpen, emailPrefill: emailPrefill ?? prev.emailPrefill })),
   setNotification: (notification) => set({ notification }),
+  // 대시보드 "종목 추가" 버튼 → HoldingsView 가 신규 드로어를 열도록 하는 신호(증가 카운터).
+  openHoldingDrawerSignal: 0,
+  requestOpenHoldingDrawer: () => set((prev) => ({ openHoldingDrawerSignal: prev.openHoldingDrawerSignal + 1 })),
 
   // ── legacy 가 등록하는 imperative 액션 (React 셸이 호출) ─────────
   // { setView, refreshPrices, saveSnapshot, openLoginDialog, signOut,
