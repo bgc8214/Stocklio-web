@@ -1,9 +1,4 @@
-import {
-  escapeHtml,
-  formatAsOf,
-  formatKrw,
-  formatNumber,
-} from "./formatters.js";
+import { formatAsOf, formatKrw } from "./formatters.js";
 import { AUTO_PRICE_REFRESH_TTL_MS } from "./constants.js";
 import { fetchJson, getQuote, getUsdKrw } from "./services/market-data-service.js";
 import {
@@ -46,56 +41,8 @@ export function getPriceRefreshPromise() {
 // 이 모듈은 가격 갱신/스냅샷/알림/백업/임포트 같은 서비스 op 만 담당한다(DOM 렌더 없음).
 export function renderAutomation() {}
 
-export function renderDashboardStatus() {
-  if (window.STOCKLIO_USE_CRAFT) return;
-  const state = _ctx.getState();
-  const els = _ctx.els;
-  const marketContext = _ctx.getCurrentMarketContext();
-  const latestHoldingPrice = [...state.holdings]
-    .filter((holding) => holding.priceAsOf)
-    .sort((a, b) => String(b.priceAsOf).localeCompare(String(a.priceAsOf)))[0];
-  const priceAsOf = latestHoldingPrice?.priceAsOf || state.fxRate?.asOf;
-
-  // 총자산 카드 뱃지: 날짜, FX, 장상태 (Craft.js가 DOM을 재구성하므로 카드 직접 탐색)
-  const totalValueCard = document.querySelector('[data-dashboard-card="total-value"]');
-  if (totalValueCard) {
-    let badgesEl = totalValueCard.querySelector(".metric-badges");
-    if (!badgesEl) {
-      badgesEl = document.createElement("div");
-      badgesEl.className = "metric-badges";
-      totalValueCard.appendChild(badgesEl);
-    }
-    const { formatShortDate } = _ctx;
-    // priceAsOf가 실제 날짜 형식(YYYY-MM-DD)인지 확인
-    const isRealDate = priceAsOf && /^\d{4}-\d{2}-\d{2}/.test(priceAsOf);
-    const dateText = isRealDate
-      ? `${formatShortDate(priceAsOf.slice(0, 10))} 종가`
-      : (marketContext.isMarketClosed ? marketContext.label : "");
-    const fxText = state.fxRate?.rate ? `USD/KRW ${formatNumber(state.fxRate.rate, 2)}` : "";
-    const marketText = marketContext.isMarketClosed ? marketContext.closedReason || "미국장 휴장" : "";
-    // 수익률 배지는 renderSummary가 별도 span으로 주입 — 덮어쓰지 않고 유지
-    const returnBadge = badgesEl.querySelector(".metric-return-badge");
-    const returnBadgeHtml = returnBadge ? returnBadge.outerHTML : "";
-    badgesEl.innerHTML = [dateText, fxText, marketText]
-      .filter(Boolean)
-      .map((t) => `<span class="metric-badge">${escapeHtml(t)}</span>`)
-      .join("") + returnBadgeHtml;
-  }
-
-  // 변동 요약 패널 레이블
-  const breakdownDateLabel = document.getElementById("breakdownDateLabel");
-  const breakdownSubtitle = document.getElementById("breakdownSubtitle");
-  if (breakdownDateLabel) {
-    breakdownDateLabel.textContent = marketContext.isMarketClosed ? "휴장일 기준" : "오늘 기준";
-  }
-  if (breakdownSubtitle) {
-    breakdownSubtitle.textContent = marketContext.isMarketClosed
-      ? "휴장일에는 변동 대신 환율과 현금 흐름을 확인합니다"
-      : "종목별 가격 변동과 환율 효과를 분석합니다";
-  }
-}
-
-// 가격 로그/알림 표는 React AutomationView 가 렌더한다.
+// 대시보드 카드/가격로그/알림 표는 craft-dashboard(React) 와 React AutomationView 가 렌더한다.
+export function renderDashboardStatus() {}
 export function renderPriceLogs() {}
 export function renderNotifications() {}
 
