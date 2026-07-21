@@ -28,6 +28,11 @@ export const useStore = create((set) => ({
   loginDialogOpen: false,
   emailDialogOpen: false,
   emailPrefill: "",
+  // 알림 설정/발송 로그(설정 탭). legacy automation-view 가 push 한다.
+  notification: {
+    settings: { telegram_chat_id: "", telegram_enabled: false, daily_digest_enabled: true, large_move_threshold_krw: 0 },
+    logs: [],
+  },
 
   setActiveView: (activeView, pageTitle, pageSubtitle) =>
     set((prev) => ({
@@ -43,6 +48,7 @@ export const useStore = create((set) => ({
   setLoginDialog: (loginDialogOpen) => set({ loginDialogOpen }),
   setEmailDialog: (emailDialogOpen, emailPrefill) =>
     set((prev) => ({ emailDialogOpen, emailPrefill: emailPrefill ?? prev.emailPrefill })),
+  setNotification: (notification) => set({ notification }),
 
   // ── legacy 가 등록하는 imperative 액션 (React 셸이 호출) ─────────
   // { setView, refreshPrices, saveSnapshot, openLoginDialog, signOut,

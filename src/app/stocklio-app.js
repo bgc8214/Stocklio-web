@@ -80,12 +80,11 @@ import {
 // 성과 탭은 Phase 4 에서 React PerformanceView 가 소유한다(performance-view.js 제거).
 // 대시보드의 오늘 변동/오늘의 주인공 패널은 craft-dashboard.jsx(React)가 직접 렌더한다.
 // 입출금 탭은 Phase 3 에서 React CashflowsView 가 소유한다(cashflows-view.js 제거).
+// automation-view.js 는 Phase 5 이후 서비스 모듈(가격 갱신/스냅샷/알림/백업/임포트 op)로 남는다.
+// UI 렌더는 React AutomationView 가 담당하므로 op/부트스트랩용 export 만 가져온다.
 import {
   init as initAutomationView,
-  renderAutomation,
   renderDashboardStatus,
-  renderPriceLogs,
-  renderNotifications,
   saveTodaySnapshot,
   queueAutomaticPriceRefresh,
   refreshPrices,
@@ -99,13 +98,6 @@ import {
   loadImportSummary,
   previewImport,
   commitImport,
-  buildPortfolioSnapshot,
-  saveTodaySnapshotNow,
-  renderReconciliation,
-  formatNotificationStatus,
-  getPriceRefreshPromise,
-  getNotificationSettings,
-  getNotificationLogs,
 } from "./automation-view.js";
 import {
   init as initDashboardView,
@@ -155,7 +147,6 @@ const sampleState = createSampleState(makeId);
 
 let state = createEmptyState();
 let editingHoldingId = null;
-let editingAccountId = null;
 let holdingPage = 1;
 let holdingScope = "all";
 let holdingsViewMode = "detail";
@@ -225,18 +216,7 @@ window.addEventListener("popstate", () => {
   setView(viewFromHash() || "dashboard", { fromHistory: true });
 });
 
-els.refreshButton.addEventListener("click", () => {
-  refreshPrices({ reason: "manual" }).catch((error) => {
-    setStatus("가격 업데이트 실패", error.message);
-  });
-});
-
-els.saveSnapshotButton.addEventListener("click", () => {
-  saveTodaySnapshot({ reason: "manual" }).catch((error) => {
-    setStatus("오늘 성과 기록 실패", error.message);
-    showOperationToast("오늘 성과 기록 실패", error.message, "error");
-  });
-});
+// 설정 탭의 수동 가격 갱신/스냅샷 버튼은 Phase 5 에서 React AutomationView 가 소유한다.
 
 els.dashboardRefreshButton?.addEventListener("click", () => {
   refreshPrices({ reason: "manual" }).catch((error) => {
@@ -283,40 +263,36 @@ useStore.getState().registerActions({
   signInWithNaver: handleNaverLogin,
   signInWithEmail: sendEmailLoginLink,
   signOut: handleLogout,
-});
-
-els.notificationForm?.addEventListener("submit", (event) => {
-  event.preventDefault();
-  saveNotificationSettings().catch((error) => {
-    setStatus("알림 설정 저장 실패", error.message);
-    showOperationToast("알림 설정 저장 실패", error.message, "error");
-  });
-});
-
-els.testNotificationButton?.addEventListener("click", () => {
-  sendTestNotification().catch((error) => {
-    setStatus("테스트 알림 실패", error.message);
-    showOperationToast("테스트 알림 실패", error.message, "error");
-  });
-});
-
-els.findTelegramChatButton?.addEventListener("click", () => {
-  findTelegramChatId().catch((error) => {
-    setStatus("chat id 찾기 실패", error.message);
-    showOperationToast("chat id 찾기 실패", error.message, "error");
-  });
-});
-
-els.emptyPortfolioButton.addEventListener("click", () => {
-  const ok = window.confirm("현재 포트폴리오 데이터를 비우고 빈 상태로 시작할까요?");
-  if (!ok) {
-    return;
-  }
-  state = createEmptyState();
-  setIsLayoutEditing(false);
-  saveState();
-  render();
-  showOperationToast("포트폴리오 초기화", "보유 종목과 계좌를 새로 입력하세요");
+  // 설정(자동화) 탭 op — React AutomationView 가 호출한다.
+  refreshPrices: (opts) => refreshPrices(opts),
+  saveTodaySnapshot: (opts) => saveTodaySnapshot(opts),
+  saveNotificationSettings: (settings) => saveNotificationSettings(settings),
+  sendTestNotification: (chatId) => sendTestNotification(chatId),
+  findTelegramChatId: () => findTelegramChatId(),
+  exportBackup: () => exportBackup(),
+  restoreBackup: (file) => restoreBackup(file),
+  previewImport: (file) => previewImport(file),
+  commitImport: () => commitImport(),
+  loadImportSummary: () => loadImportSummary(),
+  emptyPortfolio: () => {
+    state = createEmptyState();
+    setIsLayoutEditing(false);
+    saveState();
+    render();
+    showOperationToast("포트폴리오 초기화", "보유 종목과 계좌를 새로 입력하세요");
+  },
+  loadSampleData: () => {
+    state = structuredClone(sampleState);
+    setIsLayoutEditing(false);
+    saveState();
+    render();
+    showOperationToast("예시 데이터 로드됨", "보유 종목과 계좌에서 직접 입력하세요");
+  },
+  getReconcileSummary: () => {
+    const totals = getTotals(state.holdings);
+    const accountsTotal = calculateGroupByAccount(state.holdings).reduce((sum, item) => sum + item.valueKrw, 0);
+    return { totalValueKrw: totals.valueKrw, accountsTotal, diff: totals.valueKrw - accountsTotal };
+  },
 });
 
 function handleGoogleLogin() {
@@ -365,13 +341,7 @@ window.addEventListener("stocklio:auth", (event) => {
   });
 });
 
-els.resetButton.addEventListener("click", () => {
-  state = structuredClone(sampleState);
-  setIsLayoutEditing(false);
-  saveState();
-  render();
-  showOperationToast("예시 데이터 로드됨", "보유 종목과 계좌에서 직접 입력하세요");
-});
+// 포트폴리오 초기화/샘플 로드는 Phase 5 에서 React AutomationView 가 store.actions 로 호출한다.
 
 els.layoutEditButton.addEventListener("click", () => {
   if (window.STOCKLIO_USE_CRAFT) {
@@ -628,33 +598,10 @@ els.holdingForm.addEventListener("submit", (event) => {
 });
 
 els.holdingCancel.addEventListener("click", () => cancelEdit("holding"));
-els.accountCancel?.addEventListener("click", () => cancelEdit("account"));
 
 // 미분류 예수금 배분은 Phase 2 에서 React AccountsView 가 소유한다.
 
-els.exportBackupButton.addEventListener("click", () => {
-  exportBackup();
-});
-
-els.restoreInput.addEventListener("change", (event) => {
-  restoreBackup(event.target.files?.[0]).finally(() => {
-    event.target.value = "";
-  });
-});
-
-els.importPreviewInput.addEventListener("change", (event) => {
-  previewImport(event.target.files?.[0]).finally(() => {
-    event.target.value = "";
-  });
-});
-
-els.commitImportButton.addEventListener("click", () => {
-  commitImport();
-});
-
-els.loadImportSummaryButton.addEventListener("click", () => {
-  loadImportSummary();
-});
+// 백업/복원/엑셀 임포트는 Phase 5 에서 React AutomationView 가 store.actions 로 호출한다.
 
 function loadState() {
   const stored = localStorage.getItem(STORAGE_KEY);
@@ -773,8 +720,6 @@ async function initialize() {
     strategyBuckets,
     getEditingHoldingId: () => editingHoldingId,
     setEditingHoldingId: (id) => { editingHoldingId = id; },
-    getEditingAccountId: () => editingAccountId,
-    setEditingAccountId: (id) => { editingAccountId = id; },
     getAuthState: () => authState,
     setAuthState: (s) => { authState = s; },
     getSyncState: () => syncState,
@@ -826,6 +771,8 @@ async function initialize() {
     cancelEdit,
     // accounts-view helpers
     rowActionMenu,
+    // 설정 탭: 알림 상태를 store 로 push (automation-view → React AutomationView)
+    setNotificationState: (payload) => useStore.getState().setNotification(payload),
   };
   initHoldingsView(ctx);
   initAutomationView(ctx);
@@ -932,11 +879,8 @@ function render() {
   // 계좌 목록/개요/예수금 잔고는 Phase 2 에서 React AccountsView 가 store 구독으로 렌더한다.
   renderHoldings();
   // 입출금 기록/배당 차트는 Phase 3 에서 React CashflowsView 가 store 구독으로 렌더한다.
-  renderAutomation();
+  // 설정 탭(자동화/가격로그/알림/검증)은 Phase 5 에서 React AutomationView 가 렌더한다.
   renderDashboardStatus();
-  renderPriceLogs();
-  renderNotifications();
-  renderReconciliation();
   renderDashboardLayout();
   renderEmptyPortfolioNotice();
   publishState();
