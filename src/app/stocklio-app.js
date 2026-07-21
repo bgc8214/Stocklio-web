@@ -89,20 +89,7 @@ import {
   copyPerformanceSummary,
   setContributionView,
 } from "./performance-view.js";
-import {
-  init as initCashflowsView,
-  renderCashFlows,
-  renderDividendChart,
-  renderCashBalances,
-  allocateUnclassifiedCash,
-  startEditCashFlow,
-  startEditCashBalance,
-  formatFlowType,
-  cashFlowTypeOptions,
-  currencyOptions,
-  saveInlineCashBalanceEdit,
-  saveInlineCashFlowEdit,
-} from "./cashflows-view.js";
+// 입출금 탭은 Phase 3 에서 React CashflowsView 가 소유한다(cashflows-view.js 제거).
 import {
   init as initAutomationView,
   renderAutomation,
@@ -179,8 +166,6 @@ const sampleState = createSampleState(makeId);
 
 let state = createEmptyState();
 let editingHoldingId = null;
-let editingCashFlowId = null;
-let editingCashBalanceId = null;
 let editingAccountId = null;
 let holdingPage = 1;
 let holdingScope = "all";
@@ -620,22 +605,7 @@ els.performanceExportButton?.addEventListener("click", exportPerformanceCsv);
 els.contributionViewAccount?.addEventListener("click", () => setContributionView("account"));
 els.contributionViewStrategy?.addEventListener("click", () => setContributionView("strategy"));
 
-els.cashFlowTypeFilter.addEventListener("change", renderCashFlows);
-els.cashFlowSort.addEventListener("change", () => {
-  cashFlowHeaderSort = parseSortValue(els.cashFlowSort.value, DEFAULT_CASH_FLOW_SORT);
-  renderSortHeaders();
-  renderCashFlows();
-});
-document.querySelectorAll("[data-flow-sort-key]").forEach((button) => {
-  button.addEventListener("click", () => {
-    const nextSort = cycleSortValue(els.cashFlowSort.value, button.dataset.flowSortKey, DEFAULT_CASH_FLOW_SORT);
-    els.cashFlowSort.value = nextSort;
-    cashFlowHeaderSort = parseSortValue(nextSort, DEFAULT_CASH_FLOW_SORT);
-    renderSortHeaders();
-    renderCashFlows();
-  });
-});
-
+// 입출금 필터/정렬/폼/인라인 편집은 Phase 3 에서 React CashflowsView 가 소유한다.
 // 계좌 필터/검증/계좌 폼/계좌별 예수금은 Phase 2 에서 React AccountsView 가 소유한다.
 
 els.holdingForm.addEventListener("submit", (event) => {
@@ -681,37 +651,7 @@ els.holdingForm.addEventListener("submit", (event) => {
   // 보유 종목 저장 — UI에 반영
 });
 
-els.cashFlowForm.date.value = todayKey();
-
-els.cashFlowForm.addEventListener("submit", (event) => {
-  event.preventDefault();
-  const form = new FormData(event.currentTarget);
-  const account = parseAccountKey(form.get("accountKey"));
-  const nextFlow = {
-    id: editingCashFlowId || makeId(),
-    date: String(form.get("date")),
-    investor: account.investor,
-    account: account.account,
-    type: String(form.get("type")),
-    amountKrw: Number(form.get("amountKrw")),
-    note: String(form.get("note")).trim(),
-  };
-  if (editingCashFlowId) {
-    state.cashFlows = state.cashFlows.map((flow) => (flow.id === editingCashFlowId ? nextFlow : flow));
-  } else {
-    state.cashFlows.push(nextFlow);
-  }
-  editingCashFlowId = null;
-  event.currentTarget.reset();
-  els.cashFlowForm.date.value = todayKey();
-  updateEditControls();
-  saveState();
-  render();
-  // 입출금 저장 상태 알림 제거
-});
-
 els.holdingCancel.addEventListener("click", () => cancelEdit("holding"));
-els.cashFlowCancel.addEventListener("click", () => cancelEdit("cashFlow"));
 els.accountCancel?.addEventListener("click", () => cancelEdit("account"));
 
 // 미분류 예수금 배분은 Phase 2 에서 React AccountsView 가 소유한다.
@@ -855,17 +795,10 @@ async function initialize() {
     unique,
     normalizeStrategy,
     strategyBuckets,
-    renderCashBalances,
-    renderCashFlows,
-    formatFlowType,
     getEditingHoldingId: () => editingHoldingId,
     setEditingHoldingId: (id) => { editingHoldingId = id; },
     getEditingAccountId: () => editingAccountId,
     setEditingAccountId: (id) => { editingAccountId = id; },
-    getEditingCashFlowId: () => editingCashFlowId,
-    setEditingCashFlowId: (id) => { editingCashFlowId = id; },
-    getEditingCashBalanceId: () => editingCashBalanceId,
-    setEditingCashBalanceId: (id) => { editingCashBalanceId = id; },
     getAuthState: () => authState,
     setAuthState: (s) => { authState = s; },
     getSyncState: () => syncState,
@@ -920,7 +853,6 @@ async function initialize() {
   };
   initHoldingsView(ctx);
   initPerformanceView(ctx);
-  initCashflowsView(ctx);
   initAutomationView(ctx);
   initDashboardView(ctx);
   try {
@@ -1029,8 +961,7 @@ function render() {
   renderMonthlySummary();
   renderAllocationOverview();
   renderHoldings();
-  renderCashFlows();
-  renderDividendChart();
+  // 입출금 기록/배당 차트는 Phase 3 에서 React CashflowsView 가 store 구독으로 렌더한다.
   renderAutomation();
   renderDashboardStatus();
   renderPriceLogs();
@@ -1199,38 +1130,22 @@ function setView(view, { fromHistory = false, replaceHistory = false } = {}) {
 }
 
 function cancelEdit(kind) {
+  // 계좌/입출금 편집은 React AccountsView/CashflowsView 가 소유한다. 여기서는 종목만 처리한다.
   if (kind === "holding") {
     closeHoldingDrawer();
-  }
-  if (kind === "cashFlow") {
-    editingCashFlowId = null;
-    els.cashFlowForm.reset();
-    els.cashFlowForm.elements.date.value = todayKey();
-    renderCashFlows();
-  }
-  if (kind === "cashBalance") {
-    editingCashBalanceId = null;
-    renderCashBalances();
-  }
-  if (kind === "account") {
-    editingAccountId = null;
-    els.accountForm.reset();
-    els.accountForm.hidden = true;
   }
   updateEditControls();
   renderAccountSelectors();
 }
 
 function updateEditControls() {
-  // 계좌 폼은 Phase 2 에서 React AccountsView 가 소유한다.
+  // 계좌/입출금 폼은 React AccountsView/CashflowsView 가 소유한다. 종목 폼만 처리한다.
   els.holdingSubmit.textContent = editingHoldingId ? "수정 저장" : "목록에 추가";
   els.holdingCancel.hidden = Boolean(els.holdingFormPanel?.hidden);
   if (els.holdingFormTitle) {
     els.holdingFormTitle.textContent = editingHoldingId ? "종목 수정" : "종목 추가";
     els.holdingFormSubtitle.textContent = editingHoldingId ? "보유 포지션의 계좌, 전략, 수량, 평단가를 수정합니다." : "현재 보유 종목 목록에 새 포지션을 추가합니다.";
   }
-  els.cashFlowSubmit.textContent = editingCashFlowId ? "수정 저장" : "기록";
-  els.cashFlowCancel.hidden = !editingCashFlowId;
 }
 
 function getTotals(holdings) {

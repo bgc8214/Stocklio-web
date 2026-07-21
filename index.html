@@ -449,68 +449,8 @@
 
       </section>
 
-      <section class="detail-grid" data-view="cashflows" hidden>
-        <div class="panel" style="margin-bottom: 16px;">
-          <div class="section-heading">
-            <h2>배당 인컴</h2>
-            <span>월별 배당 수령 현황</span>
-          </div>
-          <div id="dividendChartContent" class="dividend-chart"></div>
-        </div>
-        <div class="panel">
-          <div class="section-heading">
-            <h2>입출금 기록</h2>
-            <span>입금/출금은 투자손익 계산을 보정합니다</span>
-          </div>
-          <form id="cashFlowForm" class="cash-flow-form">
-            <input name="date" type="date" required>
-            <select name="accountKey" aria-label="계좌 선택" required></select>
-            <select name="type" required>
-              <option value="deposit">입금</option>
-              <option value="withdrawal">출금</option>
-              <option value="dividend">배당</option>
-              <option value="tax">세금</option>
-              <option value="fee">수수료</option>
-            </select>
-            <input name="amountKrw" type="number" step="1" min="0" placeholder="금액 KRW" required>
-            <input name="note" placeholder="메모">
-            <button id="cashFlowSubmit" type="submit">기록</button>
-            <button id="cashFlowCancel" class="ghost" type="button" hidden>취소</button>
-          </form>
-          <div class="filters compact-filters" aria-label="입출금 필터">
-            <select id="cashFlowTypeFilter" aria-label="입출금 유형 필터">
-              <option value="">모든 유형</option>
-              <option value="deposit">입금</option>
-              <option value="withdrawal">출금</option>
-              <option value="dividend">배당</option>
-              <option value="tax">세금</option>
-              <option value="fee">수수료</option>
-            </select>
-            <select id="cashFlowSort" aria-label="입출금 정렬">
-              <option value="date-desc">최근 날짜순</option>
-              <option value="date-asc">오래된 날짜순</option>
-              <option value="amount-desc">금액 높은 순</option>
-              <option value="amount-asc">금액 낮은 순</option>
-            </select>
-          </div>
-          <div class="table-wrap compact">
-            <table>
-              <thead>
-                <tr>
-                  <th><button class="th-sort" type="button" data-flow-sort-key="date" aria-sort="descending">날짜 <span class="sort-indicator" aria-hidden="true">↓</span></button></th>
-                  <th>투자자</th>
-                  <th>계좌</th>
-                  <th>유형</th>
-                  <th><button class="th-sort" type="button" data-flow-sort-key="amount" aria-sort="none">금액 <span class="sort-indicator" aria-hidden="true">↕</span></button></th>
-                  <th>메모</th>
-                  <th></th>
-                </tr>
-              </thead>
-              <tbody id="cashFlowsBody"></tbody>
-            </table>
-          </div>
-        </div>
-      </section>
+      <!-- 입출금 탭은 React(CashflowsView)가 렌더한다. -->
+      <div id="cashflowsViewMount" data-view="cashflows" hidden></div>
 
       <section class="detail-grid automation-view" data-view="automation" hidden>
 
