@@ -77,18 +77,8 @@ import {
   saveInlineHoldingEdit,
   setHoldingsViewMode,
 } from "./holdings-view.js";
-import {
-  init as initPerformanceView,
-  renderPerformance,
-  renderBreakdown,
-  renderTopMover,
-
-  renderSnapshots,
-  renderMonthlySummary,
-  exportPerformanceCsv,
-  copyPerformanceSummary,
-  setContributionView,
-} from "./performance-view.js";
+// 성과 탭은 Phase 4 에서 React PerformanceView 가 소유한다(performance-view.js 제거).
+// 대시보드의 오늘 변동/오늘의 주인공 패널은 craft-dashboard.jsx(React)가 직접 렌더한다.
 // 입출금 탭은 Phase 3 에서 React CashflowsView 가 소유한다(cashflows-view.js 제거).
 import {
   init as initAutomationView,
@@ -121,7 +111,6 @@ import {
   init as initDashboardView,
   renderSummary,
   renderAllocation,
-  renderAllocationOverview,
   renderFilters,
   renderSortHeaders,
   renderAccountSelectors,
@@ -591,20 +580,7 @@ els.holdingDrawerBackdrop?.addEventListener("click", () => closeHoldingDrawer())
 els.holdingCancel.addEventListener("click", () => closeHoldingDrawer());
 els.holdingsExportButton?.addEventListener("click", exportVisibleHoldings);
 
-els.performanceRange.addEventListener("change", () => {
-  renderPerformance();
-  renderSnapshots();
-  renderMonthlySummary();
-});
-
-els.snapshotDayFilter?.addEventListener("change", renderSnapshots);
-
-els.performanceCopyButton?.addEventListener("click", copyPerformanceSummary);
-els.performanceExportButton?.addEventListener("click", exportPerformanceCsv);
-
-els.contributionViewAccount?.addEventListener("click", () => setContributionView("account"));
-els.contributionViewStrategy?.addEventListener("click", () => setContributionView("strategy"));
-
+// 성과 탭(기간/일별 필터, 요약 복사/CSV, 기여 분석)은 Phase 4 에서 React PerformanceView 가 소유한다.
 // 입출금 필터/정렬/폼/인라인 편집은 Phase 3 에서 React CashflowsView 가 소유한다.
 // 계좌 필터/검증/계좌 폼/계좌별 예수금은 Phase 2 에서 React AccountsView 가 소유한다.
 
@@ -852,7 +828,6 @@ async function initialize() {
     rowActionMenu,
   };
   initHoldingsView(ctx);
-  initPerformanceView(ctx);
   initAutomationView(ctx);
   initDashboardView(ctx);
   try {
@@ -952,14 +927,9 @@ function render() {
   updateEditControls();
   renderSummary();
   renderAllocation();
-  renderPerformance();
-  renderBreakdown();
-  renderTopMover();
-
+  // 성과 탭(성과 흐름/변동/스냅샷/월별/기여/자산구성)은 Phase 4 에서 React PerformanceView 가 소유한다.
+  // 대시보드 변동/주인공 패널은 craft-dashboard.jsx(React)가 렌더한다.
   // 계좌 목록/개요/예수금 잔고는 Phase 2 에서 React AccountsView 가 store 구독으로 렌더한다.
-  renderSnapshots();
-  renderMonthlySummary();
-  renderAllocationOverview();
   renderHoldings();
   // 입출금 기록/배당 차트는 Phase 3 에서 React CashflowsView 가 store 구독으로 렌더한다.
   renderAutomation();
