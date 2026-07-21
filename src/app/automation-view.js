@@ -527,7 +527,10 @@ export async function commitImport() {
 }
 
 export async function loadNotificationState() {
-  const els = _ctx.els;
+  // stocklio:auth 이벤트가 init(ctx) 보다 먼저 도착하면 _ctx 가 아직 없다(부트스트랩 레이스). 방어.
+  if (!_ctx) {
+    return;
+  }
   if (!window.StocklioAuth?.isConfigured?.() || !window.StocklioAuth.getState().signedIn) {
     notificationSettings = {
       telegram_chat_id: "",
