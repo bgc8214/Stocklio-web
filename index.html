@@ -125,76 +125,8 @@
 
       </section>
 
-      <section class="accounts-view" data-view="accounts" hidden>
-        <div class="account-page-heading">
-          <div>
-            <strong>계좌</strong>
-            <span>예수금을 선택해 업데이트하세요</span>
-          </div>
-          <span class="status-pill">총자산에 예수금 포함</span>
-          <div class="account-page-actions">
-            <button id="accountReconcileButton" class="ghost small-button" type="button">데이터 검증</button>
-            <button id="addAccountButton" class="secondary small-button" type="button">계좌 추가</button>
-          </div>
-        </div>
-
-        <div class="account-overview-grid" aria-label="계좌 요약">
-          <article class="account-overview-card">
-            <span>예수금</span>
-            <strong id="accountOverviewCash">-</strong>
-            <small>KRW 환산 기준</small>
-          </article>
-          <article class="account-overview-card">
-            <span>추적 계좌</span>
-            <strong id="accountOverviewCount">-</strong>
-            <small id="accountOverviewCountDetail">-</small>
-          </article>
-          <article class="account-overview-card account-overview-card--alert" id="accountCashMissingCard" hidden>
-            <span>예수금 미입력</span>
-            <strong id="accountCashMissingCount">-</strong>
-            <small>업데이트가 필요한 계좌</small>
-          </article>
-        </div>
-
-        <div class="panel account-list-panel">
-          <div class="section-heading">
-            <div>
-              <h2>계좌 목록</h2>
-              <span>계좌를 클릭하면 그 자리에서 예수금과 보유 종목을 바로 편집할 수 있어요.</span>
-            </div>
-            <span id="accountListCount" class="status-pill">0개 계좌</span>
-          </div>
-          <div class="account-filters">
-            <select id="accountInvestorFilter" aria-label="계좌 투자자 필터"></select>
-            <select id="accountCurrencyFilter" aria-label="계좌 통화 필터">
-              <option value="">모든 통화</option>
-              <option value="KRW">KRW</option>
-              <option value="USD">USD</option>
-            </select>
-            <input id="accountSearch" type="search" placeholder="계좌명/증권사 검색" aria-label="계좌 검색">
-          </div>
-          <div id="unclassifiedCashPanel" class="allocation-box" hidden>
-            <div class="section-heading compact-heading">
-              <h2>미분류 예수금 배분</h2>
-              <span id="unclassifiedCashSummary">배분할 금액 없음</span>
-            </div>
-            <form id="cashAllocationForm" class="cash-allocation-form">
-              <select name="targetAccount" aria-label="배분할 계좌" required></select>
-              <input name="amount" type="number" step="0.01" min="0.01" placeholder="배분 금액" required>
-              <button type="submit">계좌로 배분</button>
-            </form>
-          </div>
-          <div id="accountList" class="account-list"></div>
-        </div>
-
-        <div class="panel">
-          <div class="section-heading">
-            <h2>예수금 변경 기록</h2>
-          </div>
-          <div id="cashBalanceList" class="cash-balance-list"></div>
-        </div>
-
-      </section>
+      <!-- 계좌 탭은 React(AccountsView)가 렌더한다. data-view 로 legacy setView 가 표시를 토글한다. -->
+      <div id="accountsViewMount" data-view="accounts" hidden></div>
 
       <section class="panel holdings-panel" data-view="holdings" hidden>
         <div class="holding-toolbar">
