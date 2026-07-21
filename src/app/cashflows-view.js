@@ -65,6 +65,10 @@ export function cashFlowTypeOptions(value) {
 export function renderCashBalances() {
   const state = _ctx.getState();
   const els = _ctx.els;
+  // 예수금 잔고/미분류 배분 UI 는 Phase 2 에서 React AccountsView 가 소유한다.
+  if (!els.cashBalanceList) {
+    return;
+  }
   renderUnclassifiedCashAllocation();
   const rows = [...(state.cashBalances || [])].sort((a, b) => `${a.investor}${a.account}`.localeCompare(`${b.investor}${b.account}`));
   els.cashBalanceList.innerHTML = rows.length

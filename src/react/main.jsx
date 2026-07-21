@@ -9,6 +9,7 @@ import { initializeStocklioApp } from "../app/stocklio-app.js";
 import { connectLegacyBridge } from "./store/useStore.js";
 import { App } from "./App.jsx";
 import { ContentChrome } from "./components/ContentChrome.jsx";
+import { AccountsView } from "./views/AccountsView.jsx";
 import "../craft-dashboard.jsx";
 
 // initialize() 의 첫 render()→publishState() 이전에 브리지 리스너를 붙여야 초기 상태를 놓치지 않는다.
@@ -24,6 +25,12 @@ if (sidebarMount) {
 const chromeMount = document.querySelector("#contentChromeMount");
 if (chromeMount) {
   createRoot(chromeMount).render(<ContentChrome />);
+}
+
+// 포팅된 탭 뷰를 각 마운트 지점(data-view)에 렌더한다. 표시는 legacy setView 가 토글한다.
+const accountsMount = document.querySelector("#accountsViewMount");
+if (accountsMount) {
+  createRoot(accountsMount).render(<AccountsView />);
 }
 
 initializeStocklioApp();

@@ -159,16 +159,16 @@ import {
   getResizingDashboardCard,
   setResizingDashboardCard,
 } from "./dashboard-view.js";
-import {
-  init as initAccountsView,
-  renderAccounts,
-  renderAccountOverview,
-  getAccountStats,
-  getFilteredAccounts,
-  rowActionMenu,
-  startEditAccount,
-} from "./accounts-view.js";
 import { useStore } from "../react/store/useStore.js";
+
+// 계좌 탭은 Phase 2 에서 React AccountsView 가 소유한다(accounts-view.js 제거).
+// cashflows/holdings 뷰가 ctx 로 쓰는 공용 행 메뉴 헬퍼만 여기로 이식한다.
+function rowActionMenu(label, actions) {
+  return `<details class="row-menu">
+    <summary aria-label="${escapeHtml(label)}" title="작업 더보기">⋮</summary>
+    <div class="row-menu-popover">${actions.join("")}</div>
+  </details>`;
+}
 
 let holdingHeaderSort = { key: "value", dir: "desc" };
 let cashFlowHeaderSort = { key: "date", dir: "desc" };
@@ -230,6 +230,21 @@ const els = getDomElements();
 useStore.getState().registerActions({
   setView: (view) => setView(view),
   applyCurrencyMode: (mode) => applyCurrencyMode(mode),
+  // 포팅된 React 탭이 상태를 변경할 때 쓰는 공용 mutation 표면.
+  // fn(state)이 state 를 직접 변형(또는 새 state 반환)하면 save+render 로 브리지에 반영한다.
+  // legacy 가 여전히 단일 writer 이므로 React 는 이 액션을 통해서만 쓴다(Phase 8 에서 store 로 승격).
+  mutate: (fn) => {
+    const next = fn(state);
+    if (next && next !== state) {
+      state = next;
+    }
+    saveState();
+    render();
+  },
+  makeId,
+  todayKey,
+  setStatus,
+  showOperationToast,
 });
 
 window.addEventListener("popstate", () => {
@@ -328,16 +343,6 @@ els.emptyPortfolioButton.addEventListener("click", () => {
   saveState();
   render();
   showOperationToast("포트폴리오 초기화", "보유 종목과 계좌를 새로 입력하세요");
-});
-
-els.addAccountButton?.addEventListener("click", () => {
-  editingAccountId = null;
-  els.accountForm.reset();
-  els.accountForm.hidden = false;
-  updateEditControls();
-  setView("automation");
-  els.accountForm.scrollIntoView({ block: "center", behavior: "smooth" });
-  els.accountForm.querySelector("input")?.focus();
 });
 
 function handleGoogleLogin() {
@@ -631,46 +636,7 @@ document.querySelectorAll("[data-flow-sort-key]").forEach((button) => {
   });
 });
 
-for (const accountFilter of [els.accountInvestorFilter, els.accountCurrencyFilter, els.accountSearch]) {
-  accountFilter?.addEventListener(accountFilter === els.accountSearch ? "input" : "change", renderAccounts);
-}
-els.accountReconcileButton?.addEventListener("click", () => {
-  renderReconciliation();
-  setView("automation");
-  els.reconcileSummary?.scrollIntoView({ block: "center", behavior: "smooth" });
-});
-
-els.accountForm.addEventListener("submit", (event) => {
-  event.preventDefault();
-  const form = new FormData(event.currentTarget);
-  const nextAccount = {
-    id: editingAccountId || makeId(),
-    investor: String(form.get("investor")).trim(),
-    account: String(form.get("account")).trim(),
-    provider: String(form.get("provider")).trim(),
-    accountType: normalizeAccountType(String(form.get("accountType"))),
-    baseCurrency: String(form.get("baseCurrency")),
-  };
-  if (editingAccountId) {
-    const previous = state.accounts.find((account) => account.id === editingAccountId) || getKnownAccounts().find((account) => account.id === editingAccountId);
-    const hasPersistedAccount = state.accounts.some((account) => account.id === editingAccountId);
-    state.accounts = hasPersistedAccount
-      ? state.accounts.map((account) => (account.id === editingAccountId ? nextAccount : account))
-      : [...state.accounts, nextAccount];
-    if (previous) {
-      state = renameAccountReferences(state, previous, nextAccount);
-    }
-  } else {
-    state.accounts.push(nextAccount);
-  }
-  editingAccountId = null;
-  event.currentTarget.reset();
-  event.currentTarget.hidden = true;
-  updateEditControls();
-  saveState();
-  render();
-  // 계좌 저장 — UI에 반영되므로 별도 알림 불필요
-});
+// 계좌 필터/검증/계좌 폼/계좌별 예수금은 Phase 2 에서 React AccountsView 가 소유한다.
 
 els.holdingForm.addEventListener("submit", (event) => {
   event.preventDefault();
@@ -746,22 +712,9 @@ els.cashFlowForm.addEventListener("submit", (event) => {
 
 els.holdingCancel.addEventListener("click", () => cancelEdit("holding"));
 els.cashFlowCancel.addEventListener("click", () => cancelEdit("cashFlow"));
-els.accountCancel.addEventListener("click", () => cancelEdit("account"));
+els.accountCancel?.addEventListener("click", () => cancelEdit("account"));
 
-els.cashAllocationForm.addEventListener("submit", (event) => {
-  event.preventDefault();
-  const form = new FormData(event.currentTarget);
-  const [investor, account] = String(form.get("targetAccount")).split("|||");
-  const allocated = allocateUnclassifiedCash({
-    investor,
-    account,
-    amount: Number(form.get("amount")),
-  });
-  event.currentTarget.reset();
-  saveState();
-  render();
-  setStatus("미분류 예수금 배분", `${investor} · ${account}에 ${formatKrw(allocated)} 반영`);
-});
+// 미분류 예수금 배분은 Phase 2 에서 React AccountsView 가 소유한다.
 
 els.exportBackupButton.addEventListener("click", () => {
   exportBackup();
@@ -917,7 +870,6 @@ async function initialize() {
     setAuthState: (s) => { authState = s; },
     getSyncState: () => syncState,
     setSyncState: (s) => { syncState = s; },
-    startEditAccount,
     getHoldingDailyMove: selectHoldingDailyMove,
     getDailyMoveRows: selectDailyMoveRows,
     getCurrentMarketContext: () => getUsMarketContextForSeoulDate(),
@@ -925,7 +877,6 @@ async function initialize() {
     getFilteredSnapshotRows: filterSnapshotRows,
     buildAccountSnapshots: createAccountSnapshots,
     getRecentPriceRefreshImpact,
-    getAccountStats,
     renderAccountSelectors,
     clamp,
     // sort helpers
@@ -972,7 +923,6 @@ async function initialize() {
   initCashflowsView(ctx);
   initAutomationView(ctx);
   initDashboardView(ctx);
-  initAccountsView(ctx);
   try {
     configureRuntimeSurface();
     authState = await waitForAuthState();
@@ -1074,14 +1024,13 @@ function render() {
   renderBreakdown();
   renderTopMover();
 
-  renderAccounts();
+  // 계좌 목록/개요/예수금 잔고는 Phase 2 에서 React AccountsView 가 store 구독으로 렌더한다.
   renderSnapshots();
   renderMonthlySummary();
   renderAllocationOverview();
   renderHoldings();
   renderCashFlows();
   renderDividendChart();
-  renderCashBalances();
   renderAutomation();
   renderDashboardStatus();
   renderPriceLogs();
@@ -1273,9 +1222,7 @@ function cancelEdit(kind) {
 }
 
 function updateEditControls() {
-  els.accountSubmit.textContent = editingAccountId ? "수정 저장" : "계좌 저장";
-  els.accountCancel.hidden = els.accountForm.hidden;
-  els.addAccountButton.hidden = !els.accountForm.hidden;
+  // 계좌 폼은 Phase 2 에서 React AccountsView 가 소유한다.
   els.holdingSubmit.textContent = editingHoldingId ? "수정 저장" : "목록에 추가";
   els.holdingCancel.hidden = Boolean(els.holdingFormPanel?.hidden);
   if (els.holdingFormTitle) {

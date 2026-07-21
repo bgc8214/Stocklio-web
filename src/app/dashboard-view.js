@@ -25,6 +25,9 @@ export function renderFilters() {
 }
 
 export function fillSelect(select, label, values, labels = {}) {
+  if (!select) {
+    return;
+  }
   const previous = select.value;
   select.innerHTML = `<option value="">${label}</option>${values
     .map((value) => `<option value="${escapeHtml(value)}">${escapeHtml(labels[value] || value)}</option>`)
