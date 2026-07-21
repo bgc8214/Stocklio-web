@@ -1,28 +1,50 @@
-// Phase 1a: 앱 전역 상태의 단일 진입점.
+// 앱 전역 상태의 단일 진입점.
 //
-// 이 단계에서는 아직 legacy stocklio-app.js 가 상태의 주인(writer)이다.
-// 이 스토어는 legacy 가 dispatch 하는 `stocklio:state` 이벤트를 구독해
-// portfolio state 를 read-only 로 미러링한다. React 뷰(현재는 대시보드)는
-// window.StocklioApp 을 직접 참조하지 않고 이 스토어를 통해 상태를 읽는다.
-//
-// 이후 Phase 에서 legacy plumbing 을 걷어내며 이 스토어가 실제 writer 로
-// 승격된다(mutate/persist 액션 추가). 지금은 브리지 미러이므로 stocklio-app.js
-// 의 저장/렌더 로직은 건드리지 않는다.
+// 관심사별 단일 writer 원칙:
+// - portfolio data: 아직 legacy stocklio-app.js 가 writer 다. legacy 가 dispatch 하는
+//   `stocklio:state` 이벤트를 이 스토어가 read-only 로 미러링한다(Phase 1a).
+// - UI chrome 상태(activeView/currencyMode/auth/sync/toast/page title): React 셸이
+//   소유한다. legacy 는 setView/renderAuth/showOperationToast 등에서 이 스토어로
+//   상태를 push 하고, 사용자 액션은 store.actions(legacy 가 등록)로 delegate 한다(Phase 1b).
 import { create } from "zustand";
 
 export const useStore = create((set) => ({
-  // portfolio state (holdings/accounts/cashFlows/... version=6). 최초 로드 전에는 null.
+  // ── portfolio (legacy 미러, read-only) ─────────────────────────
   portfolio: null,
-  // stocklio:state 이벤트마다 증가 — 동일 참조가 아닌 경우에도 재계산을 강제할 때 사용.
   revision: 0,
-  setPortfolio: (portfolio) =>
-    set((prev) => ({ portfolio, revision: prev.revision + 1 })),
+  setPortfolio: (portfolio) => set((prev) => ({ portfolio, revision: prev.revision + 1 })),
+
+  // ── UI chrome 상태 (React 셸 소유) ─────────────────────────────
+  activeView: "dashboard",
+  currencyMode: localStorage.getItem("currencyMode") === "usd" ? "usd" : "krw",
+  pageTitle: "대시보드",
+  pageSubtitle: "포트폴리오 현황",
+  auth: { configured: false, signedIn: false, user: null },
+  sync: { status: "idle", message: "" },
+  toast: { visible: false, title: "", detail: "", tone: "info" },
+
+  setActiveView: (activeView, pageTitle, pageSubtitle) =>
+    set((prev) => ({
+      activeView,
+      pageTitle: pageTitle ?? prev.pageTitle,
+      pageSubtitle: pageSubtitle ?? prev.pageSubtitle,
+    })),
+  setCurrencyMode: (currencyMode) => set({ currencyMode }),
+  setAuth: (auth) => set({ auth }),
+  setSync: (sync) => set({ sync }),
+  setToast: (toast) => set((prev) => ({ toast: { ...prev.toast, ...toast } })),
+
+  // ── legacy 가 등록하는 imperative 액션 (React 셸이 호출) ─────────
+  // { setView, refreshPrices, saveSnapshot, openLoginDialog, signOut,
+  //   signInWithGoogle, signInWithNaver, signInWithEmail, applyCurrencyMode, addHolding }
+  actions: {},
+  registerActions: (actions) => set((prev) => ({ actions: { ...prev.actions, ...actions } })),
 }));
 
-// legacy 브리지를 스토어로 연결한다. main.jsx 에서 앱 부트스트랩 직후 한 번 호출한다.
+// legacy 의 portfolio 브리지(`stocklio:state`)를 스토어로 연결한다.
+// main.jsx 에서 앱 부트스트랩 직전에 한 번 호출한다.
 export function connectLegacyBridge() {
   const { setPortfolio } = useStore.getState();
-  // 초기 상태: legacy 가 이미 publishState() 를 호출했을 수 있으므로 즉시 흡수.
   const initial = window.StocklioApp?.getState?.();
   if (initial) {
     setPortfolio(initial);

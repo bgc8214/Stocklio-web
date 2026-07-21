@@ -168,6 +168,7 @@ import {
   rowActionMenu,
   startEditAccount,
 } from "./accounts-view.js";
+import { useStore } from "../react/store/useStore.js";
 
 let holdingHeaderSort = { key: "value", dir: "desc" };
 let cashFlowHeaderSort = { key: "date", dir: "desc" };
@@ -224,70 +225,16 @@ const allocationViewLabels = {
 
 const els = getDomElements();
 
-els.viewTabs.forEach((button) => {
-  button.addEventListener("click", () => {
-    setView(button.dataset.viewTab);
-  });
+// 사이드바 nav(탭/통화토글/테마/모바일 더보기 드로어)는 Phase 1b-1 에서 React 셸(Sidebar)이 소유한다.
+// React 셸이 store.actions 를 통해 아래 액션을 호출한다. store 로 view/currency 를 push 한다.
+useStore.getState().registerActions({
+  setView: (view) => setView(view),
+  applyCurrencyMode: (mode) => applyCurrencyMode(mode),
 });
 
 window.addEventListener("popstate", () => {
   setView(viewFromHash() || "dashboard", { fromHistory: true });
 });
-
-// ─── 모바일 더보기 드로어 ─────────────────────────────────────────
-(function initMoreDrawer() {
-  // 모바일 전용: CSS 로 .nav-more-btn 이 표시될 때만 동작
-  const moreBtn = document.getElementById("navMoreBtn");
-  const drawer = document.getElementById("navMoreDrawer");
-  const backdrop = document.getElementById("navMoreBackdrop");
-  const itemsEl = document.getElementById("navMoreItems");
-  if (!moreBtn || !drawer || !itemsEl) return;
-
-  // 더보기에 포함될 탭 (data-nav-more 속성으로 표시됨, JS 로 이동)
-  const MORE_TABS = ["cashflows", "automation", "simulator"];
-
-  function openDrawer() {
-    // 현재 탭 상태 반영해 아이템 생성
-    itemsEl.innerHTML = "";
-    MORE_TABS.forEach((tabId) => {
-      const src = document.querySelector(`[data-view-tab="${tabId}"]`);
-      if (!src) return;
-      const btn = document.createElement("button");
-      btn.type = "button";
-      btn.className = "nav-more-item" + (src.classList.contains("active") ? " active" : "");
-      btn.dataset.viewTab = tabId;
-      btn.innerHTML = `<span class="nav-more-icon">${src.dataset.navIcon}</span><span class="nav-more-name">${src.textContent}</span>`;
-      btn.addEventListener("click", () => {
-        setView(tabId);
-        closeDrawer();
-      });
-      itemsEl.appendChild(btn);
-    });
-    drawer.hidden = false;
-    moreBtn.setAttribute("aria-expanded", "true");
-    requestAnimationFrame(() => drawer.classList.add("open"));
-  }
-
-  function closeDrawer() {
-    drawer.classList.remove("open");
-    moreBtn.setAttribute("aria-expanded", "false");
-    drawer.addEventListener("transitionend", () => { drawer.hidden = true; }, { once: true });
-  }
-
-  moreBtn.addEventListener("click", () => {
-    drawer.hidden ? openDrawer() : closeDrawer();
-  });
-  backdrop.addEventListener("click", closeDrawer);
-
-  // setView 후 더보기 버튼 active 상태 갱신 (MORE_TABS 중 하나가 활성이면 강조)
-  const _origSetView = setView;
-  // setView 를 직접 패치하지 않고 viewTabs MutationObserver 대신 탭 클릭마다 갱신
-  document.addEventListener("click", (e) => {
-    if (!e.target.closest("[data-view-tab]")) return;
-    const activeTab = e.target.closest("[data-view-tab]")?.dataset.viewTab;
-    moreBtn.classList.toggle("active", MORE_TABS.includes(activeTab));
-  });
-})();
 
 els.refreshButton.addEventListener("click", () => {
   refreshPrices({ reason: "manual" }).catch((error) => {
@@ -574,23 +521,18 @@ document.addEventListener("click", (e) => {
   }
 });
 
-// 통화 모드 토글
-function updateCurrencyToggleUI() {
-  document.querySelectorAll("[data-currency-mode]").forEach((btn) => {
-    btn.classList.toggle("active", btn.dataset.currencyMode === currencyMode);
-  });
+// 통화 모드 토글: 버튼 UI 는 React 셸(Sidebar)이 store.currencyMode 로 렌더한다.
+// 여기서는 상태 갱신 + legacy 뷰 재렌더 + store push + currencyModeChange 이벤트를 담당한다.
+function applyCurrencyMode(mode) {
+  currencyMode = mode === "usd" ? "usd" : "krw";
+  localStorage.setItem("currencyMode", currencyMode);
+  useStore.getState().setCurrencyMode(currencyMode);
+  renderHoldings();
+  renderSummary();
+  window.dispatchEvent(new CustomEvent("currencyModeChange", { detail: currencyMode }));
 }
-document.querySelectorAll("[data-currency-mode]").forEach((btn) => {
-  btn.addEventListener("click", () => {
-    currencyMode = btn.dataset.currencyMode;
-    localStorage.setItem("currencyMode", currencyMode);
-    updateCurrencyToggleUI();
-    renderHoldings();
-    renderSummary();
-    window.dispatchEvent(new CustomEvent("currencyModeChange", { detail: currencyMode }));
-  });
-});
-updateCurrencyToggleUI();
+// 초기 통화 모드를 store 에 반영한다(부트스트랩 시점의 localStorage 값).
+useStore.getState().setCurrencyMode(currencyMode);
 
 // 필터 초기화
 els.filterResetBtn?.addEventListener("click", () => {
@@ -955,36 +897,8 @@ function normalizeState(input) {
   };
 }
 
-function initTheme() {
-  const saved = localStorage.getItem("stocklio-theme");
-  const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-  const isDark = saved ? saved === "dark" : prefersDark;
-  applyTheme(isDark ? "dark" : "light");
-
-  const toggleTheme = () => {
-    const next = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
-    applyTheme(next);
-    localStorage.setItem("stocklio-theme", next);
-  };
-  document.getElementById("themeToggle")?.addEventListener("click", toggleTheme);
-  document.getElementById("themeToggleMobile")?.addEventListener("click", toggleTheme);
-}
-
-function applyTheme(theme) {
-  document.documentElement.dataset.theme = theme;
-  const isDark = theme === "dark";
-  const icon = document.getElementById("themeToggleIcon");
-  const label = document.getElementById("themeToggleLabel");
-  const iconM = document.getElementById("themeToggleIconMobile");
-  const labelM = document.getElementById("themeToggleLabelMobile");
-  if (icon) icon.textContent = isDark ? "☀️" : "🌙";
-  if (label) label.textContent = isDark ? "라이트 모드" : "다크 모드";
-  if (iconM) iconM.textContent = isDark ? "☀️" : "🌙";
-  if (labelM) labelM.textContent = isDark ? "라이트 모드" : "다크 모드";
-}
-
 async function initialize() {
-  initTheme();
+  // 테마 초기 적용은 index.html <head> 인라인 스크립트가, 토글은 React 셸(useTheme)이 담당한다.
   clearStaleQuoteCaches();
   const ctx = {
     getState: () => state,
@@ -1408,9 +1322,8 @@ function setView(view, { fromHistory = false, replaceHistory = false } = {}) {
   if (els.pageSubtitle) {
     els.pageSubtitle.textContent = copy.subtitle;
   }
-  els.viewTabs.forEach((button) => {
-    button.classList.toggle("active", button.dataset.viewTab === view);
-  });
+  // React 셸(Sidebar)의 활성 탭 표시는 store.activeView 로 구동된다.
+  useStore.getState().setActiveView(view, copy.title, copy.subtitle);
   els.viewSections.forEach((section) => {
     const isActive = section.dataset.view === view;
     section.hidden = !isActive;
