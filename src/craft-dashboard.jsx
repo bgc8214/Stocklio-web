@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { dateKeyInTimeZone, getUsMarketContextForSeoulDate } from "./domain/market-calendar.js";
+import { useStore } from "./react/store/useStore.js";
 
 function useIsMobile(breakpoint = 640) {
   const [isMobile, setIsMobile] = useState(() => window.innerWidth <= breakpoint);
@@ -47,33 +48,20 @@ const allocationViewLabels = {
 };
 
 function CraftDashboardApp() {
-  const [state, setState] = useState(null);
+  // Phase 1a: 브리지를 직접 구독하지 않고 Zustand 스토어(legacy 미러)에서 읽는다.
+  const state = useStore((s) => s.portfolio);
   const [editing, setEditing] = useState(false);
-  const [stateRevision, setStateRevision] = useState(0);
-
-  useEffect(() => {
-    setState(window.StocklioApp?.getState?.() || null);
-
-    const handleState = (event) => {
-      setState(event.detail);
-      setStateRevision((value) => value + 1);
-    };
-    window.addEventListener("stocklio:state", handleState);
-    return () => window.removeEventListener("stocklio:state", handleState);
-  }, []);
 
   const layout = useMemo(() => normalizeLayout(state?.dashboardLayout), [state?.dashboardLayout]);
   const visibleCount = layout.filter((item) => item.visible !== false).length;
 
-  const saveLayout = useCallback(
-    (nextLayout) => {
-      const normalized = normalizeLayout(nextLayout);
-      setState((current) => (current ? { ...current, dashboardLayout: normalized } : current));
-      setStateRevision((value) => value + 1);
-      window.StocklioApp?.setDashboardLayout?.(normalized);
-    },
-    [setState],
-  );
+  const saveLayout = useCallback((nextLayout) => {
+    const normalized = normalizeLayout(nextLayout);
+    // 아직 legacy 가 상태의 writer 이므로 저장은 브리지를 통한다.
+    // 브리지가 saveState → publishState → stocklio:state 를 발행하면
+    // 스토어가 미러링해 자동으로 재렌더된다.
+    window.StocklioApp?.setDashboardLayout?.(normalized);
+  }, []);
 
   useEffect(() => {
     const editButton = document.querySelector("#layoutEditButton");
