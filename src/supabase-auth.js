@@ -1,9 +1,9 @@
 import { createClient } from "@supabase/supabase-js";
 
-const config = window.STOCKLIO_SUPABASE || {};
-const url = config.url || "";
-const anonKey = config.anonKey || "";
-const siteUrl = getConfiguredUrl(config.siteUrl);
+const env = import.meta.env || {};
+const url = env.VITE_SUPABASE_URL || "";
+const anonKey = env.VITE_SUPABASE_ANON_KEY || "";
+const siteUrl = getConfiguredUrl(env.VITE_PUBLIC_SITE_URL);
 
 let client = null;
 let session = null;

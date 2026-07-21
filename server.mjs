@@ -630,57 +630,58 @@ async function readBinaryBody(request) {
   return Buffer.concat(chunks);
 }
 
-const STATIC_ALLOWED_FILES = new Set(["/index.html", "/landing.html", "/app.js", "/styles.css", "/styles-brand.css", "/screenshot-dashboard.png"]);
-const STATIC_ALLOWED_PREFIXES = ["/assets/", "/src/"];
-
-function isServableStaticPath(cleanPath) {
-  return STATIC_ALLOWED_FILES.has(cleanPath) || STATIC_ALLOWED_PREFIXES.some((prefix) => cleanPath.startsWith(prefix));
-}
+// Vite SPA 빌드 산출물(dist/)을 서빙한다. index.html 진입점 전환 이후 raw 소스가 아니라
+// 빌드된 정적 파일만 노출된다. 알 수 없는 경로는 SPA fallback 으로 index.html 을 반환한다.
+const distDir = join(rootDir, "dist");
 
 async function serveStatic(pathname, response) {
-  const cleanPath = pathname === "/" ? "/index.html" : pathname === "/landing" ? "/landing.html" : pathname;
-  if (!isServableStaticPath(cleanPath)) {
-    sendJson(response, 404, { error: "Not found" });
-    return;
-  }
-  const absolutePath = normalize(join(rootDir, cleanPath));
-  if (!absolutePath.startsWith(rootDir)) {
+  const cleanPath = pathname === "/landing" ? "/landing.html" : pathname;
+  const candidate = normalize(join(distDir, cleanPath));
+  if (!candidate.startsWith(distDir)) {
     sendJson(response, 403, { error: "Forbidden" });
     return;
   }
 
-  let fileStat;
-  try {
-    fileStat = await stat(absolutePath);
-  } catch {
-    sendJson(response, 404, { error: "Not found" });
-    return;
-  }
-  if (!fileStat.isFile()) {
-    sendJson(response, 404, { error: "Not found" });
-    return;
-  }
-
-  if (cleanPath === "/index.html") {
-    const html = await readFile(absolutePath, "utf8");
-    response.writeHead(200, {
-      "content-type": mimeTypes[".html"],
-    });
-    response.end(applyClientEnv(html));
+  const filePath = await resolveStaticFile(candidate);
+  if (!filePath) {
+    // 확장자가 있거나 경로에 dot 세그먼트(.env, .git/ 등)가 있으면 404 —
+    // SPA fallback 은 확장자 없는 순수 라우트 경로에만 적용한다.
+    const hasDotSegment = cleanPath.split("/").some((segment) => segment.startsWith("."));
+    if (extname(cleanPath) || hasDotSegment) {
+      sendJson(response, 404, { error: "Not found" });
+      return;
+    }
+    // SPA fallback: 확장자 없는 경로는 index.html 로 돌려 클라이언트 라우팅에 맡긴다.
+    await sendIndexHtml(response);
     return;
   }
 
   response.writeHead(200, {
-    "content-type": mimeTypes[extname(absolutePath)] || "application/octet-stream",
+    "content-type": mimeTypes[extname(filePath)] || "application/octet-stream",
   });
-  createReadStream(absolutePath).pipe(response);
+  createReadStream(filePath).pipe(response);
 }
 
-function applyClientEnv(html) {
-  return html
-    .replaceAll("%VITE_SUPABASE_URL%", process.env.VITE_SUPABASE_URL || "")
-    .replaceAll("%VITE_SUPABASE_ANON_KEY%", process.env.VITE_SUPABASE_ANON_KEY || "")
-    .replaceAll("%VITE_PUBLIC_SITE_URL%", process.env.VITE_PUBLIC_SITE_URL || "");
+async function resolveStaticFile(candidate) {
+  try {
+    const fileStat = await stat(candidate);
+    return fileStat.isFile() ? candidate : null;
+  } catch {
+    return null;
+  }
+}
+
+async function sendIndexHtml(response) {
+  const indexPath = join(distDir, "index.html");
+  try {
+    const html = await readFile(indexPath, "utf8");
+    response.writeHead(200, { "content-type": mimeTypes[".html"] });
+    response.end(html);
+  } catch {
+    sendJson(response, 404, {
+      error: "dist/index.html not found — run `npm run build` first",
+    });
+  }
 }
 
 async function sendImportSummary(response) {

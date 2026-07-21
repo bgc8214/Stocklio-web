@@ -12,13 +12,6 @@
     <link rel="stylesheet" href="styles-brand.css">
     <script>(function(){var t=localStorage.getItem("stocklio-theme");if(t){document.documentElement.dataset.theme=t;}else if(window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches){document.documentElement.dataset.theme="dark";}})();</script>
     <script>window.STOCKLIO_USE_CRAFT = true;</script>
-    <script>
-      window.STOCKLIO_SUPABASE = {
-        url: "%VITE_SUPABASE_URL%",
-        anonKey: "%VITE_SUPABASE_ANON_KEY%",
-        siteUrl: "%VITE_PUBLIC_SITE_URL%"
-      };
-    </script>
   </head>
   <body>
     <div class="app-shell">
@@ -883,8 +876,6 @@
 
     <script src="/assets/chart.umd.min.js"></script>
     <script src="/assets/chartjs-plugin-datalabels.min.js"></script>
-    <script type="module" src="/assets/supabase-auth.js"></script>
-    <script type="module" src="app.js"></script>
-    <script type="module" src="/assets/craft-dashboard.js"></script>
+    <script type="module" src="/src/react/main.jsx"></script>
   </body>
 </html>

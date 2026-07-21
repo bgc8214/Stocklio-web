@@ -3,23 +3,15 @@ import react from "@vitejs/plugin-react";
 
 export default defineConfig({
   plugins: [react()],
-  define: {
-    "process.env.NODE_ENV": JSON.stringify("production"),
-  },
   build: {
-    emptyOutDir: false,
-    outDir: "assets",
-    lib: {
-      entry: {
-        "craft-dashboard": "src/craft-dashboard.jsx",
-        "supabase-auth": "src/supabase-auth.js",
-      },
-      formats: ["es"],
-      fileName: (_format, entryName) => `${entryName}.js`,
-    },
-    codeSplitting: false,
-    rollupOptions: {
-      output: {},
+    outDir: "dist",
+    emptyOutDir: true,
+  },
+  server: {
+    port: 5173,
+    proxy: {
+      // /api 는 로컬 API 서버(server.mjs, 포트 4173)로 프록시한다.
+      "/api": "http://localhost:4173",
     },
   },
 });
