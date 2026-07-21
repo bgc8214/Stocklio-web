@@ -11,6 +11,7 @@ import { App } from "./App.jsx";
 import { ContentChrome } from "./components/ContentChrome.jsx";
 import { AccountsView } from "./views/AccountsView.jsx";
 import { CashflowsView } from "./views/CashflowsView.jsx";
+import { PerformanceView } from "./views/PerformanceView.jsx";
 import "../craft-dashboard.jsx";
 
 // initialize() 의 첫 render()→publishState() 이전에 브리지 리스너를 붙여야 초기 상태를 놓치지 않는다.
@@ -37,6 +38,11 @@ if (accountsMount) {
 const cashflowsMount = document.querySelector("#cashflowsViewMount");
 if (cashflowsMount) {
   createRoot(cashflowsMount).render(<CashflowsView />);
+}
+
+const performanceMount = document.querySelector("#performanceViewMount");
+if (performanceMount) {
+  createRoot(performanceMount).render(<PerformanceView />);
 }
 
 initializeStocklioApp();
