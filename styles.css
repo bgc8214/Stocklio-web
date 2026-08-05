@@ -789,6 +789,10 @@ main {
   min-width: 0;
   padding: 0 11px;
   white-space: nowrap;
+  /* 모바일에서 탭을 터치하면 라벨 텍스트가 선택돼 파란 하이라이트가 남는다. 네비게이션은 선택 대상이 아니므로 차단한다. */
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .view-tabs button.active {
