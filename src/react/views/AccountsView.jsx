@@ -1,38 +1,63 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useStore } from "../store/useStore.js";
 import { getKnownAccounts, getAccountStats, isAccountInUse, holdingValues, fxOf } from "../store/selectors.js";
 import { mutate, makeId, todayKey, setStatus, showToast } from "../store/mutations.js";
-import { accountKeyFor, parseAccountKey, isUnclassifiedCash, renameAccountReferences } from "../../app/accounts.js";
+import { accountKeyFor, isUnclassifiedCash, renameAccountReferences } from "../../app/accounts.js";
 import { formatAccountType, normalizeAccountType } from "../../app/account-types.js";
 import { formatKrw, formatMoney, formatPercent } from "../../app/formatters.js";
 
 const empty = () => ({ stockValueKrw: 0, cashKrw: 0, flowsKrw: 0, gainKrw: 0, holdingCount: 0 });
+const toKrw = (amount, currency, fx) => (currency === "USD" ? Number(amount || 0) * (fx || 1) : Number(amount || 0));
 
 export function AccountsView() {
   const state = useStore((s) => s.portfolio);
   const [search, setSearch] = useState("");
   const [investorFilter, setInvestorFilter] = useState("");
   const [currencyFilter, setCurrencyFilter] = useState("");
+  const [missingOnly, setMissingOnly] = useState(false);
   const [expandedKey, setExpandedKey] = useState(null);
-  const [cashDrafts, setCashDrafts] = useState({}); // key -> {currency, amount}
+  const [editingCashKey, setEditingCashKey] = useState(null); // 예수금 인라인 편집 중인 계좌 key
+  const [savedFlashKey, setSavedFlashKey] = useState(null); // 저장 직후 "저장됨" 확정 표시
+  const [cashDraft, setCashDraft] = useState({ currency: "KRW", amount: "" });
   const [formOpen, setFormOpen] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [allocAmount, setAllocAmount] = useState("");
   const [allocTarget, setAllocTarget] = useState("");
+  const cashInputRef = useRef(null);
 
+  const fx = fxOf(state);
   const accounts = useMemo(() => getKnownAccounts(state), [state]);
   const stats = useMemo(() => getAccountStats(state), [state]);
+
+  // 계좌별 예수금 레코드(미분류 제외). 계좌당 보통 1건.
+  const cashByKey = useMemo(() => {
+    const map = new Map();
+    for (const cash of state?.cashBalances || []) {
+      if (isUnclassifiedCash(cash)) continue;
+      const key = accountKeyFor(cash);
+      if (!map.has(key)) map.set(key, []);
+      map.get(key).push(cash);
+    }
+    return map;
+  }, [state]);
+
+  const primaryCashFor = (account) => {
+    const records = cashByKey.get(account.key) || [];
+    return records.find((c) => c.currency === (account.baseCurrency || "KRW")) || records[0] || null;
+  };
 
   const filtered = useMemo(() => {
     const query = search.trim().toLowerCase();
     return accounts.filter((account) => {
       const haystack = [account.account, account.investor, account.provider, formatAccountType(account.accountType), account.baseCurrency]
         .join(" ").toLowerCase();
+      const cashKrw = stats.get(account.key)?.cashKrw ?? 0;
       return (!investorFilter || account.investor === investorFilter) &&
         (!currencyFilter || account.baseCurrency === currencyFilter) &&
+        (!missingOnly || cashKrw === 0) &&
         (!query || haystack.includes(query));
     });
-  }, [accounts, search, investorFilter, currencyFilter]);
+  }, [accounts, stats, search, investorFilter, currencyFilter, missingOnly]);
 
   const investors = useMemo(() => [...new Set(accounts.map((a) => a.investor).filter(Boolean))].sort(), [accounts]);
   const totalCash = [...stats.values()].reduce((sum, item) => sum + item.cashKrw, 0);
@@ -45,34 +70,35 @@ export function AccountsView() {
   const unclassifiedTotal = unclassified.reduce((sum, cash) => sum + Number(cash.amount || 0), 0);
   const showAllocation = unclassifiedTotal > 0 && accounts.length > 0;
 
+  useEffect(() => {
+    if (editingCashKey && cashInputRef.current) cashInputRef.current.focus();
+  }, [editingCashKey]);
+
   const toggleExpand = (account) => {
-    if (expandedKey === account.key) {
-      setExpandedKey(null);
-      return;
-    }
-    setExpandedKey(account.key);
-    if (!cashDrafts[account.key]) {
-      const st = stats.get(account.key) || empty();
-      const currency = account.baseCurrency || "KRW";
-      const rate = currency === "USD" ? fxOf(state) : 1;
-      setCashDrafts((prev) => ({
-        ...prev,
-        [account.key]: { currency, amount: rate ? Math.round((st.cashKrw / rate) * 100) / 100 : st.cashKrw },
-      }));
-    }
+    setExpandedKey((prev) => (prev === account.key ? null : account.key));
   };
 
-  const setDraft = (key, field, value) =>
-    setCashDrafts((prev) => ({ ...prev, [key]: { ...(prev[key] || { currency: "KRW", amount: "" }), [field]: value } }));
+  // 예수금 편집 시작 — 항상 최신 저장값으로 초기화(오래된 draft 잔존 방지).
+  const openCashEditor = (account) => {
+    const primary = primaryCashFor(account);
+    setCashDraft({
+      currency: primary?.currency || account.baseCurrency || "KRW",
+      amount: primary ? String(primary.amount ?? "") : "",
+    });
+    setEditingCashKey(account.key);
+    setSavedFlashKey(null);
+  };
 
-  const saveCash = (key) => {
-    const account = parseAccountKey(key);
-    const draft = cashDrafts[key];
-    if (!draft) return;
-    const amount = Number(draft.amount) || 0;
-    const currency = draft.currency || "KRW";
+  const closeCashEditor = () => setEditingCashKey(null);
+
+  const saveCash = (account, event) => {
+    event?.preventDefault();
+    const amount = Number(cashDraft.amount) || 0;
+    const currency = cashDraft.currency || account.baseCurrency || "KRW";
     mutate((st) => {
-      const existing = (st.cashBalances || []).find((c) => c.investor === account.investor && c.account === account.account && c.currency === currency);
+      const existing = (st.cashBalances || []).find(
+        (c) => c.investor === account.investor && c.account === account.account && c.currency === currency,
+      );
       const nextCash = {
         id: existing?.id || makeId(),
         investor: account.investor,
@@ -89,6 +115,9 @@ export function AccountsView() {
     });
     setStatus("예수금 저장 완료", `${account.account} · ${formatMoney(amount, currency)}`);
     showToast("예수금 저장 완료", `${account.account} · ${formatMoney(amount, currency)}`, "success");
+    setEditingCashKey(null);
+    setSavedFlashKey(account.key);
+    window.setTimeout(() => setSavedFlashKey((k) => (k === account.key ? null : k)), 2200);
   };
 
   const deleteAccount = (id) => {
@@ -107,14 +136,17 @@ export function AccountsView() {
   const submitAccountForm = (event) => {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
+    const baseCurrency = String(form.get("baseCurrency"));
     const nextAccount = {
       id: editingId || makeId(),
       investor: String(form.get("investor")).trim(),
       account: String(form.get("account")).trim(),
       provider: String(form.get("provider")).trim(),
       accountType: normalizeAccountType(String(form.get("accountType"))),
-      baseCurrency: String(form.get("baseCurrency")),
+      baseCurrency,
     };
+    const cashRaw = String(form.get("cash") || "").trim();
+    const cashAmount = cashRaw === "" ? null : Number(cashRaw.replace(/[^0-9.]/g, ""));
     mutate((st) => {
       if (editingId) {
         const previous = (st.accounts || []).find((a) => a.id === editingId) || accounts.find((a) => a.id === editingId);
@@ -127,6 +159,24 @@ export function AccountsView() {
         }
       } else {
         st.accounts = [...(st.accounts || []), nextAccount];
+      }
+      // 계좌 생성/수정 시 예수금을 함께 입력했다면 upsert(계좌 통화 기준).
+      if (cashAmount !== null && Number.isFinite(cashAmount)) {
+        const existing = (st.cashBalances || []).find(
+          (c) => c.investor === nextAccount.investor && c.account === nextAccount.account && c.currency === baseCurrency,
+        );
+        const cashRecord = {
+          id: existing?.id || makeId(),
+          investor: nextAccount.investor,
+          account: nextAccount.account,
+          currency: baseCurrency,
+          amount: cashAmount,
+          asOf: todayKey(),
+          source: existing ? "사용자 수정" : "사용자 입력",
+        };
+        st.cashBalances = existing
+          ? (st.cashBalances || []).map((c) => (c.id === existing.id ? cashRecord : c))
+          : [...(st.cashBalances || []), cashRecord];
       }
       return st;
     });
@@ -166,13 +216,14 @@ export function AccountsView() {
   };
 
   const editingAccount = editingId ? accounts.find((a) => a.id === editingId) : null;
+  const editingCashPreview = toKrw(cashDraft.amount, cashDraft.currency, fx);
 
   return (
     <section className="accounts-view" data-view="accounts">
       <div className="account-page-heading">
         <div>
           <strong>계좌</strong>
-          <span>예수금을 선택해 업데이트하세요</span>
+          <span>계좌마다 예수금을 입력·수정하세요</span>
         </div>
         <span className="status-pill">총자산에 예수금 포함</span>
         <div className="account-page-actions">
@@ -193,7 +244,7 @@ export function AccountsView() {
         <div className="panel account-form-panel">
           <div className="section-heading">
             <h2>{editingId ? "계좌 수정" : "계좌 추가"}</h2>
-            <span>계좌 추가, 수정, 삭제</span>
+            <span>계좌 정보와 예수금을 함께 입력할 수 있어요</span>
           </div>
           <form className="account-form inline-create-panel" onSubmit={submitAccountForm}>
             <input name="investor" placeholder="투자자" required defaultValue={editingAccount?.investor || ""} />
@@ -207,6 +258,8 @@ export function AccountsView() {
               <option value="KRW">KRW</option>
               <option value="USD">USD</option>
             </select>
+            <input name="cash" type="text" inputMode="decimal" placeholder="예수금 (선택)"
+              defaultValue={editingAccount ? (primaryCashFor(editingAccount)?.amount ?? "") : ""} />
             <button type="submit">{editingId ? "수정 저장" : "계좌 저장"}</button>
             <button className="ghost" type="button" onClick={() => { setFormOpen(false); setEditingId(null); }}>취소</button>
           </form>
@@ -225,11 +278,16 @@ export function AccountsView() {
           <small>KRW {krwCount}개 · USD {usdCount}개 포함</small>
         </article>
         {missingCount > 0 ? (
-          <article className="account-overview-card account-overview-card--alert">
+          <button
+            type="button"
+            className={`account-overview-card account-overview-card--alert${missingOnly ? " is-active" : ""}`}
+            onClick={() => setMissingOnly((v) => !v)}
+            aria-pressed={missingOnly}
+          >
             <span>예수금 미입력</span>
             <strong>{missingCount}개</strong>
-            <small>업데이트가 필요한 계좌</small>
-          </article>
+            <small>{missingOnly ? "· 전체 계좌 보기" : "· 클릭해 해당 계좌만 보기"}</small>
+          </button>
         ) : null}
       </div>
 
@@ -237,9 +295,9 @@ export function AccountsView() {
         <div className="section-heading">
           <div>
             <h2>계좌 목록</h2>
-            <span>계좌를 클릭하면 그 자리에서 예수금과 보유 종목을 바로 편집할 수 있어요.</span>
+            <span>예수금은 각 계좌의 <b>편집</b>에서 바로 수정합니다. 계좌를 펼치면 보유 종목·구성을 볼 수 있어요.</span>
           </div>
-          <span className="status-pill">{filtered.length}개 계좌</span>
+          <span className="status-pill">{filtered.length}개 계좌{missingOnly ? " · 미입력만" : ""}</span>
         </div>
         <div className="account-filters">
           <select aria-label="계좌 투자자 필터" value={investorFilter} onChange={(e) => setInvestorFilter(e.target.value)}>
@@ -260,6 +318,7 @@ export function AccountsView() {
               <h2>미분류 예수금 배분</h2>
               <span>{formatKrw(unclassifiedTotal)} 배분 가능</span>
             </div>
+            <p className="allocation-hint">가져오기 과정에서 계좌를 특정하지 못한 예수금입니다. 아래에서 각 계좌로 나눠 담아 주세요.</p>
             <form className="cash-allocation-form" onSubmit={submitAllocation}>
               <select aria-label="배분할 계좌" required value={allocTarget} onChange={(e) => setAllocTarget(e.target.value)}>
                 <option value="">계좌 선택</option>
@@ -282,9 +341,13 @@ export function AccountsView() {
             const st = stats.get(account.key) || empty();
             const inUse = isAccountInUse(state, account);
             const isExpanded = expandedKey === account.key;
+            const isEditingCash = editingCashKey === account.key;
             const totalKrw = st.stockValueKrw + st.cashKrw;
             const gainClass = st.gainKrw >= 0 ? "positive" : "negative";
             const gainSign = st.gainKrw >= 0 ? "+" : "";
+            const primary = primaryCashFor(account);
+            const cur = account.baseCurrency || "KRW";
+            const hasCash = st.cashKrw !== 0 || primary != null;
             return (
               <div className={`account-list-row-wrap${isExpanded ? " is-expanded" : ""}`} key={account.key}>
                 <div
@@ -294,7 +357,25 @@ export function AccountsView() {
                 >
                   <div>
                     <strong>{account.account}</strong>
-                    <small>{account.investor} · {account.provider || "기관 미지정"} · {formatAccountType(account.accountType)} · {account.baseCurrency || "KRW"}</small>
+                    <small>{account.investor} · {account.provider || "기관 미지정"} · {formatAccountType(account.accountType)} · {cur}</small>
+                    <button
+                      type="button"
+                      className={`account-cash-quick${!hasCash ? " is-empty" : ""}${savedFlashKey === account.key ? " is-saved" : ""}`}
+                      onClick={(e) => { e.stopPropagation(); openCashEditor(account); }}
+                    >
+                      {savedFlashKey === account.key ? (
+                        <span className="cash-saved-flag">저장됨 ✓</span>
+                      ) : (
+                        <>
+                          <span className="cash-quick-label">예수금</span>
+                          <span className="cash-quick-value">
+                            {primary ? formatMoney(primary.amount, primary.currency) : "미입력"}
+                          </span>
+                          {primary && primary.currency === "USD" ? <span className="cash-quick-krw">≈ {formatKrw(st.cashKrw)}</span> : null}
+                          <span className="cash-quick-edit" aria-hidden="true">✎ 편집</span>
+                        </>
+                      )}
+                    </button>
                   </div>
                   <div className="account-row-totals">
                     <strong>{formatKrw(totalKrw)}</strong>
@@ -315,42 +396,65 @@ export function AccountsView() {
                   </div>
                   <span className="account-row-chevron" aria-hidden="true">{isExpanded ? "▲" : "▼"}</span>
                 </div>
-                {isExpanded ? <AccountAccordionBody account={account} stats={st} state={state} draft={cashDrafts[account.key] || { currency: account.baseCurrency || "KRW", amount: "" }} setDraft={setDraft} saveCash={saveCash} /> : null}
+
+                {isEditingCash ? (
+                  <form className="account-cash-editor" onSubmit={(e) => saveCash(account, e)}>
+                    <label className="cash-editor-field">
+                      <span>예수금 ({cashDraft.currency})</span>
+                      <input
+                        ref={cashInputRef} type="number" step="0.01" placeholder="0"
+                        value={cashDraft.amount}
+                        onChange={(e) => setCashDraft((d) => ({ ...d, amount: e.target.value }))}
+                      />
+                    </label>
+                    <label className="cash-editor-field cash-editor-currency">
+                      <span>통화</span>
+                      <select value={cashDraft.currency} onChange={(e) => setCashDraft((d) => ({ ...d, currency: e.target.value }))}>
+                        <option value="KRW">KRW</option>
+                        <option value="USD">USD</option>
+                      </select>
+                    </label>
+                    <div className="cash-editor-actions">
+                      <button type="submit">저장</button>
+                      <button className="ghost" type="button" onClick={closeCashEditor}>취소</button>
+                    </div>
+                    {cashDraft.currency === "USD" ? (
+                      <span className="cash-krw-hint">≈ {formatKrw(editingCashPreview)} (환율 {fx ? fx.toLocaleString() : "-"})</span>
+                    ) : null}
+                  </form>
+                ) : null}
+
+                {isExpanded ? <AccountAccordionBody account={account} stats={st} state={state} /> : null}
               </div>
             );
-          }) : <div className="empty-state">등록된 계좌가 없습니다</div>}
+          }) : (
+            <div className="empty-state">
+              {missingOnly ? "예수금 미입력 계좌가 없습니다" : "등록된 계좌가 없습니다"}
+            </div>
+          )}
         </div>
       </div>
 
       <div className="panel">
         <div className="section-heading">
-          <h2>예수금 변경 기록</h2>
+          <div>
+            <h2>예수금 현황</h2>
+            <span>모든 계좌의 현재 예수금입니다. 수정은 위 계좌 목록의 <b>편집</b>에서 하세요.</span>
+          </div>
         </div>
-        <CashBalanceList state={state} accounts={accounts} />
+        <CashStatusList state={state} fx={fx} />
       </div>
     </section>
   );
 }
 
-function AccountAccordionBody({ account, stats, state, draft, setDraft, saveCash }) {
+function AccountAccordionBody({ account, stats, state }) {
   const holdings = (state?.holdings || []).filter((h) => h.investor === account.investor && h.account === account.account);
   const totalKrw = stats.stockValueKrw + stats.cashKrw;
   const stockRatio = totalKrw ? stats.stockValueKrw / totalKrw : 0;
   const cashRatio = totalKrw ? stats.cashKrw / totalKrw : 0;
   return (
     <div className="account-accordion-body">
-      <div className="account-cash-form-row">
-        <label>통화
-          <select value={draft.currency} onChange={(e) => setDraft(account.key, "currency", e.target.value)}>
-            <option value="KRW">KRW</option>
-            <option value="USD">USD</option>
-          </select>
-        </label>
-        <label>예수금
-          <input type="number" step="0.01" placeholder="0" value={draft.amount ?? ""} onChange={(e) => setDraft(account.key, "amount", e.target.value)} />
-        </label>
-        <button type="button" onClick={() => saveCash(account.key)}>예수금 저장</button>
-      </div>
       <div className="account-accordion-columns">
         <div>
           <div className="section-badge">보유 종목 ({holdings.length})</div>
@@ -375,45 +479,10 @@ function AccountAccordionBody({ account, stats, state, draft, setDraft, saveCash
   );
 }
 
-// 예수금 변경 기록(인라인 편집 포함)
-function CashBalanceList({ state, accounts }) {
-  const [editingId, setEditingId] = useState(null);
-  const [draft, setDraft] = useState(null);
-  const rows = [...(state?.cashBalances || [])].sort((a, b) => `${a.investor}${a.account}`.localeCompare(`${b.investor}${b.account}`));
-
-  const startEdit = (cash) => {
-    setEditingId(cash.id);
-    setDraft({ accountKey: accountKeyFor(cash), currency: cash.currency, amount: cash.amount ?? "" });
-  };
-
-  const save = (id) => {
-    const account = parseAccountKey(draft.accountKey);
-    mutate((st) => {
-      const existing = (st.cashBalances || []).find((c) => c.id === id);
-      if (!existing) return st;
-      const nextCash = {
-        ...existing,
-        investor: account.investor,
-        account: account.account,
-        currency: draft.currency,
-        amount: Number(draft.amount),
-        asOf: todayKey(),
-        source: "사용자 수정",
-      };
-      st.cashBalances = st.cashBalances.map((c) => (c.id === id ? nextCash : c));
-      return st;
-    });
-    setEditingId(null);
-    setDraft(null);
-  };
-
-  const remove = (id) => {
-    if (!window.confirm("이 예수금 기록을 삭제할까요?")) return;
-    mutate((st) => {
-      st.cashBalances = (st.cashBalances || []).filter((c) => c.id !== id);
-      return st;
-    });
-  };
+// 예수금 현황 — 읽기 전용. 편집은 계좌 목록의 인라인 편집기 한 곳에서만 이뤄진다.
+function CashStatusList({ state, fx }) {
+  const rows = [...(state?.cashBalances || [])]
+    .sort((a, b) => `${a.investor}${a.account}`.localeCompare(`${b.investor}${b.account}`));
 
   if (!rows.length) {
     return <div className="cash-balance-list"><div className="empty-state">등록된 예수금이 없습니다</div></div>;
@@ -421,44 +490,23 @@ function CashBalanceList({ state, accounts }) {
 
   return (
     <div className="cash-balance-list">
-      {rows.map((cash) => editingId === cash.id ? (
-        <div className="detail-row is-editing-row" key={cash.id}>
-          <span>
-            <strong>예수금 수정</strong>
-            <small>계좌와 금액을 이 행에서 바로 수정합니다</small>
-          </span>
-          <div className="inline-edit-cell">
-            <select aria-label="예수금 계좌" value={draft.accountKey} onChange={(e) => setDraft((d) => ({ ...d, accountKey: e.target.value }))}>
-              {accounts.map((a) => <option key={a.key} value={a.key}>{a.investor} · {a.account}</option>)}
-            </select>
-            <select aria-label="통화" value={draft.currency} onChange={(e) => setDraft((d) => ({ ...d, currency: e.target.value }))}>
-              <option value="KRW">KRW</option>
-              <option value="USD">USD</option>
-            </select>
-            <input aria-label="예수금" type="number" step="0.01" value={draft.amount} onChange={(e) => setDraft((d) => ({ ...d, amount: e.target.value }))} />
+      {rows.map((cash) => {
+        const unclassified = isUnclassifiedCash(cash);
+        const krw = toKrw(cash.amount, cash.currency, fx);
+        return (
+          <div className="cash-balance-row" key={cash.id}>
+            <span>
+              <strong>{unclassified ? "미분류 예수금" : cash.account}</strong>
+              <small>
+                {cash.investor || "미지정"} · {cash.source || "직접 입력"}
+                {cash.asOf ? ` · ${cash.asOf}` : ""}
+              </small>
+            </span>
+            <strong>{formatMoney(cash.amount, cash.currency)}</strong>
+            <small className="cash-balance-krw">{cash.currency === "USD" ? `≈ ${formatKrw(krw)}` : ""}</small>
           </div>
-          <div className="row-actions">
-            <button className="secondary small-button" type="button" onClick={() => save(cash.id)}>저장</button>
-            <button className="ghost small-button" type="button" onClick={() => { setEditingId(null); setDraft(null); }}>취소</button>
-            <button className="icon-danger" type="button" aria-label="예수금 삭제" onClick={() => remove(cash.id)}>×</button>
-          </div>
-        </div>
-      ) : (
-        <div className="cash-balance-row" key={cash.id}>
-          <span>
-            <strong>{cash.account}</strong>
-            <small>{cash.investor} · {cash.source || "직접 입력"}</small>
-          </span>
-          <strong>{formatMoney(cash.amount, cash.currency)}</strong>
-          <details className="row-menu">
-            <summary aria-label={`${cash.account} 예수금 작업`} title="작업 더보기">⋮</summary>
-            <div className="row-menu-popover">
-              <button type="button" onClick={() => startEdit(cash)}>수정</button>
-              <button className="row-menu-danger" type="button" onClick={() => remove(cash.id)}>삭제</button>
-            </div>
-          </details>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }
