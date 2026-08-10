@@ -29,6 +29,11 @@ export function PerformanceView() {
   const rows = useMemo(() => filterSnapshotRows(allRows, range), [allRows, range]);
 
   const stats = rows.length > 0 ? getPerformanceStats(rows) : null;
+  // 입금/출금 기록이 하나도 없으면 투자손익(= 증감 − 입출금)이 부풀려질 수 있음을 안내한다.
+  const hasExternalFlows = useMemo(
+    () => (state?.cashFlows || []).some((f) => f.type === "deposit" || f.type === "withdrawal"),
+    [state],
+  );
 
   // 월별 손익 차트
   const flowSource = useMemo(
@@ -115,6 +120,16 @@ export function PerformanceView() {
           ) : null}
         </div>
       </div>
+
+      {stats && !hasExternalFlows ? (
+        <div className="perf-flow-warning panel" role="note">
+          <span className="perf-flow-warning-icon" aria-hidden="true">⚠️</span>
+          <div className="perf-flow-warning-body">
+            <strong>입출금 기록이 없어 투자손익이 부풀려질 수 있어요</strong>
+            <span>매달 납입·인출을 <b>입출금 탭</b>에 기록하면 “투자손익 = 총자산 증감 − 입출금”이 정확해집니다.</span>
+          </div>
+        </div>
+      ) : null}
 
       <div className="panel performance-chart-panel performance-full-panel">
         <div className="section-heading">

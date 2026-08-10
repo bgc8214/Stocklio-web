@@ -2,6 +2,45 @@
    이 파일은 styles/ 소스 중 하나이며, scripts/build-css.mjs가 병합해 styles.css를 생성한다.
    직접 styles.css를 수정하지 말 것. */
 @layer cashflows {
+/* 배당 빠른 입력 */
+.dividend-quick-add {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+}
+.dividend-quick-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+}
+.dividend-quick-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.dividend-quick-chip {
+  padding: 4px 10px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface-2, transparent);
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
+}
+.dividend-quick-chip:hover {
+  border-color: var(--accent);
+  color: var(--accent-dark);
+}
+.dividend-quick-hint {
+  flex-basis: 100%;
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.5;
+}
 .cash-form-row {
   display: grid;
   gap: 10px;
