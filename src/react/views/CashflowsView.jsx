@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useRef, useState } from "react";
 import { useStore } from "../store/useStore.js";
 import { getKnownAccounts } from "../store/selectors.js";
 import { mutate, makeId, todayKey, setStatus, showToast } from "../store/mutations.js";
@@ -7,14 +7,15 @@ import { formatKrw } from "../../app/formatters.js";
 import { parseSortValue, cycleSortValue } from "../../app/sort.js";
 
 const DEFAULT_SORT = "date-desc";
-const FLOW_TYPES = [
+// 입력 가능한 유형 — 세금/수수료는 성과 계산에 반영되지 않는 dead input이라 제거했다.
+// (과거에 기록/가져온 tax·fee 항목은 아래 라벨 맵으로 그대로 표시된다.)
+const INPUT_FLOW_TYPES = [
   ["deposit", "입금"],
   ["withdrawal", "출금"],
   ["dividend", "배당"],
-  ["tax", "세금"],
-  ["fee", "수수료"],
 ];
-const flowTypeLabel = (type) => FLOW_TYPES.find(([v]) => v === type)?.[1] || type || "";
+const FLOW_TYPE_LABELS = { deposit: "입금", withdrawal: "출금", dividend: "배당", tax: "세금", fee: "수수료" };
+const flowTypeLabel = (type) => FLOW_TYPE_LABELS[type] || type || "";
 
 export function CashflowsView() {
   const state = useStore((s) => s.portfolio);
@@ -23,8 +24,32 @@ export function CashflowsView() {
   const [editingId, setEditingId] = useState(null);
   const [draft, setDraft] = useState(null);
 
+  const formRef = useRef(null);
   const accounts = useMemo(() => getKnownAccounts(state), [state]);
   const dividends = useMemo(() => (state?.cashFlows || []).filter((f) => f.type === "dividend"), [state]);
+
+  // 보유 종목에서 계좌·종목 조합을 뽑아 "배당 빠른 입력" 칩을 만든다.
+  const dividendSuggestions = useMemo(() => {
+    const seen = new Map();
+    for (const h of state?.holdings || []) {
+      const accountKey = accountKeyFor(h);
+      const ticker = h.ticker || h.symbol || "";
+      const key = `${accountKey}|${ticker || h.name || ""}`;
+      if (!seen.has(key)) {
+        seen.set(key, { accountKey, account: h.account, ticker, name: h.name });
+      }
+    }
+    return [...seen.values()];
+  }, [state]);
+
+  const prefillDividend = (s) => {
+    const form = formRef.current;
+    if (!form) return;
+    if (form.elements.type) form.elements.type.value = "dividend";
+    if (form.elements.accountKey) form.elements.accountKey.value = s.accountKey;
+    if (form.elements.note && !form.elements.note.value) form.elements.note.value = `${s.name || s.ticker} 배당`;
+    form.elements.amountKrw?.focus();
+  };
 
   const sort = parseSortValue(sortValue, DEFAULT_SORT);
   const rows = useMemo(() => {
@@ -121,23 +146,42 @@ export function CashflowsView() {
           <h2>입출금 기록</h2>
           <span>입금/출금은 투자손익 계산을 보정합니다</span>
         </div>
-        <form className="cash-flow-form" onSubmit={submitForm}>
+        <form className="cash-flow-form" ref={formRef} onSubmit={submitForm}>
           <input name="date" type="date" required defaultValue={todayKey()} />
           <select name="accountKey" aria-label="계좌 선택" required defaultValue="">
             <option value="">계좌 선택</option>
             {accounts.map((a) => <option key={a.key} value={a.key}>{a.investor} · {a.account}</option>)}
           </select>
           <select name="type" required defaultValue="deposit">
-            {FLOW_TYPES.map(([v, label]) => <option key={v} value={v}>{label}</option>)}
+            {INPUT_FLOW_TYPES.map(([v, label]) => <option key={v} value={v}>{label}</option>)}
           </select>
           <input name="amountKrw" type="number" step="1" min="0" placeholder="금액 KRW" required />
           <input name="note" placeholder="메모" />
           <button type="submit">기록</button>
         </form>
+        {dividendSuggestions.length ? (
+          <div className="dividend-quick-add">
+            <span className="dividend-quick-label">배당 빠른 입력</span>
+            <div className="dividend-quick-chips">
+              {dividendSuggestions.map((s) => (
+                <button
+                  type="button"
+                  key={`${s.accountKey}|${s.ticker || s.name}`}
+                  className="dividend-quick-chip"
+                  onClick={() => prefillDividend(s)}
+                  title={`${s.account} · ${s.name || s.ticker} 배당을 위 양식에 채웁니다`}
+                >
+                  {s.ticker || s.name}
+                </button>
+              ))}
+            </div>
+            <span className="dividend-quick-hint">종목을 누르면 위 양식이 배당으로 채워집니다. 배당은 위 인컴 차트에만 집계되며 투자손익에는 중복 반영되지 않아요.</span>
+          </div>
+        ) : null}
         <div className="filters compact-filters" aria-label="입출금 필터">
           <select aria-label="입출금 유형 필터" value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)}>
             <option value="">모든 유형</option>
-            {FLOW_TYPES.map(([v, label]) => <option key={v} value={v}>{label}</option>)}
+            {INPUT_FLOW_TYPES.map(([v, label]) => <option key={v} value={v}>{label}</option>)}
           </select>
           <select aria-label="입출금 정렬" value={sortValue} onChange={(e) => setSortValue(e.target.value)}>
             <option value="date-desc">최근 날짜순</option>
@@ -170,7 +214,7 @@ export function CashflowsView() {
                   </td>
                   <td data-label="유형">
                     <select aria-label="유형" value={draft.type} onChange={(e) => setDraft((d) => ({ ...d, type: e.target.value }))}>
-                      {FLOW_TYPES.map(([v, label]) => <option key={v} value={v}>{label}</option>)}
+                      {INPUT_FLOW_TYPES.map(([v, label]) => <option key={v} value={v}>{label}</option>)}
                     </select>
                   </td>
                   <td data-label="금액"><input type="number" step="1" min="0" aria-label="금액 KRW" value={draft.amountKrw} onChange={(e) => setDraft((d) => ({ ...d, amountKrw: e.target.value }))} /></td>
@@ -217,7 +261,7 @@ function DividendChart({ dividends }) {
         <div className="empty-state">
           <span className="empty-icon">🌱</span>
           <strong>배당 기록이 없습니다</strong>
-          <span>입출금 탭에서 배당 수령을 기록하면 차트가 채워집니다</span>
+          <span>아래 입출금 기록의 '배당 빠른 입력'에서 종목을 누르면 차트가 채워집니다</span>
         </div>
       </div>
     );

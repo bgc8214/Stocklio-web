@@ -6711,6 +6711,45 @@ button.account-overview-card {
    이 파일은 styles/ 소스 중 하나이며, scripts/build-css.mjs가 병합해 styles.css를 생성한다.
    직접 styles.css를 수정하지 말 것. */
 @layer cashflows {
+/* 배당 빠른 입력 */
+.dividend-quick-add {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+}
+.dividend-quick-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+}
+.dividend-quick-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.dividend-quick-chip {
+  padding: 4px 10px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface-2, transparent);
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
+}
+.dividend-quick-chip:hover {
+  border-color: var(--accent);
+  color: var(--accent-dark);
+}
+.dividend-quick-hint {
+  flex-basis: 100%;
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.5;
+}
 .cash-form-row {
   display: grid;
   gap: 10px;
@@ -7219,6 +7258,34 @@ button.account-overview-card {
    이 파일은 styles/ 소스 중 하나이며, scripts/build-css.mjs가 병합해 styles.css를 생성한다.
    직접 styles.css를 수정하지 말 것. */
 @layer performance {
+/* 입출금 미기록 경고 배너 */
+.perf-flow-warning {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1px solid var(--warn-line, #f0c36d);
+  background: var(--warn-bg, rgba(240, 195, 109, 0.12));
+  border-radius: 12px;
+}
+.perf-flow-warning-icon {
+  font-size: 18px;
+  line-height: 1.3;
+}
+.perf-flow-warning-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.perf-flow-warning-body strong {
+  font-size: 13px;
+  color: var(--text);
+}
+.perf-flow-warning-body span {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.55;
+}
 .performance-overview-panel {
   grid-column: 1 / -1;
 }
@@ -7927,6 +7994,36 @@ button.ghost[id*="Export"] {
    이 파일은 styles/ 소스 중 하나이며, scripts/build-css.mjs가 병합해 styles.css를 생성한다.
    직접 styles.css를 수정하지 말 것. */
 @layer automation {
+/* 알림 온보딩 가이드 */
+.notif-guide {
+  margin: 0 0 12px;
+  padding-left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+.notif-guide li {
+  list-style: decimal;
+}
+.notif-guide b {
+  color: var(--text);
+}
+.notif-guide code {
+  padding: 1px 5px;
+  border-radius: 5px;
+  background: var(--surface-2, rgba(127, 127, 127, 0.12));
+  font-size: 11px;
+}
+.notification-form label > small {
+  display: block;
+  margin-top: 3px;
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.5;
+}
 .sync-status {
   border: 1px solid var(--line);
   border-radius: 999px;

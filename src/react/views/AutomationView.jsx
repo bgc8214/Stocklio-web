@@ -62,37 +62,45 @@ export function AutomationView() {
       <div className="panel automation-panel notification-panel">
         <div className="section-heading">
           <h2>알림</h2>
-          <span>{signedIn ? (telegramEnabled ? "매일 스냅샷 후 발송" : "알림 꺼짐") : "로그인 후 설정 가능"}</span>
+          <span>{signedIn ? (telegramEnabled ? "매일 스냅샷 요약을 텔레그램으로 발송" : "알림 꺼짐 · 아래에서 켜세요") : "로그인 후 설정할 수 있어요"}</span>
         </div>
         {!signedIn ? (
           <div className="locked-notice">
-            <strong>클라우드 저장 연결 후 알림을 켤 수 있습니다</strong>
-            <span>텔레그램 알림은 계정별 설정이 필요합니다. 먼저 로그인한 뒤 chat id를 연결하세요.</span>
+            <strong>로그인하면 텔레그램으로 매일 요약을 받을 수 있어요</strong>
+            <span>클라우드에 포트폴리오를 저장한 뒤, 자동 기록이 끝나면 총자산·투자손익 요약이 발송됩니다.</span>
           </div>
-        ) : null}
-        {signedIn ? (
-          <form className="notification-form" onSubmit={saveNotifications}>
-            <label><span>텔레그램 대화</span>
-              <input type="text" inputMode="numeric" placeholder="예: 123456789" value={chatId} onChange={(e) => setChatId(e.target.value)} />
-            </label>
-            <label><span>알림 기준</span>
-              <input type="number" min="0" step="10000" placeholder="0이면 매일 발송" value={threshold} onChange={(e) => setThreshold(e.target.value)} />
-            </label>
-            <label className="toggle-row">
-              <input type="checkbox" checked={telegramEnabled} onChange={(e) => setTelegramEnabled(e.target.checked)} />
-              <span>텔레그램 알림 사용</span>
-            </label>
-            <label className="toggle-row">
-              <input type="checkbox" checked={dailyDigest} onChange={(e) => setDailyDigest(e.target.checked)} />
-              <span>매일 스냅샷 요약 받기</span>
-            </label>
-            <div className="form-actions inline-actions">
-              <button type="submit">저장</button>
-              <button className="ghost" type="button" onClick={findChatId}>chat id 찾기</button>
-              <button className="secondary" type="button" onClick={() => actions.sendTestNotification?.(String(chatId).trim())?.catch?.(() => {})}>테스트 메시지</button>
-            </div>
-          </form>
-        ) : null}
+        ) : (
+          <>
+            <ol className="notif-guide">
+              <li>텔레그램에서 <b>@stocklio_alarm_bot</b>과 대화를 열고 <code>/start</code>를 보냅니다.</li>
+              <li>아래 <b>chat id 찾기</b>를 누르면 대화가 자동으로 연결돼요.</li>
+              <li><b>텔레그램 알림 사용</b>을 켜고 <b>저장</b> → <b>테스트 메시지</b>로 확인하면 끝.</li>
+            </ol>
+            <form className="notification-form" onSubmit={saveNotifications}>
+              <label><span>텔레그램 chat id</span>
+                <input type="text" inputMode="numeric" placeholder="예: 123456789" value={chatId} onChange={(e) => setChatId(e.target.value)} />
+                <small>봇과 대화를 시작한 뒤 'chat id 찾기'를 누르면 자동으로 채워집니다.</small>
+              </label>
+              <label><span>큰 변동 알림 기준 (원)</span>
+                <input type="number" min="0" step="10000" placeholder="0" value={threshold} onChange={(e) => setThreshold(e.target.value)} />
+                <small>이 금액 이상 변동한 날에만 발송합니다. 비우거나 0이면 매일 발송.</small>
+              </label>
+              <label className="toggle-row">
+                <input type="checkbox" checked={telegramEnabled} onChange={(e) => setTelegramEnabled(e.target.checked)} />
+                <span>텔레그램 알림 사용</span>
+              </label>
+              <label className="toggle-row">
+                <input type="checkbox" checked={dailyDigest} onChange={(e) => setDailyDigest(e.target.checked)} />
+                <span>매일 스냅샷 요약 받기</span>
+              </label>
+              <div className="form-actions inline-actions">
+                <button type="submit">저장</button>
+                <button className="ghost" type="button" onClick={findChatId}>chat id 찾기</button>
+                <button className="secondary" type="button" onClick={() => actions.sendTestNotification?.(String(chatId).trim())?.catch?.(() => {})}>테스트 메시지</button>
+              </div>
+            </form>
+          </>
+        )}
         <div className="automation-summary">
           <div><strong>요약 내용</strong><span>총자산, 전일 대비, 투자손익 추정, 입출금 영향, 변동 원인 상위 종목</span></div>
           <div><strong>최근 발송</strong><span>{latestNotif ? `${notifStatusLabel(latestNotif.status)} · ${formatAsOf(latestNotif.sent_at || latestNotif.created_at)}` : "발송 기록이 없습니다"}</span></div>

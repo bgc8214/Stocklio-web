@@ -31,7 +31,7 @@ export const viewCopy = {
   holdings: { title: "보유 종목", subtitle: "" },
   accounts: { title: "계좌", subtitle: "예수금 관리와 계좌 현황" },
   performance: { title: "성과", subtitle: "누적 수익과 일별 증감" },
-  cashflows: { title: "입출금", subtitle: "입출금 · 배당 · 수수료 기록" },
+  cashflows: { title: "입출금", subtitle: "입금 · 출금 · 배당 기록" },
   automation: { title: "설정", subtitle: "알림, 백업, 동기화" },
   simulator: { title: "시뮬레이터", subtitle: "만약 이 방식으로 투자했다면" },
 };

@@ -2,6 +2,36 @@
    이 파일은 styles/ 소스 중 하나이며, scripts/build-css.mjs가 병합해 styles.css를 생성한다.
    직접 styles.css를 수정하지 말 것. */
 @layer automation {
+/* 알림 온보딩 가이드 */
+.notif-guide {
+  margin: 0 0 12px;
+  padding-left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+.notif-guide li {
+  list-style: decimal;
+}
+.notif-guide b {
+  color: var(--text);
+}
+.notif-guide code {
+  padding: 1px 5px;
+  border-radius: 5px;
+  background: var(--surface-2, rgba(127, 127, 127, 0.12));
+  font-size: 11px;
+}
+.notification-form label > small {
+  display: block;
+  margin-top: 3px;
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.5;
+}
 .sync-status {
   border: 1px solid var(--line);
   border-radius: 999px;
