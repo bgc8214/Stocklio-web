@@ -69,8 +69,20 @@
 
 세전·환율 스냅샷 기준의 **추정치**이며 향후 배당 변동·세금은 미반영(패널에 명시).
 
+## 추가 개선 — 월별 예상 배당 캘린더 (2026-08-11, hallmark 스킬)
+
+예상 배당에 **월별 스케줄**을 추가. 과거 1년 배당의 **지급 월**을 종목별로 12개월 버킷에 배분해 "언제 얼마 들어올지"를 보여준다.
+
+**구현**:
+- `parseTtmDividendPerShare`가 개별 지급 내역 `payments:[{month, perShare}]`을 추가로 반환(기존 필드 유지).
+- 도메인 `buildMonthlyDividendSchedule(holdings, dividendByTicker, fxRate)` — 12개월 `months[{amountKrw, contributors}]` + `peakMonth`·`payingMonths`·`totalKrw`. 테스트 3개.
+- UI: 예상 배당 패널에 **종목별 ↔ 월별 토글**. 월별은 12칼럼 캘린더(막대+금액), **피크 월 강조**·**현재 월 마커**·빈 달 baseline, 로드 시 스태거드 상승 애니메이션(`prefers-reduced-motion` 대응).
+- 디자인: hallmark 규칙대로 **새 테마 없이 기존 토큰**(`--accent`, `--muted`, `--line`, Pretendard) 채택. 그리드 `repeat(12, minmax(0,1fr))`로 오버플로 구조적 차단, `@media ≤560px`에서 금액 라벨 숨김·트랙 축소.
+
+**검증**: 실제 Yahoo 데이터로 분기 배당(3·6·9·12월) + 월배당 패턴이 12월 피크로 표시됨을 확인. 라이트/다크·가로스크롤 없음 확인.
+
 ## 남은 아이디어(후속)
 - 설정 탭을 알림/자동기록(상단)과 백업·가져오기·로그(고급 접기)로 더 분리.
 - CSP `style-src`에 `cdn.jsdelivr.net` 허용 또는 Pretendard 로컬 번들화(현재 폰트 CDN이 CSP로 차단됨).
-- 예상 배당 **월별 스케줄**(과거 지급 월 기반) 추정 — 현재는 연배당·월평균만.
 - 배당 세금(15.4%/현지원천징수) 옵션 반영한 세후 예상.
+- 월별 캘린더에 종목별 기여 상세(툴팁 → 클릭 확장) 노출.
