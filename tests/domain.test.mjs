@@ -6,6 +6,7 @@ import {
   getExternalFlowAmount,
   getTotals,
   groupByAccount,
+  buildMonthlyDividendSchedule,
   normalizeDashboardLayout,
   parseTtmDividendPerShare,
   projectPortfolioDividends,
@@ -749,4 +750,46 @@ test("projectPortfolioDividends: 배당 지급 종목 없으면 빈 결과", () 
   assert.equal(p.payingCount, 0);
   assert.equal(p.annualKrw, 0);
   assert.equal(p.portfolioYieldRatio, 0);
+});
+
+test("parseTtmDividendPerShare: 지급 월(payments)을 기록한다", () => {
+  const now = Date.UTC(2026, 0, 1) / 1000;
+  const at = (y, m, d) => Date.UTC(y, m - 1, d) / 1000;
+  const payload = {
+    chart: { result: [{ meta: { currency: "USD" }, events: { dividends: {
+      a: { amount: 0.25, date: at(2025, 3, 20) },
+      b: { amount: 0.26, date: at(2025, 6, 20) },
+    } } }] },
+  };
+  const info = parseTtmDividendPerShare(payload, now * 1000);
+  assert.deepEqual(info.payments.map((p) => p.month).sort((x, y) => x - y), [3, 6]);
+});
+
+test("buildMonthlyDividendSchedule: 종목별 지급 월을 12개월 버킷에 배분", () => {
+  const holdings = [
+    { ticker: "SCHD", currency: "USD", quantity: 10 },
+    { ticker: "005930.KS", currency: "KRW", quantity: 100 },
+  ];
+  const divMap = {
+    SCHD: { currency: "USD", payments: [{ month: 3, perShare: 0.25 }, { month: 6, perShare: 0.25 }] },
+    "005930.KS": { currency: "KRW", payments: [{ month: 6, perShare: 100 }] },
+  };
+  const fx = 1300;
+  const s = buildMonthlyDividendSchedule(holdings, divMap, fx);
+  assert.equal(s.months.length, 12);
+  // 3월: SCHD 0.25*10*1300 = 3250
+  assert.equal(s.months[2].amountKrw, 3250);
+  // 6월: SCHD 3250 + 삼성 100*100 = 10000 → 13250
+  assert.equal(s.months[5].amountKrw, 13250);
+  assert.equal(s.months[5].contributors.length, 2);
+  assert.equal(s.peakMonth, 6);
+  assert.equal(s.payingMonths, 2);
+  assert.equal(s.totalKrw, 16500);
+});
+
+test("buildMonthlyDividendSchedule: 배당 없으면 빈 스케줄", () => {
+  const s = buildMonthlyDividendSchedule([{ ticker: "MSFT", quantity: 10 }], {}, 1300);
+  assert.equal(s.payingMonths, 0);
+  assert.equal(s.peakMonth, null);
+  assert.equal(s.totalKrw, 0);
 });

@@ -140,12 +140,13 @@ export function parseTtmDividendPerShare(chartPayload, nowMs = Date.now()) {
   const currency = result?.meta?.currency || "USD";
   const events = result?.events?.dividends;
   if (!events || typeof events !== "object") {
-    return { perShare: 0, currency, count: 0, lastDate: null };
+    return { perShare: 0, currency, count: 0, lastDate: null, payments: [] };
   }
   const cutoffSec = nowMs / 1000 - 372 * 24 * 3600; // 약 12개월(윤달·주말 여유 포함)
   let sum = 0;
   let count = 0;
   let lastSec = 0;
+  const payments = []; // 월별 스케줄용 개별 지급 내역
   for (const key of Object.keys(events)) {
     const ev = events[key];
     const amount = Number(ev?.amount);
@@ -155,12 +156,16 @@ export function parseTtmDividendPerShare(chartPayload, nowMs = Date.now()) {
     sum += amount;
     count += 1;
     if (ts > lastSec) lastSec = ts;
+    if (Number.isFinite(ts)) {
+      payments.push({ month: new Date(ts * 1000).getUTCMonth() + 1, perShare: amount });
+    }
   }
   return {
     perShare: sum,
     currency,
     count,
     lastDate: lastSec ? new Date(lastSec * 1000).toISOString().slice(0, 10) : null,
+    payments,
   };
 }
 
@@ -203,6 +208,43 @@ export function projectPortfolioDividends(holdings = [], dividendByTicker = {}, 
     portfolioYieldRatio: equityValueKrw > 0 ? annualKrw / equityValueKrw : 0,
     payingCount: rows.length,
   };
+}
+
+// 보유 종목의 과거 1년 배당 지급 월을 기반으로 12개월 예상 배당 캘린더를 만든다.
+// 반환: { months: [{month, label, amountKrw, contributors:[{ticker, amountKrw}]}], totalKrw, peakMonth, payingMonths, maxMonthKrw }
+export function buildMonthlyDividendSchedule(holdings = [], dividendByTicker = {}, fxRate = 1) {
+  const fx = Number(fxRate || 1);
+  const months = Array.from({ length: 12 }, (_, i) => ({
+    month: i + 1,
+    label: `${i + 1}월`,
+    amountKrw: 0,
+    contributors: [],
+  }));
+  for (const h of holdings) {
+    const info = dividendByTicker[h.ticker];
+    const quantity = Number(h.quantity || 0);
+    const payments = Array.isArray(info?.payments) ? info.payments : [];
+    if (quantity <= 0 || !payments.length) continue;
+    const currency = info?.currency || h.currency || "KRW";
+    for (const p of payments) {
+      const idx = Number(p.month) - 1;
+      if (idx < 0 || idx > 11) continue;
+      const native = Number(p.perShare || 0) * quantity;
+      if (native <= 0) continue;
+      const krw = currency === "USD" ? native * fx : native;
+      const bucket = months[idx];
+      bucket.amountKrw += krw;
+      const existing = bucket.contributors.find((c) => c.ticker === h.ticker);
+      if (existing) existing.amountKrw += krw;
+      else bucket.contributors.push({ ticker: h.ticker, amountKrw: krw });
+    }
+  }
+  for (const m of months) m.contributors.sort((a, b) => b.amountKrw - a.amountKrw);
+  const totalKrw = months.reduce((s, m) => s + m.amountKrw, 0);
+  const maxMonthKrw = months.reduce((mx, m) => Math.max(mx, m.amountKrw), 0);
+  const payingMonths = months.filter((m) => m.amountKrw > 0).length;
+  const peakMonth = maxMonthKrw > 0 ? months.reduce((best, m) => (m.amountKrw > best.amountKrw ? m : best)).month : null;
+  return { months, totalKrw, peakMonth, payingMonths, maxMonthKrw };
 }
 
 export function buildPortfolioSnapshot(state, date, makeId = defaultId) {

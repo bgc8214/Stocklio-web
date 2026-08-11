@@ -3,9 +3,9 @@ import { useStore } from "../store/useStore.js";
 import { getKnownAccounts } from "../store/selectors.js";
 import { mutate, makeId, todayKey, setStatus, showToast } from "../store/mutations.js";
 import { accountKeyFor, parseAccountKey } from "../../app/accounts.js";
-import { formatKrw, formatNumber, formatPercent } from "../../app/formatters.js";
+import { formatKrw, formatCompactKrw, formatNumber, formatPercent } from "../../app/formatters.js";
 import { parseSortValue, cycleSortValue } from "../../app/sort.js";
-import { projectPortfolioDividends } from "../../domain/portfolio-core.js";
+import { projectPortfolioDividends, buildMonthlyDividendSchedule } from "../../domain/portfolio-core.js";
 import { getDividendInfo } from "../../app/services/market-data-service.js";
 
 const DEFAULT_SORT = "date-desc";
@@ -81,6 +81,10 @@ export function CashflowsView() {
 
   const projection = useMemo(
     () => projectPortfolioDividends(holdings, dividendMap, fxRate),
+    [holdings, dividendMap, fxRate],
+  );
+  const schedule = useMemo(
+    () => buildMonthlyDividendSchedule(holdings, dividendMap, fxRate),
     [holdings, dividendMap, fxRate],
   );
 
@@ -172,7 +176,7 @@ export function CashflowsView() {
           <h2>예상 배당</h2>
           <span>보유 종목의 최근 1년 배당 기준 · 세전 추정</span>
         </div>
-        <ExpectedDividendPanel projection={projection} status={divStatus} fxRate={fxRate} />
+        <ExpectedDividendPanel projection={projection} schedule={schedule} status={divStatus} fxRate={fxRate} />
       </div>
       <div className="panel" style={{ marginBottom: 16 }}>
         <div className="section-heading">
@@ -298,7 +302,8 @@ function formatPerShare(value, currency) {
   return currency === "USD" ? `$${formatNumber(value, value < 10 ? 4 : 2)}` : `${formatNumber(value, 0)}원`;
 }
 
-function ExpectedDividendPanel({ projection, status, fxRate }) {
+function ExpectedDividendPanel({ projection, schedule, status, fxRate }) {
+  const [detail, setDetail] = useState("holdings"); // holdings | monthly
   if (status === "loading" && !projection.rows.length) {
     return <div className="empty-state"><span>보유 종목의 배당 정보를 불러오는 중…</span></div>;
   }
@@ -322,31 +327,75 @@ function ExpectedDividendPanel({ projection, status, fxRate }) {
         <div><span>배당 수익률</span><strong>{formatPercent(projection.portfolioYieldRatio)}</strong></div>
         <div><span>배당 종목</span><strong>{projection.payingCount}개</strong></div>
       </div>
-      <div className="table-wrap compact">
-        <table>
-          <thead>
-            <tr>
-              <th>종목</th>
-              <th>주당 배당</th>
-              <th>수량</th>
-              <th>예상 연 배당</th>
-              <th>수익률</th>
-            </tr>
-          </thead>
-          <tbody>
-            {projection.rows.map((r) => (
-              <tr key={`${r.investor}|${r.account}|${r.ticker}`}>
-                <td data-label="종목"><strong>{r.ticker}</strong><span className="expected-dividend-name">{r.name}</span></td>
-                <td data-label="주당 배당">{formatPerShare(r.perShare, r.currency)}{r.payoutsPerYear ? <span className="expected-dividend-freq"> · 연 {r.payoutsPerYear}회</span> : null}</td>
-                <td data-label="수량">{formatNumber(r.quantity, 0)}</td>
-                <td data-label="예상 연 배당"><span className="money-value">{formatKrw(r.annualKrw)}</span></td>
-                <td data-label="수익률">{formatPercent(r.yieldRatio)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      <div className="expected-dividend-toggle" role="tablist" aria-label="예상 배당 보기 방식">
+        <button type="button" role="tab" aria-selected={detail === "holdings"} className={detail === "holdings" ? "is-active" : ""} onClick={() => setDetail("holdings")}>종목별</button>
+        <button type="button" role="tab" aria-selected={detail === "monthly"} className={detail === "monthly" ? "is-active" : ""} onClick={() => setDetail("monthly")}>월별</button>
       </div>
+      {detail === "holdings" ? (
+        <div className="table-wrap compact">
+          <table>
+            <thead>
+              <tr>
+                <th>종목</th>
+                <th>주당 배당</th>
+                <th>수량</th>
+                <th>예상 연 배당</th>
+                <th>수익률</th>
+              </tr>
+            </thead>
+            <tbody>
+              {projection.rows.map((r) => (
+                <tr key={`${r.investor}|${r.account}|${r.ticker}`}>
+                  <td data-label="종목"><strong>{r.ticker}</strong><span className="expected-dividend-name">{r.name}</span></td>
+                  <td data-label="주당 배당">{formatPerShare(r.perShare, r.currency)}{r.payoutsPerYear ? <span className="expected-dividend-freq"> · 연 {r.payoutsPerYear}회</span> : null}</td>
+                  <td data-label="수량">{formatNumber(r.quantity, 0)}</td>
+                  <td data-label="예상 연 배당"><span className="money-value">{formatKrw(r.annualKrw)}</span></td>
+                  <td data-label="수익률">{formatPercent(r.yieldRatio)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <MonthlyDividendCalendar schedule={schedule} />
+      )}
       <p className="expected-dividend-note">최근 1년간 실제 지급된 배당(주당) 기준의 세전 추정치입니다. 환율 {formatNumber(fxRate, 1)} 적용 · 향후 배당 변동·세금은 반영되지 않습니다.</p>
+    </div>
+  );
+}
+
+function MonthlyDividendCalendar({ schedule }) {
+  const { months, peakMonth, payingMonths, maxMonthKrw } = schedule;
+  if (!payingMonths) {
+    return <div className="empty-state"><span>월별로 배분할 배당 이력이 아직 없어요</span></div>;
+  }
+  const nowMonth = new Date().getUTCMonth() + 1;
+  return (
+    <div className="dividend-calendar" role="group" aria-label="월별 예상 배당">
+      {months.map((m, i) => {
+        const ratio = maxMonthKrw > 0 ? m.amountKrw / maxMonthKrw : 0;
+        const isPeak = m.month === peakMonth && m.amountKrw > 0;
+        const top = m.contributors[0];
+        const tip = m.amountKrw > 0
+          ? `${m.label} 예상 ${formatKrw(m.amountKrw)}${top ? ` · ${top.ticker}` : ""}`
+          : `${m.label} 배당 없음`;
+        return (
+          <div
+            key={m.month}
+            className={`dividend-cal-col${isPeak ? " is-peak" : ""}${m.amountKrw > 0 ? "" : " is-empty"}${m.month === nowMonth ? " is-current" : ""}`}
+            style={{ "--reveal-delay": `${i * 40}ms` }}
+            tabIndex={0}
+            title={tip}
+            aria-label={tip}
+          >
+            <span className="dividend-cal-amount">{m.amountKrw > 0 ? formatCompactKrw(m.amountKrw) : ""}</span>
+            <div className="dividend-cal-track">
+              <div className="dividend-cal-bar" style={{ height: `${Math.max(m.amountKrw > 0 ? 6 : 0, Math.round(ratio * 100))}%` }} />
+            </div>
+            <span className="dividend-cal-label">{m.month}</span>
+          </div>
+        );
+      })}
     </div>
   );
 }
