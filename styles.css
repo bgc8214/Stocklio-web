@@ -6711,6 +6711,55 @@ button.account-overview-card {
    이 파일은 styles/ 소스 중 하나이며, scripts/build-css.mjs가 병합해 styles.css를 생성한다.
    직접 styles.css를 수정하지 말 것. */
 @layer cashflows {
+/* 예상 배당 패널은 헤드라인이므로 전체 폭으로 */
+.detail-grid[data-view="cashflows"] > .panel:first-child {
+  grid-column: 1 / -1;
+}
+/* 예상 배당 */
+.expected-dividend-summary {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.expected-dividend-summary > div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface-2, transparent);
+}
+.expected-dividend-summary span {
+  font-size: 11px;
+  color: var(--muted);
+}
+.expected-dividend-summary strong {
+  font-size: 16px;
+  color: var(--text);
+}
+.expected-dividend-name {
+  display: block;
+  font-size: 11px;
+  color: var(--muted);
+}
+.expected-dividend-freq {
+  color: var(--muted);
+  font-size: 11px;
+}
+.expected-dividend-note {
+  margin: 10px 2px 0;
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.55;
+}
+@media (max-width: 640px) {
+  .expected-dividend-summary {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
 /* 배당 빠른 입력 */
 .dividend-quick-add {
   display: flex;

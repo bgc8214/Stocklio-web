@@ -134,6 +134,77 @@ export function getExternalFlowAmount(flow) {
   return 0;
 }
 
+// Yahoo chart(events=div) 응답에서 최근 12개월 배당 합계 = 주당 연배당(TTM)을 뽑는다.
+export function parseTtmDividendPerShare(chartPayload, nowMs = Date.now()) {
+  const result = chartPayload?.chart?.result?.[0];
+  const currency = result?.meta?.currency || "USD";
+  const events = result?.events?.dividends;
+  if (!events || typeof events !== "object") {
+    return { perShare: 0, currency, count: 0, lastDate: null };
+  }
+  const cutoffSec = nowMs / 1000 - 372 * 24 * 3600; // 약 12개월(윤달·주말 여유 포함)
+  let sum = 0;
+  let count = 0;
+  let lastSec = 0;
+  for (const key of Object.keys(events)) {
+    const ev = events[key];
+    const amount = Number(ev?.amount);
+    const ts = Number(ev?.date ?? key);
+    if (!Number.isFinite(amount) || amount <= 0) continue;
+    if (Number.isFinite(ts) && ts < cutoffSec) continue;
+    sum += amount;
+    count += 1;
+    if (ts > lastSec) lastSec = ts;
+  }
+  return {
+    perShare: sum,
+    currency,
+    count,
+    lastDate: lastSec ? new Date(lastSec * 1000).toISOString().slice(0, 10) : null,
+  };
+}
+
+// 보유 종목 × 주당 연배당(TTM) → 예상 배당(원통화·KRW 환산·수익률) 및 포트폴리오 합계.
+// dividendByTicker: { [ticker]: { perShare, currency, count } }
+export function projectPortfolioDividends(holdings = [], dividendByTicker = {}, fxRate = 1) {
+  const fx = Number(fxRate || 1);
+  const rows = [];
+  for (const h of holdings) {
+    const info = dividendByTicker[h.ticker];
+    const perShare = Number(info?.perShare || 0);
+    const quantity = Number(h.quantity || 0);
+    if (perShare <= 0 || quantity <= 0) continue;
+    const currency = info?.currency || h.currency || "KRW";
+    const annualNative = perShare * quantity;
+    const annualKrw = currency === "USD" ? annualNative * fx : annualNative;
+    const valueNative = Number(h.price || 0) * quantity;
+    const yieldRatio = valueNative > 0 ? annualNative / valueNative : 0; // 비율(0.03 = 3%)
+    rows.push({
+      ticker: h.ticker,
+      name: h.name,
+      account: h.account,
+      investor: h.investor,
+      currency,
+      perShare,
+      quantity,
+      annualNative,
+      annualKrw,
+      yieldRatio,
+      payoutsPerYear: Number(info?.count || 0),
+    });
+  }
+  rows.sort((a, b) => b.annualKrw - a.annualKrw);
+  const annualKrw = rows.reduce((sum, r) => sum + r.annualKrw, 0);
+  const equityValueKrw = getTotals({ holdings, cashBalances: [], fxRate: fx }).valueKrw;
+  return {
+    rows,
+    annualKrw,
+    monthlyAvgKrw: annualKrw / 12,
+    portfolioYieldRatio: equityValueKrw > 0 ? annualKrw / equityValueKrw : 0,
+    payingCount: rows.length,
+  };
+}
+
 export function buildPortfolioSnapshot(state, date, makeId = defaultId) {
   const fxRate = Number(state.fxRate?.rate || 1);
   const totals = getTotals({ holdings: state.holdings, cashBalances: state.cashBalances, fxRate });
