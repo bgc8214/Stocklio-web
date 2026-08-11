@@ -22,6 +22,10 @@ export default async function handler(request, response) {
   const yahooUrl = new URL(`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}`);
   yahooUrl.searchParams.set("interval", interval);
   yahooUrl.searchParams.set("range", range);
+  // 배당 예상용 — events=div 이면 Yahoo 응답에 배당 이벤트(events.dividends)를 포함시킨다.
+  if (searchParams.get("events") === "div") {
+    yahooUrl.searchParams.set("events", "div");
+  }
 
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 5000);

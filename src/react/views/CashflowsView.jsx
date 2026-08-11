@@ -1,10 +1,12 @@
-import React, { useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useStore } from "../store/useStore.js";
 import { getKnownAccounts } from "../store/selectors.js";
 import { mutate, makeId, todayKey, setStatus, showToast } from "../store/mutations.js";
 import { accountKeyFor, parseAccountKey } from "../../app/accounts.js";
-import { formatKrw } from "../../app/formatters.js";
+import { formatKrw, formatNumber, formatPercent } from "../../app/formatters.js";
 import { parseSortValue, cycleSortValue } from "../../app/sort.js";
+import { projectPortfolioDividends } from "../../domain/portfolio-core.js";
+import { getDividendInfo } from "../../app/services/market-data-service.js";
 
 const DEFAULT_SORT = "date-desc";
 // 입력 가능한 유형 — 세금/수수료는 성과 계산에 반영되지 않는 dead input이라 제거했다.
@@ -50,6 +52,37 @@ export function CashflowsView() {
     if (form.elements.note && !form.elements.note.value) form.elements.note.value = `${s.name || s.ticker} 배당`;
     form.elements.amountKrw?.focus();
   };
+
+  // 예상 배당 — 보유 종목의 주당 연배당(TTM)을 조회해 자동 계산한다.
+  const holdings = useMemo(() => state?.holdings || [], [state]);
+  const fxRate = Number(state?.fxRate?.rate || 1);
+  const [dividendMap, setDividendMap] = useState({});
+  const [divStatus, setDivStatus] = useState("idle"); // idle | loading | ready | error
+  const tickerKey = useMemo(
+    () => [...new Set(holdings.map((h) => h.ticker).filter(Boolean))].sort().join(","),
+    [holdings],
+  );
+  useEffect(() => {
+    const tickers = tickerKey ? tickerKey.split(",") : [];
+    if (!tickers.length) { setDividendMap({}); setDivStatus("idle"); return undefined; }
+    let cancelled = false;
+    setDivStatus("loading");
+    Promise.all(tickers.map(async (t) => {
+      try { return [t, await getDividendInfo(t)]; } catch { return [t, null]; }
+    })).then((entries) => {
+      if (cancelled) return;
+      const map = {};
+      for (const [t, info] of entries) if (info) map[t] = info;
+      setDividendMap(map);
+      setDivStatus("ready");
+    }).catch(() => { if (!cancelled) setDivStatus("error"); });
+    return () => { cancelled = true; };
+  }, [tickerKey]);
+
+  const projection = useMemo(
+    () => projectPortfolioDividends(holdings, dividendMap, fxRate),
+    [holdings, dividendMap, fxRate],
+  );
 
   const sort = parseSortValue(sortValue, DEFAULT_SORT);
   const rows = useMemo(() => {
@@ -136,8 +169,15 @@ export function CashflowsView() {
     <section className="detail-grid" data-view="cashflows">
       <div className="panel" style={{ marginBottom: 16 }}>
         <div className="section-heading">
-          <h2>배당 인컴</h2>
-          <span>월별 배당 수령 현황</span>
+          <h2>예상 배당</h2>
+          <span>보유 종목의 최근 1년 배당 기준 · 세전 추정</span>
+        </div>
+        <ExpectedDividendPanel projection={projection} status={divStatus} fxRate={fxRate} />
+      </div>
+      <div className="panel" style={{ marginBottom: 16 }}>
+        <div className="section-heading">
+          <h2>배당 수령 기록</h2>
+          <span>내가 실제로 받은 배당 · 월별</span>
         </div>
         <DividendChart dividends={dividends} />
       </div>
@@ -251,6 +291,63 @@ export function CashflowsView() {
         </div>
       </div>
     </section>
+  );
+}
+
+function formatPerShare(value, currency) {
+  return currency === "USD" ? `$${formatNumber(value, value < 10 ? 4 : 2)}` : `${formatNumber(value, 0)}원`;
+}
+
+function ExpectedDividendPanel({ projection, status, fxRate }) {
+  if (status === "loading" && !projection.rows.length) {
+    return <div className="empty-state"><span>보유 종목의 배당 정보를 불러오는 중…</span></div>;
+  }
+  if (status === "error" && !projection.rows.length) {
+    return <div className="empty-state"><span>배당 정보를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.</span></div>;
+  }
+  if (!projection.rows.length) {
+    return (
+      <div className="empty-state">
+        <span className="empty-icon">🪙</span>
+        <strong>배당을 지급하는 보유 종목이 없어요</strong>
+        <span>배당주(예: SCHD)를 보유하면 예상 배당이 여기에 자동 계산됩니다</span>
+      </div>
+    );
+  }
+  return (
+    <div className="expected-dividend">
+      <div className="expected-dividend-summary">
+        <div><span>예상 연 배당</span><strong>{formatKrw(projection.annualKrw)}</strong></div>
+        <div><span>월 평균</span><strong>{formatKrw(projection.monthlyAvgKrw)}</strong></div>
+        <div><span>배당 수익률</span><strong>{formatPercent(projection.portfolioYieldRatio)}</strong></div>
+        <div><span>배당 종목</span><strong>{projection.payingCount}개</strong></div>
+      </div>
+      <div className="table-wrap compact">
+        <table>
+          <thead>
+            <tr>
+              <th>종목</th>
+              <th>주당 배당</th>
+              <th>수량</th>
+              <th>예상 연 배당</th>
+              <th>수익률</th>
+            </tr>
+          </thead>
+          <tbody>
+            {projection.rows.map((r) => (
+              <tr key={`${r.investor}|${r.account}|${r.ticker}`}>
+                <td data-label="종목"><strong>{r.ticker}</strong><span className="expected-dividend-name">{r.name}</span></td>
+                <td data-label="주당 배당">{formatPerShare(r.perShare, r.currency)}{r.payoutsPerYear ? <span className="expected-dividend-freq"> · 연 {r.payoutsPerYear}회</span> : null}</td>
+                <td data-label="수량">{formatNumber(r.quantity, 0)}</td>
+                <td data-label="예상 연 배당"><span className="money-value">{formatKrw(r.annualKrw)}</span></td>
+                <td data-label="수익률">{formatPercent(r.yieldRatio)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <p className="expected-dividend-note">최근 1년간 실제 지급된 배당(주당) 기준의 세전 추정치입니다. 환율 {formatNumber(fxRate, 1)} 적용 · 향후 배당 변동·세금은 반영되지 않습니다.</p>
+    </div>
   );
 }
 

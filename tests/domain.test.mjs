@@ -7,6 +7,8 @@ import {
   getTotals,
   groupByAccount,
   normalizeDashboardLayout,
+  parseTtmDividendPerShare,
+  projectPortfolioDividends,
   validateStateShape,
 } from "../src/domain/portfolio-core.js";
 import {
@@ -684,4 +686,67 @@ test("simulateMultiSymbol: 종목별 결과 반환", () => {
   assert.equal(results[1].symbol, "VOO");
   assert.equal(results[0].result.finalValue, 2_000_000);
   assert.equal(results[1].result.finalValue, 2_000_000);
+});
+
+test("parseTtmDividendPerShare: 최근 12개월 배당 합계와 통화", () => {
+  const now = Date.UTC(2026, 0, 1) / 1000; // 2026-01-01 (초)
+  const mk = (monthsAgo, amount) => ({ amount, date: now - monthsAgo * 30 * 24 * 3600 });
+  const payload = {
+    chart: {
+      result: [
+        {
+          meta: { currency: "USD" },
+          events: {
+            dividends: {
+              a: mk(1, 0.25),
+              b: mk(4, 0.26),
+              c: mk(7, 0.27),
+              d: mk(10, 0.24),
+              old: mk(18, 0.99), // 12개월 밖 → 제외
+            },
+          },
+        },
+      ],
+    },
+  };
+  const info = parseTtmDividendPerShare(payload, now * 1000);
+  assert.equal(info.currency, "USD");
+  assert.equal(info.count, 4);
+  assert.equal(Number(info.perShare.toFixed(2)), 1.02);
+});
+
+test("parseTtmDividendPerShare: 배당 이벤트 없으면 0", () => {
+  const info = parseTtmDividendPerShare({ chart: { result: [{ meta: { currency: "KRW" } }] } });
+  assert.equal(info.perShare, 0);
+  assert.equal(info.count, 0);
+  assert.equal(info.currency, "KRW");
+});
+
+test("projectPortfolioDividends: 수량×주당배당, USD 환산, 수익률", () => {
+  const holdings = [
+    { ticker: "SCHD", name: "Schwab US Dividend", investor: "A", account: "ISA", currency: "USD", quantity: 20, price: 34 },
+    { ticker: "069500.KS", name: "KODEX 200", investor: "A", account: "국내", currency: "KRW", quantity: 50, price: 32000 },
+    { ticker: "MSFT", name: "Microsoft", investor: "A", account: "ISA", currency: "USD", quantity: 10, price: 500 }, // 배당정보 없음 → 제외
+  ];
+  const divMap = {
+    SCHD: { perShare: 1.0, currency: "USD", count: 4 },
+    "069500.KS": { perShare: 800, currency: "KRW", count: 4 },
+  };
+  const fx = 1300;
+  const p = projectPortfolioDividends(holdings, divMap, fx);
+  assert.equal(p.payingCount, 2);
+  // SCHD: 1.0*20*1300 = 26000, KODEX: 800*50 = 40000
+  assert.equal(p.rows[0].ticker, "069500.KS"); // annualKrw 큰 순 정렬
+  assert.equal(p.annualKrw, 66000);
+  assert.equal(Number(p.monthlyAvgKrw.toFixed(0)), 5500);
+  // SCHD 수익률 = (1.0*20)/(34*20) = 0.0294...
+  const schd = p.rows.find((r) => r.ticker === "SCHD");
+  assert.equal(Number(schd.yieldRatio.toFixed(4)), 0.0294);
+});
+
+test("projectPortfolioDividends: 배당 지급 종목 없으면 빈 결과", () => {
+  const p = projectPortfolioDividends([{ ticker: "MSFT", quantity: 10, price: 500, currency: "USD" }], {}, 1300);
+  assert.equal(p.payingCount, 0);
+  assert.equal(p.annualKrw, 0);
+  assert.equal(p.portfolioYieldRatio, 0);
 });

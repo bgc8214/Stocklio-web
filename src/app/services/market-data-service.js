@@ -1,5 +1,6 @@
-import { CACHE_PREFIX, FX_CACHE_TTL_MS, QUOTE_CACHE_TTL_MS } from "../constants.js";
+import { CACHE_PREFIX, FX_CACHE_TTL_MS, QUOTE_CACHE_TTL_MS, DIVIDEND_CACHE_TTL_MS } from "../constants.js";
 import { parseYahooChartMeta } from "../../domain/market-calendar.js";
+import { parseTtmDividendPerShare } from "../../domain/portfolio-core.js";
 
 const CACHE_BASE_NAME = CACHE_PREFIX.replace(/-v\d+$/, "");
 
@@ -41,6 +42,19 @@ export async function getUsdKrw(options = {}) {
       priceDate: quote.priceDate,
     };
   }, { ...options, validate: isFxPayload });
+}
+
+// 종목별 주당 연배당(TTM) 조회 — 배당은 자주 변하지 않아 24h 캐시.
+export async function getDividendInfo(ticker, options = {}) {
+  return cached(`div:${ticker}`, DIVIDEND_CACHE_TTL_MS, async () => {
+    const url = new URL("/api/yahoo/chart", window.location.origin);
+    url.searchParams.set("symbol", ticker);
+    url.searchParams.set("range", "1y");
+    url.searchParams.set("interval", "1d");
+    url.searchParams.set("events", "div");
+    const data = await fetchJson(url);
+    return parseTtmDividendPerShare(data);
+  }, { ...options, validate: (p) => p && Number.isFinite(Number(p.perShare)) });
 }
 
 export async function searchSymbols(query) {
