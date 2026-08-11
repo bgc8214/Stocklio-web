@@ -375,12 +375,23 @@ function DividendByTickerList({ rows }) {
 function MonthlyDividendCalendar({ schedule }) {
   const { months, peakMonth, payingMonths, maxMonthKrw } = schedule;
   if (!payingMonths) {
-    return <div className="empty-state"><span>월별로 배분할 배당 이력이 아직 없어요</span></div>;
+    return (
+      <div className="empty-state">
+        <span className="empty-icon">🗓️</span>
+        <strong>월별로 배분할 배당이 없어요</strong>
+        <span>배당주를 보유하면 최근 1년 지급 월을 기준으로 향후 12개월 예상이 표시됩니다</span>
+      </div>
+    );
   }
   const nowMonth = new Date().getUTCMonth() + 1;
+  // 현재 월부터 12개월 전방으로 회전해 "앞으로 언제 얼마" 흐름으로 읽히게 한다.
+  const startIdx = nowMonth - 1;
+  const ordered = [...months.slice(startIdx), ...months.slice(0, startIdx)];
   return (
-    <div className="dividend-calendar" role="group" aria-label="월별 예상 배당">
-      {months.map((m, i) => {
+    <>
+      <div className="dividend-calendar-caption">향후 12개월 예상 · 최근 1년 배당 기준</div>
+      <div className="dividend-calendar" role="group" aria-label="향후 12개월 예상 배당">
+      {ordered.map((m, i) => {
         const ratio = maxMonthKrw > 0 ? m.amountKrw / maxMonthKrw : 0;
         const isPeak = m.month === peakMonth && m.amountKrw > 0;
         const top = m.contributors[0];
@@ -404,7 +415,8 @@ function MonthlyDividendCalendar({ schedule }) {
           </div>
         );
       })}
-    </div>
+      </div>
+    </>
   );
 }
 
