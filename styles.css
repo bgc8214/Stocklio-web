@@ -6754,6 +6754,47 @@ button.account-overview-card {
   color: var(--muted);
   line-height: 1.55;
 }
+/* 다음 배당 하이라이트 */
+.dividend-next {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 12px;
+  padding: 10px 14px;
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--line));
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+}
+.dividend-next-icon {
+  font-size: 16px;
+  line-height: 1;
+}
+.dividend-next-body {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+}
+.dividend-next-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted);
+  flex-shrink: 0;
+}
+.dividend-next-main {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--text);
+}
+.dividend-next-tickers {
+  margin-left: auto;
+  font-size: 11px;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 /* 종목별 ↔ 월별 토글 */
 .expected-dividend-toggle {
   display: inline-flex;
