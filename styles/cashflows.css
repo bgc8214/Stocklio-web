@@ -76,6 +76,84 @@
   outline-offset: 2px;
 }
 
+/* 종목별 예상 배당 — 랭크형 기여 막대 리스트(티커 단위 합산) */
+.dividend-rank {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.dividend-rank-row {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface-2, transparent);
+  transition: transform 0.15s, border-color 0.15s;
+}
+.dividend-rank-row:hover {
+  transform: translateX(2px);
+  border-color: color-mix(in srgb, var(--accent) 40%, var(--line));
+}
+.dividend-rank-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: var(--share, 0%);
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  border-right: 2px solid color-mix(in srgb, var(--accent) 48%, transparent);
+  transform-origin: left;
+  animation: dividend-rank-grow 0.6s var(--reveal-delay, 0ms) both cubic-bezier(0.22, 1, 0.36, 1);
+}
+.dividend-rank-content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+}
+.dividend-rank-id {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+.dividend-rank-id strong {
+  font-size: 14px;
+  letter-spacing: -0.01em;
+  color: var(--text);
+}
+.dividend-rank-id span {
+  overflow: hidden;
+  font-size: 11px;
+  color: var(--muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.dividend-rank-figs {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 1px;
+  flex-shrink: 0;
+}
+.dividend-rank-amt {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--text);
+}
+.dividend-rank-meta {
+  font-size: 11px;
+  color: var(--muted);
+}
+@keyframes dividend-rank-grow {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dividend-rank-fill { animation: none; }
+}
+
 /* 월별 예상 배당 캘린더 */
 .dividend-calendar {
   display: grid;

@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import {
+  aggregateDividendRowsByTicker,
   buildAccountSnapshots,
   buildPortfolioSnapshot,
   getExternalFlowAmount,
@@ -792,4 +793,36 @@ test("buildMonthlyDividendSchedule: 배당 없으면 빈 스케줄", () => {
   assert.equal(s.payingMonths, 0);
   assert.equal(s.peakMonth, null);
   assert.equal(s.totalKrw, 0);
+});
+
+test("projectPortfolioDividends: 같은 종목이 여러 계좌면 종목별로 합산", () => {
+  const holdings = [
+    { ticker: "AAPL", name: "Apple", investor: "A", account: "ISA", currency: "USD", quantity: 10, price: 300 },
+    { ticker: "AAPL", name: "Apple", investor: "A", account: "연금", currency: "USD", quantity: 5, price: 300 },
+    { ticker: "SCHD", name: "Schwab", investor: "A", account: "ISA", currency: "USD", quantity: 20, price: 34 },
+  ];
+  const divMap = {
+    AAPL: { perShare: 1.0, currency: "USD", count: 4 },
+    SCHD: { perShare: 1.0, currency: "USD", count: 4 },
+  };
+  const p = projectPortfolioDividends(holdings, divMap, 1000);
+  assert.equal(p.rows.length, 3); // 행(계좌)은 3
+  assert.equal(p.payingCount, 2); // 종목은 2개(AAPL, SCHD)
+  const aapl = p.byTicker.find((r) => r.ticker === "AAPL");
+  assert.equal(aapl.quantity, 15); // 10 + 5 합산
+  assert.equal(aapl.annualKrw, 15000); // 1.0 * 15 * 1000
+  assert.equal(aapl.accountCount, 2);
+});
+
+test("aggregateDividendRowsByTicker: 가중 수익률과 계좌 수", () => {
+  const rows = [
+    { ticker: "T", name: "t", investor: "A", account: "x", currency: "KRW", quantity: 10, annualKrw: 1000, valueKrw: 20000, payoutsPerYear: 4 },
+    { ticker: "T", name: "t", investor: "A", account: "y", currency: "KRW", quantity: 10, annualKrw: 1000, valueKrw: 20000, payoutsPerYear: 4 },
+  ];
+  const out = aggregateDividendRowsByTicker(rows);
+  assert.equal(out.length, 1);
+  assert.equal(out[0].quantity, 20);
+  assert.equal(out[0].annualKrw, 2000);
+  assert.equal(out[0].accountCount, 2);
+  assert.equal(Number(out[0].yieldRatio.toFixed(3)), 0.05); // 2000/40000
 });

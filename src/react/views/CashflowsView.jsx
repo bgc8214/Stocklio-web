@@ -298,10 +298,6 @@ export function CashflowsView() {
   );
 }
 
-function formatPerShare(value, currency) {
-  return currency === "USD" ? `$${formatNumber(value, value < 10 ? 4 : 2)}` : `${formatNumber(value, 0)}원`;
-}
-
 function ExpectedDividendPanel({ projection, schedule, status, fxRate }) {
   const [detail, setDetail] = useState("holdings"); // holdings | monthly
   if (status === "loading" && !projection.rows.length) {
@@ -332,34 +328,46 @@ function ExpectedDividendPanel({ projection, schedule, status, fxRate }) {
         <button type="button" role="tab" aria-selected={detail === "monthly"} className={detail === "monthly" ? "is-active" : ""} onClick={() => setDetail("monthly")}>월별</button>
       </div>
       {detail === "holdings" ? (
-        <div className="table-wrap compact">
-          <table>
-            <thead>
-              <tr>
-                <th>종목</th>
-                <th>주당 배당</th>
-                <th>수량</th>
-                <th>예상 연 배당</th>
-                <th>수익률</th>
-              </tr>
-            </thead>
-            <tbody>
-              {projection.rows.map((r) => (
-                <tr key={`${r.investor}|${r.account}|${r.ticker}`}>
-                  <td data-label="종목"><strong>{r.ticker}</strong><span className="expected-dividend-name">{r.name}</span></td>
-                  <td data-label="주당 배당">{formatPerShare(r.perShare, r.currency)}{r.payoutsPerYear ? <span className="expected-dividend-freq"> · 연 {r.payoutsPerYear}회</span> : null}</td>
-                  <td data-label="수량">{formatNumber(r.quantity, 0)}</td>
-                  <td data-label="예상 연 배당"><span className="money-value">{formatKrw(r.annualKrw)}</span></td>
-                  <td data-label="수익률">{formatPercent(r.yieldRatio)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <DividendByTickerList rows={projection.byTicker} />
       ) : (
         <MonthlyDividendCalendar schedule={schedule} />
       )}
       <p className="expected-dividend-note">최근 1년간 실제 지급된 배당(주당) 기준의 세전 추정치입니다. 환율 {formatNumber(fxRate, 1)} 적용 · 향후 배당 변동·세금은 반영되지 않습니다.</p>
+    </div>
+  );
+}
+
+function DividendByTickerList({ rows }) {
+  if (!rows.length) {
+    return <div className="empty-state"><span>배당을 지급하는 종목이 없어요</span></div>;
+  }
+  const maxAnnual = rows.reduce((mx, r) => Math.max(mx, r.annualKrw), 0);
+  return (
+    <div className="dividend-rank">
+      {rows.map((r, i) => {
+        const share = maxAnnual > 0 ? Math.max(3, Math.round((r.annualKrw / maxAnnual) * 100)) : 0;
+        const meta = [
+          `${formatPercent(r.yieldRatio)}`,
+          r.payoutsPerYear ? `연 ${r.payoutsPerYear}회` : null,
+          `${formatNumber(r.quantity, 0)}주`,
+          r.accountCount > 1 ? `${r.accountCount}계좌` : null,
+        ].filter(Boolean).join(" · ");
+        return (
+          <div className="dividend-rank-row" key={r.ticker} style={{ "--share": `${share}%`, "--reveal-delay": `${i * 55}ms` }}>
+            <div className="dividend-rank-fill" aria-hidden="true" />
+            <div className="dividend-rank-content">
+              <div className="dividend-rank-id">
+                <strong>{r.ticker}</strong>
+                <span>{r.name}</span>
+              </div>
+              <div className="dividend-rank-figs">
+                <span className="dividend-rank-amt">{formatKrw(r.annualKrw)}</span>
+                <span className="dividend-rank-meta">{meta}</span>
+              </div>
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }

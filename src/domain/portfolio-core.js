@@ -183,6 +183,7 @@ export function projectPortfolioDividends(holdings = [], dividendByTicker = {}, 
     const annualNative = perShare * quantity;
     const annualKrw = currency === "USD" ? annualNative * fx : annualNative;
     const valueNative = Number(h.price || 0) * quantity;
+    const valueKrw = currency === "USD" ? valueNative * fx : valueNative;
     const yieldRatio = valueNative > 0 ? annualNative / valueNative : 0; // 비율(0.03 = 3%)
     rows.push({
       ticker: h.ticker,
@@ -194,20 +195,63 @@ export function projectPortfolioDividends(holdings = [], dividendByTicker = {}, 
       quantity,
       annualNative,
       annualKrw,
+      valueKrw,
       yieldRatio,
       payoutsPerYear: Number(info?.count || 0),
     });
   }
   rows.sort((a, b) => b.annualKrw - a.annualKrw);
+  const byTicker = aggregateDividendRowsByTicker(rows);
   const annualKrw = rows.reduce((sum, r) => sum + r.annualKrw, 0);
   const equityValueKrw = getTotals({ holdings, cashBalances: [], fxRate: fx }).valueKrw;
   return {
     rows,
+    byTicker,
     annualKrw,
     monthlyAvgKrw: annualKrw / 12,
     portfolioYieldRatio: equityValueKrw > 0 ? annualKrw / equityValueKrw : 0,
-    payingCount: rows.length,
+    payingCount: byTicker.length, // 계좌가 아니라 종목(티커) 단위 개수
   };
+}
+
+// 같은 종목이 여러 계좌에 나뉘어 있어도 티커 단위로 합산한다(수량·연배당·평가액·계좌 수).
+export function aggregateDividendRowsByTicker(rows = []) {
+  const map = new Map();
+  for (const r of rows) {
+    let agg = map.get(r.ticker);
+    if (!agg) {
+      agg = {
+        ticker: r.ticker,
+        name: r.name,
+        currency: r.currency,
+        perShare: r.perShare,
+        quantity: 0,
+        annualKrw: 0,
+        valueKrw: 0,
+        payoutsPerYear: r.payoutsPerYear,
+        accounts: new Set(),
+      };
+      map.set(r.ticker, agg);
+    }
+    agg.quantity += Number(r.quantity || 0);
+    agg.annualKrw += Number(r.annualKrw || 0);
+    agg.valueKrw += Number(r.valueKrw || 0);
+    agg.accounts.add(`${r.investor}|${r.account}`);
+  }
+  return [...map.values()]
+    .map((a) => ({
+      ticker: a.ticker,
+      name: a.name,
+      currency: a.currency,
+      perShare: a.perShare,
+      quantity: a.quantity,
+      annualKrw: a.annualKrw,
+      valueKrw: a.valueKrw,
+      yieldRatio: a.valueKrw > 0 ? a.annualKrw / a.valueKrw : 0,
+      payoutsPerYear: a.payoutsPerYear,
+      accountCount: a.accounts.size,
+    }))
+    .sort((x, y) => y.annualKrw - x.annualKrw);
 }
 
 // 보유 종목의 과거 1년 배당 지급 월을 기반으로 12개월 예상 배당 캘린더를 만든다.
