@@ -8,6 +8,7 @@ import {
   getTotals,
   groupByAccount,
   buildMonthlyDividendSchedule,
+  getNextDividendMonth,
   normalizeDashboardLayout,
   parseTtmDividendPerShare,
   projectPortfolioDividends,
@@ -825,4 +826,28 @@ test("aggregateDividendRowsByTicker: 가중 수익률과 계좌 수", () => {
   assert.equal(out[0].annualKrw, 2000);
   assert.equal(out[0].accountCount, 2);
   assert.equal(Number(out[0].yieldRatio.toFixed(3)), 0.05); // 2000/40000
+});
+
+test("getNextDividendMonth: 현재 월부터 앞으로 첫 지급 월(래핑 포함)", () => {
+  const months = Array.from({ length: 12 }, (_, i) => ({ month: i + 1, amountKrw: 0, contributors: [] }));
+  months[8].amountKrw = 410000; // 9월
+  months[11].amountKrw = 440000; // 12월
+  months[2].amountKrw = 400000; // 3월
+  const schedule = { months };
+  // 8월 기준 → 다음은 9월(offset 1)
+  const n1 = getNextDividendMonth(schedule, 8);
+  assert.equal(n1.month, 9);
+  assert.equal(n1.monthsAway, 1);
+  // 12월 기준 → 이번 달 12월(offset 0)
+  const n2 = getNextDividendMonth(schedule, 12);
+  assert.equal(n2.month, 12);
+  assert.equal(n2.monthsAway, 0);
+  // 1월 기준 → 3월(offset 2)
+  assert.equal(getNextDividendMonth(schedule, 1).month, 3);
+});
+
+test("getNextDividendMonth: 배당 없으면 null", () => {
+  const schedule = { months: Array.from({ length: 12 }, (_, i) => ({ month: i + 1, amountKrw: 0, contributors: [] })) };
+  assert.equal(getNextDividendMonth(schedule, 5), null);
+  assert.equal(getNextDividendMonth({ months: [] }, 5), null);
 });

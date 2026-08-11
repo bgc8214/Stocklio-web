@@ -5,7 +5,7 @@ import { mutate, makeId, todayKey, setStatus, showToast } from "../store/mutatio
 import { accountKeyFor, parseAccountKey } from "../../app/accounts.js";
 import { formatKrw, formatCompactKrw, formatNumber, formatPercent } from "../../app/formatters.js";
 import { parseSortValue, cycleSortValue } from "../../app/sort.js";
-import { projectPortfolioDividends, buildMonthlyDividendSchedule } from "../../domain/portfolio-core.js";
+import { projectPortfolioDividends, buildMonthlyDividendSchedule, getNextDividendMonth } from "../../domain/portfolio-core.js";
 import { getDividendInfo } from "../../app/services/market-data-service.js";
 
 const DEFAULT_SORT = "date-desc";
@@ -315,6 +315,7 @@ function ExpectedDividendPanel({ projection, schedule, status, fxRate }) {
       </div>
     );
   }
+  const next = getNextDividendMonth(schedule, new Date().getUTCMonth() + 1);
   return (
     <div className="expected-dividend">
       <div className="expected-dividend-summary">
@@ -323,6 +324,22 @@ function ExpectedDividendPanel({ projection, schedule, status, fxRate }) {
         <div><span>배당 수익률</span><strong>{formatPercent(projection.portfolioYieldRatio)}</strong></div>
         <div><span>배당 종목</span><strong>{projection.payingCount}개</strong></div>
       </div>
+      {next ? (
+        <div className="dividend-next" role="note">
+          <span className="dividend-next-icon" aria-hidden="true">💰</span>
+          <div className="dividend-next-body">
+            <span className="dividend-next-label">다음 배당</span>
+            <span className="dividend-next-main">
+              {next.monthsAway === 0 ? "이번 달" : `${next.month}월`} · 약 {formatKrw(next.amountKrw)}
+            </span>
+          </div>
+          {next.contributors.length ? (
+            <span className="dividend-next-tickers">
+              {next.contributors.slice(0, 3).map((c) => c.ticker).join(" · ")}{next.contributors.length > 3 ? " 외" : ""}
+            </span>
+          ) : null}
+        </div>
+      ) : null}
       <div className="expected-dividend-toggle" role="tablist" aria-label="예상 배당 보기 방식">
         <button type="button" role="tab" aria-selected={detail === "holdings"} className={detail === "holdings" ? "is-active" : ""} onClick={() => setDetail("holdings")}>종목별</button>
         <button type="button" role="tab" aria-selected={detail === "monthly"} className={detail === "monthly" ? "is-active" : ""} onClick={() => setDetail("monthly")}>월별</button>

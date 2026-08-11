@@ -291,6 +291,20 @@ export function buildMonthlyDividendSchedule(holdings = [], dividendByTicker = {
   return { months, totalKrw, peakMonth, payingMonths, maxMonthKrw };
 }
 
+// 현재 월부터 앞으로 배당이 처음 들어오는 달을 찾는다(현재 월 포함). 없으면 null.
+export function getNextDividendMonth(schedule, nowMonth) {
+  const months = schedule?.months || [];
+  if (!months.length) return null;
+  const start = Number(nowMonth) - 1;
+  for (let offset = 0; offset < 12; offset += 1) {
+    const m = months[(((start + offset) % 12) + 12) % 12];
+    if (m && m.amountKrw > 0) {
+      return { month: m.month, amountKrw: m.amountKrw, contributors: m.contributors || [], monthsAway: offset };
+    }
+  }
+  return null;
+}
+
 export function buildPortfolioSnapshot(state, date, makeId = defaultId) {
   const fxRate = Number(state.fxRate?.rate || 1);
   const totals = getTotals({ holdings: state.holdings, cashBalances: state.cashBalances, fxRate });
