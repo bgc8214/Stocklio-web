@@ -6864,6 +6864,12 @@ button.account-overview-card {
 }
 
 /* 월별 예상 배당 캘린더 */
+.dividend-calendar-caption {
+  margin: 0 2px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+}
 .dividend-calendar {
   display: grid;
   grid-template-columns: repeat(12, minmax(0, 1fr));

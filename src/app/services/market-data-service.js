@@ -54,7 +54,9 @@ export async function getDividendInfo(ticker, options = {}) {
     url.searchParams.set("events", "div");
     const data = await fetchJson(url);
     return parseTtmDividendPerShare(data);
-  }, { ...options, validate: (p) => p && Number.isFinite(Number(p.perShare)) });
+    // payments(월별 지급 내역)는 나중에 추가된 필드 — 이를 검증에 포함해야
+    // 그 이전에 캐시된 payments 없는 옛 항목이 자동으로 재조회된다.
+  }, { ...options, validate: (p) => p && Number.isFinite(Number(p.perShare)) && Array.isArray(p.payments) });
 }
 
 export async function searchSymbols(query) {
