@@ -5,7 +5,7 @@
 :root {
   color-scheme: light;
   --bg: #f6f7f3;
-  --surface: #ffffff;
+  --surface: #fbfcfd;
   --surface-soft: #eef3ee;
   --ink: #111a15;
   --value: #0f1712;
@@ -21,6 +21,9 @@
   --gold: #a97819;
   --control-bg: #f8faf7;
   --shadow: 0 16px 40px rgba(23, 33, 27, 0.08);
+  --warn-line: #e6a817;
+  --warn-bg: #fff8ec;
+  --warn-text: #a06d0e;
 }
 
 * {
@@ -180,7 +183,7 @@ td:nth-child(4) {
 
 :root {
   --bg: #f7f8f6;
-  --surface: #ffffff;
+  --surface: #fbfcfd;
   --surface-soft: #f1f5f1;
   --line: #dde4dd;
   --accent: #3366ff;
@@ -245,6 +248,9 @@ button.secondary:hover,
   --radius: 12px;
   --header-height: 72px;
   --rail-width: 248px;
+  --warn-line: #7a5a12;
+  --warn-bg: #241b0d;
+  --warn-text: #f0b429;
 }
 
 [data-theme="dark"] body,

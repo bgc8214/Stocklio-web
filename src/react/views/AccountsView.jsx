@@ -9,6 +9,18 @@ import { formatKrw, formatMoney, formatPercent } from "../../app/formatters.js";
 const empty = () => ({ stockValueKrw: 0, cashKrw: 0, flowsKrw: 0, gainKrw: 0, holdingCount: 0 });
 const toKrw = (amount, currency, fx) => (currency === "USD" ? Number(amount || 0) * (fx || 1) : Number(amount || 0));
 
+// 인라인 스트로크 아이콘 — 앱 전반의 line-icon 보이스와 맞춘 단일 세트(이모지 대체).
+const PencilIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M12 20h9" /><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
+  </svg>
+);
+const CheckIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M20 6 9 17l-5-5" />
+  </svg>
+);
+
 export function AccountsView() {
   const state = useStore((s) => s.portfolio);
   const [search, setSearch] = useState("");
@@ -267,7 +279,7 @@ export function AccountsView() {
       ) : null}
 
       <div className="account-overview-grid" aria-label="계좌 요약">
-        <article className="account-overview-card">
+        <article className="account-overview-card account-overview-card--primary">
           <span>예수금</span>
           <strong>{formatKrw(totalCash)}</strong>
           <small>KRW 환산 기준</small>
@@ -364,7 +376,7 @@ export function AccountsView() {
                       onClick={(e) => { e.stopPropagation(); openCashEditor(account); }}
                     >
                       {savedFlashKey === account.key ? (
-                        <span className="cash-saved-flag">저장됨 ✓</span>
+                        <span className="cash-saved-flag"><CheckIcon />저장됨</span>
                       ) : (
                         <>
                           <span className="cash-quick-label">예수금</span>
@@ -372,7 +384,7 @@ export function AccountsView() {
                             {primary ? formatMoney(primary.amount, primary.currency) : "미입력"}
                           </span>
                           {primary && primary.currency === "USD" ? <span className="cash-quick-krw">≈ {formatKrw(st.cashKrw)}</span> : null}
-                          <span className="cash-quick-edit" aria-hidden="true">✎ 편집</span>
+                          <span className="cash-quick-edit"><PencilIcon />편집</span>
                         </>
                       )}
                     </button>

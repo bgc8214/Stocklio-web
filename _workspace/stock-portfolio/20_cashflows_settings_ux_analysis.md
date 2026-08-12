@@ -111,6 +111,20 @@
 - 도메인 `getNextDividendMonth(schedule, nowMonth)` — 현재 월 포함 전방 탐색, 래핑 지원, 없으면 null. 테스트 2개.
 - "실제 수령 + 미래 예상"을 한 타임라인으로 합치는 안은 **보류**: 실제 수령이 수동 입력이라 대개 비어 있어 합치면 과거 절반이 텅 빈 채로 보임. 실제 수령 자동 기록(배당락일 감지)은 별도 대형 과제로 남김.
 
+## 계좌 탭 hallmark redesign (2026-08-12)
+
+`hallmark audit` 결과(0 critical · 2 major · 6 minor)를 기반으로 **구조·라우트·카피 유지, 시각 레이어만** 인플레이스 수정.
+
+- **Pure white surface(major)** — `--surface: #ffffff` → `#fbfcfd`(앵커 쪽 미세 틴트). base.css 라이트 `:root` 2곳. 다크는 이미 틴트됨. 전 탭 공통 개선(대시보드 회귀 없음 확인).
+- **Card-in-card(major)** — 계좌 카드 안의 테두리+틴트 예수금 pill(`.account-cash-quick`)을 **테두리·배경 없는 인라인 텍스트**로 낮추고 편집 링크만 accent 강조.
+- **3등분 KPI(minor)** — 등분 3칼럼을 **비대칭 bento**(예수금 1.7fr 주인공 + 큰 숫자 + 옅은 accent 카드)로.
+- **이모지 아이콘(minor)** — `✎`/`✓`를 인라인 스트로크 SVG(PencilIcon/CheckIcon)로 교체, 앱의 line-icon 보이스와 통일.
+- **토큰 이탈 raw hex(minor)** — accounts.css 하드코딩(`#e6a817 #fff8ec #b07c10 #2a2010 #e8ece8`)을 **`--warn-line/--warn-bg/--warn-text` 토큰**(base.css 라이트/다크 신설) + `--surface-soft`로 치환. accounts.css raw hex 0.
+- **행 위계(minor)** — 계좌 총액 `.account-row-totals strong` 16→19px/950으로 키워 초점 단일화.
+- **균일 카드(minor)** — 행 세로 패딩 16→13px로 압축.
+
+검증: `npm run check`(45 pass) + build, 계좌 라이트/다크 + 대시보드(틴트 회귀 점검) 확인, 스크린샷 정리. redesign 안전레일 준수(삭제 0, 기존 라우트/컴포넌트 유지).
+
 ## 남은 아이디어(후속)
 - 실제 수령 배당 **자동 기록**(자동화가 배당락일 감지) → 그때 실제/예상 통합 타임라인 검토.
 - 설정 탭을 알림/자동기록(상단)과 백업·가져오기·로그(고급 접기)로 더 분리.
