@@ -471,12 +471,20 @@ function AccountAccordionBody({ account, stats, state }) {
         <div>
           <div className="section-badge">보유 종목 ({holdings.length})</div>
           <ul className="detail-list">
-            {holdings.length ? holdings.map((h) => (
-              <li key={h.id}>
-                <span>{h.name || h.ticker}<small>{h.ticker}</small></span>
-                <strong>{formatKrw(holdingValues(state, h).valueKrw)}</strong>
-              </li>
-            )) : <li>보유 종목 없음</li>}
+            {holdings.length ? holdings.map((h) => {
+              const name = h.name || h.ticker;
+              // 티커가 이름과 의미 있게 다를 때만(예: Apple / AAPL) 부제로. 한국 ETF처럼
+              // ticker에 종목명이 그대로 든 경우 중복이라 표시하지 않는다.
+              const nk = String(name).toLowerCase();
+              const tk = String(h.ticker || "").toLowerCase();
+              const showTicker = tk && tk !== nk && !nk.includes(tk) && !tk.includes(nk);
+              return (
+                <li key={h.id}>
+                  <span>{name}{showTicker ? <small>{h.ticker}</small> : null}</span>
+                  <strong>{formatKrw(holdingValues(state, h).valueKrw)}</strong>
+                </li>
+              );
+            }) : <li>보유 종목 없음</li>}
           </ul>
         </div>
         <div>
