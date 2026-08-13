@@ -6317,6 +6317,36 @@ tr.is-editing-row td {
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
 }
 
+/* 보유 종목 행 — 이름(+선택적 티커) 왼쪽, 금액 오른쪽. 붙어 보이지 않게 정리 */
+.account-accordion-columns .detail-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.account-accordion-columns .detail-list li {
+  align-items: baseline;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+}
+.account-accordion-columns .detail-list li > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.account-accordion-columns .detail-list li > span small {
+  margin-left: 6px;
+  color: var(--muted);
+  font-weight: 700;
+}
+.account-accordion-columns .detail-list li > strong {
+  flex-shrink: 0;
+  color: var(--value);
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+}
+
 .account-list-row strong {
   font-size: 16px;
   font-weight: 950;
