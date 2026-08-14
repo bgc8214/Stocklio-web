@@ -1,10 +1,9 @@
 import React, { useEffect, useRef } from "react";
 import { formatNumber } from "../../app/formatters.js";
-import { palette } from "../../app/constants.js";
 
-// 앱 팔레트 기반 시리즈 색상(옛 초록 브랜드 제거, blue-led 로 통일).
-const SERIES_YEAR = palette[0]; // #3366FF accent blue — 연 누적
-const SERIES_MONTH = palette[3]; // #8B5CF6 purple — 월 누적
+// 차트 시리즈 색상(사용자 선호로 기존 색상 유지).
+const SERIES_YEAR = "#4f7f36"; // 연 누적(green)
+const SERIES_MONTH = "#1d6fa4"; // 월 누적(blue)
 const SERIES_DAILY = "#c7433d"; // 일일 손익(red)
 
 // performance-view.js 의 Chart.js 월별 손익 차트를 얇게 래핑한다.
@@ -32,7 +31,7 @@ export function MonthlyFlowChart({ source }) {
             label: source.yearLabel,
             data: source.points.map((point) => point.yearCumulativeMan),
             borderColor: SERIES_YEAR,
-            backgroundColor: "rgba(51, 102, 255, 0.14)",
+            backgroundColor: "rgba(190, 224, 166, 0.55)",
             borderWidth: 2.5,
             fill: "origin",
             pointRadius: 0,
@@ -44,7 +43,7 @@ export function MonthlyFlowChart({ source }) {
             label: source.monthLabel,
             data: source.points.map((point) => point.monthCumulativeMan),
             borderColor: SERIES_MONTH,
-            backgroundColor: "rgba(139, 92, 246, 0.28)",
+            backgroundColor: "rgba(93, 169, 233, 0.35)",
             borderWidth: 2.5,
             fill: false,
             pointRadius: 3,

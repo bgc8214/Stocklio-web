@@ -32,6 +32,9 @@
   --tooltip-bg: #1b2430;
   --tooltip-fg: #ffffff;
   --tooltip-muted: rgba(255, 255, 255, 0.55);
+  /* 성과 차트 선 색(사용자 선호로 기존 green 유지) */
+  --chart-line: #1f7a5b;
+  --chart-line-soft: rgba(31, 122, 91, 0.12);
 }
 
 * {
@@ -7852,12 +7855,12 @@ button.account-overview-card {
 }
 
 .trend-area {
-  fill: color-mix(in srgb, var(--accent) 12%, transparent);
+  fill: var(--chart-line-soft);
 }
 
 .trend-line {
   fill: none;
-  stroke: var(--accent);
+  stroke: var(--chart-line);
   stroke-linecap: round;
   stroke-linejoin: round;
   stroke-width: 2;
@@ -7865,7 +7868,7 @@ button.account-overview-card {
 
 .trend-point {
   fill: var(--surface);
-  stroke: var(--accent);
+  stroke: var(--chart-line);
   stroke-width: 2;
 }
 
@@ -7880,7 +7883,7 @@ button.account-overview-card {
 
 .trend-point-group:focus .trend-point,
 .trend-point-group:hover .trend-point {
-  fill: var(--accent);
+  fill: var(--chart-line);
   stroke: var(--surface);
 }
 
@@ -7952,7 +7955,7 @@ button.account-overview-card {
 }
 
 .trend-point-label {
-  fill: var(--accent-dark);
+  fill: var(--chart-line);
   font-size: 11px;
   font-weight: 800;
 }

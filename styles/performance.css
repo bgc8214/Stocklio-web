@@ -238,12 +238,12 @@
 }
 
 .trend-area {
-  fill: color-mix(in srgb, var(--accent) 12%, transparent);
+  fill: var(--chart-line-soft);
 }
 
 .trend-line {
   fill: none;
-  stroke: var(--accent);
+  stroke: var(--chart-line);
   stroke-linecap: round;
   stroke-linejoin: round;
   stroke-width: 2;
@@ -251,7 +251,7 @@
 
 .trend-point {
   fill: var(--surface);
-  stroke: var(--accent);
+  stroke: var(--chart-line);
   stroke-width: 2;
 }
 
@@ -266,7 +266,7 @@
 
 .trend-point-group:focus .trend-point,
 .trend-point-group:hover .trend-point {
-  fill: var(--accent);
+  fill: var(--chart-line);
   stroke: var(--surface);
 }
 
@@ -338,7 +338,7 @@
 }
 
 .trend-point-label {
-  fill: var(--accent-dark);
+  fill: var(--chart-line);
   font-size: 11px;
   font-weight: 800;
 }
