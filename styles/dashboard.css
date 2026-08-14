@@ -44,6 +44,13 @@
   margin-bottom: 18px;
 }
 
+/* FOUC 방지: index.html 의 정적 placeholder 카드는 craft-dashboard.jsx 가 마운트하며
+   board 내용을 통째로 교체할 때까지 버려지는 스켈레톤이다. 하이드레이션 전(=.craft-dashboard-board
+   미부여) 셸/그리드 폭이 잡히기 전의 깨진 레이아웃이 잠깐 보이지 않도록 숨긴다. */
+.dashboard-board:not(.craft-dashboard-board) {
+  visibility: hidden;
+}
+
 .dashboard-board.craft-dashboard-board {
   align-items: stretch;
   display: flex;
