@@ -18,6 +18,9 @@ import {
 
 const RANGE_LABELS = { all: "전체 기간", ytd: "올해", "30d": "최근 30일", "7d": "최근 7일" };
 
+// 손익 색: 양수=상승(빨강), 음수=하락(파랑), 0=중립. 0을 상승색으로 칠하지 않는다.
+const signClass = (v) => (v > 0 ? "positive" : v < 0 ? "negative" : undefined);
+
 export function PerformanceView() {
   const state = useStore((s) => s.portfolio);
   const [range, setRange] = useState("all");
@@ -111,11 +114,11 @@ export function PerformanceView() {
         <div className="performance-detail-stats">
           {stats ? (
             <>
-              <div><span>기간 증감</span><strong className={stats.periodChangeKrw >= 0 ? "positive" : "negative"}>{formatKrw(stats.periodChangeKrw)}</strong><small>{formatPercent(stats.periodReturn)}</small></div>
+              <div><span>기간 증감</span><strong className={signClass(stats.periodChangeKrw)}>{formatKrw(stats.periodChangeKrw)}</strong><small>{formatPercent(stats.periodReturn)}</small></div>
               <div><span>입출금</span><strong>{formatKrw(stats.netInflowKrw)}</strong><small>외부 현금흐름</small></div>
-              <div><span>투자손익</span><strong className={stats.investmentGainKrw >= 0 ? "positive" : "negative"}>{formatKrw(stats.investmentGainKrw)}</strong><small>증감 - 입출금</small></div>
-              <div><span>월 누적</span><strong className={stats.monthToDateGainKrw >= 0 ? "positive" : "negative"}>{formatKrw(stats.monthToDateGainKrw)}</strong><small>{formatPercent(stats.monthToDateReturn)}</small></div>
-              <div><span>최대 낙폭</span><strong className={stats.maxDrawdownKrw >= 0 ? "positive" : "negative"}>{formatKrw(stats.maxDrawdownKrw)}</strong><small>{formatPercent(stats.maxDrawdownRate)}</small></div>
+              <div><span>투자손익</span><strong className={signClass(stats.investmentGainKrw)}>{formatKrw(stats.investmentGainKrw)}</strong><small>증감 - 입출금</small></div>
+              <div><span>월 누적</span><strong className={signClass(stats.monthToDateGainKrw)}>{formatKrw(stats.monthToDateGainKrw)}</strong><small>{formatPercent(stats.monthToDateReturn)}</small></div>
+              <div><span>최대 낙폭</span><strong className={signClass(stats.maxDrawdownKrw)}>{formatKrw(stats.maxDrawdownKrw)}</strong><small>{formatPercent(stats.maxDrawdownRate)}</small></div>
             </>
           ) : null}
         </div>
@@ -148,9 +151,12 @@ export function PerformanceView() {
             </div>
           ) : null}
         </div>
-        <div className="monthly-flow-chart-wrap">
+        <div className={`monthly-flow-chart-wrap${flowSource.points.length > 0 && flowSource.points.length < 3 ? " is-sparse" : ""}`}>
           {flowSource.points.length ? <MonthlyFlowChart source={flowSource} /> : <div className="empty-state">선택 기간에 표시할 스냅샷이 없습니다</div>}
         </div>
+        {flowSource.points.length > 0 && flowSource.points.length < 3 ? (
+          <p className="monthly-flow-hint">아직 이 달의 스냅샷이 적어요. 매일 기록이 쌓이면 추세가 채워집니다.</p>
+        ) : null}
         {flowSource.points.length ? (
           <details className="monthly-flow-source-details">
             <summary>표로 보기</summary>
@@ -180,10 +186,10 @@ export function PerformanceView() {
               <tbody>
                 {monthlyRows.length ? monthlyRows.map((row) => (
                   <tr key={row.month}>
-                    <td data-label="월" className={row.changeKrw >= 0 ? "positive" : "negative"}>{row.month}</td>
+                    <td data-label="월">{row.month}</td>
                     <td data-label="월초 총자산">{formatKrw(row.startValueKrw)}</td>
                     <td data-label="월말 총자산">{formatKrw(row.endValueKrw)}</td>
-                    <td data-label="월 증감" className={row.changeKrw >= 0 ? "positive" : "negative"}>{formatKrw(row.changeKrw)}</td>
+                    <td data-label="월 증감" className={signClass(row.changeKrw)}>{formatKrw(row.changeKrw)}</td>
                   </tr>
                 )) : <tr><td colSpan={4}>한 달치 기록이 쌓이면 월별 분석이 시작됩니다</td></tr>}
               </tbody>
@@ -207,10 +213,10 @@ export function PerformanceView() {
                   <tr key={row.date}>
                     <td data-label="날짜">{row.date}</td>
                     <td data-label="총자산">{formatKrw(row.totalValueKrw)}</td>
-                    <td data-label="일 증감" className={row.dailyChangeKrw >= 0 ? "positive" : "negative"}>{formatKrw(row.dailyChangeKrw)}</td>
-                    <td data-label="투자손익" className={row.investmentGainKrw >= 0 ? "positive" : "negative"}>{formatKrw(row.investmentGainKrw)}</td>
-                    <td data-label="일 수익률" className={row.dailyReturn >= 0 ? "positive" : "negative"}>{formatPercent(row.dailyReturn)}</td>
-                    <td data-label="월 누적" className={row.monthToDateInvestmentGainKrw >= 0 ? "positive" : "negative"}>{formatKrw(row.monthToDateInvestmentGainKrw)}</td>
+                    <td data-label="일 증감" className={signClass(row.dailyChangeKrw)}>{formatKrw(row.dailyChangeKrw)}</td>
+                    <td data-label="투자손익" className={signClass(row.investmentGainKrw)}>{formatKrw(row.investmentGainKrw)}</td>
+                    <td data-label="일 수익률" className={signClass(row.dailyReturn)}>{formatPercent(row.dailyReturn)}</td>
+                    <td data-label="월 누적" className={signClass(row.monthToDateInvestmentGainKrw)}>{formatKrw(row.monthToDateInvestmentGainKrw)}</td>
                   </tr>
                 )) : <tr><td colSpan={6}>성과 기록이 아직 없습니다</td></tr>}
               </tbody>
@@ -270,8 +276,8 @@ function StrategyContribution({ rows }) {
   if (!rows.length) return <div className="empty-state">보유 종목이 없습니다</div>;
   const maxAbs = Math.max(...rows.map((r) => Math.abs(r.gainKrw)), 1);
   return rows.map((row) => {
-    const cls = row.gainKrw >= 0 ? "positive" : "negative";
-    const sign = row.gainKrw >= 0 ? "+" : "";
+    const cls = signClass(row.gainKrw);
+    const sign = row.gainKrw > 0 ? "+" : "";
     return (
       <div className="contribution-row" key={row.strategy}>
         <div className="contribution-row-head">
@@ -291,7 +297,7 @@ function AccountContribution({ rows }) {
     <div className="contribution-row" key={`${row.investor}-${row.account}`}>
       <div className="contribution-row-head">
         <div><strong>{row.account}</strong><small>{row.investor} · {formatKrw(row.latestValueKrw)}</small></div>
-        <strong className={row.periodChangeKrw >= 0 ? "positive" : "negative"}>{formatKrw(row.periodChangeKrw)}</strong>
+        <strong className={signClass(row.periodChangeKrw)}>{formatKrw(row.periodChangeKrw)}</strong>
       </div>
       <div className="contribution-bar"><span style={{ width: `${Math.min(100, (Math.abs(row.periodChangeKrw) / maxAbs) * 100)}%` }} /></div>
     </div>

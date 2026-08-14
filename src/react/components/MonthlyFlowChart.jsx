@@ -1,5 +1,11 @@
 import React, { useEffect, useRef } from "react";
 import { formatNumber } from "../../app/formatters.js";
+import { palette } from "../../app/constants.js";
+
+// 앱 팔레트 기반 시리즈 색상(옛 초록 브랜드 제거, blue-led 로 통일).
+const SERIES_YEAR = palette[0]; // #3366FF accent blue — 연 누적
+const SERIES_MONTH = palette[3]; // #8B5CF6 purple — 월 누적
+const SERIES_DAILY = "#c7433d"; // 일일 손익(red)
 
 // performance-view.js 의 Chart.js 월별 손익 차트를 얇게 래핑한다.
 // UMD 전역 window.Chart 를 useEffect 안에서 그대로 사용하고, cleanup 에서 destroy 한다.
@@ -25,31 +31,31 @@ export function MonthlyFlowChart({ source }) {
           {
             label: source.yearLabel,
             data: source.points.map((point) => point.yearCumulativeMan),
-            borderColor: "#4f7f36",
-            backgroundColor: "rgba(190, 224, 166, 0.55)",
+            borderColor: SERIES_YEAR,
+            backgroundColor: "rgba(51, 102, 255, 0.14)",
             borderWidth: 2.5,
             fill: "origin",
             pointRadius: 0,
             pointHitRadius: 10,
             tension: 0,
-            datalabels: { align: "top", anchor: "end", color: "#4f7f36", font: { weight: "bold", size: 10 }, formatter: labelFormatter },
+            datalabels: { align: "top", anchor: "end", color: SERIES_YEAR, font: { weight: "bold", size: 10 }, formatter: labelFormatter },
           },
           {
             label: source.monthLabel,
             data: source.points.map((point) => point.monthCumulativeMan),
-            borderColor: "#1d6fa4",
-            backgroundColor: "rgba(93, 169, 233, 0.35)",
+            borderColor: SERIES_MONTH,
+            backgroundColor: "rgba(139, 92, 246, 0.28)",
             borderWidth: 2.5,
             fill: false,
             pointRadius: 3,
             pointHitRadius: 10,
             tension: 0,
-            datalabels: { align: "bottom", anchor: "end", color: "#1d6fa4", font: { size: 10 }, formatter: labelFormatter },
+            datalabels: { align: "bottom", anchor: "end", color: SERIES_MONTH, font: { size: 10 }, formatter: labelFormatter },
           },
           {
             label: "일일 손익",
             data: source.points.map((point) => point.dailyMan),
-            borderColor: "#c7433d",
+            borderColor: SERIES_DAILY,
             backgroundColor: "rgba(199, 67, 61, 0.35)",
             borderWidth: 2,
             fill: false,

@@ -26,10 +26,10 @@ export function Donut({ items, centerLabel, radius = 78, strokeWidth = 28, cente
   return (
     <>
       <svg viewBox={viewBox} role="img" aria-label="자산 비중 차트">
-        <circle cx={center} cy={center} r={radius} fill="none" stroke="#e6ebe5" strokeWidth={strokeWidth} />
+        <circle cx={center} cy={center} r={radius} fill="none" style={{ stroke: "var(--line)" }} strokeWidth={strokeWidth} />
         {rings}
-        <text x={center} y={center - 4} textAnchor="middle" fontSize={center === 90 ? 17 : 19} fontWeight="800" fill="#17211b">{items.length}</text>
-        <text x={center} y={center + 18} textAnchor="middle" fontSize="12" fill="#66736b">{centerLabel}</text>
+        <text x={center} y={center - 4} textAnchor="middle" fontSize={center === 90 ? 17 : 19} fontWeight="800" style={{ fill: "var(--value)" }}>{items.length}</text>
+        <text x={center} y={center + 18} textAnchor="middle" fontSize="12" style={{ fill: "var(--muted)" }}>{centerLabel}</text>
       </svg>
       <div className={compact ? "legend compact-legend" : "legend"}>
         {items.length ? items.map((item, index) => {
