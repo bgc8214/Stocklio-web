@@ -28,6 +28,9 @@
   --tooltip-bg: #1b2430;
   --tooltip-fg: #ffffff;
   --tooltip-muted: rgba(255, 255, 255, 0.55);
+  /* 성과 차트 선 색(사용자 선호로 기존 green 유지) */
+  --chart-line: #1f7a5b;
+  --chart-line-soft: rgba(31, 122, 91, 0.12);
 }
 
 * {
