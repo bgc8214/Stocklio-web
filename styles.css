@@ -28,6 +28,10 @@
   --warn-line: #e6a817;
   --warn-bg: #fff8ec;
   --warn-text: #a06d0e;
+  /* 항상 어두운 툴팁 칩(라이트/다크 공통) — 다크 블록에서 재정의하지 않는다 */
+  --tooltip-bg: #1b2430;
+  --tooltip-fg: #ffffff;
+  --tooltip-muted: rgba(255, 255, 255, 0.55);
 }
 
 * {
@@ -7618,8 +7622,8 @@ button.account-overview-card {
   align-items: flex-start;
   gap: 10px;
   padding: 12px 14px;
-  border: 1px solid var(--warn-line, #f0c36d);
-  background: var(--warn-bg, rgba(240, 195, 109, 0.12));
+  border: 1px solid var(--warn-line);
+  background: var(--warn-bg);
   border-radius: 12px;
 }
 .perf-flow-warning-icon {
@@ -7690,7 +7694,7 @@ button.account-overview-card {
 
 .daily-move-summary {
   align-items: center;
-  background: #f4f7f4;
+  background: var(--surface-soft);
   border: 1px solid var(--line);
   border-radius: 8px;
   display: flex;
@@ -7719,7 +7723,7 @@ button.account-overview-card {
 }
 
 .daily-move-insight {
-  background: rgba(31, 122, 91, 0.08);
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
   border-radius: 8px;
   color: var(--ink);
   font-size: 13px;
@@ -7848,12 +7852,12 @@ button.account-overview-card {
 }
 
 .trend-area {
-  fill: rgba(31, 122, 91, 0.12);
+  fill: color-mix(in srgb, var(--accent) 12%, transparent);
 }
 
 .trend-line {
   fill: none;
-  stroke: #1f7a5b;
+  stroke: var(--accent);
   stroke-linecap: round;
   stroke-linejoin: round;
   stroke-width: 2;
@@ -7861,7 +7865,7 @@ button.account-overview-card {
 
 .trend-point {
   fill: var(--surface);
-  stroke: #1f7a5b;
+  stroke: var(--accent);
   stroke-width: 2;
 }
 
@@ -7876,7 +7880,7 @@ button.account-overview-card {
 
 .trend-point-group:focus .trend-point,
 .trend-point-group:hover .trend-point {
-  fill: #1f7a5b;
+  fill: var(--accent);
   stroke: var(--surface);
 }
 
@@ -7887,43 +7891,43 @@ button.account-overview-card {
 }
 
 .trend-tooltip rect {
-  fill: #1a2820;
+  fill: var(--tooltip-bg);
   filter: drop-shadow(0 8px 20px rgba(18, 31, 25, 0.28));
 }
 
 .trend-tooltip text {
-  fill: #ffffff;
+  fill: var(--tooltip-fg);
   font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.01em;
 }
 
 .trend-tooltip .tooltip-date {
-  fill: rgba(255,255,255,0.55);
+  fill: var(--tooltip-muted);
   font-size: 11px;
   font-weight: 600;
 }
 
 .trend-tooltip .tooltip-value {
-  fill: #ffffff;
+  fill: var(--tooltip-fg);
   font-size: 13px;
   font-weight: 800;
 }
 
 .trend-tooltip .tooltip-positive {
-  fill: #e84040;
+  fill: var(--gain);
   font-size: 12px;
   font-weight: 700;
 }
 
 .trend-tooltip .tooltip-negative {
-  fill: #4a90d9;
+  fill: var(--loss);
   font-size: 12px;
   font-weight: 700;
 }
 
 .trend-tooltip .tooltip-return {
-  fill: rgba(255,255,255,0.55);
+  fill: var(--tooltip-muted);
   font-size: 11px;
   font-weight: 600;
 }
@@ -7948,7 +7952,7 @@ button.account-overview-card {
 }
 
 .trend-point-label {
-  fill: #1f7a5b;
+  fill: var(--accent-dark);
   font-size: 11px;
   font-weight: 800;
 }
@@ -8003,8 +8007,8 @@ button.account-overview-card {
 }
 
 .monthly-flow-source-table th {
-  background: #c8ccca;
-  color: #0f1712;
+  background: var(--surface-soft);
+  color: var(--value);
 }
 
 .monthly-flow-source-table tbody th {
@@ -8015,7 +8019,7 @@ button.account-overview-card {
 
 .monthly-flow-source-table th,
 .monthly-flow-source-table td {
-  border-color: #b7beb9;
+  border-color: var(--line);
   padding: 7px 8px;
 }
 
@@ -8025,6 +8029,18 @@ button.account-overview-card {
   height: 440px;
   overflow-x: auto;
   padding: 12px;
+}
+
+/* 스냅샷이 적을 때 거대한 빈 여백 대신 높이를 줄인다 */
+.monthly-flow-chart-wrap.is-sparse {
+  height: 240px;
+}
+
+.monthly-flow-hint {
+  margin: 8px 2px 0;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
 }
 
 .monthly-flow-chart-wrap canvas {
@@ -8210,7 +8226,7 @@ button.account-overview-card {
 }
 
 .daily-move-summary {
-  background: #f2f7f3;
+  background: var(--surface-soft);
   border-radius: 10px;
   padding: 14px;
 }
@@ -8220,23 +8236,18 @@ button.account-overview-card {
 }
 
 [data-theme="dark"] .trend-tooltip rect {
-  fill: #1e2b24;
   filter: drop-shadow(0 4px 16px rgba(0,0,0,0.7));
-  stroke: rgba(29,185,122,0.35);
+  stroke: var(--line);
   stroke-width: 1;
 }
 
-[data-theme="dark"] .trend-tooltip text {
-  fill: #ffffff;
-}
-
 [data-theme="dark"] .daily-move-summary {
-  background: #1a1a1a;
-  border-color: rgba(255,255,255,0.08);
+  background: var(--surface-soft);
+  border-color: var(--line);
 }
 
 [data-theme="dark"] .daily-move-insight {
-  background: rgba(29,185,122,0.1);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
   color: rgba(255,255,255,0.85);
 }
 

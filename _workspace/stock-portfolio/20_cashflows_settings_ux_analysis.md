@@ -125,6 +125,19 @@
 
 검증: `npm run check`(45 pass) + build, 계좌 라이트/다크 + 대시보드(틴트 회귀 점검) 확인, 스크린샷 정리. redesign 안전레일 준수(삭제 0, 기존 라우트/컴포넌트 유지).
 
+## 성과 탭 hallmark redesign (2026-08-14)
+
+`hallmark audit` 결과(1 critical · 3 major · 3 minor)를 시각 레이어만 인플레이스 수정. 롤백 지점: git tag `perf-redesign-before`(8a6f925), 단일 커밋이라 `git revert` 로 즉시 원복 가능.
+
+- **(critical) 도넛 중앙 숫자 다크 대비 실패** — `Donut.jsx` 하드코딩 fill(`#17211b`/`#66736b`/track `#e6ebe5`)로 다크에서 숫자가 안 보였음 → inline `style` 로 `var(--value)/--muted/--line` 토큰화.
+- **(major) 차트가 옛 초록 브랜드** — `총자산 추세` 선/점(`#1f7a5b`)·영역(`rgba(31,122,91,…)`)·라벨, `손익 흐름` 연 누적선(`#4f7f36`) → accent(파랑) 계열로. 손익 흐름은 팔레트 기반 파랑·보라·빨강 3계열(`MonthlyFlowChart`).
+- **(major) performance.css raw hex 다수** → `--accent/--gain/--loss/--surface(-soft)/--line/--value` 및 신설 `--tooltip-bg/-fg/-muted`(항상 어두운 툴팁 칩)로 전부 토큰화. raw hex 0.
+- **(major) 월 라벨·0원이 손익색(빨강)** — `signClass()`(양수=상승·음수=하락·0=중립) 헬퍼로 교체, 월 라벨은 중립. 월별/일별/KPI/기여 분석 전부 적용.
+- **(minor) 손익 흐름 거대한 빈 여백** — 스냅샷 <3개면 높이 축소(`is-sparse`) + "기록이 쌓이면 채워집니다" 안내.
+- **(minor) 0원 빨강 / 도넛 트랙 하드코딩** — 위 signClass·토큰화로 함께 해소.
+
+검증: `npm run check`(45 pass) + build, 라이트/다크 확인(도넛 숫자 가시성·파란 차트·중립 0원), 스크린샷 정리.
+
 ## 남은 아이디어(후속)
 - 실제 수령 배당 **자동 기록**(자동화가 배당락일 감지) → 그때 실제/예상 통합 타임라인 검토.
 - 설정 탭을 알림/자동기록(상단)과 백업·가져오기·로그(고급 접기)로 더 분리.

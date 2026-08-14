@@ -24,6 +24,10 @@
   --warn-line: #e6a817;
   --warn-bg: #fff8ec;
   --warn-text: #a06d0e;
+  /* 항상 어두운 툴팁 칩(라이트/다크 공통) — 다크 블록에서 재정의하지 않는다 */
+  --tooltip-bg: #1b2430;
+  --tooltip-fg: #ffffff;
+  --tooltip-muted: rgba(255, 255, 255, 0.55);
 }
 
 * {
