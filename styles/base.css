@@ -274,9 +274,9 @@ button.secondary:hover,
 
 [data-theme="dark"] input:focus,
 [data-theme="dark"] select:focus {
-  border-color: rgba(29,185,122,0.5);
+  border-color: color-mix(in srgb, var(--accent) 50%, transparent);
   outline: none;
-  box-shadow: 0 0 0 3px rgba(29,185,122,0.12);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 12%, transparent);
 }
 
 [data-theme="dark"] button.ghost,
@@ -291,7 +291,7 @@ button.secondary:hover,
 [data-theme="dark"] button.secondary:hover,
 [data-theme="dark"] .small-button:hover {
   background: #2e2e2e;
-  border-color: rgba(29,185,122,0.5);
+  border-color: color-mix(in srgb, var(--accent) 50%, transparent);
   color: white;
 }
 

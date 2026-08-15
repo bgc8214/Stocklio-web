@@ -150,7 +150,7 @@
 }
 
 tr.is-editing-row td {
-  background: rgba(31, 122, 91, 0.08);
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
 }
 
 .holding-form {

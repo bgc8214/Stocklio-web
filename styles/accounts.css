@@ -358,13 +358,13 @@
 
 .account-list-row:hover,
 .account-list-row:focus-visible {
-  box-shadow: 0 2px 8px rgba(31, 122, 91, 0.08);
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--accent) 8%, transparent);
 }
 
 .account-list-row.is-selected {
-  background: rgba(31, 122, 91, 0.06);
-  border-color: rgba(31, 122, 91, 0.28);
-  box-shadow: 0 2px 10px rgba(31, 122, 91, 0.1);
+  background: color-mix(in srgb, var(--accent) 6%, transparent);
+  border-color: color-mix(in srgb, var(--accent) 28%, transparent);
+  box-shadow: 0 2px 10px color-mix(in srgb, var(--accent) 10%, transparent);
 }
 
 .account-card-row:hover {
