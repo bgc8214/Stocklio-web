@@ -401,6 +401,13 @@ button.primary {
   box-shadow: 0 2px 8px rgba(35, 122, 92, 0.3);
 }
 
+/* primary + small-button 조합은 .small-button 의 어두운 글자색을 상속받으므로
+   accent 배경 위에서 흰 글자로 되돌린다. */
+button.primary.small-button {
+  color: #fff;
+  border-color: transparent;
+}
+
 button.primary:hover:not(:disabled) {
   background: var(--accent-dark);
   box-shadow: 0 4px 14px rgba(35, 122, 92, 0.4);
