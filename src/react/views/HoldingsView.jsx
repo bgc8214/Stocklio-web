@@ -11,8 +11,11 @@ import {
   formatAsOf, formatKrw, formatMoneyByMode, formatChangeByMode, formatChangePrefixed, formatNumber, formatPercent,
 } from "../../app/formatters.js";
 import { parseSortValue, cycleSortValue } from "../../app/sort.js";
-import { searchSymbols } from "../../app/services/market-data-service.js";
+import { searchSymbols, getDividendInfo } from "../../app/services/market-data-service.js";
 import { TickerLogo } from "../components/TickerLogo.jsx";
+
+// 손익 색: 양수=상승(빨강), 음수=하락(파랑), 0=중립.
+const signClass = (v) => (v > 0 ? "positive" : v < 0 ? "negative" : undefined);
 
 const DEFAULT_SORT = "value-desc";
 const PAGE_SIZE = window.innerWidth <= 980 ? 100 : 10;
@@ -41,6 +44,7 @@ export function HoldingsView() {
   const [accountChip, setAccountChip] = useState("");
   const [filterOpen, setFilterOpen] = useState(false);
   const [drawer, setDrawer] = useState(null); // null | {holding} — holding=null 은 신규
+  const [detailTicker, setDetailTicker] = useState(null); // 종목 상세 드로어(종목별 카드 탭)
 
   // 대시보드 "종목 추가" 버튼(레거시 status strip)이 신규 드로어를 열도록 하는 신호.
   const openDrawerSignal = useStore((s) => s.openHoldingDrawerSignal);
@@ -183,7 +187,7 @@ export function HoldingsView() {
       ) : null}
 
       {isSummary ? (
-        <HoldingsSummaryCards state={state} rows={filtered} />
+        <HoldingsSummaryCards state={state} rows={filtered} onOpenDetail={(t) => setDetailTicker(t)} />
       ) : (
         <>
           <div className="table-wrap holdings-table-wrap">
@@ -228,6 +232,7 @@ export function HoldingsView() {
       )}
 
       {drawer ? <HoldingDrawer state={state} holding={drawer.holding} onClose={() => setDrawer(null)} /> : null}
+      {detailTicker ? <HoldingDetailDrawer state={state} tickerKey={detailTicker} currencyMode={currencyMode} fx={fx} onClose={() => setDetailTicker(null)} /> : null}
     </section>
   );
 }
@@ -268,7 +273,7 @@ function HoldingRow({ state, holding, currencyMode, fx, onEdit, onDelete }) {
   );
 }
 
-function HoldingsSummaryCards({ state, rows }) {
+function HoldingsSummaryCards({ state, rows, onOpenDetail }) {
   const byTicker = new Map();
   for (const h of rows) {
     const key = h.ticker || h.name;
@@ -294,7 +299,14 @@ function HoldingsSummaryCards({ state, rows }) {
           const weight = totalValue ? item.valueKrw / totalValue : 0;
           const gainPos = item.gainKrw >= 0, dayPos = item.dayMoveKrw >= 0;
           return (
-            <div className="holdings-summary-card" role="listitem" key={item.ticker || item.name}>
+            <button
+              type="button"
+              className="holdings-summary-card"
+              role="listitem"
+              key={item.ticker || item.name}
+              onClick={() => onOpenDetail?.(item.ticker || item.name)}
+              title={`${item.name} 계좌별 상세 보기`}
+            >
               <div className="hsc-header">
                 <TickerLogo ticker={item.ticker} name={item.name} size={32} />
                 <div className="hsc-name-wrap"><strong className="hsc-name" title={item.name}>{item.name}</strong><span className="hsc-ticker">{item.ticker}</span></div>
@@ -304,12 +316,114 @@ function HoldingsSummaryCards({ state, rows }) {
               <div className="hsc-meta">
                 {item.hasDayData ? <span className={`hsc-day ${dayPos ? "positive" : "negative"}`}>{dayPos ? "+" : ""}{formatKrw(item.dayMoveKrw)}</span> : null}
                 <span className="hsc-weight">{formatPercent(weight)}</span>
+                <span className="hsc-detail-cue" aria-hidden="true">계좌별 ›</span>
               </div>
-            </div>
+            </button>
           );
         })}
       </div>
     </div>
+  );
+}
+
+// 종목 상세 드로어 — 한 종목을 계좌별로 분해해서 보여준다(멀티계좌 앱의 핵심 공백을 메움).
+// 실현수익/매매이력은 데이터가 없어 표시하지 않는다.
+function HoldingDetailDrawer({ state, tickerKey, currencyMode, fx, onClose }) {
+  const holdings = (state?.holdings || []).filter((h) => (h.ticker || h.name) === tickerKey);
+  const [dividend, setDividend] = useState(null);
+  const first = holdings[0] || {};
+  const currency = first.currency || "KRW";
+  const ticker = first.ticker;
+  const name = first.name || first.ticker || tickerKey;
+
+  useEffect(() => {
+    if (!ticker) return undefined;
+    let cancelled = false;
+    getDividendInfo(ticker).then((info) => { if (!cancelled) setDividend(info); }).catch(() => {});
+    return () => { cancelled = true; };
+  }, [ticker]);
+
+  const money = (nativeVal) => formatMoneyByMode(nativeVal, currency, currencyMode, fx);
+  const change = (nativeVal) => formatChangeByMode(nativeVal, currency, currencyMode, fx);
+
+  const agg = holdings.reduce((a, h) => {
+    const v = holdingValues(state, h);
+    const dm = holdingDailyMove(state, h);
+    a.qty += Number(h.quantity || 0);
+    a.valueNative += v.valueNative; a.costNative += v.costNative; a.valueKrw += v.valueKrw;
+    a.dayMoveNative += dm.hasData ? (currency === "USD" ? dm.valueUsd : dm.valueKrw) : 0;
+    a.hasDay = a.hasDay || dm.hasData;
+    return a;
+  }, { qty: 0, valueNative: 0, costNative: 0, valueKrw: 0, dayMoveNative: 0, hasDay: false });
+  const gainNative = agg.valueNative - agg.costNative;
+  const returnRate = agg.costNative ? gainNative / agg.costNative : 0;
+  const avgCost = agg.qty ? agg.costNative / agg.qty : 0;
+  const totalPortfolioKrw = (state?.holdings || []).reduce((s, h) => s + holdingValues(state, h).valueKrw, 0);
+  const weight = totalPortfolioKrw ? agg.valueKrw / totalPortfolioKrw : 0;
+
+  const perShare = Number(dividend?.perShare || 0);
+  const annualNative = perShare * agg.qty;
+  const annualKrw = currency === "USD" ? annualNative * fx : annualNative;
+  const divYield = agg.valueNative ? annualNative / agg.valueNative : 0;
+
+  const rows = holdings
+    .map((h) => { const v = holdingValues(state, h); return { h, v, ret: v.costNative ? v.gainNative / v.costNative : 0 }; })
+    .sort((a, b) => b.v.valueNative - a.v.valueNative);
+
+  return (
+    <>
+      <div className="drawer-backdrop is-open" onClick={onClose} />
+      <aside className="side-drawer holding-detail-drawer is-open" aria-label={`${name} 상세`}>
+        <div className="drawer-heading">
+          <div className="hdd-title">
+            <TickerLogo ticker={ticker} name={name} size={36} />
+            <div>
+              <h2>{name}</h2>
+              <span>{ticker ? `${ticker} · ` : ""}{money(Number(first.price || 0))}</span>
+            </div>
+          </div>
+          <button className="ghost small-button" type="button" onClick={onClose}>닫기</button>
+        </div>
+
+        <div className="hdd-body">
+          <div className="hdd-summary">
+            <div><span>평가금액</span><strong>{money(agg.valueNative)}</strong></div>
+            <div><span>원금</span><strong>{money(agg.costNative)}</strong></div>
+            <div><span>총손익</span><strong className={signClass(gainNative)}>{change(gainNative)}</strong><small className={signClass(gainNative)}>{formatPercent(returnRate)}</small></div>
+            <div><span>일 영향</span><strong className={agg.hasDay ? signClass(agg.dayMoveNative) : undefined}>{agg.hasDay ? change(agg.dayMoveNative) : "—"}</strong></div>
+            <div><span>평단가</span><strong>{money(avgCost)}</strong></div>
+            <div><span>수량</span><strong>{formatNumber(agg.qty, 4)}</strong></div>
+            <div><span>비중</span><strong>{formatPercent(weight)}</strong></div>
+          </div>
+
+          {perShare > 0 ? (
+            <div className="hdd-dividend">
+              <span className="hdd-dividend-icon" aria-hidden="true">💰</span>
+              <span className="hdd-dividend-label">예상 연 배당</span>
+              <span className="hdd-dividend-main">{formatKrw(annualKrw)}</span>
+              <span className="hdd-dividend-sub">수익률 {formatPercent(divYield)}</span>
+            </div>
+          ) : null}
+
+          <div className="hdd-section-title">계좌별 보유 <span>{rows.length}개 계좌</span></div>
+          <div className="hdd-accounts">
+            {rows.map(({ h, v, ret }) => (
+              <div className="hdd-account-row" key={`${h.investor}|${h.account}|${h.id}`}>
+                <div className="hdd-account-id">
+                  <strong>{h.account}</strong>
+                  <small>{h.investor} · {formatNumber(h.quantity, 4)}주 · 평단 {money(h.averageCost)}</small>
+                </div>
+                <div className="hdd-account-figs">
+                  <span className="hdd-account-val">{money(v.valueNative)}</span>
+                  <span className={`hdd-account-gain ${signClass(v.gainNative) || ""}`}>{change(v.gainNative)} · {formatPercent(ret)}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+          <p className="hdd-note">평단가 기준 세전 손익입니다. 실현손익·매매 이력은 현재 지원하지 않습니다.</p>
+        </div>
+      </aside>
+    </>
   );
 }
 
