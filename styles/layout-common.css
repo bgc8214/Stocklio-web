@@ -656,7 +656,7 @@
 }
 
 .inline-edit-chip {
-  background: rgba(31, 122, 91, 0.1);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
   border-radius: 999px;
   color: var(--accent-dark);
   display: inline-flex;
@@ -996,8 +996,8 @@
 }
 
 .operation-toast[data-tone="success"] {
-  border-color: rgba(29, 185, 122, 0.3);
-  box-shadow: 0 8px 32px rgba(29, 185, 122, 0.12), 0 2px 8px rgba(0, 0, 0, 0.14);
+  border-color: color-mix(in srgb, var(--accent) 30%, transparent);
+  box-shadow: 0 8px 32px color-mix(in srgb, var(--accent) 12%, transparent), 0 2px 8px rgba(0, 0, 0, 0.14);
 }
 
 .operation-toast[data-tone="error"] {
@@ -1365,7 +1365,7 @@ th[data-sort],
 
 .status-actions #dashboardAddHoldingButton {
   order: 1;
-  box-shadow: 0 8px 18px rgba(31, 122, 91, 0.18);
+  box-shadow: 0 8px 18px color-mix(in srgb, var(--accent) 18%, transparent);
 }
 
 .status-actions #dashboardRefreshButton {
