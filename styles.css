@@ -5773,11 +5773,18 @@ tr.is-editing-row td {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
+/* 탭 가능함을 은근히 알리는 셰브론(라벨 없이) — hover 시 강조 */
 .hsc-detail-cue {
   margin-left: auto;
-  font-size: 11px;
-  font-weight: 800;
+  font-size: 16px;
+  line-height: 1;
+  font-weight: 700;
+  color: var(--subtle);
+  transition: transform 0.15s, color 0.15s;
+}
+.holdings-summary-card:hover .hsc-detail-cue {
   color: var(--accent-dark);
+  transform: translateX(2px);
 }
 
 /* 종목 상세 드로어 */
