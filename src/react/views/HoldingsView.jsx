@@ -316,7 +316,7 @@ function HoldingsSummaryCards({ state, rows, onOpenDetail }) {
               <div className="hsc-meta">
                 {item.hasDayData ? <span className={`hsc-day ${dayPos ? "positive" : "negative"}`}>{dayPos ? "+" : ""}{formatKrw(item.dayMoveKrw)}</span> : null}
                 <span className="hsc-weight">{formatPercent(weight)}</span>
-                <span className="hsc-detail-cue" aria-hidden="true">계좌별 ›</span>
+                <span className="hsc-detail-cue" aria-hidden="true">›</span>
               </div>
             </button>
           );
