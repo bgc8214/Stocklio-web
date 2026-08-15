@@ -5755,10 +5755,133 @@ tr.is-editing-row td {
   display: flex;
   flex-direction: column;
   min-width: 0;
-  transition: box-shadow 0.15s;
+  transition: box-shadow 0.15s, border-color 0.15s, transform 0.15s;
+  /* 탭하면 종목 상세 드로어가 열리는 버튼 */
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  width: 100%;
 }
 
-.holdings-summary-card:hover { box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
+.holdings-summary-card:hover {
+  box-shadow: 0 4px 16px rgba(0,0,0,0.10);
+  border-color: color-mix(in srgb, var(--accent) 35%, var(--line));
+  transform: translateY(-2px);
+}
+.holdings-summary-card:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.hsc-detail-cue {
+  margin-left: auto;
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--accent-dark);
+}
+
+/* 종목 상세 드로어 */
+.holding-detail-drawer .hdd-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.holding-detail-drawer .hdd-title h2 {
+  font-size: 18px;
+  margin: 0 0 2px;
+  overflow-wrap: anywhere;
+}
+.hdd-body {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-height: 0;
+}
+.hdd-summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+.hdd-summary > div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface-soft);
+}
+.hdd-summary span {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted);
+}
+.hdd-summary strong {
+  font-size: 16px;
+  color: var(--value);
+  font-variant-numeric: tabular-nums;
+}
+.hdd-summary small {
+  font-size: 11px;
+  font-weight: 700;
+}
+.hdd-dividend {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 10px 14px;
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--line));
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+}
+.hdd-dividend-icon { font-size: 14px; }
+.hdd-dividend-label { font-size: 11px; font-weight: 700; color: var(--muted); }
+.hdd-dividend-main { font-size: 15px; font-weight: 800; color: var(--value); font-variant-numeric: tabular-nums; }
+.hdd-dividend-sub { margin-left: auto; font-size: 11px; color: var(--muted); }
+.hdd-section-title {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--value);
+}
+.hdd-section-title span { font-size: 11px; font-weight: 700; color: var(--muted); }
+.hdd-accounts {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.hdd-account-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+.hdd-account-id { min-width: 0; }
+.hdd-account-id strong { display: block; font-size: 13px; color: var(--value); }
+.hdd-account-id small { font-size: 11px; color: var(--muted); }
+.hdd-account-figs {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 1px;
+  flex-shrink: 0;
+}
+.hdd-account-val { font-size: 13px; font-weight: 800; color: var(--value); font-variant-numeric: tabular-nums; }
+.hdd-account-gain { font-size: 11px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.hdd-note {
+  margin: 4px 0 0;
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.5;
+}
 
 .sparkline-wrap {
   display: inline-block;
