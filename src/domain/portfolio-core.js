@@ -169,6 +169,41 @@ export function parseTtmDividendPerShare(chartPayload, nowMs = Date.now()) {
   };
 }
 
+// Yahoo chart(range=1y, interval=1d) 응답에서 일별 종가 시계열과 52주 최고가(종가 기준)를 뽑는다.
+// meta.fiftyTwoWeekHigh(장중 고가 기준)를 쓰지 않는 이유: 최고가를 찍은 "날짜"가 필요해서.
+export function parse52WeekPriceSummary(chartPayload) {
+  const result = chartPayload?.chart?.result?.[0];
+  const timestamps = result?.timestamp;
+  const closes = result?.indicators?.quote?.[0]?.close;
+  if (!Array.isArray(timestamps) || !Array.isArray(closes)) {
+    return null;
+  }
+  const points = [];
+  let high = 0;
+  let highDate = null;
+  for (let i = 0; i < timestamps.length; i += 1) {
+    const close = Number(closes[i]);
+    const ts = Number(timestamps[i]);
+    if (!Number.isFinite(close) || close <= 0 || !Number.isFinite(ts)) continue;
+    const date = new Date(ts * 1000).toISOString().slice(0, 10);
+    points.push({ date, close });
+    if (close > high) {
+      high = close;
+      highDate = date;
+    }
+  }
+  if (!points.length) {
+    return null;
+  }
+  return {
+    currency: result?.meta?.currency || "USD",
+    points,
+    high,
+    highDate,
+    lastClose: points[points.length - 1].close,
+  };
+}
+
 // 보유 종목 × 주당 연배당(TTM) → 예상 배당(원통화·KRW 환산·수익률) 및 포트폴리오 합계.
 // dividendByTicker: { [ticker]: { perShare, currency, count } }
 export function projectPortfolioDividends(holdings = [], dividendByTicker = {}, fxRate = 1) {

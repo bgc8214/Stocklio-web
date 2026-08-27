@@ -380,6 +380,30 @@ tr.is-editing-row td {
 .hdd-dividend-label { font-size: 11px; font-weight: 700; color: var(--muted); }
 .hdd-dividend-main { font-size: 15px; font-weight: 800; color: var(--value); font-variant-numeric: tabular-nums; }
 .hdd-dividend-sub { margin-left: auto; font-size: 11px; color: var(--muted); }
+.hdd-price-history {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface-soft);
+}
+.hdd-ph-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+.hdd-ph-label { font-size: 11px; font-weight: 700; color: var(--muted); }
+.hdd-ph-drawdown { font-size: 13px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.hdd-ph-meta { font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.hdd-ph-meta strong { font-weight: 800; color: var(--value); }
+.price-sparkline { width: 100%; height: auto; display: block; }
+.price-sparkline-line { fill: none; stroke: var(--accent); stroke-width: 1.6; }
+.price-sparkline-area { fill: color-mix(in srgb, var(--accent) 10%, transparent); stroke: none; }
+.price-sparkline-high { fill: var(--gain); }
+.price-sparkline-last { fill: var(--accent-dark); }
 .hdd-section-title {
   display: flex;
   align-items: baseline;

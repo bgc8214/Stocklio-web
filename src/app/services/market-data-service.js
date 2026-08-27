@@ -1,6 +1,6 @@
-import { CACHE_PREFIX, FX_CACHE_TTL_MS, QUOTE_CACHE_TTL_MS, DIVIDEND_CACHE_TTL_MS } from "../constants.js";
+import { CACHE_PREFIX, FX_CACHE_TTL_MS, QUOTE_CACHE_TTL_MS, DIVIDEND_CACHE_TTL_MS, PRICE_HISTORY_CACHE_TTL_MS } from "../constants.js";
 import { parseYahooChartMeta } from "../../domain/market-calendar.js";
-import { parseTtmDividendPerShare } from "../../domain/portfolio-core.js";
+import { parseTtmDividendPerShare, parse52WeekPriceSummary } from "../../domain/portfolio-core.js";
 
 const CACHE_BASE_NAME = CACHE_PREFIX.replace(/-v\d+$/, "");
 
@@ -57,6 +57,23 @@ export async function getDividendInfo(ticker, options = {}) {
     // payments(월별 지급 내역)는 나중에 추가된 필드 — 이를 검증에 포함해야
     // 그 이전에 캐시된 payments 없는 옛 항목이 자동으로 재조회된다.
   }, { ...options, validate: (p) => p && Number.isFinite(Number(p.perShare)) && Array.isArray(p.payments) });
+}
+
+// 종목별 1년 일봉 요약(스파크라인 + 52주 최고가) — 일 단위로만 변하므로 24h 캐시.
+// 고점 대비 하락률의 "현재가"는 이 캐시가 아니라 보유 종목의 실시간 quote 가격을 쓴다.
+export async function getPriceHistory(ticker, options = {}) {
+  return cached(`hist:${ticker}`, PRICE_HISTORY_CACHE_TTL_MS, async () => {
+    const url = new URL("/api/yahoo/chart", window.location.origin);
+    url.searchParams.set("symbol", ticker);
+    url.searchParams.set("range", "1y");
+    url.searchParams.set("interval", "1d");
+    const data = await fetchJson(url);
+    const summary = parse52WeekPriceSummary(data);
+    if (!summary) {
+      throw new Error(`${ticker} 가격 이력 응답이 없습니다`);
+    }
+    return summary;
+  }, { ...options, validate: isPriceHistoryPayload });
 }
 
 export async function searchSymbols(query) {
@@ -125,6 +142,16 @@ function isFxPayload(payload) {
       Number.isFinite(Number(payload.previousClose)) &&
       Number.isFinite(Number(payload.change)) &&
       Number.isFinite(Number(payload.changePercent)),
+  );
+}
+
+function isPriceHistoryPayload(payload) {
+  return Boolean(
+    payload &&
+      Array.isArray(payload.points) &&
+      payload.points.length > 0 &&
+      Number.isFinite(Number(payload.high)) &&
+      Number(payload.high) > 0,
   );
 }
 
