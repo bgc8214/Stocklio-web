@@ -11,8 +11,9 @@ import {
   formatAsOf, formatKrw, formatMoneyByMode, formatChangeByMode, formatChangePrefixed, formatNumber, formatPercent,
 } from "../../app/formatters.js";
 import { parseSortValue, cycleSortValue } from "../../app/sort.js";
-import { searchSymbols, getDividendInfo } from "../../app/services/market-data-service.js";
+import { searchSymbols, getDividendInfo, getPriceHistory } from "../../app/services/market-data-service.js";
 import { TickerLogo } from "../components/TickerLogo.jsx";
+import { PriceSparkline } from "../components/PriceSparkline.jsx";
 
 // 손익 색: 양수=상승(빨강), 음수=하락(파랑), 0=중립.
 const signClass = (v) => (v > 0 ? "positive" : v < 0 ? "negative" : undefined);
@@ -331,6 +332,7 @@ function HoldingsSummaryCards({ state, rows, onOpenDetail }) {
 function HoldingDetailDrawer({ state, tickerKey, currencyMode, fx, onClose }) {
   const holdings = (state?.holdings || []).filter((h) => (h.ticker || h.name) === tickerKey);
   const [dividend, setDividend] = useState(null);
+  const [history, setHistory] = useState(null); // 1년 종가 시계열 + 52주 최고가
   const first = holdings[0] || {};
   const currency = first.currency || "KRW";
   const ticker = first.ticker;
@@ -340,6 +342,7 @@ function HoldingDetailDrawer({ state, tickerKey, currencyMode, fx, onClose }) {
     if (!ticker) return undefined;
     let cancelled = false;
     getDividendInfo(ticker).then((info) => { if (!cancelled) setDividend(info); }).catch(() => {});
+    getPriceHistory(ticker).then((h) => { if (!cancelled) setHistory(h); }).catch(() => {});
     return () => { cancelled = true; };
   }, [ticker]);
 
@@ -360,6 +363,10 @@ function HoldingDetailDrawer({ state, tickerKey, currencyMode, fx, onClose }) {
   const avgCost = agg.qty ? agg.costNative / agg.qty : 0;
   const totalPortfolioKrw = (state?.holdings || []).reduce((s, h) => s + holdingValues(state, h).valueKrw, 0);
   const weight = totalPortfolioKrw ? agg.valueKrw / totalPortfolioKrw : 0;
+
+  // 고점 대비 하락률 — 최고가는 1년 일봉(종가 기준), 현재가는 실시간 quote 가격.
+  const livePrice = Number(first.price || 0) || Number(history?.lastClose || 0);
+  const drawdown = history?.high > 0 && livePrice > 0 ? (livePrice - history.high) / history.high : null;
 
   const perShare = Number(dividend?.perShare || 0);
   const annualNative = perShare * agg.qty;
@@ -395,6 +402,25 @@ function HoldingDetailDrawer({ state, tickerKey, currencyMode, fx, onClose }) {
             <div><span>수량</span><strong>{formatNumber(agg.qty, 4)}</strong></div>
             <div><span>비중</span><strong>{formatPercent(weight)}</strong></div>
           </div>
+
+          {history ? (
+            <div className="hdd-price-history">
+              <div className="hdd-ph-head">
+                <span className="hdd-ph-label">최근 1년</span>
+                {drawdown != null ? (
+                  <span className={`hdd-ph-drawdown ${signClass(Math.min(drawdown, 0)) || ""}`}>
+                    {drawdown < -0.0005 ? `고점 대비 ${formatPercent(drawdown)}` : "52주 최고가 수준"}
+                  </span>
+                ) : null}
+              </div>
+              <PriceSparkline points={history.points} />
+              <div className="hdd-ph-meta">
+                52주 최고 <strong>{money(history.high)}</strong>
+                {history.highDate ? <small> · {history.highDate.replaceAll("-", ".")}</small> : null}
+                {livePrice > 0 ? <small> · 현재 {money(livePrice)}</small> : null}
+              </div>
+            </div>
+          ) : null}
 
           {perShare > 0 ? (
             <div className="hdd-dividend">

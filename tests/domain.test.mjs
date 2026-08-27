@@ -10,6 +10,7 @@ import {
   buildMonthlyDividendSchedule,
   getNextDividendMonth,
   normalizeDashboardLayout,
+  parse52WeekPriceSummary,
   parseTtmDividendPerShare,
   projectPortfolioDividends,
   validateStateShape,
@@ -723,6 +724,37 @@ test("parseTtmDividendPerShare: 배당 이벤트 없으면 0", () => {
   assert.equal(info.perShare, 0);
   assert.equal(info.count, 0);
   assert.equal(info.currency, "KRW");
+});
+
+test("parse52WeekPriceSummary: 종가 시계열에서 52주 최고가와 날짜", () => {
+  const day = 24 * 3600;
+  const base = Date.UTC(2026, 0, 5, 14, 30) / 1000; // 2026-01-05 미국장 개장 시각(초)
+  const payload = {
+    chart: {
+      result: [
+        {
+          meta: { currency: "USD" },
+          timestamp: [base, base + day, base + 2 * day, base + 3 * day],
+          indicators: { quote: [{ close: [100, 150, null, 120] }] },
+        },
+      ],
+    },
+  };
+  const summary = parse52WeekPriceSummary(payload);
+  assert.equal(summary.currency, "USD");
+  assert.equal(summary.high, 150);
+  assert.equal(summary.highDate, "2026-01-06");
+  assert.equal(summary.points.length, 3); // null 종가는 제외
+  assert.equal(summary.lastClose, 120);
+});
+
+test("parse52WeekPriceSummary: 시계열 없으면 null", () => {
+  assert.equal(parse52WeekPriceSummary({}), null);
+  assert.equal(parse52WeekPriceSummary(null), null);
+  assert.equal(
+    parse52WeekPriceSummary({ chart: { result: [{ timestamp: [], indicators: { quote: [{ close: [] }] } }] } }),
+    null,
+  );
 });
 
 test("projectPortfolioDividends: 수량×주당배당, USD 환산, 수익률", () => {
