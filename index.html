@@ -10,9 +10,19 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="styles-brand.css">
-    <script>(function(){var t=localStorage.getItem("stocklio-theme");if(t){document.documentElement.dataset.theme=t;}else if(window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches){document.documentElement.dataset.theme="dark";}})();</script>
+    <script>(function(){var t=localStorage.getItem("stocklio-theme");if(t){document.documentElement.dataset.theme=t;}else if(window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches){document.documentElement.dataset.theme="dark";}
+// 부팅 가림막 안전장치 — JS 초기화가 실패해도 6초 뒤에는 화면을 연다.
+setTimeout(function(){if(document.body){document.body.classList.remove("is-booting");}},6000);})();</script>
   </head>
-  <body>
+  <body class="is-booting">
+    <!-- 부팅 가림막 — 정적 마크업이 덜 그려진 채 노출되는 깜빡임을 막는다.
+         첫 상태 발행(render)이 body.is-booting 을 제거하면 사라진다. -->
+    <div id="bootVeil" aria-hidden="true">
+      <div class="boot-veil-lockup">
+        <img src="assets/tuja-ilji-icon-192.png" alt="">
+        <span>투자일지</span>
+      </div>
+    </div>
     <div class="app-shell">
       <!-- 사이드바는 React(src/react/App.jsx → Sidebar)가 이 자리에 렌더한다.
            display:contents 로 <aside class="sidebar"> 가 .app-shell 그리드의 직접 자식(col 1)이 되게 한다. -->
