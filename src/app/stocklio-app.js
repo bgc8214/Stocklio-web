@@ -379,6 +379,8 @@ function render() {
   renderEmptyPortfolioNotice();
   publishState();
   renderAuth();
+  // 첫 상태 발행과 함께 부팅 가림막(index.html body.is-booting)을 걷는다. 이후 호출에선 no-op.
+  document.body.classList.remove("is-booting");
 }
 
 function renderAuth() {

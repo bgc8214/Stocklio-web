@@ -598,3 +598,44 @@ td.empty-td {
   }
 
 }
+
+/* ─── 부팅 가림막 ─────────────────────────────────────────────
+   index.html 의 body.is-booting + #bootVeil 과 짝.
+   auth 대기·상태 로드가 끝나 첫 render() 가 클래스를 제거할 때까지
+   미완성 정적 마크업 대신 브랜드 락업만 보여준다. */
+#bootVeil { display: none; }
+body.is-booting .app-shell { visibility: hidden; }
+body.is-booting #bootVeil {
+  position: fixed;
+  inset: 0;
+  z-index: 999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg);
+}
+.boot-veil-lockup {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  animation: boot-veil-pulse 1.6s ease-in-out infinite;
+}
+.boot-veil-lockup img {
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
+}
+.boot-veil-lockup span {
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: var(--value);
+}
+@keyframes boot-veil-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.65; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .boot-veil-lockup { animation: none; }
+}
