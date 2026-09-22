@@ -369,6 +369,43 @@ export function buildAccountSnapshots(state, date, makeId = defaultId) {
   }));
 }
 
+// 전체 상태 저장(last-writer-wins upsert)의 lost-update 방지.
+// 브라우저가 상태를 로드한 "이후"에 다른 writer(Vercel cron·로컬 자동화 루프)가 추가한
+// 스냅샷 이력을, 브라우저의 전체 저장이 지워버리지 않도록 저장 직전에 원격 이력과 합친다.
+// 이력 외 필드(보유 종목·계좌 등)는 항상 로컬이 기준이고, 같은 key의 이력도 로컬이 이긴다.
+export function mergeSnapshotHistories(localState, remoteState) {
+  if (!localState || typeof localState !== "object") return localState;
+  if (!remoteState || typeof remoteState !== "object") return localState;
+  return {
+    ...localState,
+    portfolioSnapshots: mergeHistoryRows(
+      localState.portfolioSnapshots,
+      remoteState.portfolioSnapshots,
+      (row) => row.date,
+    ),
+    accountSnapshots: mergeHistoryRows(
+      localState.accountSnapshots,
+      remoteState.accountSnapshots,
+      (row) => (row.date ? `${row.date}|${row.investor}|${row.account}` : null),
+    ),
+  };
+}
+
+function mergeHistoryRows(localRows, remoteRows, keyOf) {
+  const local = Array.isArray(localRows) ? localRows : [];
+  const remote = Array.isArray(remoteRows) ? remoteRows : [];
+  if (!remote.length) return local;
+  const byKey = new Map();
+  // 원격 먼저 담고 로컬로 덮어써서, 원격에만 있는 이력은 보존하고 겹치면 로컬이 이긴다.
+  for (const row of remote) {
+    if (row) byKey.set(keyOf(row) || `remote-id:${row.id}`, row);
+  }
+  for (const row of local) {
+    if (row) byKey.set(keyOf(row) || `local-id:${row.id}`, row);
+  }
+  return [...byKey.values()].sort((a, b) => String(a.date || "").localeCompare(String(b.date || "")));
+}
+
 export function validateStateShape(state) {
   const issues = [];
   if (!state || typeof state !== "object") {

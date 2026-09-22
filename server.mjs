@@ -12,6 +12,7 @@ import {
   buildPortfolioSnapshot as buildPortfolioSnapshotCore,
   getNetInflowKrw,
   groupByAccount as groupByAccountCore,
+  mergeSnapshotHistories,
   normalizeDashboardLayout,
   validateStateShape,
 } from "./src/domain/portfolio-core.js";
@@ -64,7 +65,8 @@ createServer(async (request, response) => {
 
     if (url.pathname === "/api/state" && request.method === "PUT") {
       const nextState = await readJsonBody(request);
-      writeState(normalizeState(nextState));
+      // 자동화 루프가 이 탭 로드 이후 추가한 스냅샷 이력을 전체 저장이 지우지 않게 머지한다.
+      writeState(mergeSnapshotHistories(normalizeState(nextState), readState()));
       sendJson(response, 200, { ok: true, savedAt: new Date().toISOString() });
       return;
     }
