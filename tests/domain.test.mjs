@@ -9,6 +9,7 @@ import {
   groupByAccount,
   buildMonthlyDividendSchedule,
   getNextDividendMonth,
+  mergeSnapshotHistories,
   normalizeDashboardLayout,
   parse52WeekPriceSummary,
   parseTtmDividendPerShare,
@@ -724,6 +725,40 @@ test("parseTtmDividendPerShare: 배당 이벤트 없으면 0", () => {
   assert.equal(info.perShare, 0);
   assert.equal(info.count, 0);
   assert.equal(info.currency, "KRW");
+});
+
+test("mergeSnapshotHistories: 원격에만 있는 스냅샷(cron 추가분)을 보존한다", () => {
+  const local = {
+    holdings: [{ id: "h1", name: "로컬 편집본" }],
+    portfolioSnapshots: [
+      { id: "a", date: "2026-09-21", totalValueKrw: 100 },
+      { id: "c", date: "2026-09-23", totalValueKrw: 300 },
+    ],
+    accountSnapshots: [{ id: "x", date: "2026-09-21", investor: "A", account: "ISA", totalAssetsKrw: 1 }],
+  };
+  const remote = {
+    holdings: [{ id: "h1", name: "원격 옛날본" }],
+    portfolioSnapshots: [
+      { id: "a", date: "2026-09-21", totalValueKrw: 999 }, // 같은 날짜 → 로컬이 이김
+      { id: "b", date: "2026-09-22", totalValueKrw: 200 }, // 원격에만 있음 → 보존
+    ],
+    accountSnapshots: [
+      { id: "y", date: "2026-09-22", investor: "A", account: "ISA", totalAssetsKrw: 2 },
+    ],
+  };
+  const merged = mergeSnapshotHistories(local, remote);
+  assert.deepEqual(merged.portfolioSnapshots.map((s) => s.date), ["2026-09-21", "2026-09-22", "2026-09-23"]);
+  assert.equal(merged.portfolioSnapshots[0].totalValueKrw, 100); // 로컬 우선
+  assert.equal(merged.portfolioSnapshots[1].totalValueKrw, 200); // cron 추가분 보존
+  assert.equal(merged.accountSnapshots.length, 2);
+  assert.equal(merged.holdings[0].name, "로컬 편집본"); // 이력 외 필드는 로컬 그대로
+});
+
+test("mergeSnapshotHistories: 원격이 없거나 비면 로컬 그대로", () => {
+  const local = { portfolioSnapshots: [{ id: "a", date: "2026-09-21" }], accountSnapshots: [] };
+  assert.equal(mergeSnapshotHistories(local, null), local);
+  const merged = mergeSnapshotHistories(local, { portfolioSnapshots: [], accountSnapshots: [] });
+  assert.deepEqual(merged.portfolioSnapshots.map((s) => s.id), ["a"]);
 });
 
 test("parse52WeekPriceSummary: 종가 시계열에서 52주 최고가와 날짜", () => {

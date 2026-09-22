@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import { mergeSnapshotHistories } from "./domain/portfolio-core.js";
 
 const env = import.meta.env || {};
 const url = env.VITE_SUPABASE_URL || "";
@@ -174,9 +175,18 @@ async function savePortfolioState(state) {
   if (!client || !session?.user) {
     return { skipped: true };
   }
+  // 이 탭이 상태를 로드한 뒤 cron(일일 스냅샷)이 추가한 이력을 전체 upsert가
+  // 지우지 않도록, 원격 이력과 머지해서 저장한다 (lost-update 방지).
+  let payload = state;
+  try {
+    const remote = await loadPortfolioState();
+    payload = mergeSnapshotHistories(state, remote);
+  } catch {
+    // 원격 조회 실패 시엔 기존처럼 로컬 상태 그대로 저장 (저장 자체를 막지 않는다)
+  }
   const { error } = await client.from("portfolio_states").upsert({
     user_id: session.user.id,
-    state,
+    state: payload,
   });
   if (error) {
     throw error;
