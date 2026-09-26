@@ -21,11 +21,14 @@ export default async function handler(request, response) {
   }
 
   try {
-    await getRequestUser(request);
+    const user = await getRequestUser(request);
     const updates = await getTelegramUpdates();
+    // 봇의 getUpdates 에는 봇에게 말을 건 "모든" 대화가 들어있다. 아무 로그인 사용자에게
+    // 다 보여주면 소유자의 chat id 가 노출되므로, 요청자 이메일을 봇에게 보낸(=소유 증명된)
+    // 대화만 반환한다.
     response.status(200).json({
       ok: true,
-      chats: extractChats(updates).slice(0, 5),
+      chats: extractChats(updates, user.email).slice(0, 5),
     });
   } catch (error) {
     response.status(500).json({ error: error.message });
@@ -64,11 +67,18 @@ async function getTelegramUpdates() {
   return Array.isArray(payload.result) ? payload.result : [];
 }
 
-function extractChats(updates) {
+function extractChats(updates, ownerEmail) {
+  const email = String(ownerEmail || "").trim().toLowerCase();
   const map = new Map();
   for (const update of updates) {
-    const chat = update.message?.chat || update.edited_message?.chat || update.channel_post?.chat;
+    const message = update.message || update.edited_message || update.channel_post;
+    const chat = message?.chat;
     if (!chat?.id || map.has(String(chat.id))) {
+      continue;
+    }
+    // 소유 증명: 그 대화에서 요청자의 로그인 이메일을 봇에게 보낸 적이 있어야 한다.
+    const text = String(message?.text || "").toLowerCase();
+    if (!email || !text.includes(email)) {
       continue;
     }
     map.set(String(chat.id), {
