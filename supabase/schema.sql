@@ -11,20 +11,20 @@ drop policy if exists "Users can read own portfolio state" on public.portfolio_s
 create policy "Users can read own portfolio state"
   on public.portfolio_states
   for select
-  using (auth.uid() = user_id);
+  using ((select auth.uid()) = user_id);
 
 drop policy if exists "Users can insert own portfolio state" on public.portfolio_states;
 create policy "Users can insert own portfolio state"
   on public.portfolio_states
   for insert
-  with check (auth.uid() = user_id);
+  with check ((select auth.uid()) = user_id);
 
 drop policy if exists "Users can update own portfolio state" on public.portfolio_states;
 create policy "Users can update own portfolio state"
   on public.portfolio_states
   for update
-  using (auth.uid() = user_id)
-  with check (auth.uid() = user_id);
+  using ((select auth.uid()) = user_id)
+  with check ((select auth.uid()) = user_id);
 
 create or replace function public.set_updated_at()
 returns trigger
@@ -62,7 +62,7 @@ drop policy if exists "Users can read automation runs" on public.automation_runs
 create policy "Users can read automation runs"
   on public.automation_runs
   for select
-  using (auth.role() = 'authenticated');
+  using ((select auth.role()) = 'authenticated');
 
 create table if not exists public.price_logs (
   id bigint generated always as identity primary key,
@@ -83,7 +83,7 @@ drop policy if exists "Users can read own price logs" on public.price_logs;
 create policy "Users can read own price logs"
   on public.price_logs
   for select
-  using (auth.uid() = portfolio_user_id);
+  using ((select auth.uid()) = portfolio_user_id);
 
 create table if not exists public.notification_settings (
   user_id uuid primary key references auth.users(id) on delete cascade,
@@ -102,20 +102,20 @@ drop policy if exists "Users can read own notification settings" on public.notif
 create policy "Users can read own notification settings"
   on public.notification_settings
   for select
-  using (auth.uid() = user_id);
+  using ((select auth.uid()) = user_id);
 
 drop policy if exists "Users can insert own notification settings" on public.notification_settings;
 create policy "Users can insert own notification settings"
   on public.notification_settings
   for insert
-  with check (auth.uid() = user_id);
+  with check ((select auth.uid()) = user_id);
 
 drop policy if exists "Users can update own notification settings" on public.notification_settings;
 create policy "Users can update own notification settings"
   on public.notification_settings
   for update
-  using (auth.uid() = user_id)
-  with check (auth.uid() = user_id);
+  using ((select auth.uid()) = user_id)
+  with check ((select auth.uid()) = user_id);
 
 drop trigger if exists notification_settings_set_updated_at on public.notification_settings;
 create trigger notification_settings_set_updated_at
@@ -142,4 +142,9 @@ drop policy if exists "Users can read own notification logs" on public.notificat
 create policy "Users can read own notification logs"
   on public.notification_delivery_logs
   for select
-  using (auth.uid() = user_id);
+  using ((select auth.uid()) = user_id);
+
+-- FK 커버링 인덱스 (Supabase performance 린트 대응)
+create index if not exists notification_delivery_logs_user_id_idx on public.notification_delivery_logs (user_id);
+create index if not exists price_logs_automation_run_id_idx on public.price_logs (automation_run_id);
+create index if not exists price_logs_portfolio_user_id_idx on public.price_logs (portfolio_user_id);
