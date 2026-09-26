@@ -111,9 +111,11 @@ useStore.getState().registerActions({
     showOperationToast("예시 데이터 로드됨", "보유 종목과 계좌에서 직접 입력하세요");
   },
   getReconcileSummary: () => {
-    const totals = getTotals(state.holdings);
-    const accountsTotal = calculateGroupByAccount(state.holdings).reduce((sum, item) => sum + item.valueKrw, 0);
-    return { totalValueKrw: totals.valueKrw, accountsTotal, diff: totals.valueKrw - accountsTotal };
+    const totals = getTotals();
+    const accountsTotal = calculateGroupByAccount(state).reduce((sum, item) => sum + item.valueKrw, 0);
+    // 원 단위 반올림 — 두 합계는 합산 순서가 달라 부동소수점 오차가 날 수 있고,
+    // 음수 엡실론은 "-0원"으로 표시된다. `|| 0` 은 -0 을 +0 으로 정규화한다.
+    return { totalValueKrw: totals.valueKrw, accountsTotal, diff: Math.round(totals.valueKrw - accountsTotal) || 0 };
   },
 });
 

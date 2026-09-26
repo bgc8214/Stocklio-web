@@ -150,6 +150,12 @@ async function verifyBrowser() {
       assert.equal(health.activeTabs, 1, `${tab} 활성 탭은 하나여야 한다`);
     }
 
+    const reconcileText = await page.evaluate(() => {
+      const rows = [...document.querySelectorAll("#automationViewMount .automation-list > div")];
+      return rows.find((row) => row.querySelector("strong")?.textContent.trim() === "검증 리포트")?.textContent || "";
+    });
+    assert.match(reconcileText, /차이\s*0원/, "전체 총자산과 계좌 합계가 일치해야 한다");
+
     // 보유 종목 탭: 테이블 렌더 + 검색 필터 동작.
     await page.evaluate(() => document.querySelector("[data-view-tab=\"holdings\"]").click());
     await page.waitForSelector("#holdingsViewMount .holdings-table tbody tr", { timeout: 10_000 });
