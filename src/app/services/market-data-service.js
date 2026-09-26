@@ -3,11 +3,27 @@ import { parseYahooChartMeta } from "../../domain/market-calendar.js";
 import { parseTtmDividendPerShare, parse52WeekPriceSummary } from "../../domain/portfolio-core.js";
 
 const CACHE_BASE_NAME = CACHE_PREFIX.replace(/-v\d+$/, "");
+// 어떤 캐시 유형이든 이보다 오래된 항목은 부트 시 제거 — 매도해서 더는 조회하지 않는
+// 종목의 quote:/div:/hist: 키가 localStorage 에 영원히 쌓이는 것을 막는다.
+const CACHE_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
 
 export function clearStaleQuoteCaches() {
+  const now = Date.now();
   for (let i = localStorage.length - 1; i >= 0; i -= 1) {
     const key = localStorage.key(i);
-    if (key && key.startsWith(CACHE_BASE_NAME) && !key.startsWith(CACHE_PREFIX)) {
+    if (!key || !key.startsWith(CACHE_BASE_NAME)) {
+      continue;
+    }
+    if (!key.startsWith(CACHE_PREFIX)) {
+      localStorage.removeItem(key); // 이전 버전 prefix
+      continue;
+    }
+    try {
+      const cachedValue = JSON.parse(localStorage.getItem(key) || "{}");
+      if (!Number.isFinite(cachedValue.cachedAt) || now - cachedValue.cachedAt > CACHE_MAX_AGE_MS) {
+        localStorage.removeItem(key);
+      }
+    } catch {
       localStorage.removeItem(key);
     }
   }
@@ -116,7 +132,19 @@ async function cached(key, ttlMs, loader, { force = false, validate = () => true
     }
   }
   const payload = await loader();
-  localStorage.setItem(cacheKey, JSON.stringify({ cachedAt: Date.now(), payload }));
+  const serialized = JSON.stringify({ cachedAt: Date.now(), payload });
+  try {
+    localStorage.setItem(cacheKey, serialized);
+  } catch {
+    // quota 초과 — 오래된 캐시를 비우고 한 번 더 시도. 그래도 실패하면 캐시 없이 진행
+    // (저장 실패가 가격 조회 자체를 죽이면 안 된다).
+    try {
+      clearStaleQuoteCaches();
+      localStorage.setItem(cacheKey, serialized);
+    } catch {
+      // no-op
+    }
+  }
   return payload;
 }
 

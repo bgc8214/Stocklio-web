@@ -226,39 +226,48 @@ function normalizeAutomationState(input) {
   };
 }
 
+function isKrTicker(ticker) {
+  return /^[0-9]{6}\.(KS|KQ)$/.test(String(ticker || "").toUpperCase());
+}
+
 async function refreshPrices(state, runId, userId, marketContext) {
   const quoteMap = new Map();
   const failures = [];
   const newLogs = [];
   const tickers = unique((state.holdings || []).filter((holding) => holding.autoPrice !== false).map((holding) => holding.ticker));
 
-  if (marketContext?.isMarketClosed) {
+  // 미국 휴장일(추수감사절 등)에도 한국 장은 열릴 수 있다 — 미국 종목만 최근 종가를
+  // 유지하고 KR 종목(6자리 .KS/.KQ)과 환율은 계속 갱신한다.
+  const usMarketClosed = Boolean(marketContext?.isMarketClosed);
+  const tickersToFetch = usMarketClosed ? tickers.filter(isKrTicker) : tickers;
+
+  if (usMarketClosed) {
     const log = createPriceLog({
       symbol: "US_MARKET",
       status: "success",
-      message: `${marketContext.closedReason || "휴장"} · ${marketContext.latestTradingDate} 종가 유지`,
+      message: `${marketContext.closedReason || "휴장"} · 미국 종목 ${marketContext.latestTradingDate} 종가 유지`,
       marketStatus: "closed",
       quoteAsOf: marketContext.latestTradingDate,
     });
     newLogs.push(log);
     await recordPriceLog(userId, runId, log).catch(() => {});
-  } else {
-    await runWithConcurrency(tickers, PRICE_FETCH_CONCURRENCY, async (ticker) => {
-      try {
-        const quote = await getYahooQuote(ticker);
-        quoteMap.set(ticker, quote);
-        const log = createPriceLog({ symbol: ticker, status: "success", price: quote.price, source: quote.source, marketStatus: "open", quoteAsOf: quote.asOf });
-        newLogs.push(log);
-        await recordPriceLog(userId, runId, log);
-      } catch (error) {
-        const failure = { symbol: ticker, message: error.message };
-        failures.push(failure);
-        const log = createPriceLog({ symbol: ticker, status: "error", message: error.message, marketStatus: "unknown" });
-        newLogs.push(log);
-        await recordPriceLog(userId, runId, log).catch(() => {});
-      }
-    });
   }
+
+  await runWithConcurrency(tickersToFetch, PRICE_FETCH_CONCURRENCY, async (ticker) => {
+    try {
+      const quote = await getYahooQuote(ticker);
+      quoteMap.set(ticker, quote);
+      const log = createPriceLog({ symbol: ticker, status: "success", price: quote.price, source: quote.source, marketStatus: "open", quoteAsOf: quote.asOf });
+      newLogs.push(log);
+      await recordPriceLog(userId, runId, log);
+    } catch (error) {
+      const failure = { symbol: ticker, message: error.message };
+      failures.push(failure);
+      const log = createPriceLog({ symbol: ticker, status: "error", message: error.message, marketStatus: "unknown" });
+      newLogs.push(log);
+      await recordPriceLog(userId, runId, log).catch(() => {});
+    }
+  });
 
   let fxRate = null; // 조회 실패 시 applyRefreshResults 가 base 의 기존 환율을 유지한다
   try {
