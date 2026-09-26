@@ -31,7 +31,6 @@ const LABELS = {
   allocation: "자산 비중",
   "performance-flow": "성과 흐름",
   breakdown: "오늘 변동 원인",
-  "top-mover": "오늘의 주인공",
 };
 
 const palette = ["#3366FF", "#16A34A", "#F59E0B", "#8B5CF6", "#6541F2"];
@@ -297,11 +296,6 @@ function CardContent({ id, state }) {
   if (id === "performance-flow") {
     return <PerformancePanel state={state} />;
   }
-  if (id === "top-mover") {
-    return <TopMoverPanel state={state} />;
-  }
-
-
   return <BreakdownPanel state={state} />;
 }
 
@@ -764,17 +758,8 @@ function reorderLayout(layout, sourceId, targetId, insertAfter) {
   return next;
 }
 
-function shouldDropAfter(event, target) {
-  const rect = target.getBoundingClientRect();
-  return event.clientY > rect.top + rect.height / 2 || event.clientX > rect.left + rect.width / 2;
-}
-
 function cardClass(id) {
   return ["allocation", "performance-flow", "breakdown"].includes(id) ? "panel" : "metric";
-}
-
-function layoutKey(layout) {
-  return layout.map((item) => `${item.id}:${item.span}:${item.minHeight}:${item.visible}`).join("|");
 }
 
 function getTotals(state) {
@@ -956,62 +941,6 @@ function clamp(value, min, max) {
 
 function roundTo(value, step) {
   return Math.round(value / step) * step;
-}
-
-
-function TopMoverPanel({ state }) {
-  const cm = useCurrencyMode();
-  const fmt = makeFmt(cm, state.fxRate);
-  const marketContext = getCurrentMarketContext();
-  if (marketContext.isMarketClosed) {
-    return (
-      <>
-        <div className="section-heading"><h2>오늘의 주인공</h2><span>가격 갱신 기준</span></div>
-        <div className="empty-state">미국장 {marketContext.closedReason || "휴장"}</div>
-      </>
-    );
-  }
-  const rows = (state.holdings || []).map((h) => ({
-    holding: h,
-    dailyMove: getHoldingDailyMove(state, h),
-  })).filter((r) => r.dailyMove.hasData);
-  if (!rows.length) {
-    return (
-      <>
-        <div className="section-heading"><h2>오늘의 주인공</h2><span>가격 갱신 기준</span></div>
-        <div className="empty-state">가격 변동 데이터가 없습니다</div>
-      </>
-    );
-  }
-  rows.sort((a, b) => Math.abs(b.dailyMove.valueKrw) - Math.abs(a.dailyMove.valueKrw));
-  const top = rows[0];
-  const h = top.holding;
-  const m = top.dailyMove;
-  const positive = m.valueKrw >= 0;
-  const fallbackLetter = (h.ticker || h.name || "?").replace(/[^A-Za-z0-9가-힣]/g, "")[0]?.toUpperCase() || "?";
-  return (
-    <>
-      <div className="section-heading"><h2>오늘의 주인공</h2><span>가격 갱신 기준</span></div>
-      <div className="top-mover-row">
-        <span className="ticker-logo" style={{ width: 40, height: 40 }}>
-          <img
-            src={`https://assets.parqet.com/logos/symbol/${encodeURIComponent(h.ticker)}?format=svg`}
-            alt={h.ticker} width="40" height="40"
-            onError={(e) => { e.target.style.display = "none"; e.target.nextSibling.style.display = "flex"; }}
-          />
-          <span className="ticker-logo-fallback" style={{ display: "none", width: 40, height: 40, fontSize: 16 }}>{fallbackLetter}</span>
-        </span>
-        <div className="top-mover-info">
-          <strong>{h.name || h.ticker}</strong>
-          <span className="top-mover-meta">{h.ticker} · {h.account}</span>
-        </div>
-        <div className="top-mover-values">
-          <span className={`top-mover-change ${positive ? "positive" : "negative"}`}>{positive ? "+" : ""}{fmt(m.valueKrw)}</span>
-          <span className={`top-mover-pct ${positive ? "positive" : "negative"}`}>{formatPercent(m.changePercent)}</span>
-        </div>
-      </div>
-    </>
-  );
 }
 
 

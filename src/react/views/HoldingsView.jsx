@@ -14,12 +14,16 @@ import { parseSortValue, cycleSortValue } from "../../app/sort.js";
 import { searchSymbols, getDividendInfo, getPriceHistory } from "../../app/services/market-data-service.js";
 import { TickerLogo } from "../components/TickerLogo.jsx";
 import { PriceSparkline } from "../components/PriceSparkline.jsx";
+import { useIsMobile } from "../hooks/useIsMobile.js";
 
 // 손익 색: 양수=상승(빨강), 음수=하락(파랑), 0=중립.
 const signClass = (v) => (v > 0 ? "positive" : v < 0 ? "negative" : undefined);
 
 const DEFAULT_SORT = "value-desc";
-const PAGE_SIZE = window.innerWidth <= 980 ? 100 : 10;
+// 모바일은 하단 탭 네비라 페이지 넘김이 불편해 크게, 데스크톱은 10개씩.
+// (모듈 스코프 고정이면 회전·리사이즈가 반영되지 않아 useIsMobile 훅으로 계산한다)
+const PAGE_SIZE_MOBILE = 100;
+const PAGE_SIZE_DESKTOP = 10;
 const SORT_OPTIONS = [
   ["value-desc", "평가금액 높은 순"], ["value-asc", "평가금액 낮은 순"],
   ["gain-desc", "손익 높은 순"], ["gain-asc", "손익 낮은 순"],
@@ -33,6 +37,7 @@ const SORT_OPTIONS = [
 export function HoldingsView() {
   const state = useStore((s) => s.portfolio);
   const currencyMode = useStore((s) => s.currencyMode);
+  const isMobileViewport = useIsMobile(980);
 
   const [search, setSearch] = useState("");
   const [investorFilter, setInvestorFilter] = useState("");
@@ -102,9 +107,10 @@ export function HoldingsView() {
     });
   }, [holdings, state, search, investorFilter, strategyFilter, accountTypeFilter, scope, sortValue, accountChip, fx]);
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const pageSize = isMobileViewport ? PAGE_SIZE_MOBILE : PAGE_SIZE_DESKTOP;
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
   const safePage = Math.min(Math.max(1, page), totalPages);
-  const pageRows = filtered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
+  const pageRows = filtered.slice((safePage - 1) * pageSize, safePage * pageSize);
 
   const summary = useMemo(() => computeSummary(state, filtered), [state, filtered]);
   const activeFilterCount = [investorFilter, strategyFilter, accountTypeFilter].filter(Boolean).length;
@@ -183,7 +189,7 @@ export function HoldingsView() {
               <button key={s} type="button" className={scope === s ? "is-active" : undefined} onClick={() => { setScope(s); setPage(1); }}>{label}</button>
             ))}
           </div>
-          <span className="status-pill">{filtered.length > PAGE_SIZE ? `${(safePage - 1) * PAGE_SIZE + 1}-${Math.min(filtered.length, safePage * PAGE_SIZE)} / ${filtered.length}개` : `${filtered.length}개 표시`}</span>
+          <span className="status-pill">{filtered.length > pageSize ? `${(safePage - 1) * pageSize + 1}-${Math.min(filtered.length, safePage * pageSize)} / ${filtered.length}개` : `${filtered.length}개 표시`}</span>
         </div>
       ) : null}
 
@@ -217,9 +223,9 @@ export function HoldingsView() {
               </tbody>
             </table>
           </div>
-          {filtered.length > PAGE_SIZE ? (
+          {filtered.length > pageSize ? (
             <div className="pagination-bar" aria-label="보유 종목 페이지">
-              <span>{formatNumber(filtered.length, 0)}개 중 {formatNumber((safePage - 1) * PAGE_SIZE + 1, 0)}-{formatNumber(Math.min(filtered.length, safePage * PAGE_SIZE), 0)}개</span>
+              <span>{formatNumber(filtered.length, 0)}개 중 {formatNumber((safePage - 1) * pageSize + 1, 0)}-{formatNumber(Math.min(filtered.length, safePage * pageSize), 0)}개</span>
               <div>
                 <button className="ghost small-button" type="button" disabled={safePage <= 1} onClick={() => setPage(safePage - 1)}>이전</button>
                 {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
@@ -327,9 +333,21 @@ function HoldingsSummaryCards({ state, rows, onOpenDetail }) {
   );
 }
 
+// ESC 로 드로어 닫기 — native <dialog> 가 아닌 커스텀 드로어라 직접 처리한다.
+function useEscapeClose(onClose) {
+  useEffect(() => {
+    const onKey = (event) => {
+      if (event.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+}
+
 // 종목 상세 드로어 — 한 종목을 계좌별로 분해해서 보여준다(멀티계좌 앱의 핵심 공백을 메움).
 // 실현수익/매매이력은 데이터가 없어 표시하지 않는다.
 function HoldingDetailDrawer({ state, tickerKey, currencyMode, fx, onClose }) {
+  useEscapeClose(onClose);
   const holdings = (state?.holdings || []).filter((h) => (h.ticker || h.name) === tickerKey);
   const [dividend, setDividend] = useState(null);
   const [history, setHistory] = useState(null); // 1년 종가 시계열 + 52주 최고가
@@ -497,6 +515,7 @@ function exportCsv(state, rows) {
 
 // ─── 종목 추가/수정 드로어 (라이브 티커 검색 포함) ──────────────────
 function HoldingDrawer({ state, holding, onClose }) {
+  useEscapeClose(onClose);
   const editing = Boolean(holding);
   const accounts = useMemo(() => getKnownAccounts(state), [state]);
   const [accountKey, setAccountKey] = useState(holding ? accountKeyFor(holding) : "");

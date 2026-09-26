@@ -92,13 +92,6 @@
   gap: 8px;
 }
 
-.metric-badges {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-top: 10px;
-}
-
 .metric-badge {
   background: var(--surface-soft);
   border: 1px solid var(--line);
@@ -1506,8 +1499,6 @@ th[data-sort],
   vertical-align: middle;
 }
 
-.metric-badges { margin-top: 4px; }
-
 .metric-return-badge {
   display: inline-block;
   font-size: 11px;
@@ -1740,10 +1731,6 @@ th[data-sort],
     .metric strong {
         font-size: clamp(20px, 5.1vw, 26px);
         line-height: 1.12;
-      }
-
-    .metric-badges {
-        margin-top: 4px;
       }
 
     .page-heading strong {
