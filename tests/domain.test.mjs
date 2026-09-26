@@ -723,6 +723,19 @@ test("parseTtmDividendPerShare: 최근 12개월 배당 합계와 통화", () => 
   assert.equal(Number(info.perShare.toFixed(2)), 1.02);
 });
 
+test("parseTtmDividendPerShare: 372일 창에 13번째 월배당이 걸려도 최근 12개월만 합산", () => {
+  const now = Date.UTC(2026, 8, 20) / 1000; // 2026-09-20
+  const dividends = {};
+  // 13개월 연속 월배당 (매월 15일, 0.1씩) — 372일 창엔 13건 모두 들어온다
+  for (let i = 0; i < 13; i += 1) {
+    const ts = Date.UTC(2026, 8 - i, 15) / 1000;
+    dividends[`d${i}`] = { amount: 0.1, date: ts };
+  }
+  const info = parseTtmDividendPerShare({ chart: { result: [{ meta: { currency: "USD" }, events: { dividends } }] } }, now * 1000);
+  assert.equal(info.count, 12); // 13번째(가장 오래된 달)는 제외
+  assert.equal(Number(info.perShare.toFixed(1)), 1.2);
+});
+
 test("parseTtmDividendPerShare: 배당 이벤트 없으면 0", () => {
   const info = parseTtmDividendPerShare({ chart: { result: [{ meta: { currency: "KRW" } }] } });
   assert.equal(info.perShare, 0);

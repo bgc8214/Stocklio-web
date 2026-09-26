@@ -153,22 +153,34 @@ export function parseTtmDividendPerShare(chartPayload, nowMs = Date.now()) {
     return { perShare: 0, currency, count: 0, lastDate: null, payments: [] };
   }
   const cutoffSec = nowMs / 1000 - 372 * 24 * 3600; // 약 12개월(윤달·주말 여유 포함)
-  let sum = 0;
-  let count = 0;
-  let lastSec = 0;
-  const payments = []; // 월별 스케줄용 개별 지급 내역
+  const entries = [];
   for (const key of Object.keys(events)) {
     const ev = events[key];
     const amount = Number(ev?.amount);
     const ts = Number(ev?.date ?? key);
     if (!Number.isFinite(amount) || amount <= 0) continue;
-    if (Number.isFinite(ts) && ts < cutoffSec) continue;
-    sum += amount;
+    if (!Number.isFinite(ts) || ts < cutoffSec) continue;
+    entries.push({ ts, amount });
+  }
+  // 372일 여유 창은 월배당 종목에서 같은 달 지급이 양 끝에 걸려 13건이 될 수 있다 —
+  // 최근 12개 "연·월 버킷"만 남겨 TTM 이 한 달치 과대되지 않게 한다.
+  const monthBucketOf = (ts) => {
+    const d = new Date(ts * 1000);
+    return d.getUTCFullYear() * 12 + d.getUTCMonth();
+  };
+  const recentBuckets = new Set(
+    [...new Set(entries.map((entry) => monthBucketOf(entry.ts)))].sort((a, b) => b - a).slice(0, 12),
+  );
+  let sum = 0;
+  let count = 0;
+  let lastSec = 0;
+  const payments = []; // 월별 스케줄용 개별 지급 내역
+  for (const entry of entries) {
+    if (!recentBuckets.has(monthBucketOf(entry.ts))) continue;
+    sum += entry.amount;
     count += 1;
-    if (ts > lastSec) lastSec = ts;
-    if (Number.isFinite(ts)) {
-      payments.push({ month: new Date(ts * 1000).getUTCMonth() + 1, perShare: amount });
-    }
+    if (entry.ts > lastSec) lastSec = entry.ts;
+    payments.push({ month: new Date(entry.ts * 1000).getUTCMonth() + 1, perShare: entry.amount });
   }
   return {
     perShare: sum,
