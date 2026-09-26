@@ -372,9 +372,31 @@ export function buildPortfolioSnapshot(state, date, makeId = defaultId) {
     totalValueKrw: totals.valueKrw,
     totalCostUsd: totals.costUsdEquivalent,
     totalGainUsd: totals.gainUsdEquivalent,
+    stockValueKrw: totals.stockValueKrw,
+    cashKrw: totals.cashKrw,
     fxRate,
     netInflowKrw: getNetInflowKrw(state.cashFlows, date),
+    positions: buildSnapshotPositions(state.holdings, fxRate),
   };
+}
+
+// 스냅샷 생성 시점의 보유 내역(수량·가격)을 함께 고정해둔다 — 수량 이력이 따로 없어
+// 지나간 날짜의 구성은 나중에 복원할 수 없기 때문. 과거 스냅샷에는 소급 적용하지 않는다
+// (positions 가 없는 스냅샷 = 이 필드 도입 전 생성분).
+export function buildSnapshotPositions(holdings = [], fxRate = 1) {
+  return (holdings || [])
+    .filter((holding) => Number(holding.quantity || 0) > 0)
+    .map((holding) => ({
+      ticker: holding.ticker || null,
+      name: holding.name || holding.ticker || "",
+      investor: holding.investor || "",
+      account: holding.account || "",
+      currency: holding.currency || "KRW",
+      quantity: Number(holding.quantity || 0),
+      price: Number(holding.price || 0),
+      averageCost: Number(holding.averageCost || 0),
+      valueKrw: getHoldingValues(holding, fxRate).valueKrw,
+    }));
 }
 
 export function buildAccountSnapshots(state, date, makeId = defaultId) {
