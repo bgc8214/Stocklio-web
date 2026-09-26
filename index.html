@@ -40,8 +40,6 @@ setTimeout(function(){if(document.body){document.body.classList.remove("is-booti
         </div>
       </section>
 
-      <section class="dashboard-layout-toolbar" data-view="dashboard" aria-label="대시보드 레이아웃 설정" hidden></section>
-
       <section class="dashboard-status-strip" data-view="dashboard" aria-label="대시보드 상태">
         <div class="status-actions">
           <span id="layoutStatus" class="layout-status-badge" hidden></span>
@@ -50,88 +48,10 @@ setTimeout(function(){if(document.body){document.body.classList.remove("is-booti
           <button id="dashboardRefreshButton" class="ghost small-button" type="button">시세 확인</button>
           <button id="dashboardAddHoldingButton" class="primary small-button" type="button">종목 추가</button>
         </div>
-        <span id="dashboardPriceStatus" hidden></span>
-        <span id="dashboardPriceDetail" hidden></span>
-        <span id="dashboardSnapshotStatus" hidden></span>
-        <span id="dashboardSnapshotDetail" hidden></span>
-        <span id="dashboardStorageStatus" hidden></span>
-        <span id="dashboardStorageDetail" hidden></span>
       </section>
 
       <section id="dashboardBoard" class="dashboard-board" data-view="dashboard" aria-label="포트폴리오 대시보드">
-        <article class="metric dashboard-card" data-dashboard-card="total-value">
-          <span>총자산</span>
-          <strong id="totalValue">$0</strong>
-          <small id="totalValueKrw">주식 + 예수금</small>
-          <div id="totalValueBadges" class="metric-badges"></div>
-        </article>
-        <article class="metric dashboard-card" data-dashboard-card="total-cost">
-          <span>주식 매입금액</span>
-          <strong id="totalCost">$0</strong>
-          <small id="totalCostMeta">평단 기준</small>
-        </article>
-        <article class="metric dashboard-card" data-dashboard-card="total-gain">
-          <span>주식 평가순익</span>
-          <strong id="totalGain">$0</strong>
-          <small id="totalReturn">0.00%</small>
-        </article>
-        <article class="metric dashboard-card" data-dashboard-card="cash-total">
-          <span>예수금</span>
-          <strong id="cashTotal">₩0</strong>
-          <small>총자산에 포함</small>
-        </article>
-        <article class="metric dashboard-card" data-dashboard-card="fx-rate">
-          <span>USD/KRW</span>
-          <strong id="fxRate">1,350</strong>
-          <small id="fxSource">샘플 환율</small>
-        </article>
-
-        <div class="panel allocation-panel dashboard-card" data-dashboard-card="allocation">
-          <div class="section-heading">
-            <div class="section-heading-title">
-              <h2>자산 비중</h2>
-              <span id="allocationCount" class="section-badge"></span>
-            </div>
-            <span>현재 평가가격 기준</span>
-            <select id="allocationDimensionSelect" aria-label="자산 비중 기준">
-              <option value="strategy" selected>전략별</option>
-              <option value="holding">종목별</option>
-              <option value="account">계좌별</option>
-              <option value="investor">투자자별</option>
-              <option value="accountType">계좌유형별</option>
-            </select>
-          </div>
-          <div class="donut-wrap">
-            <svg id="allocationDonut" viewBox="0 0 220 220" role="img" aria-label="자산 비중 차트"></svg>
-            <div id="allocationLegend" class="legend"></div>
-          </div>
-        </div>
-
-        <div class="panel performance-panel dashboard-card" data-dashboard-card="performance-flow">
-          <div class="section-heading">
-            <div><h2>성과 흐름</h2><span>최근 총자산과 일별 증감</span></div>
-            <span>금액과 증감</span>
-          </div>
-          <div id="performanceStats" class="performance-stats"></div>
-          <div id="performanceChart" class="bar-chart" aria-label="성과 차트"></div>
-        </div>
-
-        <div class="panel dashboard-card" data-dashboard-card="breakdown">
-          <div class="section-heading">
-            <div><h2>변동 요약</h2><span id="breakdownSubtitle">휴장일에는 변동 대신 환율과 현금 흐름을 확인합니다</span></div>
-            <span id="breakdownDateLabel">휴장일 기준</span>
-          </div>
-          <div id="breakdownList" class="breakdown-list"></div>
-        </div>
-
-        <div class="panel dashboard-card" data-dashboard-card="top-mover">
-          <div class="section-heading">
-            <div><h2>오늘의 주인공</h2><span id="topMoverDate">가격 갱신 기준</span></div>
-          </div>
-          <div id="topMoverContent" class="top-mover-content"></div>
-        </div>
-
-
+        <!-- 대시보드 카드는 craft-dashboard(React)가 이 자리에 렌더한다. 부트 중에는 boot veil 이 가린다. -->
       </section>
 
       <!-- 계좌 탭은 React(AccountsView)가 렌더한다. data-view 로 legacy setView 가 표시를 토글한다. -->

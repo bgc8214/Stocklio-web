@@ -58,7 +58,6 @@ const els = {
   viewSections: document.querySelectorAll("[data-view]"),
   dashboardRefreshButton: document.querySelector("#dashboardRefreshButton"),
   dashboardAddHoldingButton: document.querySelector("#dashboardAddHoldingButton"),
-  layoutResetButton: document.querySelector("#layoutResetButton"),
   emptyPortfolioNotice: document.querySelector("#emptyPortfolioNotice"),
 };
 
@@ -137,12 +136,8 @@ els.dashboardAddHoldingButton?.addEventListener("click", () => {
   useStore.getState().requestOpenHoldingDrawer();
 });
 
-// 대시보드 레이아웃 편집/초기화 — craft 대시보드(React)가 소유하므로 여기서는 no-op 방지 가드만 유지.
-els.layoutResetButton?.addEventListener("click", () => {
-  state.dashboardLayout = normalizeDashboardLayout(undefined);
-  saveState();
-  showOperationToast("레이아웃 초기화", "기본 배치로 되돌렸습니다");
-});
+// 대시보드 레이아웃 편집/초기화 버튼은 craft 대시보드(React)가 단독으로 소유한다 —
+// 여기서 중복 바인딩하면 한 번 클릭에 saveState 가 두 번 나간다.
 
 // auth 이벤트: 상태 갱신 → 데이터/알림 로드 → 렌더 → 자동 가격 갱신.
 window.addEventListener("stocklio:auth", (event) => {

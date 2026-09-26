@@ -12,19 +12,6 @@ export const AUTH_READY_TIMEOUT_MS = 1800;
 
 export const palette = ["#3366FF", "#16A34A", "#F59E0B", "#8B5CF6", "#6541F2"];
 
-export const dashboardCardLabels = {
-  "total-value": "총자산",
-  "total-cost": "주식 매입금액",
-  "total-gain": "주식 평가손익",
-  "cash-total": "예수금",
-  "fx-rate": "환율",
-  allocation: "자산 비중",
-  "performance-flow": "성과 흐름",
-  breakdown: "오늘 변동 원인",
-  "top-mover": "오늘의 주인공",
-
-};
-
 export const DEFAULT_HOLDING_SORT = "value-desc";
 export const DEFAULT_CASH_FLOW_SORT = "date-desc";
 
