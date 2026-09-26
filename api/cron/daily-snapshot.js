@@ -94,9 +94,15 @@ export default async function handler(request, response) {
       scope: "daily_snapshot",
       processed_portfolios: portfolios.length,
       success_count: successCount,
-      failure_count: failureCount + failures.length,
+      failure_count: failures.length,
       message: summarizeRun(runStatus, today, portfolios.length, failures.length),
     });
+
+    // 포트폴리오 단위 실패(failureCount)나 전체 실패는 텔레그램으로 셀프 알림 —
+    // 심볼 단건 실패(partial)는 매일 노이즈가 될 수 있어 제외.
+    if (runStatus === "failed" || failureCount > 0) {
+      await notifyRunFailure(runStatus, today, failures).catch(() => {});
+    }
 
     response.status(runStatus === "failed" ? 500 : 200).json({
       ok: runStatus !== "failed",
@@ -105,7 +111,7 @@ export default async function handler(request, response) {
       status: runStatus,
       processedPortfolios: portfolios.length,
       successCount,
-      failureCount: failureCount + failures.length,
+      failureCount: failures.length,
       failures: failures.slice(0, 20),
     });
   } catch (error) {
@@ -117,13 +123,44 @@ export default async function handler(request, response) {
       scope: "daily_snapshot",
       message: error.message,
     }).catch(() => {});
+    await notifyRunFailure("failed", today, [{ symbol: "run", message: error.message }]).catch(() => {});
     response.status(500).json({ ok: false, runId, error: error.message });
   }
 }
 
+// cron 이 조용히 죽으면 대시보드를 열어보기 전까지 아무도 모른다 —
+// 실패 시 봇으로 셀프 알림 1건을 보낸다. OPS_TELEGRAM_CHAT_ID 가 있으면 그 대화로,
+// 없으면 텔레그램이 켜진 첫 사용자의 chat 으로 보낸다. 알림 실패는 무시(run 결과에 영향 없음).
+async function notifyRunFailure(runStatus, date, failures) {
+  if (!TELEGRAM_BOT_TOKEN) {
+    return;
+  }
+  let chatId = String(process.env.OPS_TELEGRAM_CHAT_ID || "").trim();
+  if (!chatId) {
+    const rows = await supabaseFetch("/rest/v1/notification_settings", {
+      searchParams: {
+        select: "telegram_chat_id",
+        telegram_enabled: "eq.true",
+        limit: "1",
+      },
+    }).catch(() => null);
+    chatId = String(rows?.[0]?.telegram_chat_id || "").trim();
+  }
+  if (!chatId) {
+    return;
+  }
+  const lines = [
+    `⚠️ 투자일지 자동 기록 ${runStatus === "failed" ? "실패" : "부분 실패"} · ${date}`,
+    ...failures.slice(0, 5).map((failure) => `- ${failure.symbol}: ${String(failure.message || "").slice(0, 120)}`),
+  ];
+  await sendTelegramMessage(chatId, lines.join("\n"));
+}
+
 function isAuthorized(request) {
   if (!CRON_SECRET) {
-    return process.env.VERCEL_ENV !== "production";
+    // 시크릿이 없으면 Vercel 어디서든(프리뷰 포함) 거부한다 — 로컬 개발만 예외.
+    // (이전엔 non-production 이면 통과라 프리뷰 URL 로 무인증 실행이 가능했다)
+    return !process.env.VERCEL;
   }
   return request.headers.authorization === `Bearer ${CRON_SECRET}`;
 }

@@ -465,7 +465,7 @@ export async function findTelegramChatId() {
   if (!_ctx.authState.signedIn) {
     throw new Error("로그인 후 chat id를 찾을 수 있습니다");
   }
-  _ctx.setStatus("chat id 찾는 중", "@stocklio_alarm_bot에 /start를 보낸 대화를 확인합니다");
+  _ctx.setStatus("chat id 찾는 중", "@stocklio_alarm_bot에게 로그인 이메일을 보낸 대화를 확인합니다");
   const token = window.StocklioAuth.getAccessToken?.();
   const result = await fetch("/api/notifications/telegram-updates", {
     headers: { authorization: `Bearer ${token}` },
@@ -476,7 +476,7 @@ export async function findTelegramChatId() {
   }
   const chat = payload.chats?.[0];
   if (!chat) {
-    throw new Error("@stocklio_alarm_bot에 /start를 먼저 보내고 다시 눌러주세요");
+    throw new Error("@stocklio_alarm_bot에게 로그인 이메일을 메시지로 먼저 보내고 다시 눌러주세요 (본인 확인용)");
   }
   _ctx.setStatus("chat id 입력 완료", `${chat.name || "텔레그램 대화"} · ${chat.id}`);
   _ctx.showOperationToast("chat id 찾기 완료", "텔레그램 chat id를 입력했습니다. 설정 저장 또는 테스트 메시지를 눌러주세요", "success");

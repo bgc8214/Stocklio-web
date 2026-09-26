@@ -33,6 +33,14 @@ export default async function handler(request, response) {
       return;
     }
 
+    // 봇 명의 임의 발송(스팸·피싱) 방지: 본인 계정에 저장된 chat id 이거나,
+    // 그 대화에서 요청자의 로그인 이메일을 봇에게 보낸(소유 증명) 경우에만 발송한다.
+    const authorizedChat = await isChatAuthorized(user, chatId);
+    if (!authorizedChat) {
+      response.status(403).json({ error: "telegram_chat_not_verified" });
+      return;
+    }
+
     const portfolio = await getPortfolioState(user.id);
     const state = portfolio?.state || {};
     const snapshots = [...(state.portfolioSnapshots || [])].sort((a, b) => a.date.localeCompare(b.date));
@@ -82,6 +90,42 @@ async function getRequestUser(request) {
     throw new Error(`auth_user_failed_${result.status}`);
   }
   return result.json();
+}
+
+async function isChatAuthorized(user, chatId) {
+  const rows = await supabaseFetch("/rest/v1/notification_settings", {
+    searchParams: {
+      select: "telegram_chat_id",
+      user_id: `eq.${user.id}`,
+      limit: "1",
+    },
+  }).catch(() => null);
+  const savedChatId = String(rows?.[0]?.telegram_chat_id || "").trim();
+  if (savedChatId && savedChatId === chatId) {
+    return true;
+  }
+  // 온보딩(저장 전 테스트) 경로: 봇 대화에서 로그인 이메일을 보낸 chat 만 허용.
+  const email = String(user.email || "").trim().toLowerCase();
+  if (!email) {
+    return false;
+  }
+  const updates = await getTelegramUpdates().catch(() => []);
+  return updates.some((update) => {
+    const message = update.message || update.edited_message || update.channel_post;
+    return String(message?.chat?.id || "") === chatId &&
+      String(message?.text || "").toLowerCase().includes(email);
+  });
+}
+
+async function getTelegramUpdates() {
+  const url = new URL(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/getUpdates`);
+  url.searchParams.set("limit", "20");
+  const result = await fetch(url);
+  if (!result.ok) {
+    throw new Error(`telegram_updates_failed_${result.status}`);
+  }
+  const payload = await result.json();
+  return payload.ok && Array.isArray(payload.result) ? payload.result : [];
 }
 
 async function getPortfolioState(userId) {
