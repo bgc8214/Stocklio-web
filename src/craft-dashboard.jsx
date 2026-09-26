@@ -795,7 +795,9 @@ function getTotals(state) {
 }
 
 function getHoldingValues(holding, fx) {
-  const multiplier = holding.currency === "USD" ? fx : 1;
+  // 도메인(portfolio-core.getHoldingValues)과 동일 기준: KRW 외 통화는 USD 로 취급해 환산.
+  // (이전엔 USD===만 환산해서 currency 누락 종목의 합계가 보유 종목 탭과 어긋났다)
+  const multiplier = holding.currency === "KRW" ? 1 : fx;
   const valueNative = Number(holding.quantity || 0) * Number(holding.price || 0);
   const costNative = Number(holding.quantity || 0) * Number(holding.averageCost || 0);
   return {

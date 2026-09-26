@@ -407,7 +407,10 @@ async function runDailySnapshotJob(trigger) {
     ...(refreshed.accountSnapshots || []).filter((item) => item.date !== today),
     ...accountSnapshots,
   ].sort((a, b) => `${a.date}${a.investor}${a.account}`.localeCompare(`${b.date}${b.investor}${b.account}`));
-  refreshed.portfolioSnapshots.sort((a, b) => a.date.localeCompare(b.date));
+  // 스냅샷 생성 이후 늦게 입력·백데이트된 입출금을 반영해 netInflowKrw 를 전체 재계산한다.
+  refreshed.portfolioSnapshots = refreshed.portfolioSnapshots
+    .map((item) => ({ ...item, netInflowKrw: getNetInflowKrw(refreshed.cashFlows || [], item.date) }))
+    .sort((a, b) => a.date.localeCompare(b.date));
 
   return updateAutomationState(refreshed, {
     ok: true,

@@ -1,6 +1,7 @@
 import {
   buildAccountSnapshots,
   buildPortfolioSnapshot,
+  getNetInflowKrw,
   validateStateShape,
 } from "../../src/domain/portfolio-core.js";
 import {
@@ -135,7 +136,21 @@ async function processPortfolio(portfolio, date, runId) {
   }
 
   const marketContext = getUsMarketContextForSeoulDate(date);
-  const { state: refreshed, failures } = await refreshPrices(state, runId, portfolio.user_id, marketContext);
+  const refreshResult = await refreshPrices(state, runId, portfolio.user_id, marketContext);
+  const failures = refreshResult.failures;
+  // 가격 조회(수십 초) 동안 사용자가 브라우저에서 저장한 편집을 잃지 않도록,
+  // 쓰기 직전 fresh 상태를 재조회하고 그 위에 이번 run 의 시세 결과만 얹는다
+  // (server.mjs 로컬 자동화 루프의 re-read 패턴과 동일. 재조회 실패 시 run 시작 상태로 fallback).
+  let base = state;
+  try {
+    const freshState = await fetchPortfolioState(portfolio.user_id);
+    if (freshState) {
+      base = normalizeAutomationState(freshState);
+    }
+  } catch {
+    // fallback to run-start state
+  }
+  const refreshed = applyRefreshResults(base, refreshResult);
   const snapshot = buildPortfolioSnapshot(refreshed, date, idFor("snapshot"));
   snapshot.marketContext = marketContext;
   snapshot.priceDate = marketContext.latestTradingDate;
@@ -177,7 +192,7 @@ function normalizeAutomationState(input) {
 async function refreshPrices(state, runId, userId, marketContext) {
   const quoteMap = new Map();
   const failures = [];
-  const logs = [...(state.priceUpdateLogs || [])];
+  const newLogs = [];
   const tickers = unique((state.holdings || []).filter((holding) => holding.autoPrice !== false).map((holding) => holding.ticker));
 
   if (marketContext?.isMarketClosed) {
@@ -188,7 +203,7 @@ async function refreshPrices(state, runId, userId, marketContext) {
       marketStatus: "closed",
       quoteAsOf: marketContext.latestTradingDate,
     });
-    logs.push(log);
+    newLogs.push(log);
     await recordPriceLog(userId, runId, log).catch(() => {});
   } else {
     await runWithConcurrency(tickers, PRICE_FETCH_CONCURRENCY, async (ticker) => {
@@ -196,54 +211,68 @@ async function refreshPrices(state, runId, userId, marketContext) {
         const quote = await getYahooQuote(ticker);
         quoteMap.set(ticker, quote);
         const log = createPriceLog({ symbol: ticker, status: "success", price: quote.price, source: quote.source, marketStatus: "open", quoteAsOf: quote.asOf });
-        logs.push(log);
+        newLogs.push(log);
         await recordPriceLog(userId, runId, log);
       } catch (error) {
         const failure = { symbol: ticker, message: error.message };
         failures.push(failure);
         const log = createPriceLog({ symbol: ticker, status: "error", message: error.message, marketStatus: "unknown" });
-        logs.push(log);
+        newLogs.push(log);
         await recordPriceLog(userId, runId, log).catch(() => {});
       }
     });
   }
 
-  let fxRate = state.fxRate;
+  let fxRate = null; // 조회 실패 시 applyRefreshResults 가 base 의 기존 환율을 유지한다
   try {
     fxRate = await getYahooFxRate();
     const log = createPriceLog({ symbol: "USD/KRW", status: "success", price: fxRate.rate, source: "Yahoo Finance" });
-    logs.push(log);
+    newLogs.push(log);
     await recordPriceLog(userId, runId, log);
   } catch (error) {
     failures.push({ symbol: "USD/KRW", message: error.message });
     const log = createPriceLog({ symbol: "USD/KRW", status: "error", message: error.message });
-    logs.push(log);
+    newLogs.push(log);
     await recordPriceLog(userId, runId, log).catch(() => {});
   }
 
+  return { failures, quoteMap, fxRate, newLogs };
+}
+
+// refreshPrices 결과(시세·환율·로그)를 base 상태 위에 얹는다.
+// base 는 쓰기 직전 재조회한 fresh 상태 — 이번 run 의 결과 외에는 건드리지 않는다.
+function applyRefreshResults(base, { quoteMap, fxRate, newLogs }) {
   return {
-    failures,
-    state: {
-      ...state,
-      fxRate,
-      priceUpdateLogs: logs.slice(-300),
-      holdings: (state.holdings || []).map((holding) => {
-        const quote = quoteMap.get(holding.ticker);
-        return quote
-            ? {
-                ...holding,
-                price: quote.price,
-                previousClose: quote.previousClose,
-                priceChange: quote.priceChange,
-                priceChangePercent: quote.priceChangePercent,
-                priceSource: quote.source,
-                priceAsOf: quote.asOf,
-                priceDate: quote.priceDate,
-              }
-          : holding;
-      }),
-    },
+    ...base,
+    fxRate: fxRate || base.fxRate,
+    priceUpdateLogs: [...(base.priceUpdateLogs || []), ...newLogs].slice(-300),
+    holdings: (base.holdings || []).map((holding) => {
+      const quote = quoteMap.get(holding.ticker);
+      return quote
+          ? {
+              ...holding,
+              price: quote.price,
+              previousClose: quote.previousClose,
+              priceChange: quote.priceChange,
+              priceChangePercent: quote.priceChangePercent,
+              priceSource: quote.source,
+              priceAsOf: quote.asOf,
+              priceDate: quote.priceDate,
+            }
+        : holding;
+    }),
   };
+}
+
+async function fetchPortfolioState(userId) {
+  const data = await supabaseFetch("/rest/v1/portfolio_states", {
+    searchParams: {
+      select: "state",
+      user_id: `eq.${userId}`,
+      limit: "1",
+    },
+  });
+  return Array.isArray(data) && data[0]?.state ? data[0].state : null;
 }
 
 function upsertSnapshots(state, date, snapshot, accountSnapshots, failures, marketContext) {
@@ -261,7 +290,11 @@ function upsertSnapshots(state, date, snapshot, accountSnapshots, failures, mark
 
   return {
     ...state,
-    portfolioSnapshots: nextPortfolioSnapshots.sort((a, b) => a.date.localeCompare(b.date)),
+    // netInflowKrw 는 스냅샷 생성(07:00) "이후" 당일 날짜로 입력된 입출금을 놓친다 —
+    // 매 run 마다 현재 cashFlows 기준으로 전체 재계산해 늦게 입력·백데이트된 흐름을 반영한다.
+    portfolioSnapshots: nextPortfolioSnapshots
+      .map((item) => ({ ...item, netInflowKrw: getNetInflowKrw(state.cashFlows || [], item.date) }))
+      .sort((a, b) => a.date.localeCompare(b.date)),
     accountSnapshots: [
       ...state.accountSnapshots.filter((item) => item.date !== date),
       ...accountSnapshots,

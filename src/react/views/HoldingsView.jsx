@@ -551,7 +551,7 @@ function HoldingDrawer({ state, holding, onClose }) {
     const avg = Number(averageCost);
     mutate((st) => {
       const existing = editing ? (st.holdings || []).find((h) => h.id === holding.id) : null;
-      const currency = existing?.currency || (/^[0-9]{6}\.KS$/.test(tk) ? "KRW" : "USD");
+      const currency = existing?.currency || (/^[0-9]{6}\.(KS|KQ)$/.test(tk) ? "KRW" : "USD");
       const next = {
         id: editing ? holding.id : makeId(),
         investor: acct.investor,

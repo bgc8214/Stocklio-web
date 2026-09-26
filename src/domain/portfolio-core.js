@@ -124,6 +124,16 @@ export function getNetInflowKrw(cashFlows = [], date) {
     .reduce((sum, flow) => sum + getExternalFlowAmount(flow), 0);
 }
 
+// 스냅샷 구간 (afterDate, throughDate] 의 외부 입출금 합계.
+// 다이제스트의 "전일 대비"가 비교하는 스냅샷 구간과 같은 창을 쓰기 위한 함수 —
+// 단일 날짜 기준(getNetInflowKrw)은 스냅샷 생성 이후 입력된 당일 흐름과
+// 휴장·결측으로 벌어진 구간의 흐름을 놓친다.
+export function getNetInflowKrwBetween(cashFlows = [], afterDate, throughDate) {
+  return cashFlows
+    .filter((flow) => flow.date > afterDate && flow.date <= throughDate)
+    .reduce((sum, flow) => sum + getExternalFlowAmount(flow), 0);
+}
+
 export function getExternalFlowAmount(flow) {
   if (flow.type === "deposit") {
     return Number(flow.amountKrw || 0);
