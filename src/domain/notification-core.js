@@ -1,4 +1,4 @@
-import { getTotals } from "./portfolio-core.js";
+import { getNetInflowKrwBetween, getTotals } from "./portfolio-core.js";
 
 export function buildDailyDigest({ state, snapshot, previousSnapshot, date, siteUrl = "", marketContext = null }) {
   const totals = getTotals({
@@ -9,7 +9,11 @@ export function buildDailyDigest({ state, snapshot, previousSnapshot, date, site
   const dayChangeKrw = previousSnapshot
     ? Number(snapshot.totalValueKrw || 0) - Number(previousSnapshot.totalValueKrw || 0)
     : 0;
-  const netInflowKrw = Number(snapshot.netInflowKrw || 0);
+  // 입출금은 dayChangeKrw 와 같은 구간(직전 스냅샷 date 초과 ~ 이번 스냅샷 date 이하)으로 집계.
+  // snapshot.netInflowKrw(단일 날짜, 07:00 시점 고정)는 늦게 입력된 당일 흐름을 놓친다.
+  const netInflowKrw = previousSnapshot && Array.isArray(state.cashFlows)
+    ? getNetInflowKrwBetween(state.cashFlows, previousSnapshot.date, snapshot.date || date)
+    : Number(snapshot.netInflowKrw || 0);
   const investmentChangeKrw = dayChangeKrw - netInflowKrw;
   const shouldExplainMovers = !marketContext?.isMarketClosed;
   const moveBreakdown = shouldExplainMovers ? getMoveBreakdown(state) : createEmptyMoveBreakdown();

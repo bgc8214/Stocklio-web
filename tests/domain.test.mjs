@@ -5,6 +5,7 @@ import {
   buildAccountSnapshots,
   buildPortfolioSnapshot,
   getExternalFlowAmount,
+  getNetInflowKrwBetween,
   getTotals,
   groupByAccount,
   buildMonthlyDividendSchedule,
@@ -329,6 +330,8 @@ test("daily digest summarizes portfolio change and top movers", () => {
   const state = {
     ...sample,
     cashBalances: [],
+    // 다이제스트 입출금은 (직전 스냅샷, 이번 스냅샷] 구간의 cashFlows 로 계산된다
+    cashFlows: [{ id: "f1", date: "2026-05-14", type: "deposit", amountKrw: 100_000 }],
     fxRate: { rate: 1400, previousClose: 1390 },
     holdings: [
       {
@@ -725,6 +728,35 @@ test("parseTtmDividendPerShare: 배당 이벤트 없으면 0", () => {
   assert.equal(info.perShare, 0);
   assert.equal(info.count, 0);
   assert.equal(info.currency, "KRW");
+});
+
+test("getNetInflowKrwBetween: (직전, 이번] 구간의 외부 흐름만 합산", () => {
+  const flows = [
+    { date: "2026-09-21", type: "deposit", amountKrw: 111 },   // 구간 밖 (경계 미포함)
+    { date: "2026-09-22", type: "deposit", amountKrw: 1000 },  // 스냅샷 이후 늦게 입력된 흐름
+    { date: "2026-09-23", type: "withdrawal", amountKrw: 300 },
+    { date: "2026-09-23", type: "dividend", amountKrw: 999 },  // 배당은 외부 흐름 아님
+    { date: "2026-09-24", type: "deposit", amountKrw: 555 },   // 구간 밖
+  ];
+  assert.equal(getNetInflowKrwBetween(flows, "2026-09-21", "2026-09-23"), 700);
+  assert.equal(getNetInflowKrwBetween([], "2026-09-21", "2026-09-23"), 0);
+});
+
+test("daily digest: 스냅샷 생성 이후 입력된 당일 입출금도 구간 계산에 잡힌다", () => {
+  // 9/22 07:00 스냅샷(netInflowKrw=0) 이후 10시에 9/22 날짜로 입금을 기록한 시나리오 —
+  // 9/23 다이제스트의 입출금은 스냅샷 필드가 아니라 cashFlows 구간 합계에서 나와야 한다.
+  const snapshot = { date: "2026-09-23", totalValueKrw: 2_000_000, netInflowKrw: 0 };
+  const previousSnapshot = { date: "2026-09-22", totalValueKrw: 1_000_000 };
+  const state = {
+    ...sample,
+    cashBalances: [],
+    cashFlows: [{ id: "late", date: "2026-09-23", type: "deposit", amountKrw: 900_000 }],
+    holdings: [],
+  };
+  const digest = buildDailyDigest({ state, snapshot, previousSnapshot, date: "2026-09-23" });
+  assert.equal(digest.metrics.netInflowKrw, 900_000);
+  assert.equal(digest.metrics.investmentChangeKrw, 100_000);
+  assert.match(digest.text, /입출금/);
 });
 
 test("mergeSnapshotHistories: 원격에만 있는 스냅샷(cron 추가분)을 보존한다", () => {
