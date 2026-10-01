@@ -5,8 +5,10 @@ import {
   buildAccountSnapshots,
   buildPortfolioSnapshot,
   getExternalFlowAmount,
+  getImpliedExternalFlowKrw,
   getNetInflowKrwBetween,
   getTotals,
+  getTradeEffectKrw,
   groupByAccount,
   buildMonthlyDividendSchedule,
   getNextDividendMonth,
@@ -770,6 +772,62 @@ test("daily digest: 스냅샷 생성 이후 입력된 당일 입출금도 구간
   assert.equal(digest.metrics.netInflowKrw, 900_000);
   assert.equal(digest.metrics.investmentChangeKrw, 100_000);
   assert.match(digest.text, /입출금/);
+});
+
+test("getTradeEffectKrw: 수량 변화만 오늘 가격·환율로 평가한다", () => {
+  const prev = {
+    fxRate: 1350,
+    positions: [
+      { ticker: "TQQQ", currency: "USD", quantity: 100, price: 77 },
+      { ticker: "005930.KS", currency: "KRW", quantity: 10, price: 70000 },
+      { ticker: "SOLD", currency: "USD", quantity: 5, price: 200 },
+    ],
+  };
+  const curr = {
+    fxRate: 1400,
+    positions: [
+      { ticker: "TQQQ", currency: "USD", quantity: 110, price: 80 }, // +10주 매수
+      { ticker: "005930.KS", currency: "KRW", quantity: 10, price: 71000 }, // 수량 동일 → 0
+      { ticker: "NEW.KS", currency: "KRW", quantity: 3, price: 100000 }, // 신규
+    ],
+  };
+  // +10×80×1400 (TQQQ) + 3×100000 (NEW) − 5×200×1350 (SOLD, 직전 가격·환율)
+  assert.equal(getTradeEffectKrw(prev, curr), 10 * 80 * 1400 + 300000 - 5 * 200 * 1350);
+  assert.equal(getTradeEffectKrw({ positions: null }, curr), null); // 도입 전 스냅샷
+});
+
+test("getImpliedExternalFlowKrw: 내부 예수금 매수는 상쇄, 외부 자금 매수는 추정 유입", () => {
+  const prev = { fxRate: 1400, cashKrw: 50_000_000, positions: [{ ticker: "QQQM", currency: "USD", quantity: 100, price: 300 }] };
+  // 내부 자금: +10주(420만) 매수, 예수금 −420만 → 외부 유입 0
+  const boughtInternal = { fxRate: 1400, cashKrw: 45_800_000, positions: [{ ticker: "QQQM", currency: "USD", quantity: 110, price: 300 }] };
+  assert.equal(getImpliedExternalFlowKrw(prev, boughtInternal).estimated, false);
+  assert.equal(getImpliedExternalFlowKrw(prev, boughtInternal).externalFlowKrw, 0);
+  // 외부 자금: 예수금은 그대로, 수량만 +10주 → +420만 추정
+  const boughtExternal = { fxRate: 1400, cashKrw: 50_000_000, positions: [{ ticker: "QQQM", currency: "USD", quantity: 110, price: 300 }] };
+  const implied = getImpliedExternalFlowKrw(prev, boughtExternal);
+  assert.equal(implied.estimated, true);
+  assert.equal(implied.externalFlowKrw, 4_200_000);
+  // 소액 잔차(환율 노이즈)는 threshold 미만이라 0
+  const noise = { fxRate: 1400, cashKrw: 50_300_000, positions: prev.positions };
+  assert.equal(getImpliedExternalFlowKrw(prev, noise).estimated, false);
+});
+
+test("daily digest: 미기록 매수는 입출금(추정)으로 분리해 투자손익이 부풀지 않는다", () => {
+  const previousSnapshot = {
+    date: "2026-09-30", totalValueKrw: 1_000_000_000, fxRate: 1400, cashKrw: 50_000_000,
+    positions: [{ ticker: "QQQM", currency: "USD", quantity: 100, price: 300 }],
+  };
+  const snapshot = {
+    date: "2026-10-01", totalValueKrw: 1_030_000_000, netInflowKrw: 0, fxRate: 1400, cashKrw: 50_000_000,
+    positions: [{ ticker: "QQQM", currency: "USD", quantity: 160, price: 300 }], // +60주 = 2,520만 외부 매수
+  };
+  const state = { ...sample, holdings: [], cashBalances: [], cashFlows: [] };
+  const digest = buildDailyDigest({ state, snapshot, previousSnapshot, date: "2026-10-01" });
+  assert.equal(digest.metrics.netInflowKrw, 25_200_000);
+  assert.equal(digest.metrics.netInflowEstimated, true);
+  assert.equal(digest.metrics.investmentChangeKrw, 4_800_000); // 3,000만 − 2,520만
+  assert.match(digest.text, /입출금\(추정\)/);
+  assert.match(digest.text, /매매\(수량 변화\)/);
 });
 
 test("mergeSnapshotHistories: 원격에만 있는 스냅샷(cron 추가분)을 보존한다", () => {

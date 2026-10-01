@@ -399,6 +399,65 @@ export function buildSnapshotPositions(holdings = [], fxRate = 1) {
     }));
 }
 
+// 두 스냅샷의 positions 를 비교해 "매매(수량 변화) 효과"를 계산한다.
+// 항등식: Δ주식가치 = (기존 수량 기준 가격·환율 효과) + (수량 변화 × 현재 가격·환율).
+// 수량이 늘면 매수 평가액이 +, 전량 매도된 종목은 직전 가격·환율로 −.
+// 둘 중 한쪽이라도 positions 가 없으면(필드 도입 전 스냅샷) null — 호출부는 추정을 포기한다.
+export function getTradeEffectKrw(previousSnapshot, snapshot) {
+  const prevPositions = Array.isArray(previousSnapshot?.positions) ? previousSnapshot.positions : null;
+  const currPositions = Array.isArray(snapshot?.positions) ? snapshot.positions : null;
+  if (!prevPositions || !currPositions) {
+    return null;
+  }
+  const fxNow = Number(snapshot.fxRate || 1);
+  const fxPrev = Number(previousSnapshot.fxRate || fxNow);
+  const keyOf = (position) => position.ticker || position.name || "";
+
+  const prevByKey = new Map(); // key -> { qty, price, currency }
+  for (const position of prevPositions) {
+    const key = keyOf(position);
+    const entry = prevByKey.get(key) || { qty: 0, price: Number(position.price || 0), currency: position.currency };
+    entry.qty += Number(position.quantity || 0);
+    prevByKey.set(key, entry);
+  }
+  const currByKey = new Map();
+  for (const position of currPositions) {
+    const key = keyOf(position);
+    const entry = currByKey.get(key) || { qty: 0, price: Number(position.price || 0), currency: position.currency };
+    entry.qty += Number(position.quantity || 0);
+    currByKey.set(key, entry);
+  }
+
+  let effectKrw = 0;
+  for (const [key, curr] of currByKey) {
+    const deltaQty = curr.qty - (prevByKey.get(key)?.qty || 0);
+    if (!deltaQty) continue;
+    effectKrw += deltaQty * curr.price * (curr.currency === "KRW" ? 1 : fxNow);
+  }
+  for (const [key, prev] of prevByKey) {
+    if (currByKey.has(key) || !prev.qty) continue; // 전량 매도 — 직전 스냅샷 기준으로 차감
+    effectKrw -= prev.qty * prev.price * (prev.currency === "KRW" ? 1 : fxPrev);
+  }
+  return effectKrw;
+}
+
+// 입출금 기록이 없을 때 "외부 자금 유입"을 추정한다: 매매 효과 + 예수금 변화.
+// 내부 예수금으로 산 매수는 두 항이 상쇄되어 0, 외부 자금 매수나 미기록 입금은 잔차로 남는다.
+// 예수금의 환율 효과는 스냅샷에 통화 구성이 없어 잔차에 섞인다 — thresholdKrw 미만은 노이즈로 보고 0 처리.
+export function getImpliedExternalFlowKrw(previousSnapshot, snapshot, { thresholdKrw = 1_000_000 } = {}) {
+  const tradeEffectKrw = getTradeEffectKrw(previousSnapshot, snapshot);
+  const cashNow = Number(snapshot?.cashKrw);
+  const cashPrev = Number(previousSnapshot?.cashKrw);
+  if (tradeEffectKrw == null || !Number.isFinite(cashNow) || !Number.isFinite(cashPrev)) {
+    return { externalFlowKrw: 0, tradeEffectKrw, estimated: false };
+  }
+  const impliedKrw = tradeEffectKrw + (cashNow - cashPrev);
+  if (Math.abs(impliedKrw) < thresholdKrw) {
+    return { externalFlowKrw: 0, tradeEffectKrw, estimated: false };
+  }
+  return { externalFlowKrw: Math.round(impliedKrw), tradeEffectKrw, estimated: true };
+}
+
 export function buildAccountSnapshots(state, date, makeId = defaultId) {
   return groupByAccount(state).map((item) => ({
     id: makeId(),

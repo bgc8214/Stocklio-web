@@ -1,4 +1,4 @@
-import { getNetInflowKrwBetween, getTotals } from "./portfolio-core.js";
+import { getImpliedExternalFlowKrw, getNetInflowKrwBetween, getTotals } from "./portfolio-core.js";
 
 export function buildDailyDigest({ state, snapshot, previousSnapshot, date, siteUrl = "", marketContext = null }) {
   const totals = getTotals({
@@ -11,9 +11,15 @@ export function buildDailyDigest({ state, snapshot, previousSnapshot, date, site
     : 0;
   // 입출금은 dayChangeKrw 와 같은 구간(직전 스냅샷 date 초과 ~ 이번 스냅샷 date 이하)으로 집계.
   // snapshot.netInflowKrw(단일 날짜, 07:00 시점 고정)는 늦게 입력된 당일 흐름을 놓친다.
-  const netInflowKrw = previousSnapshot && Array.isArray(state.cashFlows)
+  const recordedInflowKrw = previousSnapshot && Array.isArray(state.cashFlows)
     ? getNetInflowKrwBetween(state.cashFlows, previousSnapshot.date, snapshot.date || date)
     : Number(snapshot.netInflowKrw || 0);
+  // 앱에서 보유 수량만 갱신하고 입출금을 기록하지 않는 흐름 대응:
+  // 기록이 없으면 positions 비교(매매 효과 + 예수금 변화)로 외부 유입을 추정해
+  // 신규 매수 대금이 "투자손익"으로 둔갑하지 않게 한다.
+  const implied = previousSnapshot ? getImpliedExternalFlowKrw(previousSnapshot, snapshot) : { externalFlowKrw: 0, tradeEffectKrw: null, estimated: false };
+  const inflowEstimated = !recordedInflowKrw && implied.estimated;
+  const netInflowKrw = inflowEstimated ? implied.externalFlowKrw : recordedInflowKrw;
   const investmentChangeKrw = dayChangeKrw - netInflowKrw;
   const shouldExplainMovers = !marketContext?.isMarketClosed;
   const moveBreakdown = shouldExplainMovers ? getMoveBreakdown(state) : createEmptyMoveBreakdown();
@@ -26,10 +32,13 @@ export function buildDailyDigest({ state, snapshot, previousSnapshot, date, site
     `전일 대비  ${formatSignedCompact(dayChangeKrw)}`,
   ];
 
-  // 입출금이 있을 때만 분리 표시, 없으면 한 줄로
+  // 입출금(기록 또는 추정)이 있을 때만 분리 표시, 없으면 한 줄로
   if (netInflowKrw !== 0) {
     lines.push(`투자손익  ${formatSignedCompact(investmentChangeKrw)}`);
-    lines.push(`입출금  ${formatSignedCompact(netInflowKrw)}`);
+    lines.push(`입출금${inflowEstimated ? "(추정)" : ""}  ${formatSignedCompact(netInflowKrw)}`);
+    if (inflowEstimated && Math.abs(implied.tradeEffectKrw || 0) >= 1_000_000) {
+      lines.push(`└ 매매(수량 변화) ${formatSignedCompact(implied.tradeEffectKrw)} 반영`);
+    }
   }
 
   lines.push(`주식 ${formatCompact(totals.stockValueKrw)} · 예수금 ${formatCompact(totals.cashKrw)}`);
@@ -83,6 +92,8 @@ export function buildDailyDigest({ state, snapshot, previousSnapshot, date, site
       totalValueKrw: Number(snapshot.totalValueKrw || 0),
       dayChangeKrw,
       netInflowKrw,
+      netInflowEstimated: inflowEstimated,
+      tradeEffectKrw: implied.tradeEffectKrw,
       investmentChangeKrw,
       cashKrw: totals.cashKrw,
       stockValueKrw: totals.stockValueKrw,

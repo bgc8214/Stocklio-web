@@ -1,4 +1,5 @@
 import { formatMonthDay } from "./formatters.js";
+import { getImpliedExternalFlowKrw } from "../domain/portfolio-core.js";
 
 export function getSnapshotRows(portfolioSnapshots = []) {
   const snapshots = [...portfolioSnapshots].sort((a, b) => a.date.localeCompare(b.date));
@@ -7,7 +8,13 @@ export function getSnapshotRows(portfolioSnapshots = []) {
   return snapshots.map((snapshot, index) => {
     const previous = snapshots[index - 1];
     const dailyChangeKrw = previous ? snapshot.totalValueKrw - previous.totalValueKrw : 0;
-    const netInflowKrw = Number(snapshot.netInflowKrw || 0);
+    const recordedInflowKrw = Number(snapshot.netInflowKrw || 0);
+    // 입출금 기록이 없는 날은 positions 비교(매매 효과 + 예수금 변화)로 외부 유입을 추정 —
+    // 앱에서 수량만 갱신한 매수가 투자손익·수익률을 부풀리지 않게 한다 (다이제스트와 동일 기준).
+    const implied = previous && !recordedInflowKrw
+      ? getImpliedExternalFlowKrw(previous, snapshot)
+      : { externalFlowKrw: 0, estimated: false };
+    const netInflowKrw = recordedInflowKrw || implied.externalFlowKrw;
     const investmentGainKrw = previous ? dailyChangeKrw - netInflowKrw : 0;
     const dailyReturn = previous?.totalValueKrw ? investmentGainKrw / previous.totalValueKrw : 0;
     const month = snapshot.date.slice(0, 7);
@@ -19,6 +26,7 @@ export function getSnapshotRows(portfolioSnapshots = []) {
       ...snapshot,
       dailyChangeKrw,
       netInflowKrw,
+      netInflowEstimated: implied.estimated,
       investmentGainKrw,
       dailyReturn,
       monthToDateInvestmentGainKrw: monthGain,
