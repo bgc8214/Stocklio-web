@@ -6,6 +6,12 @@
     <title>투자일지</title>
     <link rel="icon" type="image/png" href="assets/favicon.png">
     <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+    <link rel="manifest" href="/manifest.webmanifest">
+    <meta name="theme-color" content="#F4F5F7" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#10131a" media="(prefers-color-scheme: dark)">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="투자일지">
     <link rel="preconnect" href="https://cdn.jsdelivr.net">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
     <link rel="stylesheet" href="styles.css">
@@ -77,5 +83,14 @@ setTimeout(function(){if(document.body){document.body.classList.remove("is-booti
     <script src="/assets/chart.umd.min.js"></script>
     <script src="/assets/chartjs-plugin-datalabels.min.js"></script>
     <script type="module" src="/src/react/main.jsx"></script>
+    <script>
+      // PWA 서비스 워커 등록 — Vite dev(5173)에서는 HMR 모듈이 캐시에 섞이지 않게 건너뛴다.
+      // (로컬 server.mjs:4173 과 프로덕션에서는 등록됨)
+      if ("serviceWorker" in navigator && window.location.port !== "5173") {
+        window.addEventListener("load", function () {
+          navigator.serviceWorker.register("/sw.js").catch(function () {});
+        });
+      }
+    </script>
   </body>
 </html>
