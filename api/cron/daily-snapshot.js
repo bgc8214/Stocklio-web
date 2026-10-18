@@ -218,6 +218,8 @@ function normalizeAutomationState(input) {
     accountSnapshots: Array.isArray(state.accountSnapshots) ? state.accountSnapshots : [],
     priceUpdateLogs: Array.isArray(state.priceUpdateLogs) ? state.priceUpdateLogs : [],
     portfolioSnapshots: Array.isArray(state.portfolioSnapshots) ? state.portfolioSnapshots : [],
+    // 표시 설정(고정 환율 등) — cron 이 모르는 필드라고 지우면 안 된다
+    settings: state.settings && typeof state.settings === "object" ? state.settings : {},
     automation: {
       ...(state.automation || {}),
       snapshotTime: state.automation?.snapshotTime || "07:00",

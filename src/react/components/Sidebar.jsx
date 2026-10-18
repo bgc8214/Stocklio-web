@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useStore } from "../store/useStore.js";
 import { useTheme } from "../hooks/useTheme.js";
+import { mutate } from "../store/mutations.js";
 
 // index.html 의 <aside class="sidebar"> 마크업을 1:1 로 이식한 컴포넌트.
 // CSS(styles/layout-nav.css)가 class·data 속성에 강결합돼 있으므로 구조를 그대로 재현한다.
@@ -19,7 +20,14 @@ export function Sidebar() {
   const activeView = useStore((s) => s.activeView);
   const currencyMode = useStore((s) => s.currencyMode);
   const actions = useStore((s) => s.actions);
+  const settings = useStore((s) => s.portfolio?.settings) || {};
   const { theme, toggle: toggleTheme } = useTheme();
+  const fixedFxRate = Number(settings.fixedFxRate || 0);
+  const fxMode = settings.fxMode === "fixed" && fixedFxRate > 0 ? "fixed" : "live";
+  const setFxMode = (mode) => mutate((st) => {
+    st.settings = { ...(st.settings || {}), fxMode: mode };
+    return st;
+  });
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   const setView = (id) => actions.setView?.(id);
@@ -112,6 +120,26 @@ export function Sidebar() {
               원
             </button>
           </div>
+          {fixedFxRate > 0 ? (
+            <div className="currency-toggle fx-mode-toggle" role="group" aria-label="환율 모드 선택">
+              <button
+                type="button"
+                className={`currency-toggle-btn${fxMode === "live" ? " active" : ""}`}
+                title="매일 갱신되는 실시간 환율로 환산"
+                onClick={() => setFxMode("live")}
+              >
+                실시간
+              </button>
+              <button
+                type="button"
+                className={`currency-toggle-btn${fxMode === "fixed" ? " active" : ""}`}
+                title={`고정 환율 ${fixedFxRate.toLocaleString("ko-KR")}원으로 환산 (표시 전용)`}
+                onClick={() => setFxMode("fixed")}
+              >
+                고정 {fixedFxRate.toLocaleString("ko-KR")}
+              </button>
+            </div>
+          ) : null}
           <button className="theme-toggle" type="button" aria-label="테마 전환" onClick={toggleTheme}>
             <span className="theme-toggle-icon">{isDark ? "☀️" : "🌙"}</span>
             <span>{isDark ? "라이트 모드" : "다크 모드"}</span>

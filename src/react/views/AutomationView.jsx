@@ -3,6 +3,7 @@ import { useStore } from "../store/useStore.js";
 import { getTotals } from "../store/selectors.js";
 import { groupByAccount } from "../../domain/portfolio-core.js";
 import { formatAsOf, formatKrw, formatNumber } from "../../app/formatters.js";
+import { mutate, showToast } from "../store/mutations.js";
 
 const isStaticDeployment = () => !["localhost", "127.0.0.1", ""].includes(window.location.hostname);
 const notifStatusLabel = (status) => (status === "success" ? "성공" : status === "skipped" ? "건너뜀" : "실패");
@@ -72,7 +73,7 @@ export function AutomationView() {
         ) : (
           <>
             <ol className="notif-guide">
-              <li>텔레그램에서 <b>@stocklio_alarm_bot</b>과 대화를 열고 <code>/start</code>를 보냅니다.</li>
+              <li>텔레그램에서 <b>@stocklio_alarm_bot</b>과 대화를 열고 <b>로그인 이메일</b>을 메시지로 보냅니다 (본인 확인용).</li>
               <li>아래 <b>chat id 찾기</b>를 누르면 대화가 자동으로 연결돼요.</li>
               <li><b>텔레그램 알림 사용</b>을 켜고 <b>저장</b> → <b>테스트 메시지</b>로 확인하면 끝.</li>
             </ol>
@@ -128,6 +129,8 @@ export function AutomationView() {
           </div>
         </details>
       </div>
+
+      <FxDisplaySettings state={state} />
 
       <details className="panel advanced-section automation-advanced-panel">
         <summary>기록과 백업</summary>
@@ -208,5 +211,60 @@ export function AutomationView() {
         </div>
       </details>
     </section>
+  );
+}
+
+// ─── 표시 설정: 고정 환율 ───────────────────────────────────────────
+// 값을 저장하면 사이드바에 실시간↔고정 환율 토글이 나타난다. 화면 환산 전용 —
+// 스냅샷·텔레그램·입출금 기록은 항상 실시간 환율을 쓴다 (publishState 미러에서만 치환).
+function FxDisplaySettings({ state }) {
+  const settings = state?.settings || {};
+  const savedRate = Number(settings.fixedFxRate || 0);
+  const [input, setInput] = useState("");
+
+  useEffect(() => {
+    setInput(savedRate > 0 ? String(savedRate) : "");
+  }, [savedRate]);
+
+  const save = (event, override) => {
+    event.preventDefault();
+    const raw = override !== undefined ? override : input; // setState 는 비동기라 해제 시 값을 직접 받는다
+    const value = Number(raw);
+    if (raw !== "" && !(value > 0)) {
+      showToast("고정 환율 저장 실패", "0보다 큰 숫자를 입력해주세요", "error");
+      return;
+    }
+    mutate((st) => {
+      const next = { ...(st.settings || {}) };
+      if (value > 0) {
+        next.fixedFxRate = value;
+      } else {
+        delete next.fixedFxRate;
+        next.fxMode = "live";
+      }
+      st.settings = next;
+      return st;
+    });
+    showToast(
+      value > 0 ? "고정 환율 저장" : "고정 환율 해제",
+      value > 0 ? `1 USD = ${value.toLocaleString("ko-KR")}원 · 사이드바에서 실시간↔고정 전환` : "실시간 환율만 사용합니다",
+      "success",
+    );
+  };
+
+  return (
+    <div className="panel automation-panel">
+      <div className="section-heading"><h2>표시 설정</h2><span>환율 보기 방식</span></div>
+      <form className="notification-form" onSubmit={save}>
+        <label><span>고정 환율 (USD/KRW)</span>
+          <input type="number" min="0" step="0.01" placeholder="예: 1350 (비우면 해제)" value={input} onChange={(e) => setInput(e.target.value)} />
+          <small>저장하면 사이드바에서 실시간↔고정 환율 보기를 전환할 수 있어요. 화면 표시 전용이라 성과 기록과 알림은 항상 실시간 환율로 계산됩니다.</small>
+        </label>
+        <div className="form-actions inline-actions">
+          <button type="submit">{savedRate > 0 ? "변경" : "저장"}</button>
+          {savedRate > 0 ? <button className="ghost" type="button" onClick={(e) => save(e, "")}>해제</button> : null}
+        </div>
+      </form>
+    </div>
   );
 }

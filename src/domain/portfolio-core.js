@@ -362,6 +362,30 @@ export function getNextDividendMonth(schedule, nowMonth) {
   return null;
 }
 
+// 고정 환율 보기(표시 전용) — settings.fxMode === "fixed" 이고 고정값이 있으면,
+// 화면으로 발행되는 상태 미러의 환율만 고정값으로 치환한다.
+// previousClose 도 같은 값으로 두어 일 변동 분해에서 환율 효과가 0이 되게 한다.
+// 저장되는 원본 상태·스냅샷·다이제스트는 항상 실환율을 쓴다 (이 함수는 publish 경로 전용).
+export function applyFixedFxForDisplay(state) {
+  const fixedRate = Number(state?.settings?.fixedFxRate || 0);
+  if (state?.settings?.fxMode !== "fixed" || !(fixedRate > 0)) {
+    return state;
+  }
+  return {
+    ...state,
+    fxRate: {
+      ...(state.fxRate || {}),
+      rate: fixedRate,
+      previousClose: fixedRate,
+      change: 0,
+      changePercent: 0,
+      source: "고정 환율",
+      fixedApplied: true,
+      liveRate: Number(state.fxRate?.rate || 0) || null,
+    },
+  };
+}
+
 export function buildPortfolioSnapshot(state, date, makeId = defaultId) {
   const fxRate = Number(state.fxRate?.rate || 1);
   const totals = getTotals({ holdings: state.holdings, cashBalances: state.cashBalances, fxRate });

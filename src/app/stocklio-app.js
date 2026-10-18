@@ -15,6 +15,7 @@ import { normalizeAccountType } from "./account-types.js";
 import { createEmptyState, createSampleState } from "./state-factory.js";
 import { clearStaleQuoteCaches, fetchJson } from "./services/market-data-service.js";
 import {
+  applyFixedFxForDisplay,
   getTotals as calculateTotals,
   groupByAccount as calculateGroupByAccount,
   normalizeDashboardLayout,
@@ -460,7 +461,9 @@ function publishState() {
       publishState();
     },
   };
-  window.dispatchEvent(new CustomEvent("stocklio:state", { detail: structuredClone(state) }));
+  // 화면 미러에는 고정 환율(설정 시)을 적용해 발행한다 — React 뷰·craft 대시보드가
+  // 전부 이 미러를 읽으므로 뷰별 분기 없이 일괄 적용된다. 원본 state(저장·스냅샷)는 실환율 유지.
+  window.dispatchEvent(new CustomEvent("stocklio:state", { detail: structuredClone(applyFixedFxForDisplay(state)) }));
 }
 
 // ─── 뷰 전환 (store + hash 동기화) ────────────────────────────────

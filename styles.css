@@ -968,6 +968,14 @@ main {
   width: fit-content;
 }
 
+/* 환율 모드 토글 — 통화 토글과 같은 알약 모양, 라벨이 길어 패딩만 축소 */
+.fx-mode-toggle .currency-toggle-btn {
+  font-size: 0.72rem;
+  padding: 3px 9px;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
 .sidebar-foot span {
   font-size: 12px;
   font-weight: 800;

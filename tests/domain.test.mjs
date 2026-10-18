@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import {
   aggregateDividendRowsByTicker,
+  applyFixedFxForDisplay,
   buildAccountSnapshots,
   buildPortfolioSnapshot,
   getExternalFlowAmount,
@@ -772,6 +773,28 @@ test("daily digest: 스냅샷 생성 이후 입력된 당일 입출금도 구간
   assert.equal(digest.metrics.netInflowKrw, 900_000);
   assert.equal(digest.metrics.investmentChangeKrw, 100_000);
   assert.match(digest.text, /입출금/);
+});
+
+test("applyFixedFxForDisplay: fixed 모드일 때만 환율을 치환하고 환율 효과를 0으로 만든다", () => {
+  const base = {
+    fxRate: { pair: "USD/KRW", rate: 1356.54, previousClose: 1352.33, change: 4.21, source: "Yahoo Finance" },
+    settings: { fxMode: "fixed", fixedFxRate: 1350 },
+    holdings: [{ id: "h1" }],
+  };
+  const fixed = applyFixedFxForDisplay(base);
+  assert.equal(fixed.fxRate.rate, 1350);
+  assert.equal(fixed.fxRate.previousClose, 1350); // 일 변동 분해의 환율 효과 = 0
+  assert.equal(fixed.fxRate.change, 0);
+  assert.equal(fixed.fxRate.fixedApplied, true);
+  assert.equal(fixed.fxRate.liveRate, 1356.54);
+  assert.equal(fixed.holdings, base.holdings); // 나머지 필드는 그대로
+  assert.equal(base.fxRate.rate, 1356.54); // 원본 비변경
+
+  // live 모드이거나 고정값이 없으면 원본 그대로 반환
+  assert.equal(applyFixedFxForDisplay({ ...base, settings: { fxMode: "live", fixedFxRate: 1350 } }).fxRate.rate, 1356.54);
+  assert.equal(applyFixedFxForDisplay({ ...base, settings: { fxMode: "fixed" } }).fxRate.rate, 1356.54);
+  const noSettings = { fxRate: base.fxRate };
+  assert.equal(applyFixedFxForDisplay(noSettings), noSettings);
 });
 
 test("getTradeEffectKrw: 수량 변화만 오늘 가격·환율로 평가한다", () => {

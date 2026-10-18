@@ -338,6 +338,8 @@ function normalizeState(input) {
     accountSnapshots: Array.isArray(input.accountSnapshots) ? input.accountSnapshots : [],
     priceUpdateLogs: Array.isArray(input.priceUpdateLogs) ? input.priceUpdateLogs : [],
     portfolioSnapshots: Array.isArray(input.portfolioSnapshots) ? input.portfolioSnapshots : [],
+    // 표시 설정(고정 환율 등) — 서버 정규화가 지우면 안 된다
+    settings: input.settings && typeof input.settings === "object" ? input.settings : {},
     automation: {
       lastRunAt: input.automation?.lastRunAt || null,
       lastResult: input.automation?.lastResult || "아직 자동 실행 없음",
