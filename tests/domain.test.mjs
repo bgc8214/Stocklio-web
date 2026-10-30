@@ -1044,3 +1044,52 @@ test("getNextDividendMonth: 배당 없으면 null", () => {
   assert.equal(getNextDividendMonth(schedule, 5), null);
   assert.equal(getNextDividendMonth({ months: [] }, 5), null);
 });
+
+test("buildDailyEmailDigest: 상세 리포트에 요약·종목 변동·비중·계좌·기간 성과가 담긴다", async () => {
+  const { buildDailyEmailDigest } = await import("../src/domain/email-digest.js");
+  const state = {
+    fxRate: { rate: 1400, previousClose: 1390 },
+    holdings: [
+      { id: "h1", investor: "규철", account: "토스", name: "Invesco QQQ", ticker: "QQQ", quantity: 10, price: 500, averageCost: 400, currency: "USD", priceChange: 5, priceChangePercent: 0.01 },
+      { id: "h2", investor: "채리", account: "삼성증권", name: "삼성전자", ticker: "005930.KS", quantity: 10, price: 80000, averageCost: 70000, currency: "KRW", priceChange: -1000, priceChangePercent: -0.0123 },
+    ],
+    cashBalances: [{ id: "c1", investor: "규철", account: "토스", currency: "KRW", amount: 1000000 }],
+    cashFlows: [],
+    portfolioSnapshots: [
+      { date: "2026-09-20", totalValueKrw: 7_000_000, netInflowKrw: 0 },
+      { date: "2026-10-18", totalValueKrw: 7_600_000, netInflowKrw: 0 },
+      { date: "2026-10-19", totalValueKrw: 7_800_000, netInflowKrw: 0 },
+    ],
+  };
+  const digest = buildDailyEmailDigest({
+    state,
+    snapshot: { date: "2026-10-19", totalValueKrw: 7_800_000, netInflowKrw: 0, fxRate: 1400 },
+    previousSnapshot: { date: "2026-10-18", totalValueKrw: 7_600_000, fxRate: 1390 },
+    date: "2026-10-19",
+    siteUrl: "https://stocklio-web.vercel.app",
+  });
+  assert.match(digest.subject, /2026-10-19/);
+  assert.match(digest.subject, /\+₩20만/);
+  assert.match(digest.html, /종목별 일 변동/);
+  assert.match(digest.html, /Invesco QQQ/);
+  assert.match(digest.html, /보유 비중/);
+  assert.match(digest.html, /계좌별 현황/);
+  assert.match(digest.html, /기간 성과/);
+  assert.match(digest.html, /규철 · 토스/);
+  assert.match(digest.html, /투자일지 열기/);
+  assert.doesNotMatch(digest.html, /<script/i);
+  assert.match(digest.text, /총자산/);
+});
+
+test("buildDailyEmailDigest: 휴장일에는 종목 변동 대신 안내 문구", async () => {
+  const { buildDailyEmailDigest } = await import("../src/domain/email-digest.js");
+  const digest = buildDailyEmailDigest({
+    state: { fxRate: { rate: 1400 }, holdings: [], cashBalances: [], cashFlows: [], portfolioSnapshots: [] },
+    snapshot: { date: "2026-10-19", totalValueKrw: 1_000_000, netInflowKrw: 0 },
+    previousSnapshot: { date: "2026-10-18", totalValueKrw: 1_000_000 },
+    date: "2026-10-19",
+    marketContext: { isMarketClosed: true, closedReason: "주말", latestTradingDate: "2026-10-17" },
+  });
+  assert.match(digest.html, /휴장일 리포트/);
+  assert.match(digest.html, /미국장 휴장으로 종목별 변동이 없습니다/);
+});

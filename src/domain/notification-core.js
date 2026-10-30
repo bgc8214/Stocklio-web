@@ -144,7 +144,7 @@ export function getMoveBreakdown(state) {
   };
 }
 
-function getHoldingMoveRows(state) {
+export function getHoldingMoveRows(state) {
   const fxRate = Number(state.fxRate?.rate || state.fxRate || 1);
   const previousFx = Number(state.fxRate?.previousClose || state.fxRate?.rate || fxRate);
   const rowsByTicker = new Map();

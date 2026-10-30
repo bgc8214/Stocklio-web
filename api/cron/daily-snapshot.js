@@ -8,6 +8,7 @@ import {
   buildDailyDigest,
   shouldSendDailyDigest,
 } from "../../src/domain/notification-core.js";
+import { buildDailyEmailDigest } from "../../src/domain/email-digest.js";
 import {
   dateKeyInTimeZone,
   getUsMarketContextForSeoulDate,
@@ -19,6 +20,10 @@ const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || "";
 const SITE_URL = (process.env.VITE_PUBLIC_SITE_URL || "https://stocklio-web.vercel.app").replace(/\/$/, "");
 const CRON_SECRET = process.env.CRON_SECRET || "";
+// 이메일 상세 리포트(Resend) — 두 env 가 모두 설정된 경우에만 발송한다.
+const RESEND_API_KEY = process.env.RESEND_API_KEY || "";
+const DIGEST_EMAIL_TO = process.env.DIGEST_EMAIL_TO || "";
+const DIGEST_EMAIL_FROM = process.env.DIGEST_EMAIL_FROM || "투자일지 <onboarding@resend.dev>";
 const MAX_PORTFOLIOS_PER_RUN = Number(process.env.AUTOMATION_BATCH_SIZE || 50);
 const PRICE_FETCH_CONCURRENCY = Number(process.env.AUTOMATION_PRICE_CONCURRENCY || 5);
 
@@ -197,6 +202,7 @@ async function processPortfolio(portfolio, date, runId) {
 
   await updatePortfolioState(portfolio.user_id, nextState);
   await sendDailyDigestIfNeeded(portfolio.user_id, nextState, snapshot, previousSnapshot, date, marketContext);
+  await sendEmailDigestIfConfigured(portfolio.user_id, nextState, snapshot, previousSnapshot, date, marketContext);
   return { failures, snapshot };
 }
 
@@ -384,6 +390,53 @@ async function updatePortfolioState(userId, state) {
       prefer: "return=minimal",
     },
   });
+}
+
+// 이메일 상세 리포트 — 텔레그램 요약보다 깊은 버전(종목별 변동 전체·보유 비중·계좌별·기간 성과).
+// 발송 실패는 로그만 남기고 run 을 막지 않는다.
+async function sendEmailDigestIfConfigured(userId, state, snapshot, previousSnapshot, date, marketContext) {
+  if (!RESEND_API_KEY || !DIGEST_EMAIL_TO) {
+    return;
+  }
+  try {
+    const email = buildDailyEmailDigest({ state, snapshot, previousSnapshot, date, siteUrl: SITE_URL, marketContext });
+    const result = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        authorization: `Bearer ${RESEND_API_KEY}`,
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({
+        from: DIGEST_EMAIL_FROM,
+        to: [DIGEST_EMAIL_TO],
+        subject: email.subject,
+        html: email.html,
+        text: email.text,
+      }),
+    });
+    if (!result.ok) {
+      const errorText = await result.text();
+      throw new Error(`resend_${result.status}: ${errorText.slice(0, 200)}`);
+    }
+    await recordNotificationLog({
+      user_id: userId,
+      provider: "email",
+      message_type: "daily_digest",
+      snapshot_date: date,
+      status: "success",
+      message_preview: email.subject.slice(0, 500),
+      sent_at: new Date().toISOString(),
+    });
+  } catch (error) {
+    await recordNotificationLog({
+      user_id: userId,
+      provider: "email",
+      message_type: "daily_digest",
+      snapshot_date: date,
+      status: "error",
+      error_message: String(error.message || error).slice(0, 500),
+    }).catch(() => {});
+  }
 }
 
 async function sendDailyDigestIfNeeded(userId, state, snapshot, previousSnapshot, date, marketContext) {
